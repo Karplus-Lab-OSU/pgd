@@ -1,0 +1,167 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.progressbar.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/json2.js"></script>
+
+        <script type="text/javascript">
+
+            $(document).ready(function() {
+                $("div.task span.show").hide();
+                $('#task1bar').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
+                $('#subtask1bar').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
+                $('span[@id*=21bar]').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
+                $('#task1bar').progressBar(100);
+                $('#subtask1bar').progressBar(100);
+            });
+
+            function hide(element){
+                //collapse subtasks div
+                id = element.parentNode.parentNode.id;
+                $("#"+id+"subtasks").slideUp("normal");
+
+                //toggle button
+                $("div[@id="+id+"]  div[@id="+id+"info] span.hide").hide();
+                $("div[@id="+id+"]  div[@id="+id+"info] span.show").show();
+            }
+
+            function show(element){
+                id = element.parentNode.parentNode.id;
+                //collapse subtasks div
+                $("#"+id+"subtasks").slideDown("normal");
+
+                //toggle button
+                $("div[@id="+id+"]  div[@id="+id+"info] span.hide").show();
+                $("div[@id="+id+"]  div[@id="+id+"info] span.show").hide();
+            }
+
+            function foo(){
+                $("div[@id*=foo]").slideUp("normal");
+            }
+
+        </script>
+
+        <style type="text/css">
+
+            * {
+                font-family: Helvetica, Arial, Tahoma; font-size: 12px; line-height: 25px;
+            }
+
+            .tasks {
+
+            }
+
+            .task {
+                margin-top:5px;
+            }
+
+            .topleveltask{
+                margin-bottom:30px;
+            }
+
+            .hide, .show {
+                background-repeat:no-repeat;
+                padding:9px;
+                background-position:top;
+                left: 440px;
+                position: absolute;
+                margin-top:3px;
+            }
+
+            .hide {
+                background-image:url('arrow_up.png'); 
+            }
+
+            .show {
+                background-image:url('arrow_down.png');
+            }
+
+            .status {
+                padding-right:100px;
+                margin-left:auto;
+                margin-right:0px;
+                width: 350px;
+                position: absolute;
+                left: 100px;
+            }
+
+            .info {
+                width: 800px;
+            }
+        </style>
+
+    </head>
+
+<body>
+
+<div class="tasks">
+    <div class="task topleveltask" id="task1">
+        <div id="task1info" class="info">
+            <span class="title">Example Test</span>
+            <span class="status"><span class="progressBar" id="task1bar"></span></span>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </div>
+        <div class="subtasks" id="task1subtasks">
+            <div class="task subtask">
+                <span class="title">Subtask 1</span>
+                <span class="status"><span class="progressBar" id="subtask1bar"></span></span>
+                <span class="buttons"></span>
+            </div>
+            <div class="task subtask">
+                <span class="title">Subtask 2</span>
+                <span class="status"></span>
+                <span class="buttons"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="task topleveltask" id="task2">
+        <div class="info" id="task2info">
+            <span class="title">Example Test2!!</span>
+            <span class="status">100%</span>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </div>
+        <div class="subtasks" id="task2subtasks">
+            <div class="task subtask" id="subtask1">
+                <div class="info" id="subtask1info">
+                    
+                        <span class="title">Subtask 1</span>
+                        <span class="status"><span class="progressBar" id="21bar"></span></span>
+                    
+                        <span class="hide" onclick="hide(this);">&nbsp;</span>
+                        <span class="show" onclick="show(this);">&nbsp;</span>
+                    
+                </div>
+
+                <div class="subtasks" id="subtask1subtasks">
+                <div class="task subtask" id="foo1">
+                        <span class="title">Subtask 1</span>
+                        <span class="status"><span class="progressBar" id="21bar1"></span></span>
+                        <span class="buttons"></span>
+                </div>
+            <div class="task subtask"  id="foo2">
+                <span class="title">Subtask 2</span>
+                <span class="status"><span class="progressBar" id="21bar2"></span></span>
+                <span class="buttons"></span>
+            </div>
+        </div>
+            </div>
+            <div class="task subtask"  id="foo3">
+                <span class="title">Subtask 2</span>
+                <span class="status"><span class="progressBar" id="21bar3"></span></span>
+                <span class="buttons"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br/><br/>
+<br/>
+
+<button onclick="foo();">test</button>
+
+</body>
+</html>
