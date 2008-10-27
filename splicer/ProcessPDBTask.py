@@ -3,7 +3,7 @@
 import math, sys, mmLib.Structure, mmLib.FileIO, mmLib.AtomMath
 import Bio.PDB
 import shutil
-import gzip
+import os
 
 # Structure.AminoAcidResidue:
 #
@@ -28,54 +28,87 @@ NO_VALUE = 999.9
 
 def processPDB(file):
     bioPythonProps = parseWithBioPython(file)
-    print bioPythonProps
-    #parseWithMMLib(file, bioPythonProps):
+    #print 'props: %s' % bioPythonProps
+    return parseWithMMLib(file, bioPythonProps)
 
 
 def decompressFile(src):
-    #TODO just use gunzip to decompress. make a copy of file first so it isn't lost
-    import zlib
+    tempfile = 'tmp/%s' % src
+    dest = 'tmp/%s' % src[:-2]
+
     try:
-        z = open(src)
-        f = open(src[:-2],'w')
-        decompressedData = decompress(z.read())
-        f.write(decompressedData)
+        # copy the file to the tmp directory
+        shutil.copyfile(src, tempfile)
+
+        # decompress using unix decompress.  The files are stored used LZ.
+        # algorithms i've tried will not decompress the files properly.  for
+        # now use the linux decompress
+        os.system('uncompress %s' % tempfile)
+
+    except:
+        #clean up resulting file on errors
+        if os.path.exists(dest):
+            os.path.remove(dest)
+
+        return False
 
     finally:
-        z.close()
-        f.close()
+        # clean up temp file no matter what
+        if os.path.exists(tempfile):
+            os.path.remove(tempfile)
 
-    return src[:-2]
+    return dest
 
 def parseWithBioPython(file):
     residueProps = {}
+    decompressedFile = None
+    tmp = './tmp'
 
-    #prep and open file
-    decompressedFile = decompressFile(file)
-    structure = Bio.PDB.PDBParser().get_structure('pdbname', decompressedFile)
+    try:
+        #create tmp workspace
+        if os.path.exists(tmp):
+            ownTempDir = False
+        else:
+            ownTempDir = True
+            os.mkdir(tmp)
 
-    # dssp can't do multiple models. if we ever need to, we'll have to 
-    # iterate through them
-    dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=pdb, dssp='dsspcmbi')
+        #prep and open file
+        decompressedFile = decompressFile(file)
 
-    #iterate residues
-    for res in structure[0].get_residues():
-        hetflag, resseq, icode = res.get_id()
-        chain = res.get_parent().get_id()
-        if hetflag != ' ':
-            continue
+        if decompressedFile:
 
-        # get properties using dssp
-        residue, secondary_structure, accessibility, relative_accessibility = dssp[(chain, resseq)]
+            structure = Bio.PDB.PDBParser().get_structure('pdbname', decompressedFile)
 
-        # save in dictionary for later use
-        residueProps[resseq] = {'ss':secondary_structure}
+            # dssp can't do multiple models. if we ever need to, we'll have to 
+            # iterate through them
+            dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressedFile, dssp='dsspcmbi')
+
+            #iterate residues
+            for res in structure[0].get_residues():
+                hetflag, resseq, icode = res.get_id()
+                chain = res.get_parent().get_id()
+                if hetflag != ' ':
+                    continue
+
+                # get properties using dssp
+                residue, secondary_structure, accessibility, relative_accessibility = dssp[(chain, resseq)]
+
+                # save in dictionary for later use
+                residueProps[resseq] = {'ss':secondary_structure}
+    finally:
+        #clean up any files in tmp directory no matter what
+        if decompressedFile and os.path.exists(decompressedFile):
+            os.remove(decompressedFile)
+
+        if ownTempDir and os.path.exists(tmp):
+            os.removedirs(tmp)
 
     return residueProps
 
-def parseWithMMLib(file):
+def parseWithMMLib(file, props):
     struct = mmLib.FileIO.LoadStructure(file=file)
-
+    lowerCaseIndicators = ['H','G','E','T']
+    ret = {}
     for r in struct.iter_amino_acids():
         # get offsets for residues left and right of this one
         next_res = r.get_offset_residue(1)
@@ -140,11 +173,13 @@ def parseWithMMLib(file):
             r.ome = math.radians(NO_VALUE)
 
         # check for ends of consecutive groupings.  ends must be lowercase if they are in [hget]
-        lowerCaseIndicators = ['h','g','e','t']
-        if (not (prev_res or next_res)) and ss in lowerCaseIndicators:
-            ss = bioPythonProps[r.fragment_id]['ss'].lower()
+        ss = props[int(r.fragment_id)]['ss']
+        if ((prev_res == None or next_res == None)) and ss in lowerCaseIndicators:
+            ss = ss.lower()
+            print 'lower!'
         else:
-            ss = bioPythonProps[r.fragment_id]['ss']
+            print '%s : %s %s %s' % (ss, prev_res, next_res, ss in lowerCaseIndicators)
+
 
         # This accounts for the possibility of missing atoms by initializing
         # all of the values to NO_VALUE
@@ -254,7 +289,9 @@ def parseWithMMLib(file):
         #print '%(name)s%(id)6s%(a6)7.1f%(a7)6.1f%(a1)6.1f' % r.props,
         #print '%(l1)5.3f%(l2)6.3f%(l4)6.3f%(l5)6.3f%(a3)6.1f%(a5)6.1f%(a2)6.1f%(a4)6.1f%(l3)6.3f' % r.props,
         #print
-        print r.props
+        #print r.props
+        ret[int(r.fragment_id)]= r.props
+    return ret
 
 def initialize_geometry(residue, geometry_list, type):
     for item in geometry_list:
@@ -268,4 +305,9 @@ def initialize_geometry(residue, geometry_list, type):
     return residue
 
 if __name__ == '__main__':
-    processPDB(sys.argv[1])
+    props = processPDB(sys.argv[1])
+    s = ''
+    for key in props:
+        s = '%s%s' % (s, props[key]['ss'])
+    print s
+
