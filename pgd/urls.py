@@ -14,4 +14,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     # (r'^admin/(.*)', admin.site.root),
+    (r'^tasks/$', 'pgd.tasks.views.showtasks'),
+    (r'^tasks/progress/$', 'pgd.tasks.views.taskprogress'),
+    (r'^tasks/start/$', 'pgd.tasks.views.starttask')
 )

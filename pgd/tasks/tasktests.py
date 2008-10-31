@@ -39,11 +39,13 @@ class TestContainer():
         self.test2 = Test()
         self.task = TaskContainer('Example Container')
         self.task.addTask( Task('Sub task1', self.test.doTask, self.test.taskProgress) )
+        
+        #self.task2 = TaskContainer('Subtask Container')
+        #self.task.addTask( self.task2 )
+        #self.task2.addTask( Task('subtask2-1', self.test.doTask, self.test.taskProgress) )
+        #self.task2.addTask( Task('subtask2-2', self.test2.doTask, self.test.taskProgress) )
+        
         self.task.addTask( Task('Sub task2', self.test2.doTask, self.test2.taskProgress) )
-
-
-
-
 
 
 if __name__ == "__main__":

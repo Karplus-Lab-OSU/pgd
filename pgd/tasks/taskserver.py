@@ -5,6 +5,7 @@ from threading import Thread
 import socket
 
 from tasktests import *
+from django.utils import simplejson
 
 TASK_MANAGER = TestContainer()
 
@@ -71,10 +72,10 @@ class ClientThread(Thread):
         key = buff
 
         if key == CMD_LIST:
-            return TASK_MANAGER.listTasks()
+            return simplejson.dumps(TASK_MANAGER.listTasks())
 
         elif key == CMD_PROGRESS:
-            return TASK_MANAGER.progress()
+            return simplejson.dumps(TASK_MANAGER.progress())
 
         elif key == CMD_START:
             return TASK_MANAGER.start()
@@ -83,11 +84,11 @@ class ClientThread(Thread):
             return TASK_MANAGER.stop()
 
 if __name__ == '__main__':
-    
     task = TestContainer()
     TASK_MANAGER = TaskManager(task.task)
 
-    print "tasks: ", TASK_MANAGER.listTasks()
+
+    print "tasks: ",  TASK_MANAGER.listTasks()
     print "progress: ", TASK_MANAGER.progress()
 
     serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

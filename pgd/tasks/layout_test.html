@@ -1,93 +1,47 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
     <head>
-        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery-1.2.6.js"></script>
+        
         <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.progressbar.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.tabledisplay-0.2.js"></script>
         <script type="text/javascript" src="http://doors.osuosl.org/media/js/json2.js"></script>
+
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/fx.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/fx.highlight.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/gaz.lite.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/gaz.treestore.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/gaz.treeview.js"></script>
+        
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.acts_as_tree_table.js"></script>
 
         <script type="text/javascript">
 
+           
+
             $(document).ready(function() {
-                $("div.task span.show").hide();
-                $('#task1bar').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
-                $('#subtask1bar').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
-                $('span[@id*=21bar]').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
-                $('#task1bar').progressBar(100);
-                $('#subtask1bar').progressBar(100);
+                $('span[@id*=progressbar-]').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
+
+                $('#testtree').acts_as_tree_table({default_state:'collapsed'})
+
+                $("#button-collapse").click(function(evt) {
+                    $('#task1-1').toggle();
+                });
             });
 
-            function hide(element){
-                //collapse subtasks div
-                id = element.parentNode.parentNode.id;
-                $("#"+id+"subtasks").slideUp("normal");
-
-                //toggle button
-                $("div[@id="+id+"]  div[@id="+id+"info] span.hide").hide();
-                $("div[@id="+id+"]  div[@id="+id+"info] span.show").show();
-            }
-
-            function show(element){
-                id = element.parentNode.parentNode.id;
-                //collapse subtasks div
-                $("#"+id+"subtasks").slideDown("normal");
-
-                //toggle button
-                $("div[@id="+id+"]  div[@id="+id+"info] span.hide").show();
-                $("div[@id="+id+"]  div[@id="+id+"info] span.show").hide();
-            }
-
             function foo(){
-                $("div[@id*=foo]").slideUp("normal");
+                $('span[@id*=progressbar-]').progressBar(100);
             }
+
 
         </script>
 
+        <link rel="stylesheet" type="text/css" href="jquery.acts_as_tree_table.css" />
+        <link rel="stylesheet" type="text/css" href="example.css" />
+
         <style type="text/css">
-
-            * {
-                font-family: Helvetica, Arial, Tahoma; font-size: 12px; line-height: 25px;
-            }
-
-            .tasks {
-
-            }
-
-            .task {
-                margin-top:5px;
-            }
-
-            .topleveltask{
-                margin-bottom:30px;
-            }
-
-            .hide, .show {
-                background-repeat:no-repeat;
-                padding:9px;
-                background-position:top;
-                left: 440px;
-                position: absolute;
-                margin-top:3px;
-            }
-
-            .hide {
-                background-image:url('arrow_up.png'); 
-            }
-
-            .show {
-                background-image:url('arrow_down.png');
-            }
-
-            .status {
-                padding-right:100px;
-                margin-left:auto;
-                margin-right:0px;
-                width: 350px;
-                position: absolute;
-                left: 100px;
-            }
-
-            .info {
-                width: 800px;
+            td.col0{
+                width:15%;
             }
         </style>
 
@@ -95,73 +49,73 @@
 
 <body>
 
-<div class="tasks">
-    <div class="task topleveltask" id="task1">
-        <div id="task1info" class="info">
-            <span class="title">Example Test</span>
-            <span class="status"><span class="progressBar" id="task1bar"></span></span>
+
+<table id="testtree">
+    <tr id="task1-1" class="expanded">
+        <td class="col0">Example Test</td>
+        <td><span id="progressbar-1"/></td>
+        <td>
             <span class="hide" onclick="hide(this);">&nbsp;</span>
             <span class="show" onclick="show(this);">&nbsp;</span>
-        </div>
-        <div class="subtasks" id="task1subtasks">
-            <div class="task subtask">
-                <span class="title">Subtask 1</span>
-                <span class="status"><span class="progressBar" id="subtask1bar"></span></span>
-                <span class="buttons"></span>
-            </div>
-            <div class="task subtask">
-                <span class="title">Subtask 2</span>
-                <span class="status"></span>
-                <span class="buttons"></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="task topleveltask" id="task2">
-        <div class="info" id="task2info">
-            <span class="title">Example Test2!!</span>
-            <span class="status">100%</span>
+        </td>
+    </tr>
+    <tr id="2" class="child-of-task1-1">
+        <td >Test1, subtask 2</td>
+        <td><span id="progressbar-2"/></td>
+        <td>
             <span class="hide" onclick="hide(this);">&nbsp;</span>
             <span class="show" onclick="show(this);">&nbsp;</span>
-        </div>
-        <div class="subtasks" id="task2subtasks">
-            <div class="task subtask" id="subtask1">
-                <div class="info" id="subtask1info">
-                    
-                        <span class="title">Subtask 1</span>
-                        <span class="status"><span class="progressBar" id="21bar"></span></span>
-                    
-                        <span class="hide" onclick="hide(this);">&nbsp;</span>
-                        <span class="show" onclick="show(this);">&nbsp;</span>
-                    
-                </div>
-
-                <div class="subtasks" id="subtask1subtasks">
-                <div class="task subtask" id="foo1">
-                        <span class="title">Subtask 1</span>
-                        <span class="status"><span class="progressBar" id="21bar1"></span></span>
-                        <span class="buttons"></span>
-                </div>
-            <div class="task subtask"  id="foo2">
-                <span class="title">Subtask 2</span>
-                <span class="status"><span class="progressBar" id="21bar2"></span></span>
-                <span class="buttons"></span>
-            </div>
-        </div>
-            </div>
-            <div class="task subtask"  id="foo3">
-                <span class="title">Subtask 2</span>
-                <span class="status"><span class="progressBar" id="21bar3"></span></span>
-                <span class="buttons"></span>
-            </div>
-        </div>
-    </div>
-</div>
+        </td>
+    </tr>
+    <tr id="3" class="child-of-task1-1">
+        <td  >Test1, subtask2</td>
+        <td><span id="progressbar-3"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr id="4"  class="child-of-3">
+        <td >Test1, subtask2</td>
+        <td><span id="progressbar-4"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr  id="5">
+        <td >Test1, subtask2</td>
+        <td><span id="progressbar-5"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr  id="6">
+        <td  >Test1, subtask 3</td>
+        <td><span id="progressbar-6"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+<table>
 
 <br/><br/>
 <br/>
 
-<button onclick="foo();">test</button>
+<button onclick="foo();">foo</button>
+<button id="button-collapse">collapse</button>
+<button id="button-expand">expand</button>
+
+
+
+
+
+
+
+
+
 
 </body>
 </html>
