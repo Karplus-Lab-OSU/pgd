@@ -97,7 +97,6 @@ class TaskManager():
     @param keys: filters list to include only these tasks
     """
     def progress(self, keys=None):
-        print "================"
         message = {}
 
         # show all tasks by default
