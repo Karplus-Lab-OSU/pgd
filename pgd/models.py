@@ -86,8 +86,8 @@ class protein(models.Model):
 	threshold = models.IntegerField() # new type; this should probably be a boolean type
 	resolution = models.FloatField() 
 	rfactor = models.FloatField()
-)
+
 
 class sequence(models.Model):
 	pass
-)
+
