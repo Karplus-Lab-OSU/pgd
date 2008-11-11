@@ -39,10 +39,11 @@ SS_TYPES = (
 )
 
 # residue model
+# (was 'protein')
 #
-# Note: fields that have been changed significantly are indicated (e.g. 'aa' is
-# 	now stored differently to conserve space). Also the 'idx' field is not
-# 	present here because it was never implemented in the old table.
+# Note: The 'idx' field is not present here because it was never implemented in 
+# 	the old table, and the model uses a default primary key field (can't
+# 	spread a key across fields in django... yet?).
 class residue(models.Model):
 	code = models.CharField(max_length=4)
 	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
@@ -78,13 +79,11 @@ class residue(models.Model):
 
 MAXNUM=10
 
-class protein(models.Model): # incomplete
+# protein model
+# (was 'protein_info')
+class protein(models.Model):
 	code = models.CharField(max_length=4)
-	threshold = models.IntegerField()
-	resolution = models.FloatField()
+	threshold = models.IntegerField() # new type; this should probably be a boolean type
+	resolution = models.FloatField() 
 	rfactor = models.FloatField()
 )
-
-
-#for ():
-	#variable_i = djangodatatype
