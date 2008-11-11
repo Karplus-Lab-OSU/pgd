@@ -76,8 +76,11 @@ MAXNUM=10
 
 class protein(models.Model): # incomplete
 	code = models.CharField(max_length=4)
-	threshold = models.BooleanField()
+	threshold = models.IntegerField()
+	resolution = models.FloatField()
+	rfactor = models.FloatField()
 )
+
 
 #for ():
 	#variable_i = djangodatatype
