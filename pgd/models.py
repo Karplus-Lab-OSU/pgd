@@ -45,7 +45,7 @@ SS_TYPES = (
 # 	the old table, and the model uses a default primary key field (can't
 # 	spread a key across fields in django... yet?).
 class residue(models.Model):
-	code = models.CharField(max_length=4)
+	code = models.ForeignKey(protein)
 	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
 	chainID = models.CharField(max_length=1) 
 	id = models.IntegerField()
@@ -82,8 +82,12 @@ MAXNUM=10
 # protein model
 # (was 'protein_info')
 class protein(models.Model):
-	code = models.CharField(max_length=4)
+	code = models.CharField(max_length=4, primary_key=True, unique=True)
 	threshold = models.IntegerField() # new type; this should probably be a boolean type
 	resolution = models.FloatField() 
 	rfactor = models.FloatField()
+)
+
+class sequence(models.Model):
+	pass
 )
