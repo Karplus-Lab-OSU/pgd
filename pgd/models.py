@@ -38,13 +38,17 @@ SS_TYPES = (
 	('S' = 'bend'),
 )
 
+# residue model
+#
+# Note: fields that have been changed significantly are indicated (e.g. 'aa' is
+# 	now stored differently to conserve space). Also the 'idx' field is not
+# 	present here because it was never implemented in the old table.
 class residue(models.Model):
-	code = models.CharField(max_length=4) #key
-	## SS_TYPES = ()
-	AA = models.CharField(max_length=1, choices=AA_CHOICES)
-	chainID = models.CharField(max_length=4) #key
-	id = models.FloatField() #key
-	oldID = models.CharField(max_length=5)
+	code = models.CharField(max_length=4)
+	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
+	chainID = models.CharField(max_length=1) 
+	id = models.IntegerField()
+	oldID = models.CharField(max_length=5) # is there something weird going on here?
 	a1 = models.FloatField()
 	a2 = models.FloatField()
 	a3 = models.FloatField()
@@ -57,7 +61,7 @@ class residue(models.Model):
 	L3 = models.FloatField()
 	L4 = models.FloatField()
 	L5 = models.FloatField()
-	ss = models.CharField(max_length=1, choice=SS_TYPES)
+	ss = models.CharField(max_length=1, choice=SS_TYPES) # new type (was blob, but all entries 1 char)
 	phi = models.FloatField()
 	psi = models.FloatField()
 	ome = models.FloatField()
@@ -67,8 +71,8 @@ class residue(models.Model):
 	bs = models.FloatField()
 	H_bond_energy = models.FloatField()
 	Zeta = models.FloatField()
-	terminal_flag = models.BooleanField()	# is this AA on a chain break? 
-	xpr = models.BooleanField()		# does this AA precede a proline?
+	terminal_flag = models.BooleanField() 
+	xpr = models.BooleanField() # this field may not be necessary; it has never been implemented
 
 class residue(models.Model):
 
