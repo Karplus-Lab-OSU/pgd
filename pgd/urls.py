@@ -15,7 +15,13 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     (r'^admin/(.*)', admin.site.root),
     (r'^tasks/', include('pgd.tasks.urls')),
-    
-    
 
 )
+
+#The following is used to serve up local media files like images
+if settings.LOCAL_DEV:
+    baseurlregex = r'^static/(?P<path>.*)$'
+    urlpatterns += patterns('',
+        (baseurlregex, 'django.views.static.serve',
+        {'document_root':  settings.MEDIA_ROOT}),
+    )
