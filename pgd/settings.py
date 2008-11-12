@@ -79,7 +79,6 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.admin',
     'pgd.pgd_core',
-    'pgd.pgd_search'
-    'django.contrib.admin',
+    'pgd.pgd_search',
     'pgd.tasks',
 )
