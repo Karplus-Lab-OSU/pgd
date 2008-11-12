@@ -76,4 +76,6 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'pgd.pgd_core',
+    'pgd.pgd_search'
 )
