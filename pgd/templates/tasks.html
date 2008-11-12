@@ -175,13 +175,21 @@
             span.label {
                 font-weight:700;
             }
+            
+            body {
+                padding:30px;
+            }
+            
+            div.tasks {
+                margin-top:30px;
+            }
         </style>
     </head>
     <body>
 
         <h1>Test Page for Task Management</h1>
         
-        Simple test page for monitoring and testing long running tasks written in python.  It supports multiple users whom will all see the same status for the task.
+        Admin page for monitoring and testing long running maintenence tasks required for your django app.  It supports multiple users whom will all see the same status for the task.
         
         This example task just prints some statements out to the console and sleeps.
         <br/>
@@ -189,23 +197,26 @@
         <h3>Instructions:</h3>
        
         <ol>
-        <li>1) Press Update to begin ajax updates.  For now i dont want a barrage of ajax requests</li>
-        <li>2) Press Start to start process,  if its not already running
+        <li> Press Update to begin ajax updates.  For now i dont want a barrage of ajax requests</li>
+        <li> Press Start to start process,  if its not already running
         </ol>
 
         <br/>
         <h3>How It works</h3>
-        Django is opening a socket to a TaskManagement server for each mod_python subinterpreter.  The server is multithreaded but there is only a single instance of the task being tracked.  Commands are sent to the server and json serialized responses are returned.  This adds some overhead but its acceptable for low usage apps.
+        Django is opening a socket to a TaskManagement server for each mod_python subinterpreter.  The server is multithreaded to accomidate multiple clients (apache threads) but there is only a single instance of the task being tracked.  Commands and responses are exchanged between django view handlers and the taskserver.  The extra communication adds some overhead but its acceptable for low usage apps.  This also allows the taskserver to be bound to a different processor or another machine.
 
         <br/>
         <hr/>
         <br/>
 
+<button onclick="update();">1) Start Ajax Update</button>
+
+
 <div class="tasks">
     {% for key,topleveltask in tasks.items %}
     <div class="topleveltask" id="{{key}}">
 
-        <button class="button-start" >Start Task</button>
+        <button class="button-start" >2) Start Task</button>
         <span class="lastrun"><span class="label">Last Run:</span> [value]</span>
 
         <table id="taskstable-{{key}}" class="taskstable status-stopped">
@@ -222,7 +233,7 @@
     {% endfor %}
 </div>
 
-        <button onclick="update();">Start Ajax Update</button>
+        
         
 
     </body>
