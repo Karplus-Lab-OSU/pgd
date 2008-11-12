@@ -28,11 +28,8 @@ class TaskClient():
         self.socket = None
         self.connected = False
 
-    def __del__(self):
-        print "bar"
-
     def connect(self, port):
-        print "connecting"
+        print "connecting..."
         self.port = port
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket.connect(("localhost", port))
@@ -60,9 +57,6 @@ class TaskClient():
 
             except (RuntimeError, socket.error):
                 errno, errstr = sys.exc_info()[:2]
-                print errno
-                print errstr
-
                 retry = retry - 1
 
                 try:
@@ -80,8 +74,6 @@ class TaskClient():
         # raise an error so the calling function can deal with it properly
         if not response:
             raise Exception
-
-        print 'response: $%s$' % response
 
         return response
 
@@ -119,9 +111,7 @@ class ClientThread(Thread):
                 if not buff:
                     break
 
-                print "Command: $%s$ " % buff
                 resp = self.processCommand(buff)
-                print "Response: ", resp
                 self.sockfd.send(resp)
 
             except socket.error:
