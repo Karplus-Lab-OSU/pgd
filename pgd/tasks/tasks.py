@@ -1,100 +1,160 @@
 from threading import Thread
-from django.utils import simplejson
+from abstract import *
 
+STATUS_FAILED = -1;
+STATUS_STOPPED = 0;
+STATUS_RUNNING = 1;
+STATUS_PAUSED = 2;
+STATUS_COMPLETE = 3;
+
+"""
+SubTaskWrapper - class used to store additional information
+about the relationship between a container and a subtask.
+
+    percentage - the percentage of work the task accounts for.
+"""
 class SubTaskWrapper():
     def __init__(self, task, percentage):
         self.task = task
         self.percentage = percentage
 
+"""
+WorkUnit - class used to wrap task work in a thread.  New WorkUnits
+can be constructed every time a task is run.  This allows the task to run in its own thread
+and allow it to be run multiple times.
+"""
 class WorkUnit(Thread):
     def __init__(self, parent, args):
         Thread.__init__(self)
         self.parent = parent
         self.args = args
 
+    """
+    runs the task by calling its work function
+    """
     def run(self):
-        self.parent.running = 1
-        self.parent.finished = 0
-        result = self.doTask(self.args)
-        self.parent.running = 0
-        self.parent.finished = 1
-        return result
+        #self.parent._status = STATUS_RUNNING
+        return self.parent.work(self.args)
+        #self.parent._status = STATUS_COMPLETE
 
-    def doTask(self,args):
-        self.parent.workFunction(args)
+        #return result
 
+
+"""
+Task - class that wraps a set of functions as a runnable unit of work.  Once
+wrapped the task allows functions to be managed and tracked in a uniform way.
+
+This is an abstract class and requires the following functions to be implemented:
+    * _work  -  does the work of the task
+    * _reset - resets the state of the task when stopped
+    * progress - returns the state of the task as an integer from 0 to 100
+    * progressMessage - returns the state of the task as a readable string
+"""
 class Task():
-    def __init__(self, msg, workFunction, progressFunction):
+    def __init__(self, msg):
         self.msg = msg
-        self.workFunction = workFunction
-        self.progressFunction = progressFunction
+
+        _work = AbstractMethod('_work')
+        progress = AbstractMethod('progress')
+        progressMessage = AbstractMethod('progressMessage')
+        _reset = AbstractMethod('_reset')
+
         self.workunit = None
-        self.running = 0
-        self.finished = 0
+        self._status = STATUS_STOPPED
+        self.id = 1
 
+    """
+    Resets the task, including setting the flags properly,  delegates implementation
+    specific work to _reset()
+    """
     def reset(self):
-        self.running=0
-        self.finished=0
+        self._status = STATUS_STOPPED
+        self._reset()
 
+    """
+    starts the task.  This will spawn the work in a workunit thread.
+    """
     def start(self, args=None):
         # only start if not already running
-        if self.running:
+        if self._status == STATUS_RUNNING:
             return
 
         # create a new workunit if needed
-        if self.workunit == None or self.finished:
+        if self.workunit == None or self._status == STATUS_COMPLETE:
             self.workunit = WorkUnit(self, args)
 
         self.workunit.start()
 
-    def doTask(self, args):
-        self.running = 1
-        self.finished = 0
-        result = self.workFunction(args)
-        self.running = 0
-        self.finished = 1
+    """
+    Does the work of the task.  This is can be called directly for synchronous work or via start which
+    causes a workunit thread to be spawned and call this function.  this method will set flags properly and
+    delegate implementation specific work to _work(args)
+    """
+    def work(self, args):
+        self._status = STATUS_RUNNING
+        result = self._work(args)
+        self._status = STATUS_COMPLETE
         return result
 
-    def progress(self):
-        if self.progressFunction == None:
-            return 0
-        else:
-            return self.progressFunction()
+    def status(self):
+        return self._status
 
-# TaskContainer contains other tasks
+"""
+TaskContainer - an extension of Task that contains other tasks
+
+TaskContainer does no work itself.  Its purpose is to allow a bigger job
+to be broken into discrete functions.  IE.  downloading and processing.
+"""
 class TaskContainer(Task):
 
     def __init__(self, msg, sequential=True):
-        Task.__init__(self, msg, self.iterateTasks, None)
+        Task.__init__(self, msg)
         self.subtasks = []
         self.sequential = sequential
 
     def addTask(self, task, percentage=None):
         subtask = SubTaskWrapper(task, percentage)
         self.subtasks.append(subtask)
+        task.id = '%s-%d' % (self.id,len(self.subtasks))
 
     def reset(self):
         for subtask in self.subtasks:
             subtask.task.reset()
 
     # Starts the task running all subtasks
-    def iterateTasks(self, args=None):
+    def _work(self, args=None):
         self.reset()
 
-        result = None
+        result = args
         for subtask in self.subtasks:
             if self.sequential:
                 #sequential task, run the task work directly (default)
-                result = subtask.task.doTask(result)
+                result = subtask.task.work(result)
             else:
                 #parallel task, run the subtask in its own thread
-                result = subtask.task.doTask(result)
+                result = subtask.task.start(result)
 
         return result
 
+
+    """
+    calculatePercentage - determines the percentage of work that each
+    child task accounts for.
+
+    TODO: take into account tasks that have had weighting manually set. 
+    """
     def calculatePercentage(self):
         return float(1)/len(self.subtasks);
 
+
+    """
+    progress - returns the progress as a number 0-100.  
+
+    A container task's progress is a derivitive of its children.
+    the progress of the child counts for a certain percentage of the 
+    progress of the parent.  This weighting can be set manually or
+    divided evenly by calculatePercentage()
+    """
     def progress(self):
         progress = 0
         for subtask in self.subtasks:
@@ -104,7 +164,7 @@ class TaskContainer(Task):
                 percentage = subtask.percentage
 
             # if task is done it complete 100% of its work 
-            if subtask.task.finished:
+            if subtask.task._status == STATUS_COMPLETE:
                 progress += 100*percentage
             # task is only partially complete
             else:
@@ -112,62 +172,60 @@ class TaskContainer(Task):
 
         return progress
 
+    """ 
+    returns a plain text status message
+    """
+    def progressMessage(self):
+        for subtask in self.subtasks:
+            if subtask.task._status == STATUS_RUNNING:
+                return subtask.task.progressMessage()
 
-class TaskManager():
+        return None
 
-    def __init__(self, task):
-        self.task = task
+    """
+    getStatus - returns status of this task.  A container task's status is 
+    a derivitive of its children.
 
-    def processTask(self, task, tasklist=None, level=0, count=0):
-        # initial call wont have an area yet
-        if tasklist==None:
-            tasklist = []
+    failed - if any children failed, then the task failed
+    running - if any children are running then the task is running
+    paused - paused if no other children are running
+    complete - complete if all children are complete
+    stopped - default response if no other conditions are met
+    """
+    def status(self):
+        has_paused = False;
+        has_unfinished = False;
 
-        #turn the task into a tuple
-        processedTask = [count, task.msg, level, False]
+        for subtask in self.subtasks:
+            subtaskStatus = subtask.task.status()
+            if subtaskStatus == STATUS_RUNNING:
+                # we can return right here because if any child is running the 
+                # container is considered to be running
+                return STATUS_RUNNING
 
-        #add that task to the list
-        tasklist.append(processedTask)
+            elif subtaskStatus == STATUS_FAILED:
+                # we can return right here because if any child failed then the
+                # container is considered to be failed.  All other running tasks
+                # should be stopped on failure.
+                return STATUS_FAILED
 
-        #add all children if the task is a container
-        if isinstance(task,TaskContainer):
-            processedTask[3] = True
-            for subtask in task.subtasks:
-                count+=1
-                self.processTask(subtask.task, tasklist, level+1, count)
+            elif subtaskStatus == STATUS_PAUSED:
+                has_paused = True
 
-        return tasklist
+            elif subtaskStatus <> STATUS_COMPLETE:
+                has_unfinished = True
 
-    def processTaskProgress(self, task, tasklist=None, count=0):
-        # initial call wont have an area yet
-        if tasklist==None:
-            tasklist = []
+        # Task is not running or failed.  If any are paused
+        # then the container is paused
+        if has_paused:
+            return STATUS_PAUSED
 
-        #turn the task into a tuple
-        processedTask = [count, task.progress()]
+        # task is not running, failed, or paused.  if all children are complete then it is complete
+        if not has_unfinished:
+            return STATUS_COMPLETE
 
-        #add that task to the list
-        tasklist.append(processedTask)
+        # only status left it could be is STOPPED
+        return STATUS_STOPPED
 
-        #add all children if the task is a container
-        if isinstance(task,TaskContainer):
-            for subtask in task.subtasks:
-                count+=1
-                self.processTaskProgress(subtask.task, tasklist, count)
 
-        return tasklist
 
-    def listTasks(self):
-        processedTasks = self.processTask(self.task)
-        return simplejson.dumps(processedTasks)
-
-    def progress(self):
-        progress = self.processTaskProgress(self.task)
-        return simplejson.dumps(progress)
-
-    def start(self):
-        self.task.start()
-        return '1'
-
-    def stop(self):
-        pass

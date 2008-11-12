@@ -24,7 +24,6 @@ def showtasks(request):
 
     task_processor(request)
     json_list = taskClient.listTasks()
-    print json_list
     tasks = simplejson.loads(json_list)
 
     t = loader.get_template('tasks.html')
@@ -47,10 +46,12 @@ def taskprogress(request):
 
 def starttask(request):
 
+    key = request.POST['key']
+
     c = RequestContext(request, {
         'MEDIA_URL': settings.MEDIA_URL
     }, [task_processor])
 
-    return HttpResponse(taskClient.start(), mimetype='application/javascript')
+    return HttpResponse(taskClient.start(key), mimetype='application/javascript')
 
 

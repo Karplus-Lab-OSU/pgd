@@ -1,8 +1,8 @@
 from django.conf.urls.defaults import *
 
 # Uncomment the next two lines to enable the admin:
-# from django.contrib import admin
-# admin.autodiscover()
+from django.contrib import admin
+admin.autodiscover()
 
 urlpatterns = patterns('',
     # Example:
@@ -13,5 +13,15 @@ urlpatterns = patterns('',
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    # (r'^admin/(.*)', admin.site.root),
+    (r'^admin/(.*)', admin.site.root),
+    (r'^tasks/', include('pgd.tasks.urls')),
+
 )
+
+#The following is used to serve up local media files like images
+if settings.LOCAL_DEV:
+    baseurlregex = r'^static/(?P<path>.*)$'
+    urlpatterns += patterns('',
+        (baseurlregex, 'django.views.static.serve',
+        {'document_root':  settings.MEDIA_ROOT}),
+    )
