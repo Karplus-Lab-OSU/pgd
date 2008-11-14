@@ -81,4 +81,5 @@ INSTALLED_APPS = (
     'pgd.pgd_core',
     'pgd.pgd_search',
     'pgd.tasks',
+    'pgd.dbsettings',
 )
