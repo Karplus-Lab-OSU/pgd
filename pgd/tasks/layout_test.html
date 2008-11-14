@@ -1,0 +1,121 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+    <head>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery-1.2.6.js"></script>
+        
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.progressbar.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.tabledisplay-0.2.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/json2.js"></script>
+
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/fx.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/fx.highlight.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/gaz.lite.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/gaz.treestore.js"></script>
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/gaz.treeview.js"></script>
+        
+        <script type="text/javascript" src="http://doors.osuosl.org/media/js/jquery.acts_as_tree_table.js"></script>
+
+        <script type="text/javascript">
+
+           
+
+            $(document).ready(function() {
+                $('span[@id*=progressbar-]').progressBar({width:300, barImage: 'http://doors.osuosl.org/media/images/progressbg_yellow_300.gif', boxImage:'http://doors.osuosl.org/media/images/progressbar_300.gif'});
+
+                $('#testtree').acts_as_tree_table({default_state:'collapsed'})
+
+                $("#button-collapse").click(function(evt) {
+                    $('#task1-1').toggle();
+                });
+            });
+
+            function foo(){
+                $('span[@id*=progressbar-]').progressBar(100);
+            }
+
+
+        </script>
+
+        <link rel="stylesheet" type="text/css" href="jquery.acts_as_tree_table.css" />
+        <link rel="stylesheet" type="text/css" href="example.css" />
+
+        <style type="text/css">
+            td.col0{
+                width:15%;
+            }
+        </style>
+
+    </head>
+
+<body>
+
+
+<table id="testtree">
+    <tr id="task1-1" class="expanded">
+        <td class="col0">Example Test</td>
+        <td><span id="progressbar-1"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr id="2" class="child-of-task1-1">
+        <td >Test1, subtask 2</td>
+        <td><span id="progressbar-2"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr id="3" class="child-of-task1-1">
+        <td  >Test1, subtask2</td>
+        <td><span id="progressbar-3"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr id="4"  class="child-of-3">
+        <td >Test1, subtask2</td>
+        <td><span id="progressbar-4"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr  id="5">
+        <td >Test1, subtask2</td>
+        <td><span id="progressbar-5"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+    <tr  id="6">
+        <td  >Test1, subtask 3</td>
+        <td><span id="progressbar-6"/></td>
+        <td>
+            <span class="hide" onclick="hide(this);">&nbsp;</span>
+            <span class="show" onclick="show(this);">&nbsp;</span>
+        </td>
+    </tr>
+<table>
+
+<br/><br/>
+<br/>
+
+<button onclick="foo();">foo</button>
+<button id="button-collapse">collapse</button>
+<button id="button-expand">expand</button>
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

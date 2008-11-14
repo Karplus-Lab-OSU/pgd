@@ -40,7 +40,7 @@ MEDIA_ROOT = '/home/davidsjo/pgdmedia/'
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = ''
+MEDIA_URL = 'http://doors.osuosl.org/media/'
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
@@ -48,7 +48,7 @@ MEDIA_URL = ''
 ADMIN_MEDIA_PREFIX = '/media/'
 
 # Make this unique, and don't share it with anybody.
-SECRET_KEY = 'gylzuha!cuot^e5+#w7a_!br$ey9@7%s2974f=+h&x)5y3=j4n'
+SECRET_KEY = 'g3#f517j(b4$ze*3_8pi3i$=1@mk=fnbb_gunjwk_f8whrbo=a'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
@@ -69,6 +69,7 @@ TEMPLATE_DIRS = (
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
+    '/home/peter/wrk/pgd/pgd/templates'
 )
 
 INSTALLED_APPS = (
@@ -76,6 +77,9 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.admin',
     'pgd.pgd_core',
-    'pgd.pgd_search'
+    'pgd.pgd_search',
+    'pgd.tasks',
+    'pgd.dbsettings',
 )
