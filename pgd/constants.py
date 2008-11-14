@@ -37,3 +37,25 @@ SS_CHOICES = (
 	('B', 'Isolated beta-bridge'),
 	('S', 'bend'),
 )
+
+def pack_dict(label,object,limit):
+	mydict = dict(("%s_%d" % (label,key), object()) for key in range(limit))
+	mydict['__module__'] = 'pgd.tasks.models'
+	return mydict
+
+# subscripter is a way to make a property subscriptable
+# this allows you to reference properties by index
+class Subscripter():
+    def __init__(self, key, parent):
+        self.key = key
+        self.parent = parent
+        #add this instance to the parent. doing this here
+        #makes defining subscriptor instance simpler because
+        #you only need to specify the key once
+        parent.__dict__[key] = self
+
+    def __getitem__(self, i):
+        return self.parent.__dict__['%s_%d' % (self.key, i)]
+
+    def __setitem__(self, i, val):
+        self.parent.__dict__['%s_%d' % (self.key, i)] = val
