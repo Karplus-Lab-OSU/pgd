@@ -1,5 +1,5 @@
 from django.db import models
-from pgd.constants import AA_CHOICES, SS_CHOICES
+from pgd.constants import AA_CHOICES, SS_CHOICES, pack_dict, Subscripter
 
 class Protein(models.Model):
 	code = models.CharField(max_length=4, primary_key=True, unique=True)
@@ -39,6 +39,7 @@ class Residue(models.Model):
 	ome = models.FloatField()
 	bm = models.FloatField()
 	bs = models.FloatField()
+	bg = models.FloatField()
 	h_bond_energy = models.FloatField()
 	zeta = models.FloatField()
 	terminal_flag = models.BooleanField() 
