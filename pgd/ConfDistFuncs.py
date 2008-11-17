@@ -1,4 +1,3 @@
-<?php    
 
    #--------------------------------------------------------------------------------------------------------------------
    # File: CleanDB.php
@@ -7,7 +6,7 @@
    # Date: 9/28/05
    # Use: Use ConfDistPlot to create a plot, other classes are used by ConfDistPlot
    #-------------------------------------------------------------------------------------------------------------------
-        
+
 
 #-------------------------------------------------------------------------------------------------------------------
 # Stores a coordinate including actualy x,y values and x,y translated to pixel space
@@ -284,7 +283,7 @@ class ConfDistPlot():
     # query:            sql query to use to get data for the plot
     # ref:                reference attribute for shading
     # ******************************************************
-    def __init__(self, x, y, xO, yO, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, query, table, ref)
+    def __init__(self, x, y, xO, yO, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, code, ref)
         self.xSize = x
         self.ySize = y
         self.xOff = xO
@@ -307,14 +306,15 @@ class ConfDistPlot():
         self.yText = yText
 
         self.maxObs = 0
-        self.points = array()
+        self.points = []
         self.bin = NULL
         self.plotBin = NULL
 
-        self.theQuery = query
-        self.SetQuery(query)        # Runs the query
-        self.MakeBasicImage()        #Creates the basic image
-        self.table = table
+        #self.theQuery = query
+        #self.SetQuery(query)        # Runs the query
+        #self.MakeBasicImage()        #Creates the basic image
+        #self.table = table
+        self.code = code
 
         # Reference array that contains information for a specific type of value
         self.REF = {
@@ -389,7 +389,7 @@ class ConfDistPlot():
     # Makes the basics of the image
     # which consists of the X,Y axis and markings
     # ******************************************************
-    def MakeBasicImage(self):
+  '''  def MakeBasicImage(self):
     
         self.img = imagecreatetruecolor(self.xSize, self.ySize)
         self.white = imagecolorallocate( self.img, 255, 255, 255)
@@ -491,22 +491,22 @@ class ConfDistPlot():
                                    self.yText,
                                    self.black )
 
-
-    # ******************************************************
+'''
+'''    # ******************************************************
     # Displays the image
     # ******************************************************
     def DisplayImage(self):
         imagepng(self.img)
         imagedestroy(self.img)
+'''
 
-
-    # ******************************************************
+'''    # ******************************************************
     # Write image to file
     # ******************************************************
     def ImageToFile(self, file):
         imagepng(self.img, file)
-
-    # ******************************************************
+'''
+ '''   # ******************************************************
     # Sets the query used to populate points in the image
     # ******************************************************
     def SetQuery(self, str)
@@ -514,8 +514,8 @@ class ConfDistPlot():
         ConnectToDB()
         self.queryResult = mysql_query(str)
         CheckQuery(self.queryResult)
-
-
+'''
+'''
     # ******************************************************
     # Pulls up a specific detail about the bin
     # ******************************************************
@@ -533,7 +533,8 @@ class ConfDistPlot():
             obs++
 
         return sum / obs
-
+'''
+'''
     # ******************************************************
     # Creates an image map that provides tip text for areas on the plot
     # ******************************************************
@@ -593,7 +594,7 @@ class ConfDistPlot():
 
         echo "</MAP>"
         reset(self.plotBin.bins)
-
+'''
     # ******************************************************
     # Returns reference values used
     # key: value of interest
@@ -666,43 +667,31 @@ class ConfDistPlot():
         colorStep = 0
 
         #Observations setup
-        if( key == 'Observations' )
-            switch (val): 
-                case val <= 1:
-                        colorStep = self.REF['Observations'][1]
-                        break
-                case val <= 2:
-                        colorStep = self.REF['Observations'][2]
-                        break
-                case val <= 5:
-                        colorStep = self.REF['Observations'][3]
-                        break
-                case val <= 10:
-                        colorStep = self.REF['Observations'][4]
-                        break
-                case val <= 25:
-                        colorStep = self.REF['Observations'][5]
-                        break
-                case val <= 50:
-                        colorStep = self.REF['Observations'][6]
-                        break
-                case val <= 100:
-                        colorStep = self.REF['Observations'][7]
-                        break
-                case val <= 250:        
-                        colorStep = self.REF['Observations'][8]
-                        break
-                case val <= 500:        
-                        colorStep = self.REF['Observations'][9]
-                        break
-                case val <= 1000:        
-                        colorStep = self.REF['Observations'][10]
-                        break
-                default:
-                        colorStep = 0
-            endswitch
+        if key == 'Observations':
+            if val == 1:
+                    colorStep = self.REF['Observations'][1]
+            elif val == 2:
+                    colorStep = self.REF['Observations'][2]
+            elif val == 5:
+                    colorStep = self.REF['Observations'][3]
+            elif val == 10:
+                    colorStep = self.REF['Observations'][4]
+            elif val == 25:
+                    colorStep = self.REF['Observations'][5]
+            elif val == 50:
+                    colorStep = self.REF['Observations'][6]
+            elif val == 100:
+                    colorStep = self.REF['Observations'][7]
+            elif val == 250:
+                    colorStep = self.REF['Observations'][8]
+            elif val == 500:
+                    colorStep = self.REF['Observations'][9]
+            elif val == 1000:
+                    colorStep = self.REF['Observations'][10]
+            else:
+                    colorStep = 0
 
-        else
+        else:
             variance = val - self.USEREF[key]['ref'] # Variance from the reference value
             colorStep = round(variance / self.USEREF[key]['stepsize'], 0 ) # color to be used based on how far from teh reference value
             if( colorStep < -10 ) colorStep = -10    # Bounds on the color
@@ -719,9 +708,11 @@ class ConfDistPlot():
     def PlotPoints(self):
 
         # Only bins need to be painted, so cycle through the bins
-        while( list(xBin, yArr) = each(self.plotBin.bins) )
+        for xBin, yArr in self.plotBin.bins:
+        #while( list(xBin, yArr) = each(self.plotBin.bins) )
 
-            while( list(yBin, binVal) = each(yArr) )
+            for yBin, binVal in yArr:
+            #while( list(yBin, binVal) = each(yArr) )
 
                 # Determine actual image location of the bin
                 x = xBin * self.plotBin.xLen
@@ -729,32 +720,33 @@ class ConfDistPlot():
                 xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
                 yC = ((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
 
-                if( x < self.xRange[0] || x > self.xRange[1] )
+                if x < self.xRange[0] || x > self.xRange[1]:
                     break
-                if( y < self.yRange[0] || y > self.yRange[1] )
+                if y < self.yRange[0] || y > self.yRange[1]:
                     break
 
-                # Bins are an area of pixel space, find the rectangle that describes
-                # the area the bin uses
+        # Bins are an area of pixel space, find the rectangle that describes
+        # the area the bin uses
         xMin = floor(xC)
-            xMax = xMin + round(self.plotBin.xLen / self.xPixelSize)
-            yMax = floor(yC)
-            yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
+        xMax = xMin + round(self.plotBin.xLen / self.xPixelSize)
+        yMax = floor(yC)
+        yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
 
-                # The number of observations in the bin and the max number of observations
-                num = self.plotBin.GetObs(x, y)
+        # The number of observations in the bin and the max number of observations
+        num = self.plotBin.GetObs(x, y)
 
-                # As long as there is an observation, plot the rectangle for the bin
-                if( num >= 1 )
+        # As long as there is an observation, plot the rectangle for the bin
+        if( num >= 1 ):
+            # Special Case for # obs
+            if self.ref == "Observations":
+                color = self.DetermineColor( self.ref, num)
+            else:
+                color = self.DetermineColor( self.ref, self.plotBin.bins[xBin][yBin].GetAvg(self.ref) )
+            self.plotBin.bins[xBin][yBin].SetColorStep(color[4])
 
-                    # Special Case for # obs
-                    if( self.ref == "Observations" )
-                        color = self.DetermineColor( self.ref, num)
-                    else
-                        color = self.DetermineColor( self.ref, self.plotBin.bins[xBin][yBin].GetAvg(self.ref) )
-                    self.plotBin.bins[xBin][yBin].SetColorStep(color[4])
-                    paintcolor = imagecolorallocate(self.img, color[0], color[1], color[2])
-                    imagefilledrectangle(self.img, xMin+1, yMin+1, xMax-1, yMax-1, paintcolor)
+            # paint rectangle
+            paintcolor = imagecolorallocate(self.img, color[0], color[1], color[2])
+            imagefilledrectangle(self.img, xMin+1, yMin+1, xMax-1, yMax-1, paintcolor)
 
         reset(self.plotBin.bins)
 
@@ -765,21 +757,23 @@ class ConfDistPlot():
     def Plot(self):
 
         # Turn all the query results into an array of points
-        while( row = mysql_fetch_array(self.queryResult) )
+        protein = Protein.objects.filter(code=self.code)
+        for residue in protein.residues():
+        #while( row = mysql_fetch_array(self.queryResult) )
 
-            code = row['code']
-            id = row['id']
-            xOrig = row[self.xText]    # Original Values of X and Y
-            yOrig = row[self.yText]
+            #code = residue.code
+            #id = residue.id
 
-            x = (row[self.xText]  - (self.xRange[0])) / self.xPixelSize + self.xOff
-            y = (-1 * row[self.yText] + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff
+            xOrig = residue.__dict__[self.xText]    # Original Values of X and Y
+            yOrig = residue.__dict__[self.yText]
 
-            array_push(self.points, new Coord(xOrig, yOrig, x, y, row)) 
+            x = (xOrig  - (self.xRange[0])) / self.xPixelSize + self.xOff
+            y = (yOrig + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff
 
+            self.points.append(Coord(xOrig, yOrig, x, y, residue.id))
 
         # Create a bins for the values
-        self.plotBin = new Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
+        self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
         # Plot the bad boy
         self.PlotPoints()
@@ -788,7 +782,7 @@ class ConfDistPlot():
     # *******************************************************************************
     # Prints out the query results in a dump file
     # *******************************************************************************
-    def PrintDump(self):
+    '''def PrintDump(self):
 
         # Determine the file name for a dump
         handle = NULL
@@ -873,4 +867,4 @@ class ConfDistPlot():
                 out .= "\n"
 
         fwrite( handle, out )
-
+'''

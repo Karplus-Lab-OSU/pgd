@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     (r'^admin/(.*)', admin.site.root),
     (r'^tasks/', include('pgd.tasks.urls')),
     (r'^settings/', include('pgd.dbsettings.urls')),
-
+    (r'^svg/*', include('pgd.svg.urls')),
 )
 
 #The following is used to serve up local media files like images
