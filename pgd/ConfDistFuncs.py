@@ -7,6 +7,10 @@
    # Use: Use ConfDistPlot to create a plot, other classes are used by ConfDistPlot
    #-------------------------------------------------------------------------------------------------------------------
 
+from pgd_core.models import *
+from constants import *
+import math
+from svg.views import *
 
 #-------------------------------------------------------------------------------------------------------------------
 # Stores a coordinate including actualy x,y values and x,y translated to pixel space
@@ -35,16 +39,6 @@ class Coord():
 #-------------------------------------------------------------------------------------------------------------------
 class Bin():
 
-    xLen   = None
-    yLen   = None        # bounding box 
-    xMin   = None
-    xMax   = None
-    yMin   = None 
-    yMax   = None     # Boundaries
-    points = None    # Array of points
-    bins   = None        # Bins
-    maxObs = None
-
     # ******************************************************
     # Constructor
     # ******************************************************
@@ -55,6 +49,7 @@ class Bin():
         self.xMax = xMax
         self.yMin = yMin
         self.yMax = yMax
+        self.bins   = {}        # Bins
         self.points = points # list of points
         self.maxObs = 0 # initial max observed
         self.MakeBins() # Create the bins
@@ -65,7 +60,7 @@ class Bin():
     def GetBinCoords(self, x, y):
         # Find the bin by dividing the coordinate by the bounding box length, rounding down
         # and then re-applying the length. I'm not sure why I did self ...
-        xFloor = floor( x / self.xLen )
+        xFloor = math.floor( x / self.xLen )
         xFloor = self.xLen * xFloor
 
         yFloor = floor ( y / self.yLen )
@@ -73,8 +68,8 @@ class Bin():
 
         # Create a coordinate for the x and y bins that specificies the minimum and maximum
         # for the bin
-        coords[0] = new Coord(xFloor, xFloor + self.xLen, 0, 0, NULL) 
-        coords[1] = new Coord(yFloor, yFloor + self.yLen, 0, 0, NULL)
+        coords[0] = Coord(xFloor, xFloor + self.xLen, 0, 0, NULL) 
+        coords[1] = Coord(yFloor, yFloor + self.yLen, 0, 0, NULL)
 
         return coords
 
@@ -84,9 +79,10 @@ class Bin():
     # x and y represent x and y pixel location
     # ******************************************************
     def GetBin(self, x, y):
-        xBin = floor( x / self.xLen )
-        yBin = floor( y / self.yLen )
-        return self.bins[xBin][yBin]
+        xBin = math.floor( x / self.xLen )
+        yBin = math.floor( y / self.yLen )
+        key = '%s-%s' % (xBin,yBin)
+        return self.bins[key]
 
     # ******************************************************
     # Get the number of observations at a particular bin
@@ -104,21 +100,23 @@ class Bin():
 
         for i in range(len(self.points)):
             # Determine which bin a particular point belongs to
-            xBin = floor( self.points[i].x / self.xLen )
-            yBin = floor( self.points[i].y / self.yLen )
+            xBin = math.floor( self.points[i].x / self.xLen )
+            yBin = math.floor( self.points[i].y / self.yLen )
+
+            key = '%s-%s' % (xBin,yBin)
 
             # If no bin currently exists, make a new binpoint
-            if self.bins[xBin][yBin] <> None:
-                self.bins[xBin][yBin] = new BinPoint( self.points[i], self.points[i].xP, self.points[i].yP, xBin, yBin )
-            # otherwise add to the bin a new observation
+
+            if self.bins.has_key(key):
+                # add to the bin a new observation
+                self.bins[key].AddObs( self.points[i] )
+            #otherwise create the bin
             else:
-                self.bins[xBin][yBin].AddObs( self.points[i] )
+                self.bins[key] = BinPoint( self.points[i], self.points[i].xP, self.points[i].yP, xBin, yBin )
 
             # if the bin now holds the max number of observations, increased the max num of observations for ANY bin
-            if self.bins[xBin][yBin].numObs > self.maxObs:
-                self.maxObs = self.bins[xBin][yBin].numObs
-
-
+            if self.bins[key].numObs > self.maxObs:
+                self.maxObs = self.bins[key].numObs
 
 #-------------------------------------------------------------------------------------------------------------------
 # Class that contains information regarding an individual bin in a plot
@@ -129,7 +127,7 @@ class BinPoint():
     avg       = None    # average for the bin    
     sum       = None    # sum of all data
     deviation = None    # standard deviation of data            
-    obs       = None    # Array of observations
+    obs       = []    # Array of observations
     xP        = None    # X in pixel space
     yP        = None    # Y in pixel space
     colorStep = None    # The color that should be used for the bin
@@ -144,8 +142,8 @@ class BinPoint():
         self.xP = xP
         self.yP = yP
         self.numObs = 0
-        self.avg = NULL
-        self.colorStep = NULL
+        self.avg = None
+        self.colorStep = None
         self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
         self.xBin = xBin
         self.yBin = yBin
@@ -182,8 +180,8 @@ class BinPoint():
     # Saves original data x, y into the observation array
     # ******************************************************
     def AddObs(self, coord):
-        self.obs[self.numObs] = coord
-        self.numObs++
+        self.obs.append(coord)
+        self.numObs = self.numObs + 1
 
 
     # ******************************************************
@@ -211,6 +209,7 @@ class BinPoint():
         if self.numObs > 1:
             self.dev[key] = sqrt(sum / ( self.numObs - 1 ))
 
+        
 
     # ******************************************************
     # Returns the average for a specificed value, such as phi, psi, L1 ...
@@ -283,32 +282,32 @@ class ConfDistPlot():
     # query:            sql query to use to get data for the plot
     # ref:                reference attribute for shading
     # ******************************************************
-    def __init__(self, x, y, xO, yO, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, code, ref)
+    def __init__(self, x, y, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, code, ref):
         self.xSize = x
         self.ySize = y
-        self.xOff = xO
-        self.yOff = yO
+        self.xOff = xOffset
+        self.yOff = yOffset
+        self.xPadding = xPadding
+        self.yPadding = yPadding
         self.ref = ref
         self.xbin = xbin
         self.ybin = ybin
 
         # Plotting region is the space allowed inside the image
         # excluding the border area of offsets
-        self.xPlotSize = self.xSize - 2 * self.xOff
-        self.yPlotSize = self.ySize - 2 * self.yOff
-        self.xRange[0] = xMin
-        self.xRange[1] = xMax
-        self.yRange[0] = yMin
-        self.yRange[1] = yMax
-        self.xPixelSize = (self.xRange[1] - self.xRange[0]) / self.xPlotSize    # Range / PlotSize = PixelSize
-        self.yPixelSize = (self.yRange[1] - self.yRange[0]) / self.yPlotSize  
+        self.xPlotSize = self.xSize - 2 * self.xPadding
+        self.yPlotSize = self.ySize - 2 * self.yPadding
+        self.xRange = [xMin, xMax]
+        self.yRange = [yMin, yMax]
+
+        self.xPixelSize = (self.xRange[1] - self.xRange[0]) / float(self.xPlotSize)    # Range / PlotSize = PixelSize
+        self.yPixelSize = (self.yRange[1] - self.yRange[0]) / float(self.yPlotSize)
         self.xText = xText
         self.yText = yText
-
         self.maxObs = 0
         self.points = []
-        self.bin = NULL
-        self.plotBin = NULL
+        self.bin = None
+        self.plotBin = None
 
         #self.theQuery = query
         #self.SetQuery(query)        # Runs the query
@@ -318,283 +317,72 @@ class ConfDistPlot():
 
         # Reference array that contains information for a specific type of value
         self.REF = {
-                    'phi': {'ref':180, 'stepsize':1, 'custom':false},
-                    'Observations': (-10, -7, -4, -1, 2, 5, 8, 10, 10 ),
+                    'phi': {'ref':180, 'stepsize':1, 'custom':False},
+                    'Observations': [-10, -7, -4, -1, 2, 5, 8, 10, 10 ],
                     'L1': { 
                             'ref':1.330, 
                             'stepsize':0.0025, 
                             'custom': 
-                            false},
+                            False},
                     'L2': { 
                             'ref': 1.465, 
-                            'custom':false, 
+                            'custom':False, 
                             'stepsize':0.005},
                     'L3': { 
                             'ref': 1.530,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':0.005},
                     'L4': { 
                             'ref':1.525,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':0.005},
                     'L5': { 
                             'ref': 1.240,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':0.005},
                     'L6': { 
                             'ref': 1.330,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':0.005},
                     'L7': { 
                             'ref': 1.465,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':0.005},
                     'a1': { 
                             'ref': 121,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1},
                     'a2': { 
                             'ref': 110,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1},
                     'a3': { 
                             'ref': 110,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1},
                     'a4': { 
                             'ref': 110,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1},
                     'a5': { 
                             'ref': 120,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':0.5},
                     'a6': { 
                             'ref': 117,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1},
                     'a7': { 
                             'ref': 123,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1},
                     'ome': { 
                             'ref': 180,
-                            'custom':false,
+                            'custom':False,
                             'stepsize':1}
                  }
-            self.USEREF = self.REF
+        self.USEREF = self.REF
 
-
-    # ******************************************************
-    # Makes the basics of the image
-    # which consists of the X,Y axis and markings
-    # ******************************************************
-  '''  def MakeBasicImage(self):
-    
-        self.img = imagecreatetruecolor(self.xSize, self.ySize)
-        self.white = imagecolorallocate( self.img, 255, 255, 255)
-        self.black = imagecolorallocate( self.img,   0,   0,   0)
-        self.bkg = imagecolorallocate( self.img, 255, 255, 204)
-        imagefill( self.img, 0, 0, self.bkg )
-        imagerectangle( self.img,
-                                        self.xOff,
-                                        self.yOff,
-                                        (self.xOff + self.xPlotSize),
-                                        (self.yOff + self.yPlotSize),
-                                        self.black                 )
-
-        # Left side descriptions 
-        # Start at offset, which is the base of the plot and move to the other side
-        # painting hashes at intervals that are 1/8 of the total
-        # and painting numerics at intervals that are 1/4 of the total
-        self.fontSize = 2
-        self.fontWidth = imagefontwidth(self.fontSize)
-        self.fontHeight = imagefontheight(self.fontSize)
-
-        paintString = true
-        for( y=self.yOff y <= self.yPlotSize+self.yOff y=y+0.125*self.yPlotSize )
-            imageline( self.img, self.xOff, y, self.xOff - 5, y, self.black )
-            if( paintString)
-
-                str = self.yRange[1]-(y-self.yOff)*self.yPixelSize # Top Value - pixel location * pixel "value"
-                imagestring( self.img,
-                                         self.fontSize,
-                                         self.xOff - strlen(str) * self.fontWidth - self.fontWidth * 1,
-                                         y - self.fontHeight/2,
-                                         str,
-                                         self.black )
-
-            paintString = !paintString
-
-        # Bottom side descriptions
-        paintString = true
-        for( x=self.xOff x <= self.xPlotSize+self.xOff x=x+0.125*self.xPlotSize )
-
-            imageline( self.img, x, self.yPlotSize+self.yOff, x, self.yPlotSize+self.yOff+5, self.black )
-            if( paintString )
-
-                str = self.xRange[0]+(x-self.xOff)*self.xPixelSize
-                imagestring( self.img,
-                                         self.fontSize,
-                                         x - strlen(str)*self.fontWidth/2,
-                                         self.yPlotSize + self.fontHeight/2 + self.yOff,
-                                         str,
-                                         self.black )
-            paintString = !paintString
-
-
-        # Dotted lines 
-        style = array( self.black, self.white, self.white )
-        imagesetstyle( self.img, style )
-        imageline(self.img,
-                            self.xOff,
-                            self.yOff + self.yPlotSize/2,
-                            self.xOff + self.xPlotSize,
-                            self.yOff + self.yPlotSize/2,
-                            IMG_COLOR_STYLED)
-        imageline(self.img,
-                            self.xOff + self.xPlotSize/2,
-                            self.yOff,
-                            self.xOff + self.xPlotSize/2,
-                            self.yOff + self.yPlotSize,
-                            IMG_COLOR_STYLED)
-
-        # Label Text
-        text = "Plot of self.xText vs. self.yText"
-        text2 = "Shading Based Off of self.ref"
-        imagestring( self.img,
-                               self.fontSize,
-                                 self.xPlotSize/2 + self.xOff - strlen(text)*self.fontWidth/2,
-                                 3,
-                                 text,
-                                 self.black )
-        imagestring( self.img,
-                               self.fontSize,
-                                 self.xPlotSize/2 + self.xOff - strlen(text2)*self.fontWidth/2,
-                                 15,
-                                 text2,
-                                 self.black )
-
-
-        # X text
-        imagestring( self.img,
-                                 self.fontSize, 
-                                 self.xPlotSize/2 + self.xOff - strlen(self.xText)*self.fontWidth/2,
-                                 self.yPlotSize+self.yOff + self.fontHeight*1.25,
-                                 self.xText,
-                                 self.black )
-        # Y text
-        imagestringup( self.img,
-                                     self.fontSize, 
-                                     self.xOff - strlen(str) * self.fontWidth - self.fontWidth * 1 - 5,
-                                   self.yPlotSize/2 + self.yOff + strlen(self.yText)*self.fontWidth/2,
-                                   self.yText,
-                                   self.black )
-
-'''
-'''    # ******************************************************
-    # Displays the image
-    # ******************************************************
-    def DisplayImage(self):
-        imagepng(self.img)
-        imagedestroy(self.img)
-'''
-
-'''    # ******************************************************
-    # Write image to file
-    # ******************************************************
-    def ImageToFile(self, file):
-        imagepng(self.img, file)
-'''
- '''   # ******************************************************
-    # Sets the query used to populate points in the image
-    # ******************************************************
-    def SetQuery(self, str)
-        self.theQuery = str
-        ConnectToDB()
-        self.queryResult = mysql_query(str)
-        CheckQuery(self.queryResult)
-'''
-'''
-    # ******************************************************
-    # Pulls up a specific detail about the bin
-    # ******************************************************
-    def GetMapDetail(self, bin, detail)
-        sum = 0
-        obs = 0
-
-        foreach( bin.obs as value )
-            query = "SELECT detail FROM " . self.table . " WHERE "
-                            ."code = '".value.code."' AND id = ". value.id
-            result = mysql_query(query)
-            CheckQuery(result)
-            row = mysql_fetch_array(result)
-            sum += row[detail]
-            obs++
-
-        return sum / obs
-'''
-'''
-    # ******************************************************
-    # Creates an image map that provides tip text for areas on the plot
-    # ******************************************************
-    def MakeMap(self, name):
-
-        echo "<MAP NAME=\"name\">\n"
-        # Cycle through the bin areas
-        while( list(xBin, yArr) = each(self.plotBin.bins) )
-
-            while( list(yBin, binVal) = each(yArr) )
-
-                # x and y points
-                x = xBin * self.plotBin.xLen
-                y = yBin * self.plotBin.yLen
-                # Actual x and y coordinates
-                xC = round((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
-
-                if( x < self.xRange[0] || x > self.xRange[1] )
-                    break
-                if( y < self.yRange[0] || y > self.yRange[1] )
-                    break
-
-                yC = round((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
-
-                scriptVar = "tt" . (xC*100) . yC
-                box = self.plotBin.GetBinCoords(x, y)
-                str = "scriptVar = \"" 
-                            . "Phi: ". box[0].x . " - " . box[0].y . "<BR>"
-                            . "Psi: ". box[1].x . " - " . box[1].y . "<BR>"
-                            . "Observations: " . binVal.numObs. "<BR>"
-                            . "Avg Phi: " . round(binVal.GetAvg('phi'), 1) . " (" . round(binVal.GetDev('phi'), 3) . ")<BR>"
-                            . "Avg Psi: " . round(binVal.GetAvg('psi'), 1) . " (" . round(binVal.GetDev('psi'), 3) . ")<BR>"
-                            . "Avg L1: " . round(binVal.GetAvg('L1'), 3) . " (" . round(binVal.GetDev('L1'), 3) . ")<BR>"
-                            . "Avg L2: " . round(binVal.GetAvg('L2'), 3) . " (" . round(binVal.GetDev('L2'), 3) . ")<BR>"
-                            . "Avg L3: " . round(binVal.GetAvg('L3'), 3) . " (" . round(binVal.GetDev('L3'), 3) . ")<BR>"
-                            . "Avg L4: " . round(binVal.GetAvg('L4'), 3) . " (" . round(binVal.GetDev('L4'), 3) . ")<BR>"
-                            . "Avg L5: " . round(binVal.GetAvg('L5'), 3) . " (" . round(binVal.GetDev('L5'), 3) . ")<BR>"
-                            . "Avg A1: " . round(binVal.GetAvg('a1'), 3) . " (" . round(binVal.GetDev('a1'), 3) . ")<BR>"
-                            . "Avg A2: " . round(binVal.GetAvg('a2'), 3) . " (" . round(binVal.GetDev('a2'), 3) . ")<BR>"
-                            . "Avg A3: " . round(binVal.GetAvg('a3'), 3) . " (" . round(binVal.GetDev('a3'), 3) . ")<BR>"
-                            . "Avg A4: " . round(binVal.GetAvg('a4'), 3) . " (" . round(binVal.GetDev('a4'), 3) . ")<BR>"
-                            . "Avg A5: " . round(binVal.GetAvg('a5'), 3) . " (" . round(binVal.GetDev('a5'), 3) . ")<BR>"
-                            . "Avg A6: " . round(binVal.GetAvg('a6'), 3) . " (" . round(binVal.GetDev('a6'), 3) . ")<BR>"
-                            . "Avg A7: " . round(binVal.GetAvg('a7'), 3) . " (" . round(binVal.GetDev('a7'), 3) . ")<BR>"
-                            . "Avg Ome: " . round(binVal.GetAvg('ome'), 1) . " (" . round(binVal.GetDev('ome'), 3) . ")<BR>"
-                            . "Color Interval: " . binVal.GetColor() . "<BR>"
-                            . "Bin: xBin, yBin <BR>"
-                            . "\""
-                echo "<SCRIPT>str</SCRIPT>"
-                echo "<AREA SHAPE=RECT COORDS=\""
-                echo round(xC) . ","
-                echo round(yC) . ","
-                echo round(xC+(self.plotBin.xLen / self.xPixelSize)) . ","
-                echo round(yC-(self.plotBin.yLen / self.yPixelSize)) . "\""
-                #echo " onMouseOver=\"tt(scriptVar,50)\" onMouseOut=\"htm()\">\n"
-                echo " onMouseOver=\"tt(scriptVar,10,10)\" onMouseOut=\"\" onMouseClick=\"\">\n"
-
-        echo "</MAP>"
-        reset(self.plotBin.bins)
-'''
     # ******************************************************
     # Returns reference values used
     # key: value of interest
@@ -619,7 +407,7 @@ class ConfDistPlot():
     # Resets reference value for a certain key
     # key: variable
     # ******************************************************
-    def ResetRefAttrib(self, key)
+    def ResetRefAttrib(self, key):
         self.USEREF[key] = self.REF[key]
 
     # ******************************************************
@@ -628,28 +416,28 @@ class ConfDistPlot():
     # ******************************************************
     def CreateColors(self, colorInterval):
 
-    COLORS = { 
-                        -10 :(colorInterval * 0,colorInterval * 0,colorInterval * 0),
-                         -9 :(colorInterval * 1,colorInterval * 1,colorInterval * 1),
-                         -8 :(colorInterval * 2,colorInterval * 2,colorInterval * 2),
-                         -7 :(colorInterval * 3,colorInterval * 3,colorInterval * 3),
-                         -6 :(colorInterval * 4,colorInterval * 4,colorInterval * 4),
-                         -5 :(colorInterval * 5,colorInterval * 5,colorInterval * 5),
-                         -4 :(colorInterval * 6,colorInterval * 6,colorInterval * 6),
-                         -3 :(colorInterval * 7,colorInterval * 7,colorInterval * 7),
-                         -2 :(colorInterval * 8,colorInterval * 8,colorInterval * 8),
-                         -1 :(colorInterval * 9,colorInterval * 9,colorInterval * 9),
-                         0  :( colorInterval * 10,colorInterval * 10,colorInterval * 10),
-                         1  :( colorInterval * 11,colorInterval * 11,colorInterval * 11),
-                         2  :( colorInterval * 12,colorInterval * 12,colorInterval * 12),
-                         3  :( colorInterval * 13,colorInterval * 13,colorInterval * 13),
-                         4  :( colorInterval * 14,colorInterval * 14,colorInterval * 14),
-                         5  :( colorInterval * 15,colorInterval * 15,colorInterval * 15),
-                         6  :( colorInterval * 16,colorInterval * 16,colorInterval * 16),
-                         7  :( colorInterval * 17,colorInterval * 17,colorInterval * 17),
-                         8  :( colorInterval * 18,colorInterval * 18,colorInterval * 18),
-                         9  :( colorInterval * 19,colorInterval * 19,colorInterval * 19),
-                         10 :( colorInterval * 20,colorInterval * 20,colorInterval * 20)
+        COLORS = {
+                        -10 :[colorInterval * 0,colorInterval * 0,colorInterval * 0],
+                         -9 :[colorInterval * 1,colorInterval * 1,colorInterval * 1],
+                         -8 :[colorInterval * 2,colorInterval * 2,colorInterval * 2],
+                         -7 :[colorInterval * 3,colorInterval * 3,colorInterval * 3],
+                         -6 :[colorInterval * 4,colorInterval * 4,colorInterval * 4],
+                         -5 :[colorInterval * 5,colorInterval * 5,colorInterval * 5],
+                         -4 :[colorInterval * 6,colorInterval * 6,colorInterval * 6],
+                         -3 :[colorInterval * 7,colorInterval * 7,colorInterval * 7],
+                         -2 :[colorInterval * 8,colorInterval * 8,colorInterval * 8],
+                         -1 :[colorInterval * 9,colorInterval * 9,colorInterval * 9],
+                         0  :[ colorInterval * 10,colorInterval * 10,colorInterval * 10],
+                         1  :[ colorInterval * 11,colorInterval * 11,colorInterval * 11],
+                         2  :[ colorInterval * 12,colorInterval * 12,colorInterval * 12],
+                         3  :[ colorInterval * 13,colorInterval * 13,colorInterval * 13],
+                         4  :[ colorInterval * 14,colorInterval * 14,colorInterval * 14],
+                         5  :[ colorInterval * 15,colorInterval * 15,colorInterval * 15],
+                         6  :[ colorInterval * 16,colorInterval * 16,colorInterval * 16],
+                         7  :[ colorInterval * 17,colorInterval * 17,colorInterval * 17],
+                         8  :[ colorInterval * 18,colorInterval * 18,colorInterval * 18],
+                         9  :[ colorInterval * 19,colorInterval * 19,colorInterval * 19],
+                         10 :[ colorInterval * 20,colorInterval * 20,colorInterval * 20]
                        }
         return COLORS
 
@@ -663,7 +451,23 @@ class ConfDistPlot():
 
         colorMax = 255 # Maximum color value
         colorInterval = round(255 / 21, 0 )    # intervals of color
-        COLORS = self.CreateColors(colorInterval)
+        #COLORS = self.CreateColors(colorInterval)
+
+        # use ranges for RGB to introduce colorful steps
+        COLORS = {}
+        redStart = 0;
+        greenStart = 75;
+        blueStart = 0;
+        redInterval = round((255-redStart)/21)
+        greenInterval = round((255-greenStart)/21)
+        blueInterval = round((200-blueStart)/21)
+        for i in range(21):
+            COLORS[i-10] = [
+                i*redInterval+redStart,
+                i*greenInterval+greenStart,
+                i*blueInterval+blueStart,
+            ]
+
         colorStep = 0
 
         #Observations setup
@@ -694,71 +498,78 @@ class ConfDistPlot():
         else:
             variance = val - self.USEREF[key]['ref'] # Variance from the reference value
             colorStep = round(variance / self.USEREF[key]['stepsize'], 0 ) # color to be used based on how far from teh reference value
-            if( colorStep < -10 ) colorStep = -10    # Bounds on the color
-            if( colorStep > 10 ) colorStep = 10
+            if  colorStep < -10:
+                colorStep = -10    # Bounds on the color
+            if colorStep > 10:
+                colorStep = 10
 
         color = COLORS[colorStep]    # Color to be used
-        color[4] = colorStep        # Store color bin after the actual colors, I do self to save the color into the bin at a later point
+        color.append(colorStep)        # Store color bin after the actual colors, I do self to save the color into the bin at a later point
+
         return color
 
 
     # ******************************************************
     # Plots observations
     # ******************************************************
-    def PlotPoints(self):
+    def PlotPoints(self, svg=None):
+        if not svg:
+            svg = SVG()
 
         # Only bins need to be painted, so cycle through the bins
-        for xBin, yArr in self.plotBin.bins:
-        #while( list(xBin, yArr) = each(self.plotBin.bins) )
-
-            for yBin, binVal in yArr:
-            #while( list(yBin, binVal) = each(yArr) )
+        for key in self.plotBin.bins:
+                bin = self.plotBin.bins[key]
 
                 # Determine actual image location of the bin
-                x = xBin * self.plotBin.xLen
-                y = yBin * self.plotBin.yLen
+                
+                x = bin.xBin * self.plotBin.xLen
+                y = bin.yBin * self.plotBin.yLen
                 xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
                 yC = ((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
 
-                if x < self.xRange[0] || x > self.xRange[1]:
-                    break
-                if y < self.yRange[0] || y > self.yRange[1]:
-                    break
+                
+                if x < self.xRange[0] or x > self.xRange[1]:
+                    continue
+                if y < self.yRange[0] or y > self.yRange[1]:
+                    continue
 
-        # Bins are an area of pixel space, find the rectangle that describes
-        # the area the bin uses
-        xMin = floor(xC)
-        xMax = xMin + round(self.plotBin.xLen / self.xPixelSize)
-        yMax = floor(yC)
-        yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
+                # Bins are an area of pixel space, find the rectangle that describes
+                # the area the bin uses
+                xMin = math.floor(xC)
+                xMax = xMin + round(self.plotBin.xLen / self.xPixelSize)
+                yMax = math.floor(yC)
+                yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
 
-        # The number of observations in the bin and the max number of observations
-        num = self.plotBin.GetObs(x, y)
+                # The number of observations in the bin and the max number of observations
+                num = self.plotBin.GetObs(x, y)
 
-        # As long as there is an observation, plot the rectangle for the bin
-        if( num >= 1 ):
-            # Special Case for # obs
-            if self.ref == "Observations":
-                color = self.DetermineColor( self.ref, num)
-            else:
-                color = self.DetermineColor( self.ref, self.plotBin.bins[xBin][yBin].GetAvg(self.ref) )
-            self.plotBin.bins[xBin][yBin].SetColorStep(color[4])
+                # As long as there is an observation, plot the rectangle for the bin
+                if( num >= 1 ):
+                    # Special Case for # obs
+                    if self.ref == "Observations":
+                        color = self.DetermineColor( self.ref, num)
+                    else:
+                        color = self.DetermineColor( self.ref, self.plotBin.bins[key].GetAvg(self.ref) )
 
-            # paint rectangle
-            paintcolor = imagecolorallocate(self.img, color[0], color[1], color[2])
-            imagefilledrectangle(self.img, xMin+1, yMin+1, xMax-1, yMax-1, paintcolor)
+                    self.plotBin.bins['%s-%s'%(bin.xBin,bin.yBin)].SetColorStep(color[-1])
 
-        reset(self.plotBin.bins)
+                    #convert decimal RGB into HEX rgb
+                    fill = '%s%s%s' % (hex(int(color[0]))[2:], hex(int(color[1]))[2:], hex(int(color[2]))[2:])
+
+                    # add rectangle to svg
+                    svg.rect( xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, 1, color='#%s' % fill, fill='#%s' % fill )
+
+        return svg
 
 
     # ******************************************************
     # Plots the points
     # ******************************************************
-    def Plot(self):
+    def Plot(self, svg=None):
 
         # Turn all the query results into an array of points
-        protein = Protein.objects.filter(code=self.code)
-        for residue in protein.residues():
+        protein = Protein.objects.filter(code=self.code)[0]
+        for residue in protein.residues.all():
         #while( row = mysql_fetch_array(self.queryResult) )
 
             #code = residue.code
@@ -776,7 +587,7 @@ class ConfDistPlot():
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
         # Plot the bad boy
-        self.PlotPoints()
+        return self.PlotPoints(svg)
 
 
     # *******************************************************************************
@@ -838,7 +649,7 @@ class ConfDistPlot():
                 x = xBin * xLen
                 y = yBin * yLen
 
-                if( x < self.xRange[0] || x > self.xRange[1] )
+                if( x < self.xRange[0] || x > self.xRange[1] )print svg
                     break
                 if( y < self.yRange[0] || y > self.yRange[1] )
                     break
@@ -868,3 +679,15 @@ class ConfDistPlot():
 
         fwrite( handle, out )
 '''
+
+if __name__ == "__main__":
+    cdp = ConfDistPlot(400, 400, 100, 100,
+                    -180, 180,
+                    -180, 180,
+                    10, 10,
+                    "phi", "psi",
+                    '1sny',
+                    'Observations')
+
+    svg = cdp.Plot()
+    print svg.rects
