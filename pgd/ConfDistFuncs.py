@@ -74,8 +74,8 @@ class Bin():
 
         # Create a coordinate for the x and y bins that specificies the minimum and maximum
         # for the bin
-        coords[0] = new Coord(xFloor, xFloor + self.xLen, 0, 0, NULL) 
-        coords[1] = new Coord(yFloor, yFloor + self.yLen, 0, 0, NULL)
+        coords[0] = Coord(xFloor, xFloor + self.xLen, 0, 0, NULL) 
+        coords[1] = Coord(yFloor, yFloor + self.yLen, 0, 0, NULL)
 
         return coords
 
@@ -110,7 +110,7 @@ class Bin():
 
             # If no bin currently exists, make a new binpoint
             if self.bins[xBin][yBin] <> None:
-                self.bins[xBin][yBin] = new BinPoint( self.points[i], self.points[i].xP, self.points[i].yP, xBin, yBin )
+                self.bins[xBin][yBin] = BinPoint( self.points[i], self.points[i].xP, self.points[i].yP, xBin, yBin )
             # otherwise add to the bin a new observation
             else:
                 self.bins[xBin][yBin].AddObs( self.points[i] )
@@ -127,9 +127,9 @@ class Bin():
 class BinPoint():
 
     numObs    = None    # Number of observations
-    avg       = None    # average for the bin    
+    avg       = None    # average for the bin
     sum       = None    # sum of all data
-    deviation = None    # standard deviation of data            
+    deviation = None    # standard deviation of data
     obs       = None    # Array of observations
     xP        = None    # X in pixel space
     yP        = None    # Y in pixel space
@@ -188,7 +188,7 @@ class BinPoint():
 
 
     # ******************************************************
-    # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
+    # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi
     # ******************************************************
     def ComputeStats(self, key):
         # Average
@@ -390,7 +390,7 @@ class ConfDistPlot():
     # which consists of the X,Y axis and markings
     # ******************************************************
     def MakeBasicImage(self):
-    
+
         self.img = imagecreatetruecolor(self.xSize, self.ySize)
         self.white = imagecolorallocate( self.img, 255, 255, 255)
         self.black = imagecolorallocate( self.img,   0,   0,   0)
