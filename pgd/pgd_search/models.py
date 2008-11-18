@@ -1,83 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import User
-from pgd.pgd_core.models import Protein
-from pgd.constants import AA_CHOICES, SS_CHOICES, pack_dict, Subscripter
+from pgd.pgd_core.models import Protein,Residue
+from pgd.constants import AA_CHOICES, SS_CHOICES, SEQUENCE_SIZE, Subscripter
 
-# residue model
-# (was 'protein')
-#
-# Note: The 'idx' field is not present here because it was never implemented in 
-# 	the old table, and the model uses a default primary key field (can't
-# 	spread a key across fields in django... yet?).
-#class Residue(models.Model):
-#	code = models.ForeignKey(protein)
-#	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
-#	chainID = models.CharField(max_length=1) 
-#	id = models.IntegerField()
-#	oldID = models.CharField(max_length=5) # is there something weird going on here?
-#	a1 = models.FloatField()
-#	a2 = models.FloatField()
-#	a3 = models.FloatField()
-#	a4 = models.FloatField()
-#	a5 = models.FloatField()
-#	a6 = models.FloatField()
-#	a7 = models.FloatField()
-#	L1 = models.FloatField()
-#	L2 = models.FloatField()
-#	L3 = models.FloatField()
-#	L4 = models.FloatField()
-#	L5 = models.FloatField()
-#	ss = models.CharField(max_length=1, choice=SS_TYPES) # new type (was blob, but all entries 1 char)
-#	phi = models.FloatField()
-#	psi = models.FloatField()
-#	ome = models.FloatField()
-#	chi = models.FloatField()
-#	ome = models.FloatField()
-#	bm = models.FloatField()
-#	bs = models.FloatField()
-#	h_bond_energy = models.FloatField()
-#	zeta = models.FloatField()
-#	terminal_flag = models.BooleanField() 
-#	xpr = models.BooleanField() # this field may not be necessary; it has never been implemented
-
-# protein model
-# (was 'protein_info')
-#class Protein(models.Model):
-#	code = models.CharField(max_length=4, primary_key=True, unique=True)
-#	threshold = models.IntegerField() # new type; this should probably be a boolean type
-#	resolution = models.FloatField()
-#	rfactor = models.FloatField()
-
-# sequence model
-# 
-# Note: uses django-magic!
-#seq_dict = {
-#	'code' : models.ForeignKey(protein),
-#	'chainID' : models.CharField(max_length=1),
-#	'id' : models.IntegerField(),
-#	'oldID' : models.CharField(max_length=5), # is there something weird going on in this field?
-#}
-#for i in ('phi','psi','ome','chi','bm','bs','bg','H_bond_energy','zeta'):
-#	seq_dict[i] = models.FloatField()
-#for i in range(0,SEQUENCE_SIZE):
-#	seq_dict['%d_ss'] : models.CharField(max_length=1, choice=SS_TYPES), # new type
-#	seq_dict['%d_aa' % i] : models.CharField(max_length=1, choices=AA_CHOICES), # new type
-#	for j in range(1,8):
-#		seq_dict['%d_a%d' % (i,j)] = models.FloatField()
-#	for j in range(1,6):
-#		seq_dict['%d_L%d' % (i,j)] = models.FloatField()
-
-
+# Search
+# A search query submitted by a user
 class Search(models.Model):
 	user = models.ForeignKey(User)
-	code = models.ForeignKey(Protein)
 
+# Search_code
+# Codes for the proteins searched on
 class Search_code(models.Model):
 	search = models.ForeignKey(Search, related_name='codes')
 	code = models.CharField(max_length=4)
 
+# Search_residue
+# The search fields per residue
 class Search_residue(models.Model):
-	search = models.ManyToManyField(Search, related_name='residues')
+	search = models.ForeignKey(Search, related_name='residues')
 	index = models.PositiveIntegerField()
 	chainID = models.CharField(max_length=1)
 	newID = models.IntegerField()
@@ -99,12 +39,57 @@ class Search_residue(models.Model):
 	psi = models.CharField(max_length=30)
 	ome = models.CharField(max_length=30)
 	chi = models.CharField(max_length=30)
-	ome = models.CharField(max_length=30)
 	bm = models.CharField(max_length=30)
 	bs = models.CharField(max_length=30)
-	bs = models.CharField(max_length=30)
+	bg = models.CharField(max_length=30)
 	h_bond_energy = models.CharField(max_length=30)
 	zeta = models.CharField(max_length=30)
-	terminal_flag = models.BooleanField() 
+	terminal_flag = models.BooleanField()
 	xpr = models.BooleanField() # this field may not be necessary; it has never been implemented
-	 
+
+# A base class for the Sequence object
+class Sequence_abstract(models.Model):
+	
+	newID = models.ForeignKey(Protein)
+	chainID = models.CharField(max_length=1)
+       
+	def __init__(self):
+		models.Model.__init__(self)
+
+		# make the Residue objects subscriptable
+		Subscripter('residue_object', self)
+
+	# make the residue data subscriptable? (todo?)
+#	def __getattr__(self, key):
+#		if key not in self.__dict__.keys() and key.startswith("residue_data_"):
+#			
+#		object.__getattr__(self,key)
+	
+	class Meta:
+		abstract = True
+
+# Build a dict for the fields of variable number
+seq_dict = {'__module__' : 'pgd.pgd_search.models'}
+for i in range(SEQUENCE_SIZE):
+	
+	# Allow access to the master Residue object...
+	seq_dict["residue_object_%i" % i] = models.ForeignKey(Residue)
+
+	# ...but make its data available (for filters, etc.) without instantiation
+	seq_dict["r%i_index" % i] = models.PositiveIntegerField()
+	seq_dict["r%i_newID" % i] = models.IntegerField()
+	seq_dict["r%i_oldID" % i] = models.CharField(max_length=5)
+	seq_dict["r%i_ss"] = models.CharField(max_length=1, choices=SS_CHOICES)
+	seq_dict["r%i_terminal_flag" % i] = models.BooleanField()
+	seq_dict["r%i_xpr" % i] = models.BooleanField() # probably should be replaced
+
+	# the loops here are just to save on typing
+	for j in range(1,8):
+		seq_dict["r%i_a%i" % (i,j)] = models.FloatField()
+	for j in range(1,6):
+		seq_dict["r%i_L%i" % (i,j)] = models.FloatField()
+	for j in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta"):
+		seq_dict["r%i_%s" % (i,j)] = models.FloatField()
+
+# Create the Sequence object with the fields from the dict
+Sequence = type('Sequence', (Sequence_abstract,), seq_dict)
