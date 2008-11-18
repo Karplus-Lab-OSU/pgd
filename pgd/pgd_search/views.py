@@ -4,7 +4,7 @@ from django.conf import settings
 
 from ConfDistFuncs import *
 from svg import *
-from pgd_core.models import *
+#from pgd_core.models import *
 
 """ 
 Renders a conformational distribution graph
@@ -20,21 +20,22 @@ def drawGraph():
     hashsize = 10
 
     #background
-    svg.rect(x, y, width, height, 1, 'black', '#222222');
+    svg.rect(x, y, width, height, 1, '#00fffff', '#222222');
+    #svg.rect(x, y, width, height, 1, '#666666');
 
     #border
-    svg.rect(x, y, width, height, 1, 'black');
+    svg.rect(x, y, width, height, 1, '#000000');
 
     #axis
-    svg.line( x, y+height/2, x+width, y+height/2, 1, 'gray');
-    svg.line( x+width/2, y, x+width/2, y+height, 1, 'gray');
+    svg.line( x, y+height/2, x+width, y+height/2, 1, '#666666');
+    svg.line( x+width/2, y, x+width/2, y+height, 1, '#666666');
 
     #hashes
     for i in range(9):
-        hashx = x+(width/8)*i
-        hashy = y+(height/8)*i
-        svg.line( hashx, y+height, hashx, y+height+hashsize, 1, 'black');
-        svg.line( x, hashy, x-hashsize, hashy, 1, 'black');
+        hashx = x+(width/8.0)*i
+        hashy = y+(height/8.0)*i
+        svg.line( hashx, y+height, hashx, y+height+hashsize, 1, '#000000');
+        svg.line( x, hashy, x-hashsize, hashy, 1, '#000000');
 
     #x axis text
     xtext  = -180
@@ -76,22 +77,58 @@ def drawGraph():
     svg = cdp.Plot(svg)
     return svg
 
+def RGBTuple(rgbString):
+    sub = rgbString[-6:]
+    red = int(sub[:2],16)/255.0
+    green = int(sub[2:4],16)/255.0
+    blue = int(sub[4:], 16)/255.0
+    return (red,green,blue)
+
+def line(input, context):
+    context.move_to(input.x, input.y)
+    context.line_to(input.x1, input.y1)
+    context.set_line_width(input.stroke)
+    r,g,b = RGBTuple(input.color)
+    context.set_source_rgba(r,g,b,1)
+    context.stroke()
+
+def rect(input, context):
+    context.rectangle(input.x, input.y, input.width, input.height)
+
+    if input.fill:
+        r,g,b = RGBTuple(input.fill)
+        context.set_source_rgba(r,g,b,1)
+        context.fill()
+
+    if input.color:
+        red, green, blue = RGBTuple(input.color)
+        context.set_source_rgba(red,green,blue,1)
+        context.set_line_width(input.stroke)
+        context.stroke()
+
 """
 render the conf dist graph to a png and return it as the response
 this results in the image being downloaded by the user
 """
 def renderToPNG(request):
+    import cairo
+
+    width = 600
+    height = 600
+
     response = HttpResponse(mimetype="image/png")
 
     surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
-    cr = cairo.Context (surface)
+    ctx = cairo.Context (surface)
 
-    wscale = float (width) / svg.props.width
-    hscale = float (height) / svg.props.height
+    svg = drawGraph()
+    for rec in svg.rects:
+        rect(rec, ctx)
 
-    cr.scale (wscale, hscale)
+    for action in svg.lines:
+        line(action, ctx)
 
-    surface.write_to_png (response)
+    surface.write_to_png(response)
 
     return response
 
