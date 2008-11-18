@@ -1,6 +1,6 @@
 SEQUENCE_SIZE = 10
 
-# Choice
+# The possible values for the 'aa' field (in Protein and elsewhere)
 AA_CHOICES = (
 	('g', 'gly'),
 	('a', 'ala'),
@@ -23,6 +23,8 @@ AA_CHOICES = (
 	('r', 'arg'),
 	('h', 'his'),
 )
+
+# The possible values for the 'ss' field (in Protein and elsewhere)
 SS_CHOICES = (
 	('G', '3-turn helix (internal)'),
 	('g', '3-turn helix (terminal)'),
@@ -38,13 +40,8 @@ SS_CHOICES = (
 	('S', 'bend'),
 )
 
-def pack_dict(label,object,limit):
-	mydict = dict(("%s_%d" % (label,key), object()) for key in range(limit))
-	mydict['__module__'] = 'pgd.tasks.models'
-	return mydict
-
-# subscripter is a way to make a property subscriptable
-# this allows you to reference properties by index
+# This class makes a property subscriptable
+# (may get moved to pgd_search/models.py)
 class Subscripter():
     def __init__(self, key, parent):
         self.key = key
@@ -55,7 +52,7 @@ class Subscripter():
         parent.__dict__[key] = self
 
     def __getitem__(self, i):
-        return self.parent.__dict__['%s_%d' % (self.key, i)]
+        return self.parent.__dict__['%s_%i' % (self.key, i)]
 
     def __setitem__(self, i, val):
-        self.parent.__dict__['%s_%d' % (self.key, i)] = val
+        self.parent.__dict__['%s_%i' % (self.key, i)] = val
