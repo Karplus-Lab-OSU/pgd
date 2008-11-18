@@ -10,7 +10,6 @@
 from pgd_core.models import *
 from constants import *
 import math
-from svg.views import *
 
 #-------------------------------------------------------------------------------------------------------------------
 # Stores a coordinate including actualy x,y values and x,y translated to pixel space
