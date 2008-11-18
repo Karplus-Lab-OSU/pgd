@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <style type="text/css">@import "jquery.svg.css";</style> 
+        <style>
+            #canvas {
+                position: absolute;
+                left:0px;
+                top:0px;
+                width: 100%;
+                height: 100%;
+            }
+
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#canvas').svg()
+
+                x = 100;
+                y = 100;
+                height = 400;
+                width = 400;
+                borderPadding = 40;
+
+                var svg = $('#canvas').svg('get');
+
+                {% for rect in svg.rects %}
+                    svg.rect(
+                        {{rect.x}},
+                        {{rect.y}},
+                        {{rect.height}},
+                        {{rect.width}},
+                        {fill: '{{rect.fill}}', stroke: '{{rect.color}}', 'stroke-width': {{rect.stroke}}}
+                    );
+                {% endfor %}
+
+                {% for line in svg.lines %}
+                    svg.line(
+                        {{line.x}},
+                        {{line.y}},
+                        {{line.x1}},
+                        {{line.y1}},
+                        {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
+                    );
+                {% endfor %}
+
+                {% for text in svg.texts %}
+                    svg.text(
+                        {{text.x}},
+                        {{text.y}},
+                        '{{text.text}}',
+                        {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.fill}}"}
+                    );
+                {% endfor %}
+
+                });
+        </script>
+    </head>
+    <body>
+        <div id="canvas"></div>
+    </body>
+</html>
