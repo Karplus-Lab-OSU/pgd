@@ -4,17 +4,18 @@ from django.conf import settings
 
 from ConfDistFuncs import *
 from svg import *
+
 #from pgd_core.models import *
 
 """ 
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph():
+def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=0, xBin=10, yBin=10):
     svg = SVG()
 
-    x = 100;
-    y = 100;
+    x = 50;
+    y = 5;
     height = 400;
     width = 400;
     hashsize = 10
@@ -58,20 +59,20 @@ def drawGraph():
     cdp = ConfDistPlot(
             400,            #height
             400,            #width
-            0,             #Xpadding
-            0,             #Ypadding
-            100,              #Xoffset
-            100,              #Yoffset
-            -180,           #Xstart
-            180,            #Xend
-            -180,           #Ystart
-            180,            #Yend
-            10,             #Xbin
-            10,             #Ybin
-            "phi",          #X property
-            "psi",          #Y property
+            0,              #Xpadding
+            0,              #Ypadding
+            x,              #Xoffset
+            y,              #Yoffset
+            xStart,         #Xstart
+            xEnd,           #Xend
+            yStart,         #Ystart
+            yEnd,           #Yend
+            xBin,           #Xbin
+            yBin,           #Ybin
+            xProperty,      #X property
+            yProperty,      #Y property
             '1sny',         #protein code
-            'Observations'  #property
+            attribute       #property
     )
 
     svg = cdp.Plot(svg)
@@ -113,15 +114,30 @@ this results in the image being downloaded by the user
 def renderToPNG(request):
     import cairo
 
-    width = 600
-    height = 600
+    if request.GET.has_key('xStart'):
+        x           = int(request.GET['xStart'])
+        y           = int(request.GET['yStart'])
+        x1          = int(request.GET['xEnd'])
+        y1          = int(request.GET['yEnd'])
+        attribute   = request.GET['attribute']
+        xProperty   = request.GET['xProperty']
+        yProperty   = request.GET['yProperty']
+        reference   = 1 #int(request.POST['reference'])
+        residue     = request.GET['residue']
+        xBin        = int(request.GET['xBin'])
+        yBin        = int(request.GET['yBin'])
+        svg = drawGraph(x,y,x1,y1,attribute,xProperty,yProperty,reference,residue,xBin,yBin)
+    else:
+        svg = drawGraph()
+
+    width = 500
+    height = 500
 
     response = HttpResponse(mimetype="image/png")
-
     surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
     ctx = cairo.Context (surface)
-
     svg = drawGraph()
+
     for rec in svg.rects:
         rect(rec, ctx)
 
@@ -136,12 +152,42 @@ def renderToPNG(request):
 render conf dist plot using jquery.svg
 """
 def renderToSVG(request):
-    svg = drawGraph()
+    if request.GET.has_key('xStart'):
+        x           = int(request.GET['xStart'])
+        y           = int(request.GET['yStart'])
+        x1          = int(request.GET['xEnd'])
+        y1          = int(request.GET['yEnd'])
+        attribute   = request.GET['attribute']
+        xProperty   = request.GET['xProperty']
+        yProperty   = request.GET['yProperty']
+        reference   = 1 #int(request.POST['reference'])
+        residue     = request.GET['residue']
+        xBin        = int(request.GET['xBin'])
+        yBin        = int(request.GET['yBin'])
+        svg = drawGraph(x,y,x1,y1,attribute,xProperty,yProperty,reference,residue,xBin,yBin)
+        queryDict = request.GET
+    else:
+        svg = drawGraph()
+        queryDict = {}
+
+    # create list of I values
+    n = 5
+    iValues = []
+    for i in range(n, 0, -1):
+        iValues.append( (0-i,'i - %s' % i) )
+
+    iValues.append((0,'i'))
+
+    for i in range(1, n, 1):
+        iValues.append( (i,'i + %s' % i))
 
     t = loader.get_template('graph.html')
     c = RequestContext(request, {
         'MEDIA_URL': settings.MEDIA_URL,
-        'svg': svg
+        'svg': svg,
+        'iValues' : iValues,
+        'requestDict' : queryDict,
+        'referenceValues' : RefDefaults()
     })
 
     return HttpResponse(t.render(c))
