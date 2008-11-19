@@ -6,11 +6,17 @@
         <style type="text/css">@import "jquery.svg.css";</style> 
         <style>
             #canvas {
-                position: absolute;
-                left:0px;
-                top:0px;
-                width: 100%;
-                height: 100%;
+                width: 470;
+                height: 435;
+                margin: 10px;
+            }
+
+            #controls {
+                margin-top:30px;
+            }
+
+            #button-plot {
+                margin-top:10px;
             }
 
         </style>
@@ -27,10 +33,8 @@
                 height = 400;
                 width = 400;
                 borderPadding = 40;
-
                 var svg = $('#canvas').svg('get');
-
-                {% for rect in svg.rects %}
+                 {% for rect in svg.rects %}
                     svg.rect(
                         {{rect.x}},
                         {{rect.y}},
@@ -50,6 +54,7 @@
                     );
                 {% endfor %}
 
+
                 {% for text in svg.texts %}
                     svg.text(
                         {{text.x}},
@@ -59,10 +64,124 @@
                     );
                 {% endfor %}
 
+
+                    $('#button-plot').click(function (evt) {
+
+                        with(document.plotform) {
+                            data = {
+                                'xStart' : xStart.value,
+                                'xEnd' : xEnd.value,
+                                'yStart' : yStart.value,
+                                'yEnd' : yEnd.value,
+                                'attribute' : attribute.value,
+                                'xProperty' : xProperty.value,
+                                'yProperty' : yProperty.value,
+                                'residue' : residue.value,
+                                'xBin' : xBin.value,
+                                'yBin' : yBin.value,
+                                'reference' : reference.value
+                            }
+                        }
+
+                    });
+
+                    $('#attribute_select').change(function (){
+                         $("#attribute_select option:selected").each(function () {
+                            document.plotform.reference.value = REF[$(this).text()]['ref'];
+                         });
+                    })
+
                 });
+
+                var REF = {};
+                {% for k,v in referenceValues.items %}
+                    {% ifnotequal k 'Observations' %}
+                        REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
+                    {% endifnotequal %}
+                {% endfor %}
         </script>
     </head>
     <body>
         <div id="canvas"></div>
+        <form name="plotform">
+        <div id="controls">
+            <div id="attribute">Plotted Attribute 
+                <select id="attribute_select" name="attribute">
+                    <OPTION value="Observations" selected>Observations</OPTION>
+                    <OPTION value="L1">L1</OPTION>
+                    <OPTION value="L2">L2</OPTION>
+                    <OPTION value="L3">L3</OPTION>
+                    <OPTION value="L4">L4</OPTION>
+                    <OPTION value="L5">L5</OPTION>
+                    <OPTION value="a1">a1</OPTION>
+                    <OPTION value="a2">a2</OPTION>
+                    <OPTION value="a3">a3</OPTION>
+                    <OPTION value="a4">a4</OPTION>
+                    <OPTION value="a5">a5</OPTION>
+                    <OPTION value="a6">a6</OPTION>
+                    <OPTION value="a7">a7</OPTION>
+                    <OPTION value="ome">ome</OPTION>
+                    <OPTION value="chi">chi</OPTION>
+                </select>
+             </div>
+             <div>X Axis
+                <select id="xProperty" name="xProperty">
+                    <OPTION value="L1">L1</OPTION>
+                    <OPTION value="L2">L2</OPTION>
+                    <OPTION value="L3">L3</OPTION>
+                    <OPTION value="L4">L4</OPTION>
+                    <OPTION value="L5">L5</OPTION>
+                    <OPTION value="a1">a1</OPTION>
+                    <OPTION value="a2">a2</OPTION>
+                    <OPTION value="a3">a3</OPTION>
+                    <OPTION value="a4">a4</OPTION>
+                    <OPTION value="a5">a5</OPTION>
+                    <OPTION value="a6">a6</OPTION>
+                    <OPTION value="a7">a7</OPTION>
+                    <OPTION value="ome">ome</OPTION>
+                    <OPTION value="chi">chi</OPTION>
+                    <OPTION value="phi" selected>phi</OPTION>
+                    <OPTION value="psi">psi</OPTION>
+                </select>
+            </div>
+            <div>Y Axis
+                <select name="yProperty">
+                    <OPTION value="L1">L1</OPTION>
+                    <OPTION value="L2">L2</OPTION>
+                    <OPTION value="L3">L3</OPTION>
+                    <OPTION value="L4">L4</OPTION>
+                    <OPTION value="L5">L5</OPTION>
+                    <OPTION value="a1">a1</OPTION>
+                    <OPTION value="a2">a2</OPTION>
+                    <OPTION value="a3">a3</OPTION>
+                    <OPTION value="a4">a4</OPTION>
+                    <OPTION value="a5">a5</OPTION>
+                    <OPTION value="a6">a6</OPTION>
+                    <OPTION value="a7">a7</OPTION>
+                    <OPTION value="ome">ome</OPTION>
+                    <OPTION value="chi">chi</OPTION>
+                    <OPTION value="phi">phi</OPTION>
+                    <OPTION value="psi" selected>psi</OPTION>
+                </select>
+            </div>
+            <div id="reference">Reference Value <input name="reference" type="text"/></div>
+            <div id="x">X Min, Max <input name="xStart" type="text" size="4" value="-180"/><input name="xEnd" type="text" size="4" value="180"/></div>
+            <div id="y">Y Min, Max <input name="yStart" type="text" size="4" value="-180"/><input name="yEnd" type="text" size="4" value="180"/></div>
+            <div id="residue">Residue <select name="residue">
+                {% for i, str in iValues %}
+                    {% if i %}
+                        <option value="{{i}}" >{{str}}</option>
+                    {% else %}
+                        <option value="{{i}}" selected>{{str}}</option>
+                    {% endif %}
+                {% endfor %}
+
+            </select></div>
+
+            <div id="bin">Bin X, Y <input name="xBin" type="text" size="3" value="10"/><input name="yBin" type="text" size="3" value="10"/></div>
+            <button id="button-plot">Plot</button>
+        </div>
+        </form>
+        
     </body>
 </html>

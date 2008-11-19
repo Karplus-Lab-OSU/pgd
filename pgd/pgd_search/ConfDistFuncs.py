@@ -67,8 +67,8 @@ class Bin():
 
         # Create a coordinate for the x and y bins that specificies the minimum and maximum
         # for the bin
-        coords[0] = Coord(xFloor, xFloor + self.xLen, 0, 0, NULL) 
-        coords[1] = Coord(yFloor, yFloor + self.yLen, 0, 0, NULL)
+        coords[0] = Coord(xFloor, xFloor + self.xLen, 0, 0, None) 
+        coords[1] = Coord(yFloor, yFloor + self.yLen, 0, 0, None)
 
         return coords
 
@@ -125,8 +125,8 @@ class BinPoint():
     numObs    = None    # Number of observations
     avg       = None    # average for the bin    
     sum       = None    # sum of all data
-    deviation = None    # standard deviation of data            
-    obs       = []    # Array of observations
+    deviation = None    # standard deviation of data
+    obs       = None    # Array of observations
     xP        = None    # X in pixel space
     yP        = None    # Y in pixel space
     colorStep = None    # The color that should be used for the bin
@@ -141,12 +141,13 @@ class BinPoint():
         self.xP = xP
         self.yP = yP
         self.numObs = 0
-        self.avg = None
+        self.avg = {}
         self.colorStep = None
-        self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
         self.xBin = xBin
         self.yBin = yBin
-
+        self.obs = []
+        self.deviation = {}
+        self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
 
     # ******************************************************
     # Returns the x bin #
@@ -193,28 +194,28 @@ class BinPoint():
             # By adding 360 to omega when it's less than -90, we shift half of the tall peak
             # over to the far right of a -180 to +180 omega plot, into the 180-270 range.
             if key == "ome":
-                if self.obs[i].dat[key] < -90:
-                    self.obs[i].dat[key] = ( self.obs[i].dat[key] + 360 )
+                if self.obs[i].dat.__dict__[key] < -90:
+                    self.obs[i].dat.__dict__[key] = ( self.obs[i].dat.__dict__[key] + 360 )
 
-            sum += self.obs[i].dat[key]
+            sum += self.obs[i].dat.__dict__[key]
 
         self.avg[key] = sum / self.numObs
 
         # Std Deviation
         sum = 0
         for i in range(self.numObs):
-            sum += pow( (self.obs[i].dat[key] - self.avg[key]), 2 )
+            sum += pow( (self.obs[i].dat.__dict__[key] - self.avg[key]), 2 )
 
         if self.numObs > 1:
-            self.dev[key] = sqrt(sum / ( self.numObs - 1 ))
+            self.deviation[key] = math.sqrt(sum / ( self.numObs - 1 ))
 
-        
+
 
     # ******************************************************
     # Returns the average for a specificed value, such as phi, psi, L1 ...
     # ******************************************************
     def GetAvg(self, key):
-        if self.avg[key] == None:
+        if not self.avg.has_key(key):
             self.ComputeStats(key)
 
         return self.avg[key]
@@ -315,72 +316,11 @@ class ConfDistPlot():
         self.code = code
 
         # Reference array that contains information for a specific type of value
-        self.REF = {
-                    'phi': {'ref':180, 'stepsize':1, 'custom':False},
-                    'Observations': [-10, -7, -4, -1, 2, 5, 8, 10, 10 ],
-                    'L1': { 
-                            'ref':1.330, 
-                            'stepsize':0.0025, 
-                            'custom': 
-                            False},
-                    'L2': { 
-                            'ref': 1.465, 
-                            'custom':False, 
-                            'stepsize':0.005},
-                    'L3': { 
-                            'ref': 1.530,
-                            'custom':False,
-                            'stepsize':0.005},
-                    'L4': { 
-                            'ref':1.525,
-                            'custom':False,
-                            'stepsize':0.005},
-                    'L5': { 
-                            'ref': 1.240,
-                            'custom':False,
-                            'stepsize':0.005},
-                    'L6': { 
-                            'ref': 1.330,
-                            'custom':False,
-                            'stepsize':0.005},
-                    'L7': { 
-                            'ref': 1.465,
-                            'custom':False,
-                            'stepsize':0.005},
-                    'a1': { 
-                            'ref': 121,
-                            'custom':False,
-                            'stepsize':1},
-                    'a2': { 
-                            'ref': 110,
-                            'custom':False,
-                            'stepsize':1},
-                    'a3': { 
-                            'ref': 110,
-                            'custom':False,
-                            'stepsize':1},
-                    'a4': { 
-                            'ref': 110,
-                            'custom':False,
-                            'stepsize':1},
-                    'a5': { 
-                            'ref': 120,
-                            'custom':False,
-                            'stepsize':0.5},
-                    'a6': { 
-                            'ref': 117,
-                            'custom':False,
-                            'stepsize':1},
-                    'a7': { 
-                            'ref': 123,
-                            'custom':False,
-                            'stepsize':1},
-                    'ome': { 
-                            'ref': 180,
-                            'custom':False,
-                            'stepsize':1}
-                 }
+        self.REF = RefDefaults()
         self.USEREF = self.REF
+
+
+    
 
     # ******************************************************
     # Returns reference values used
@@ -520,13 +460,12 @@ class ConfDistPlot():
                 bin = self.plotBin.bins[key]
 
                 # Determine actual image location of the bin
-                
+
                 x = bin.xBin * self.plotBin.xLen
                 y = bin.yBin * self.plotBin.yLen
                 xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
                 yC = ((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
 
-                
                 if x < self.xRange[0] or x > self.xRange[1]:
                     continue
                 if y < self.yRange[0] or y > self.yRange[1]:
@@ -580,7 +519,7 @@ class ConfDistPlot():
             x = (xOrig  - (self.xRange[0])) / self.xPixelSize + self.xOff
             y = (yOrig + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff
 
-            self.points.append(Coord(xOrig, yOrig, x, y, residue.id))
+            self.points.append(Coord(xOrig, yOrig, x, y, residue))
 
         # Create a bins for the values
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
@@ -678,6 +617,76 @@ class ConfDistPlot():
 
         fwrite( handle, out )
 '''
+
+# ******************************************************
+# Returns default reference values
+# ******************************************************
+def RefDefaults():
+    return {
+                'phi': {'ref':180, 'stepsize':1, 'custom':False},
+                'Observations': [-10, -7, -4, -1, 2, 5, 8, 10, 10 ],
+                'L1': { 
+                        'ref':1.330, 
+                        'stepsize':0.0025, 
+                        'custom': 
+                        False},
+                'L2': { 
+                        'ref': 1.465, 
+                        'custom':False,
+                        'stepsize':0.005},
+                'L3': { 
+                        'ref': 1.530,
+                        'custom':False,
+                        'stepsize':0.005},
+                'L4': { 
+                        'ref':1.525,
+                        'custom':False,
+                        'stepsize':0.005},
+                'L5': { 
+                        'ref': 1.240,
+                        'custom':False,
+                        'stepsize':0.005},
+                'L6': { 
+                        'ref': 1.330,
+                        'custom':False,
+                        'stepsize':0.005},
+                'L7': { 
+                        'ref': 1.465,
+                        'custom':False,
+                        'stepsize':0.005},
+                'a1': { 
+                        'ref': 121,
+                        'custom':False,
+                        'stepsize':1},
+                'a2': { 
+                        'ref': 110,
+                        'custom':False,
+                        'stepsize':1},
+                'a3': { 
+                        'ref': 110,
+                        'custom':False,
+                        'stepsize':1},
+                'a4': { 
+                        'ref': 110,
+                        'custom':False,
+                        'stepsize':1},
+                'a5': { 
+                        'ref': 120,
+                        'custom':False,
+                        'stepsize':0.5},
+                'a6': { 
+                        'ref': 117,
+                        'custom':False,
+                        'stepsize':1},
+                'a7': { 
+                        'ref': 123,
+                        'custom':False,
+                        'stepsize':1},
+                'ome': { 
+                        'ref': 180,
+                        'custom':False,
+                        'stepsize':1}
+                }
 
 if __name__ == "__main__":
     cdp = ConfDistPlot(400, 400, 100, 100,
