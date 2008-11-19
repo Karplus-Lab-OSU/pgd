@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from pgd.pgd_core.models import Protein,Residue
 from pgd.constants import AA_CHOICES, SS_CHOICES, SEQUENCE_SIZE, Subscripter
+from exceptions import AttributeError
 
 # Search
 # A search query submitted by a user
@@ -47,17 +48,44 @@ class Search_residue(models.Model):
 	terminal_flag = models.BooleanField()
 	xpr = models.BooleanField() # this field may not be necessary; it has never been implemented
 
+# Nextscripter
+# A subscripter for iterating through the Residues in a Sequence
+class Nextscripter():
+	def __init__(self, key, parent):
+		self.parent = parent
+		#add this instance to the parent. doing this here
+		#makes defining subscriptor instance simpler because
+		#you only need to specify the key once
+		parent.__dict__[key] = self
+	
+	def __nextloop__(self, i):
+		item = self.parent.first
+		for j in range(i):
+			# If the amino acid cannot iterate any further, raise an error
+			if item.terminal_flag: raise AttributeError
+			item = item.next
+		return item
+		
+	def __getitem__(self, i):
+		return self.__nextloop__(i)
+
+	def __setitem__(self, i, val):
+		item = self.__nextloop__(i)
+		item = val
+
 # A base class for the Sequence object
 class Sequence_abstract(models.Model):
 	
 	newID = models.ForeignKey(Protein)
 	chainID = models.CharField(max_length=1)
-       
+
+	first = models.ForeignKey(Residue)
+
 	def __init__(self):
 		models.Model.__init__(self)
 
 		# make the Residue objects subscriptable
-		Subscripter('residue_object', self)
+		Nextscripter('residue_object', self)
 
 	# make the residue data subscriptable? (todo?)
 #	def __getattr__(self, key):
@@ -70,10 +98,10 @@ class Sequence_abstract(models.Model):
 
 # Build a dict for the fields of variable number
 seq_dict = {'__module__' : 'pgd.pgd_search.models'}
-for i in range(SEQUENCE_SIZE):
+for i in range(2):
 	
 	# Allow access to the master Residue object...
-	seq_dict["residue_object_%i" % i] = models.ForeignKey(Residue)
+	#seq_dict["residue_object_%i" % i] = models.ForeignKey(Residue, related_name="asdf_%i" % i)
 
 	# ...but make its data available (for filters, etc.) without instantiation
 	seq_dict["r%i_index" % i] = models.PositiveIntegerField()
