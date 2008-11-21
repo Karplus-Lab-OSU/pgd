@@ -1,5 +1,5 @@
 from django.db import models
-from pgd.constants import AA_CHOICES, SS_CHOICES, Subscripter
+from pgd.constants import AA_CHOICES, SS_CHOICES
 
 # Protein model
 # (was 'protein_info')
@@ -16,6 +16,7 @@ class Protein(models.Model):
 # (Note: fields need to be commented)
 class Residue(models.Model):
 	code = models.ForeignKey(Protein)
+	next = models.OneToOneField('self', related_name='prev')
 	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
 	chainID = models.CharField(max_length=1) 
 	newID = models.IntegerField()
