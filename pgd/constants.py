@@ -37,7 +37,7 @@ SS_CHOICES = (
 	('E', 'Beta sheet (internal)'),
 	('e', 'Beta sheet (terminal)'),
 	('B', 'Isolated beta-bridge'),
-	('S', 'bend'),
+	('S', 'Bend'),
 )
 
 # This class makes a property subscriptable
