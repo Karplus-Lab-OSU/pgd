@@ -35,6 +35,7 @@ INSERT INTO aa_codes values('h' , 'his');
 -- delete existing data
 TRUNCATE pgd_core_protein;
 TRUNCATE pgd_core_residue;
+TRUNCATE pgd_core_chain;
 
 -- import proteins
 INSERT INTO pgd_core_protein
@@ -45,10 +46,19 @@ INSERT INTO pgd_core_protein
         rfactor     AS rfactor
     FROM protein_info;
 
+-- import chains
+INSERT INTO pgd_core_chain (id, protein_id, code)
+    SELECT DISTINCT 
+        CONCAT(code, chainID) AS id, 
+        code                  AS protein_id,
+        chainID               AS code
+    FROM protein;
+
 -- import residues
-INSERT INTO pgd_core_residue (code_id,aa,chainID,oldID,newID,a1,a2,a3,a4,a5,a6,a7,L1,L2,L3,L4,L5,ss,phi,psi,chi,ome,bm,bs,h_bond_energy,zeta,terminal_flag,xpr)
+INSERT INTO pgd_core_residue (protein_id,chain_id,aa,chainID,oldID,newID,a1,a2,a3,a4,a5,a6,a7,L1,L2,L3,L4,L5,ss,phi,psi,chi,ome,bm,bs,h_bond_energy,zeta,terminal_flag,xpr)
     SELECT
-        code            AS code_id,
+        code            AS protein_id,
+        CONCAT(code, chainID)   AS chain_id,
         aa_codes.key    AS aa,
         chainID         AS chainID,
         oldID           AS oldID,
