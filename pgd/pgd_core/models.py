@@ -15,7 +15,7 @@ class Protein(models.Model):
 # Contains information regarding each amino acid and its geometry
 # (Note: fields need to be commented)
 class Residue(models.Model):
-	code = models.ForeignKey(Protein)
+	code = models.ForeignKey(Protein, related_name='residues')
 	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
 	chainID = models.CharField(max_length=1) 
 	newID = models.IntegerField()
