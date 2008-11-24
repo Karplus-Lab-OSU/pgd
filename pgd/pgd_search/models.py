@@ -97,7 +97,7 @@ class Sequence_abstract(models.Model):
 		abstract = True
 
 # Build a dict for the fields of variable number
-seq_dict = {'__module__' : 'pgd.pgd_search.models'}
+seq_dict = {'__module__' : 'pgd_search.models'}
 for i in range(2):
 	
 	# Allow access to the master Residue object...
@@ -107,7 +107,7 @@ for i in range(2):
 	seq_dict["r%i_index" % i] = models.PositiveIntegerField()
 	seq_dict["r%i_newID" % i] = models.IntegerField()
 	seq_dict["r%i_oldID" % i] = models.CharField(max_length=5)
-	seq_dict["r%i_ss"] = models.CharField(max_length=1, choices=SS_CHOICES)
+	seq_dict["r%i_ss" % i ] = models.CharField(max_length=1, choices=SS_CHOICES)
 	seq_dict["r%i_terminal_flag" % i] = models.BooleanField()
 	seq_dict["r%i_xpr" % i] = models.BooleanField() # probably should be replaced
 
