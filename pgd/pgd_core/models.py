@@ -10,12 +10,26 @@ class Protein(models.Model):
 	resolution = models.FloatField()
 	rfactor = models.FloatField()
 
+# Chain model
+# Contains information about chains within a protein
+# 
+# NOTE: This model is in a temporary state that allows easier conversion from the current database
+# the primary key will be a 5 character string derived from the chainID and protein code.
+# this will all a very simple query to generate both the table of chains and set the FK
+# in the residue table.  Once splicer is updated and importing directly to the database the PK
+# will be changed to an integer.
+class Chain (models.Model):
+        id      = models.CharField(max_length=5, primary_key=True)
+        protein = models.ForeignKey(Protein, related_name='chains')
+        code    = models.CharField(max_length=1)
+
 # Residue model
 # (was 'protein')
 # Contains information regarding each amino acid and its geometry
 # (Note: fields need to be commented)
 class Residue(models.Model):
-	code = models.ForeignKey(Protein, related_name='residues')
+        chain   = models.ForeignKey(Chain, related_name='residues')
+	protein = models.ForeignKey(Protein, related_name='residues')        
 	aa = models.CharField(max_length=1, choices=AA_CHOICES) # new type
 	chainID = models.CharField(max_length=1) 
 	newID = models.IntegerField()
