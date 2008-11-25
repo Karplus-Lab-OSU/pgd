@@ -32,7 +32,7 @@ class Residue(models.Model):
     protein         = models.ForeignKey(Protein, related_name='residues')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1)
-    index           = models.PositiveIntegerField()
+    chainIndex      = models.PositiveIntegerField()
     a1              = models.FloatField()
     a2              = models.FloatField()
     a3              = models.FloatField()

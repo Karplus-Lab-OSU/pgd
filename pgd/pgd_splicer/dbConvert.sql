@@ -55,14 +55,13 @@ INSERT INTO pgd_core_chain (id, protein_id, code)
     FROM protein;
 
 -- import residues
-INSERT INTO pgd_core_residue (protein_id,chain_id,aa,chainID,oldID,newID,a1,a2,a3,a4,a5,a6,a7,L1,L2,L3,L4,L5,ss,phi,psi,chi,ome,bm,bs,h_bond_energy,zeta,terminal_flag,xpr)
+INSERT INTO pgd_core_residue (protein_id,chain_id,aa,chainID,chainIndex,a1,a2,a3,a4,a5,a6,a7,L1,L2,L3,L4,L5,ss,phi,psi,chi,ome,bm,bs,h_bond_energy,zeta,terminal_flag,xpr)
     SELECT
         code            AS protein_id,
         CONCAT(code, chainID)   AS chain_id,
         aa_codes.key    AS aa,
         chainID         AS chainID,
-        oldID           AS oldID,
-        oldID           AS newID,
+        id              AS chainIndex,
         a1              AS a1,
         a2              AS a2,
         a3              AS a3,
