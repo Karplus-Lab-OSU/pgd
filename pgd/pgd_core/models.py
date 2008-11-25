@@ -59,4 +59,4 @@ class Residue(models.Model):
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
     def __str__(self):
-        return '%d' % self.newID
+        return '%d' % self.chainIndex
