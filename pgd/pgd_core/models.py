@@ -1,5 +1,5 @@
 from django.db import models
-from constants import AA_CHOICES, SS_CHOICES, Subscripter
+from constants import AA_CHOICES, SS_CHOICES
 
 # Protein model
 # (was 'protein_info')
@@ -30,6 +30,7 @@ class Chain (models.Model):
 class Residue(models.Model):
     chain           = models.ForeignKey(Chain, related_name='residues')
     protein         = models.ForeignKey(Protein, related_name='residues')
+    next            = models.OneToOneField('self', related_name='prev')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1)
     chainIndex      = models.PositiveIntegerField()

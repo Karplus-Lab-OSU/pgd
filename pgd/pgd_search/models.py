@@ -22,7 +22,9 @@ class Search_residue(models.Model):
     index           = models.PositiveIntegerField()
     chainID         = models.CharField(max_length=1)
     newID           = models.IntegerField()
-    oldID           = models.CharField(max_length=5) # perhaps we don't need to search on this field
+    oldID           = models.CharField(max_length=5) # perhaps we don't need to search on this field?
+    aa_int          = models.IntegerField()
+
     a1              = models.CharField(max_length=30)
     a2              = models.CharField(max_length=30)
     a3              = models.CharField(max_length=30)
@@ -48,9 +50,17 @@ class Search_residue(models.Model):
     terminal_flag   = models.BooleanField()
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
-# Nextscripter
+    def __init__(self):
+        models.Model.__init__(self)
+        # make 'residues' a subscriptable way to access Residue onjects
+        Residue_subscripter(self, 'residues')
+        # populate 'aa' with a dictionary of allowed 'aa' values
+        self.aa = dict([(j[1],1 if self.aa_int == None else 1&self.aa_int>>i) for i,j in enumerate(AA_CHOICES)])
+
+
+# Residue_subscripter
 # A subscripter for iterating through the Residues in a Segment
-class Nextscripter():
+class Residue_subscripter():
     def __init__(self, key, parent):
         self.parent = parent
         #add this instance to the parent. doing this here
@@ -58,60 +68,53 @@ class Nextscripter():
         #you only need to specify the key once
         parent.__dict__[key] = self
 
-    def __nextloop__(self, i):
-        item = self.parent.first
-        for j in range(i):
-            # If the amino acid cannot iterate any further, raise an error
-            if item.terminal_flag: raise AttributeError
-            item = item.next
-        return item
-
     def __getitem__(self, i):
-        return self.__nextloop__(i)
+        try: # Get the object, if it's been instantiated...
+            return self.parent.__dict__['r%i' % i]
+        except KeyError: # ...otherwise, instantiate it.
+            try: # If the object can be instantiated, return it...
+                self.parent.__dict__['r%i' % i] = Residue.objects.filter(id=self.parent.__dict__['r%i_id' % i])[0]
+                return self.parent.__dict__['r%i' % i]
+            except KeyError: # ...otherwise, give an index error
+                raise IndexError
 
-    def __setitem__(self, i, val):
-        item = self.__nextloop__(i)
-        item = val
+    def __iter__(self):
+        # This function makes a generator object
+        def residue_generator(outer):
+            for i in range(SEQUENCE_SIZE):
+                try: # Get the next object...
+                    yield outer.__getitem__(i)
+                except IndexError: # ...until there are no more.
+                    raise StopIteration
+        return residue_generator(self)
 
+# Segment_abstract
 # A base class for the Segment object
 class Segment_abstract(models.Model):
 
-    protein = models.ForeignKey(Protein)
+    code = models.ForeignKey(Protein)
     chainID = models.CharField(max_length=1)
-    i       = models.ForeignKey(Residue)
-    length  = models.IntegerField()
 
     def __init__(self):
         models.Model.__init__(self)
-
-        # make the Residue objects subscriptable
-        Nextscripter('residue_object', self)
-
-    # make the residue data subscriptable? (todo?)
-#    def __getattr__(self, key):
-#        if key not in self.__dict__.keys() and key.startswith("residue_data_"):
-#
-#        object.__getattr__(self,key)
+        Residue_subscripter(self, 'residues')
 
     class Meta:
         abstract = True
 
 # Build a dict for the fields of variable number
 seq_dict = {'__module__' : 'pgd_search.models'}
-for i in range(5):
+for i in range(2):
 
-    # Allow access to the master Residue object...
-    #seq_dict["residue_object_%i" % i] = models.ForeignKey(Residue, related_name="asdf_%i" % i)
+    seq_dict["r%i_id" % i] = models.PositiveIntegerField()
+    seq_dict["r%i_index" % i] = models.PositiveIntegerField()
+    seq_dict["r%i_newID" % i] = models.IntegerField()
+    seq_dict["r%i_oldID" % i] = models.CharField(max_length=5)
+    seq_dict["r%i_ss" % i] = models.CharField(max_length=1, choices=SS_CHOICES)
+    seq_dict["r%i_terminal_flag" % i] = models.BooleanField()
+    seq_dict["r%i_xpr" % i] = models.BooleanField() # probably should be replaced
 
-    # ...but make its data available (for filters, etc.) without instantiation
-    seq_dict["r%i_index" % i]           = models.PositiveIntegerField()
-    seq_dict["r%i_newID" % i]           = models.IntegerField()
-    seq_dict["r%i_oldID" % i]           = models.CharField(max_length=5)
-    seq_dict["r%i_ss" % i ]             = models.CharField(max_length=1, choices=SS_CHOICES)
-    seq_dict["r%i_terminal_flag" % i]   = models.BooleanField()
-    seq_dict["r%i_xpr" % i]             = models.BooleanField() # probably should be replaced
-
-    # the loops here are just to save on typing
+    # the loops here are just to save on space/typing
     for j in range(1,8):
         seq_dict["r%i_a%i" % (i,j)] = models.FloatField()
     for j in range(1,6):
@@ -119,5 +122,5 @@ for i in range(5):
     for j in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta"):
         seq_dict["r%i_%s" % (i,j)] = models.FloatField()
 
-# Create the Segment object with the fields from the dict
+# Create the Segment model with the fields from the dict
 Segment = type('Segment', (Segment_abstract,), seq_dict)
