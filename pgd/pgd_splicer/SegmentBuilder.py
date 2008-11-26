@@ -19,8 +19,12 @@ This task requires that proteins, chains, and residues have already been created
 """
 class SegmentBuilderTask(Task):
 
+    proteinCount = None
+    proteinTotal = None
+
     def _work(self, args):
         length = 10
+        self.proteinCount = 0
         lastIndex = length - 1
 
         #calculate the position of i in an array of size 'length'
@@ -30,8 +34,10 @@ class SegmentBuilderTask(Task):
         lastIndexOffset = lastIndex - iIndex
 
         proteins = Protein.objects.all()
+        self.proteinTotal = len(proteins)
         for protein in proteins:
-            print 'protein: %s' % protein.code
+            self.proteinCount += 1
+            print 'protein (%d/%d) : %s' % (self.proteinCount, self.proteinTotal, protein.code)
 
             chains = protein.chains.all()
             for chain in chains:
@@ -48,11 +54,11 @@ class SegmentBuilderTask(Task):
                 #populate remaining residues with values looked up from the database
                 id = 0
                 for i in range(iIndex, length):
-                    result = chain.residues.filter(chainIndex=id)
-                    if len(result):
-                        segmentList.append(result[0])
-                    else:
-                        segmentList.append(None)
+                    try:
+                        residue = chain.residues.get(chainIndex=id)
+                    except:
+                        residue = None
+                    segmentList.append(residue)
                     id = id + 1
 
                 print '        initial list: %s' % segmentList
@@ -69,26 +75,26 @@ class SegmentBuilderTask(Task):
                     #  this will roll lastIndexOffset past the last known index but this is expected
                     #  the queries will return None which is also expected
                     #  the last known index will have a maximum length of 1 with all remaining residues as None
-                    result = chain.residues.filter(chainIndex=ri+lastIndexOffset)
-                    if len(result):
-                        segmentList.append(result[0])
-                    else:
-                        segmentList.append(None)
+                    try:
+                        residue = chain.residues.get(chainIndex=ri+lastIndexOffset)
+                    except:
+                        residue = None
+
+                    segmentList.append(residue)
                     del segmentList[0]
-                    #print '        list: %s' % segmentList
+                    #print '            list: %s' % segmentList
 
                     #if i is None then skip this segment
-                    #its maxLength would be 0 and the segment would never be
-                    #returned in any search
+                    #its maxLength would be 0 and the segment would never be returned in any search
                     if not segmentList[iIndex]:
                         continue
 
                     #find existing segment or create new one
                     iProperty = 'r%d_index' % iIndex
-                    segmentResult = Segment.objects.filter(protein__code = protein.code, i__chainIndex = segmentList[iIndex].chainIndex)
-                    if len(segmentResult):
-                        segment = segmentResult[0]
-                    else:
+                    kwargs = {'protein__code':protein.code, iProperty:segmentList[iIndex].chainIndex}
+                    try:
+                        segment = Segment.objects.get(**kwargs)
+                    except:
                         segment = Segment()
 
                     #set residues in segment
@@ -108,6 +114,7 @@ class SegmentBuilderTask(Task):
                     #save segment
                     #print '            segment: %s' % segment
                     #segment.save()
+
 
 if __name__ == '__main__':
     builder = SegmentBuilderTask('Command Line Builder')
