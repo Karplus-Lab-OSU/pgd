@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
 from constants import AA_CHOICES, SS_CHOICES, SEQUENCE_SIZE, Subscripter
 from exceptions import AttributeError
+import re
 
 # Search
 # A search query submitted by a user
@@ -20,35 +21,33 @@ class Search_code(models.Model):
 class Search_residue(models.Model):
     search          = models.ForeignKey(Search, related_name='residues')
     index           = models.PositiveIntegerField()
-    chainID         = models.CharField(max_length=1)
-    newID           = models.IntegerField()
-    oldID           = models.CharField(max_length=5) # perhaps we don't need to search on this field?
-    aa_int          = models.IntegerField()
+    chainID         = models.CharField(max_length=1, null=True)
+    aa_int          = models.IntegerField(null=True)
 
-    a1              = models.CharField(max_length=30)
-    a2              = models.CharField(max_length=30)
-    a3              = models.CharField(max_length=30)
-    a4              = models.CharField(max_length=30)
-    a5              = models.CharField(max_length=30)
-    a6              = models.CharField(max_length=30)
-    a7              = models.CharField(max_length=30)
-    L1              = models.CharField(max_length=30)
-    L2              = models.CharField(max_length=30)
-    L3              = models.CharField(max_length=30)
-    L4              = models.CharField(max_length=30)
-    L5              = models.CharField(max_length=30)
-    ss              = models.CharField(max_length=1, choices=SS_CHOICES) # new type (was blob, but all entries 1 char)
-    phi             = models.CharField(max_length=30)
-    psi             = models.CharField(max_length=30)
-    ome             = models.CharField(max_length=30)
-    chi             = models.CharField(max_length=30)
-    bm              = models.CharField(max_length=30)
-    bs              = models.CharField(max_length=30)
-    bg              = models.CharField(max_length=30)
-    h_bond_energy   = models.CharField(max_length=30)
-    zeta            = models.CharField(max_length=30)
-    terminal_flag   = models.BooleanField()
-    xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
+    a1              = models.CharField(max_length=30, null=True)
+    a2              = models.CharField(max_length=30, null=True)
+    a3              = models.CharField(max_length=30, null=True)
+    a4              = models.CharField(max_length=30, null=True)
+    a5              = models.CharField(max_length=30, null=True)
+    a6              = models.CharField(max_length=30, null=True)
+    a7              = models.CharField(max_length=30, null=True)
+    L1              = models.CharField(max_length=30, null=True)
+    L2              = models.CharField(max_length=30, null=True)
+    L3              = models.CharField(max_length=30, null=True)
+    L4              = models.CharField(max_length=30, null=True)
+    L5              = models.CharField(max_length=30, null=True)
+    ss              = models.CharField(max_length=1, choices=SS_CHOICES, null=True) # new type (was blob, but all entries 1 char)
+    phi             = models.CharField(max_length=30, null=True)
+    psi             = models.CharField(max_length=30, null=True)
+    ome             = models.CharField(max_length=30, null=True)
+    chi             = models.CharField(max_length=30, null=True)
+    bm              = models.CharField(max_length=30, null=True)
+    bs              = models.CharField(max_length=30, null=True)
+    bg              = models.CharField(max_length=30, null=True)
+    h_bond_energy   = models.CharField(max_length=30, null=True)
+    zeta            = models.CharField(max_length=30, null=True)
+    terminal_flag   = models.BooleanField(null=True)
+    xpr             = models.BooleanField(null=True) # this field may not be necessary; it has never been implemented
 
     def __init__(self):
         models.Model.__init__(self)
@@ -71,12 +70,28 @@ class Residue_subscripter():
     def __getitem__(self, i):
         try: # Get the object, if it's been instantiated...
             return self.parent.__dict__['r%i' % i]
+
         except KeyError: # ...otherwise, instantiate it.
-            try: # If the object can be instantiated, return it...
+            # If the object can be instantiated, return it
+            if self.parent.__dict__['r%i_id' % i]:
                 self.parent.__dict__['r%i' % i] = Residue.objects.filter(id=self.parent.__dict__['r%i_id' % i])[0]
                 return self.parent.__dict__['r%i' % i]
-            except KeyError: # ...otherwise, give an index error
-                raise IndexError
+
+            # otherwise return None.  These objects are proxies to underlying properties 
+            # so they must always return a values or None
+            else:
+                return None
+
+    def __setitem__(self, i, v):
+        #populate dict and set the FK
+        if v:
+            self.parent.__dict__['r%i' % i] = v
+            self.parent.__dict__['r%i_id' % i] = v.id
+
+        #v is None, clear the object from the dict and clear the FK
+        else:
+            del self.parent.__dict__['r%i' % i]
+            self.parent.__dict__['r%i_id' % i] = None
 
     def __iter__(self):
         # This function makes a generator object
@@ -88,39 +103,59 @@ class Residue_subscripter():
                     raise StopIteration
         return residue_generator(self)
 
+
+#this pattern matches any property that is proxied to a residue
+proxyPattern = re.compile('^r([\d]+)_(?!id$)([\w]+)')
+
+
 # Segment_abstract
 # A base class for the Segment object
 class Segment_abstract(models.Model):
 
-    code = models.ForeignKey(Protein)
+    protein = models.ForeignKey(Protein)
     chainID = models.CharField(max_length=1)
 
     def __init__(self):
         models.Model.__init__(self)
-        Residue_subscripter(self, 'residues')
+        Residue_subscripter('residues', self)
+
+    def __getattribute__(self,name):
+        #check for properties proxied to a residue object
+        match = proxyPattern.match(name)
+        if match:
+            index = int(match.group(1))
+            attr  = match.group(2)
+            residue = object.__getattribute__(self, 'residues')[index]
+            if residue:
+                return residue.__dict__[attr]
+
+            #return none if residue is none (transitive)
+            return None
+
+        # not a proxied attribute
+        else:
+            return object.__getattribute__(self, name)
 
     class Meta:
         abstract = True
 
 # Build a dict for the fields of variable number
 seq_dict = {'__module__' : 'pgd_search.models'}
-for i in range(2):
+for i in range(10):
 
-    seq_dict["r%i_id" % i] = models.PositiveIntegerField()
-    seq_dict["r%i_index" % i] = models.PositiveIntegerField()
-    seq_dict["r%i_newID" % i] = models.IntegerField()
-    seq_dict["r%i_oldID" % i] = models.CharField(max_length=5)
-    seq_dict["r%i_ss" % i] = models.CharField(max_length=1, choices=SS_CHOICES)
-    seq_dict["r%i_terminal_flag" % i] = models.BooleanField()
-    seq_dict["r%i_xpr" % i] = models.BooleanField() # probably should be replaced
+    seq_dict["r%i_id" % i]              = models.PositiveIntegerField(null=True)
+    seq_dict["r%i_index" % i]           = models.PositiveIntegerField(null=True)
+    seq_dict["r%i_ss" % i]              = models.CharField(max_length=1, choices=SS_CHOICES, null=True)
+    seq_dict["r%i_terminal_flag" % i]   = models.BooleanField(null=True)
+    seq_dict["r%i_xpr" % i]             = models.BooleanField(null=True) # probably should be replaced
 
     # the loops here are just to save on space/typing
     for j in range(1,8):
-        seq_dict["r%i_a%i" % (i,j)] = models.FloatField()
+        seq_dict["r%i_a%i" % (i,j)] = models.FloatField(null=True)
     for j in range(1,6):
-        seq_dict["r%i_L%i" % (i,j)] = models.FloatField()
+        seq_dict["r%i_L%i" % (i,j)] = models.FloatField(null=True)
     for j in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta"):
-        seq_dict["r%i_%s" % (i,j)] = models.FloatField()
+        seq_dict["r%i_%s" % (i,j)] = models.FloatField(null=True)
 
 # Create the Segment model with the fields from the dict
 Segment = type('Segment', (Segment_abstract,), seq_dict)
