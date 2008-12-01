@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <!--<link rel="stylesheet" href="http://dev.jquery.com/view/tags/ui/latest/themes/flora/flora.all.css" type="text/css" media="screen" title="Flora (Default)"-->
+        <style>
+            * { font-family: Helvetica, Arial, Tahoma; font-size: 12px; font-color: #444; line-height: 25px; padding: 0px; margin: 0px; }
+
+            .label {
+                padding-right:20px;
+                font-weight:bold;
+                font-size:12px
+            }
+
+            TR.spacer {
+                height:20px;
+            }
+
+            input {
+                background-color: #ffffff;
+                border: 1px solid #d4d4d4;
+                padding:1px;
+                font-size: 12px;
+            }
+
+            input.field {
+                margin:2px;
+            }
+
+            td.field {
+                width:120px;
+                text-align:right;
+            }
+
+            #formContainer {
+                margin-left:50px;
+            }
+
+            .toggle {
+                float:left;
+                position:relative;
+                top:4px;
+                margin-left:30px;
+                width:15px;
+                height:15px;
+                background-repeat:repeat-x;
+                border:0px;
+            }
+
+            .toggle_Include {
+                opacity:1;
+                background-image:url('http://doors.osuosl.org/media/green.png');
+            }
+
+            .toggle_Exclude {
+                opacity:1;
+                background-image:url('http://doors.osuosl.org/media/red.png');
+            }
+
+            .field_include {
+                background-color:#c2e192;
+                border-color:black;
+            }
+            .field_exclude {
+                border-color:black;
+                background-color:#ee9c98;
+            }
+
+
+            .residues {
+                width:50px;
+             }
+
+            #residuesContainer {
+                margin-top:20px;
+            }
+
+            select {
+                border: 1px solid #d4d4d4;
+                margin-right:2px;
+                
+                width:69px;
+                background-color:#ffffff;
+            }
+
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/ui.core.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/ui.slider.js"></script>
+
+
+        <script type="text/javascript">
+
+            n = Math.ceil({{maxLength}} / 2);
+            iArray = new Array({{maxLength}});
+            for (i=0; i<n; i++) {
+                iArray[i*2] = i+1;
+                iArray[i*2+1] = 0-i-1;
+            }
+
+            function sizeChange(evt){
+                oldValue = $('#oldLength').val();
+                newValue = $('#residues').val();
+                if (oldValue != newValue) {
+                    //removing values
+                    if (oldValue > newValue) {
+                        for(i={{maxLength}}; i>=newValue; i--){
+                            str = '.col_' + iArray[i-1]
+                            $(str).fadeOut(500);
+                            $(str + ' input.field').attr("disabled", true);
+                        }
+                    // adding values
+                    } else {
+                        for(i=0; i<=newValue; i++){
+                            str = '.col_' + iArray[i-2]
+                            //alert('adding: ' + str);
+                            $(str + ' input.field').attr("disabled", false);
+                            $(str).fadeIn(500);
+                        }
+                    }
+                    $('#oldLength').val(newValue);
+                }
+            }
+
+            /*
+            Determine if an element has the default value for that field type
+            */
+            function isDefault(element){
+                return $(element).val() == ''
+            }
+
+            $(document).ready(function() {
+                //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});
+
+                $('input.field').keyup(function(evt){
+                    if (isDefault(evt.target)){
+                        $(evt.target.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
+                        $(evt.target.parentNode).children(".include").attr('disabled', true);
+                        $(evt.target).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
+                    }else{
+                        if (!($(evt.target).hasClass('field_include') || $(evt.target).hasClass('field_exclude'))){
+                            $(evt.target.parentNode).children(".toggle").addClass('toggle_Include');
+                            $(evt.target.parentNode).children(".include").val(1).attr('disabled',false);
+                            $(evt.target).addClass('field_include').removeClass('field_exclude');
+                        }
+                    }
+                });
+                
+                $('select.field').change(function(evt){
+                    if (isDefault(evt.target)){
+                        $(evt.target.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
+                        $(evt.target.parentNode).children(".include").attr('disabled', true);
+                        $(evt.target).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
+                    }else{
+                        if (!($(evt.target).hasClass('field_include') || $(evt.target).hasClass('field_exclude'))){
+                            $(evt.target.parentNode).children(".toggle").addClass('toggle_Include');
+                            $(evt.target.parentNode).children(".include").val(1).attr('disabled',false);
+                            $(evt.target).addClass('field_include').removeClass('field_exclude');
+                        }
+                    }
+                });
+
+                $('span.toggle').click(function(evt){
+                    tar = $(evt.target);
+                    if ( tar.hasClass('toggle_Include')) {
+                        tar.removeClass('toggle_Include');
+                        tar.addClass('toggle_Exclude');
+                        $(evt.target.parentNode).children(".include").val(0);
+                        $(evt.target.parentNode).children(".field").addClass('field_exclude').removeClass('field_include');
+                    }else if (tar.hasClass('toggle_Exclude')){
+                        tar.removeClass('toggle_Exclude');
+                        tar.addClass('toggle_Include');
+                        $(evt.target.parentNode).children(".include").val(1);
+                        $(evt.target.parentNode).children(".field").addClass('field_include').removeClass('field_exclude');
+                    }
+                });
+
+                $('#residues').change(sizeChange);
+
+                //force update of segments
+                $('#oldLength').val({{maxLength}});
+                sizeChange(1);
+
+            });
+
+        </script>
+    </head>
+    <body>
+
+    <div id="formContainer">
+
+        <form name="search">
+
+            <table>
+            <tbody>
+            <tr>
+                <td class="label">Residues</td>
+                <td>
+                    <select id="residues" type="text" name="length">
+                        {% for i in iValues %}
+                            <option value="{{i.2}}">{{i.2}}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="hidden" id="oldLength" value="5">
+                </td>
+            </tr>
+
+            <tr>
+                <td class="label">Resolution</td>
+                <td><input type="text" value="0" size='3'/> - <input type="text" value="1.5" size='3'/>
+            </tr>
+            <tr>
+                <td class="label">Threshold</td>
+                <td><input type="text" size="8"/>
+            </tr>
+            <tr>
+                <td class="label">PDB Files</td>
+                <td><input type="text" size="8"/>
+            </tr>
+            </tbody>
+            </table>
+
+            <div id="residuesContainer">
+            <table>
+            <tbody>
+            <tr><td/>
+            {% for i in iValues %}
+                <th class="field col_{{i.0}}">{{i.1}}</th>
+            {% endfor %}
+
+            <tr>
+                <td class="label">Peptide</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="aa_i{{i.0}}"/>
+                        <select class="field" name="aa_{{i.0}}">
+                            {% for aa in aaChoices %}
+                                <option value="{{aa.0}}">&nbsp;{{aa.1}}</option>
+                            {% endfor %}
+                        </select>
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <tr>
+                <td class="label">Phi</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="phi_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="phi_{{i.0}}"/>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">Psi</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="psi_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="psi_{{i.0}}"/>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">SS</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="ss_i_{{i.0}}"/>
+                        <select class="field" name="ss_{{i.0}}">
+                            {% for ss in ssChoices%}
+                                <option value="{{ss.0}}">&nbsp;{{ss.0}}</value>
+                            {% endfor %}
+                        </select>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">Bm Max</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="bm_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="bm_{{i.0}}"/>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">Bg Max</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="bg_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="bg_{{i.0}}"/>
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">BscMax</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="bsc_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="bsc_{{i.0}}"/>
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer">
+
+            <div id="tao">
+                <tr>
+                    <td class="label">Tao 1</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a1_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a1_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                    </tr>
+                <tr>
+                    <td class="label">Tao 2</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a2_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a2_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                    </tr>
+                <tr>
+                    <td class="label">Tao 3</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a3_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a3_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                    </tr>
+                <tr>
+                    <td class="label">Tao 4</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a4_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a4_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Tao 5</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a5_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a5_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Tao 6</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a6_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a6_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Tao 7</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="a7_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="a7_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </div>
+
+            <tr class="spacer">
+
+            <div id="length">
+                <tr>
+                    <td class="label">Length 1</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="L1_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="L1_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Length 2</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="L2_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="L2_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Length 3</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="L3_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="L3_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Length 4</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="L4_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="L4_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Length 5</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="L5_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="L5_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr>
+                    <td class="label">Length 6</td>
+                    {% for i in iValues %}
+                        <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="L6_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="L6_{{i.0}}"/>
+                    </td>
+                    {% endfor %}
+                </tr>
+            </div>
+
+            <tr>
+                <td class="label">Omega (abs)</td>
+                {% for i in iValues %}
+                    <td class="field col_{{i.0}}">
+                        <span class="toggle">&nbsp;</span>
+                        <input class="include" type="hidden" name="omega_i_{{i.0}}"/>
+                        <input class="field" type="text" size="8" name="omega_{{i.0}}"/>
+                    </td>
+                {% endfor %}
+            </tr>
+            </tbody>
+            </table>
+            </div>
+
+        </form>
+
+    </div>
+    </body>
+</html>
+

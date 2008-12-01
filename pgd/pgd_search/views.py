@@ -1,11 +1,50 @@
 from django.http import HttpResponse
 from django.template import RequestContext, Context, loader
 from django.conf import settings
+import math
 
 from ConfDistFuncs import *
 from svg import *
 
-#from pgd_core.models import *
+from constants import AA_CHOICES, SS_CHOICES
+from pgd_search.models import *
+
+
+
+def search(request):
+    # create list of I values
+    length = 5
+
+    #calculate the position of i in an array of size 'length'
+    iIndex = int(math.ceil(length/2.0)-1)
+
+    iValues = []
+    c = 1;
+    for i in range(1, iIndex+1):
+        val = iIndex - i +1
+        iValues.append(( 0-val,'i - %s' % val, c))
+        c+=1
+
+    iValues.append((0,'i',c))
+    c+=1
+
+    for i in range(1, length-iIndex, 1):
+        iValues.append( (i,'i + %s' % i,c))
+        c+=1
+
+    t = loader.get_template('search.html')
+    c = RequestContext(request, {
+        'MEDIA_URL': settings.MEDIA_URL,
+        'iValues' : iValues,
+        'maxLength' : length,
+        'aaChoices' : AA_CHOICES,
+        'ssChoices' : SS_CHOICES,
+    })
+
+    ret = HttpResponse(t.render(c))
+
+    return ret 
+
 
 """ 
 Renders a conformational distribution graph
