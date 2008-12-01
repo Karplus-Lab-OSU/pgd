@@ -61,8 +61,6 @@ class SegmentBuilderTask(Task):
                     segmentList.append(residue)
                     id = id + 1
 
-                print '        initial list: %s' % segmentList
-
                 #determine index of the last known residue in the chain
                 result = chain.residues.order_by('chainIndex').reverse()[0]
                 chainLength = result.chainIndex
@@ -99,10 +97,10 @@ class SegmentBuilderTask(Task):
 
                     #set residues in segment
                     for i in range(length):
-                        pass
-                        #segment.residue[i] = segmentList[i]
+                        segment.residues[i] = segmentList[i]
+
                     segment.protein = protein
-                    segment.i = segmentList[iIndex]
+                    segment.chainID = chain.code
  
                     #calculate max length of this particular segment
                     for i in range(iIndex):
@@ -113,7 +111,7 @@ class SegmentBuilderTask(Task):
 
                     #save segment
                     #print '            segment: %s' % segment
-                    #segment.save()
+                    segment.save()
 
 
 if __name__ == '__main__':

@@ -28,9 +28,8 @@ class Chain (models.Model):
 # Contains information regarding each amino acid and its geometry
 # (Note: fields need to be commented)
 class Residue(models.Model):
-    chain           = models.ForeignKey(Chain, related_name='residues')
     protein         = models.ForeignKey(Protein, related_name='residues')
-    next            = models.OneToOneField('self', related_name='prev')
+    chain           = models.ForeignKey(Chain, related_name='residues')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1)
     chainIndex      = models.PositiveIntegerField()

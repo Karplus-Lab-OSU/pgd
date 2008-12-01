@@ -88,8 +88,8 @@ class Residue_subscripter():
             self.parent.__dict__['r%i' % i] = v
             self.parent.__dict__['r%i_id' % i] = v.id
 
-        #v is None, clear the object from the dict and clear the FK
-        else:
+        #v is None, clear the object from the dict and clear the FK (if not already None)
+        elif self.parent.__dict__.has_key('r%i' % i):
             del self.parent.__dict__['r%i' % i]
             self.parent.__dict__['r%i_id' % i] = None
 
@@ -144,7 +144,7 @@ seq_dict = {'__module__' : 'pgd_search.models'}
 for i in range(10):
 
     seq_dict["r%i_id" % i]              = models.PositiveIntegerField(null=True)
-    seq_dict["r%i_index" % i]           = models.PositiveIntegerField(null=True)
+    seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)
     seq_dict["r%i_ss" % i]              = models.CharField(max_length=1, choices=SS_CHOICES, null=True)
     seq_dict["r%i_terminal_flag" % i]   = models.BooleanField(null=True)
     seq_dict["r%i_xpr" % i]             = models.BooleanField(null=True) # probably should be replaced
