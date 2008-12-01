@@ -1,9 +1,25 @@
 from django.db import models
 from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
-from constants import AA_CHOICES, SS_CHOICES, SEQUENCE_SIZE, Subscripter
+from constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
 import re
+
+import dbsettings
+from dbsettings.loading import set_setting_value
+
+# Search settngs
+class SearchSettings(dbsettings.Group):
+    segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches')
+    requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available')
+searchSettings = SearchSettings('Splicer')
+
+#set defaults for settings
+if not searchSettings.segmentSize:
+    set_setting_value('pgd_search.models', '', 'segmentSize', 10)
+if not searchSettings.requestedSegmentSize:
+    set_setting_value('pgd_search.models', '', 'requestedSegmentSize', 10)
+
 
 # Search
 # A search query submitted by a user
@@ -96,7 +112,7 @@ class Residue_subscripter():
     def __iter__(self):
         # This function makes a generator object
         def residue_generator(outer):
-            for i in range(SEQUENCE_SIZE):
+            for i in range(searchSettings.segmentSize):
                 try: # Get the next object...
                     yield outer.__getitem__(i)
                 except IndexError: # ...until there are no more.
@@ -141,7 +157,7 @@ class Segment_abstract(models.Model):
 
 # Build a dict for the fields of variable number
 seq_dict = {'__module__' : 'pgd_search.models'}
-for i in range(10):
+for i in range(searchSettings.segmentSize):
 
     seq_dict["r%i_id" % i]              = models.PositiveIntegerField(null=True)
     seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)

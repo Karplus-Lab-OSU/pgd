@@ -23,7 +23,7 @@ class SegmentBuilderTask(Task):
     proteinTotal = None
 
     def _work(self, args):
-        length = 10
+        length = searchSettings.segmentSize
         self.proteinCount = 0
         lastIndex = length - 1
 
