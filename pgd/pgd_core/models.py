@@ -9,6 +9,9 @@ class Protein(models.Model):
     threshold   = models.IntegerField() # new type; this should probably be a boolean type
     resolution  = models.FloatField()
     rfactor     = models.FloatField()
+    
+    def __unicode__(self):
+        return self.code
 
 # Chain model
 # Contains information about chains within a protein

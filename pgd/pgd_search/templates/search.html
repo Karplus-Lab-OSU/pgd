@@ -10,7 +10,8 @@
             .label {
                 padding-right:20px;
                 font-weight:bold;
-                font-size:12px
+                font-size:12px;
+                width:80px;
             }
 
             TR.spacer {
@@ -67,7 +68,6 @@
                 background-color:#ee9c98;
             }
 
-
             .residues {
                 width:50px;
              }
@@ -79,11 +79,9 @@
             select {
                 border: 1px solid #d4d4d4;
                 margin-right:2px;
-                
                 width:69px;
                 background-color:#ffffff;
             }
-
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -94,19 +92,21 @@
         <script type="text/javascript">
 
             n = Math.ceil({{maxLength}} / 2);
-            iArray = new Array({{maxLength}});
+            iArray = new Array({{maxLength}}-1);
             for (i=0; i<n; i++) {
                 iArray[i*2] = i+1;
-                iArray[i*2+1] = 0-i-1;
+                if (i*2+1 < {{maxLength}}-1){
+                    iArray[i*2+1] = 0-i-1;
+                }
             }
 
-            function sizeChange(evt){
-                oldValue = $('#oldLength').val();
-                newValue = $('#residues').val();
+        function sizeChange(evt){
+                oldValue = parseInt($('#oldLength').val());
+                newValue = parseInt($('#id_residues').val());
                 if (oldValue != newValue) {
                     //removing values
                     if (oldValue > newValue) {
-                        for(i={{maxLength}}; i>=newValue; i--){
+                        for(i={{maxLength}}-1; i>=newValue; i--){
                             str = '.col_' + iArray[i-1]
                             $(str).fadeOut(500);
                             $(str + ' input.field').attr("disabled", true);
@@ -115,7 +115,6 @@
                     } else {
                         for(i=0; i<=newValue; i++){
                             str = '.col_' + iArray[i-2]
-                            //alert('adding: ' + str);
                             $(str + ' input.field').attr("disabled", false);
                             $(str).fadeIn(500);
                         }
@@ -147,7 +146,7 @@
                         }
                     }
                 });
-                
+
                 $('select.field').change(function(evt){
                     if (isDefault(evt.target)){
                         $(evt.target.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
@@ -177,7 +176,7 @@
                     }
                 });
 
-                $('#residues').change(sizeChange);
+                $('#id_residues').change(sizeChange);
 
                 //force update of segments
                 $('#oldLength').val({{maxLength}});
@@ -196,28 +195,26 @@
             <table>
             <tbody>
             <tr>
-                <td class="label">Residues</td>
+                <td class="label">{{form.residues.label}}</td>
                 <td>
-                    <select id="residues" type="text" name="length">
-                        {% for i in iValues %}
-                            <option value="{{i.2}}">{{i.2}}</option>
-                        {% endfor %}
-                    </select>
+                    {{form.residues}}
                     <input type="hidden" id="oldLength" value="5">
                 </td>
             </tr>
 
             <tr>
                 <td class="label">Resolution</td>
-                <td><input type="text" value="0" size='3'/> - <input type="text" value="1.5" size='3'/>
+                <td>{{form.resolutionMin}} - {{form.resolutionMax}}</td>
             </tr>
             <tr>
-                <td class="label">Threshold</td>
-                <td><input type="text" size="8"/>
+                <td class="label">{{form.threshold.label}}</td>
+                <td>{{form.threshold}}</td>
             </tr>
             <tr>
-                <td class="label">PDB Files</td>
-                <td><input type="text" size="8"/>
+                <td class="label">{{form.proteins.label}}</td>
+                <td>
+                    {{form.proteins}}
+                </td>
             </tr>
             </tbody>
             </table>
@@ -232,80 +229,58 @@
 
             <tr>
                 <td class="label">Peptide</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="aa_i{{i.0}}"/>
-                        <select class="field" name="aa_{{i.0}}">
-                            {% for aa in aaChoices %}
-                                <option value="{{aa.0}}">&nbsp;{{aa.1}}</option>
-                            {% endfor %}
-                        </select>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.aa}}{{r.aa_i}}
                     </td>
                 {% endfor %}
             </tr>
 
             <tr>
                 <td class="label">Phi</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="phi_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="phi_{{i.0}}"/>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.phi}}{{r.phi_i}}
                     </td>
                 {% endfor %}
             </tr>
             <tr>
                 <td class="label">Psi</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="psi_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="psi_{{i.0}}"/>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.psi}}{{r.psi_i}}
                     </td>
                 {% endfor %}
             </tr>
             <tr>
                 <td class="label">SS</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="ss_i_{{i.0}}"/>
-                        <select class="field" name="ss_{{i.0}}">
-                            {% for ss in ssChoices%}
-                                <option value="{{ss.0}}">&nbsp;{{ss.0}}</value>
-                            {% endfor %}
-                        </select>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
                     </td>
                 {% endfor %}
             </tr>
             <tr>
                 <td class="label">Bm Max</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="bm_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="bm_{{i.0}}"/>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.bm}}{{r.bm_i}}
                     </td>
                 {% endfor %}
             </tr>
             <tr>
                 <td class="label">Bg Max</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="bg_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="bg_{{i.0}}"/>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.bg}}{{r.bg_i}}
                     </td>
                 {% endfor %}
             </tr>
             <tr>
                 <td class="label">BscMax</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="bsc_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="bsc_{{i.0}}"/>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.bs}}{{r.bs_i}}
                     </td>
                 {% endfor %}
             </tr>
@@ -315,71 +290,57 @@
             <div id="tao">
                 <tr>
                     <td class="label">Tao 1</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a1_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a1_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a1}}{{r.a1_i}}
                     </td>
                     {% endfor %}
                     </tr>
                 <tr>
                     <td class="label">Tao 2</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a2_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a2_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a2}}{{r.a2_i}}
                     </td>
                     {% endfor %}
                     </tr>
                 <tr>
                     <td class="label">Tao 3</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a3_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a3_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a3}}{{r.a3_i}}
                     </td>
                     {% endfor %}
                     </tr>
                 <tr>
                     <td class="label">Tao 4</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a4_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a4_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a4}}{{r.a4_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Tao 5</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a5_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a5_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a5}}{{r.a5_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Tao 6</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a6_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a6_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a6}}{{r.a6_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Tao 7</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="a7_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="a7_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a7}}{{r.a7_i}}
                     </td>
                     {% endfor %}
                 </tr>
@@ -390,61 +351,41 @@
             <div id="length">
                 <tr>
                     <td class="label">Length 1</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="L1_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="L1_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.L1}}{{r.L1_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Length 2</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="L2_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="L2_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Length 3</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="L3_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="L3_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Length 4</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="L4_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="L4_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.L4}}{{r.L4_i}}
                     </td>
                     {% endfor %}
                 </tr>
                 <tr>
                     <td class="label">Length 5</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="L5_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="L5_{{i.0}}"/>
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td class="label">Length 6</td>
-                    {% for i in iValues %}
-                        <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="L6_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="L6_{{i.0}}"/>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.L5}}{{r.L5_i}}
                     </td>
                     {% endfor %}
                 </tr>
@@ -452,20 +393,16 @@
 
             <tr>
                 <td class="label">Omega (abs)</td>
-                {% for i in iValues %}
-                    <td class="field col_{{i.0}}">
-                        <span class="toggle">&nbsp;</span>
-                        <input class="include" type="hidden" name="omega_i_{{i.0}}"/>
-                        <input class="field" type="text" size="8" name="omega_{{i.0}}"/>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
                     </td>
                 {% endfor %}
             </tr>
             </tbody>
             </table>
-            </div>
-
+<!--             </div> -->
         </form>
-
     </div>
     </body>
 </html>

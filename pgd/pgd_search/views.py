@@ -1,6 +1,8 @@
 from django.http import HttpResponse
 from django.template import RequestContext, Context, loader
 from django.conf import settings
+from django.shortcuts import render_to_response
+from django import forms
 import math
 
 from ConfDistFuncs import *
@@ -8,43 +10,84 @@ from svg import *
 
 from constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import *
+from pgd_core.models import *
 
 
+residueCountChoices = []
+for i in range(1,searchSettings.segmentSize+1):
+    residueCountChoices.append((i,i))
+
+class SearchFormBase(forms.Form):
+    threshold       = forms.ChoiceField(choices=[(25,25),(90,90)], required=False)
+    resolutionMin   = forms.FloatField(required=False, min_value=0, initial=0, widget=forms.TextInput(attrs={'size':3}))
+    resolutionMax   = forms.FloatField(required=False, min_value=0, initial=1.5, widget=forms.TextInput(attrs={'size':3}))
+    proteins        = forms.ModelMultipleChoiceField(queryset=Protein.objects.all().order_by('code'), required=False)
+    residues        = forms.ChoiceField(choices=residueCountChoices, initial=5)
+
+# Build a dict for the fields of variable number
+form_dict = {'__module__' : 'pgd_search.views'}
+
+start = 0 - (searchSettings.segmentSize-1) / 2
+stop  = int(math.ceil((searchSettings.segmentSize-1) / 2.0))+1
+residueIndexes = range(start, stop, 1)
+for i in residueIndexes:
+    form_dict["aa_%i" % i]      = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
+    form_dict["aa_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
+
+    form_dict["ss_%i" % i]      = forms.ChoiceField(choices=SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
+    form_dict["ss_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
+
+    # the loops here are just to save on space/typing
+    for j in range(1,8):
+        form_dict["a%i_%i" % (j,i)]     = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["a%i_i_%i" % (j,i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
+    for j in range(1,6):
+        form_dict["L%i_%i" % (j, i)]    = forms.FloatField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["L%i_i_%i" % (j, i)]  = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
+    for j in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta"):
+        form_dict["%s_%i" % (j, i)]     = forms.FloatField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_i_%i" % (j, i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
+
+# Create the Search Form with the fields from the dict
+SearchForm = type('SearchForm', (SearchFormBase,), form_dict)
 
 def search(request):
-    # create list of I values
-    length = 5
+    if request.method == 'POST': # If the form has been submitted
+        form = ContactForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            # Process the data in form.cleaned_data
+            #
+            return HttpResponseRedirect('/thanks/') # Redirect after POST
+    else:
+        form = SearchForm() # An unbound form
 
-    #calculate the position of i in an array of size 'length'
-    iIndex = int(math.ceil(length/2.0)-1)
-
+    #construct a list of values for i
     iValues = []
-    c = 1;
-    for i in range(1, iIndex+1):
-        val = iIndex - i +1
-        iValues.append(( 0-val,'i - %s' % val, c))
-        c+=1
+    for i in residueIndexes:
+        if i < 0:
+            iValues.append((i,'%i'%i))
+        elif i == 0:
+            iValues.append((i,'i'))
+        else:
+            iValues.append((i,'+%i'%i))
 
-    iValues.append((0,'i',c))
-    c+=1
+    #order the residue properties in way that django template can handle it better
+    residueFields = []
+    for i in residueIndexes:
+        dict = {}
+        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+            dict[prefix] =  form['%s_%i' % (prefix, i)]
+            dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
+            dict['index'] = i
+        residueFields.append(dict)
 
-    for i in range(1, length-iIndex, 1):
-        iValues.append( (i,'i + %s' % i,c))
-        c+=1
-
-    t = loader.get_template('search.html')
-    c = RequestContext(request, {
+    return render_to_response('search2.html', {
         'MEDIA_URL': settings.MEDIA_URL,
-        'iValues' : iValues,
-        'maxLength' : length,
-        'aaChoices' : AA_CHOICES,
-        'ssChoices' : SS_CHOICES,
+        'form': form,
+        'maxLength' : searchSettings.segmentSize,
+        'iValues':iValues,
+        'residueFields':residueFields
     })
-
-    ret = HttpResponse(t.render(c))
-
-    return ret 
-
 
 """ 
 Renders a conformational distribution graph
