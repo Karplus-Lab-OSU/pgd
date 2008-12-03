@@ -45,3 +45,7 @@ class Residue(models.Model):
 	zeta = models.FloatField()
 	terminal_flag = models.BooleanField() 
 	xpr = models.BooleanField() # this field may not be necessary; it has never been implemented
+
+class Testmod(models.Model):
+	broken = models.BooleanField(null=True)
+
