@@ -18,6 +18,17 @@
             #button-plot {
                 margin-top:10px;
             }
+            
+            #binDetails {
+                position:absolute;
+                float:left;
+                width:auto;
+                padding:4px;
+                background-color:grey;
+                font-size:10;
+                color:white;
+                border: 1px solid #aaaaaa;
+            }
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -34,12 +45,12 @@
                 width = 400;
                 borderPadding = 40;
                 var svg = $('#canvas').svg('get');
-                 {% for rect in svg.rects %}
+                {% for rect in svg.rects %}
                     svg.rect(
                         {{rect.x}}+fix,
                         {{rect.y}}+fix,
-                        {{rect.height}}+fix,
-                        {{rect.width}}+fix,
+                        {{rect.height}},
+                        {{rect.width}},
                         {fill: '{{rect.fill}}', stroke: '0', 'stroke-width': {{rect.stroke}}}
                     );
                 {% endfor %}
@@ -91,7 +102,18 @@
                          });
                     })
 
-                });
+                    {% for rect in boxes %}
+                        svg.rect(
+                            {{rect.0}}+fix,
+                            {{rect.1}}+fix,
+                            {{rect.2}},
+                            {{rect.3}},
+                            {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, {{rect.6}});', onmouseout:'bin_mouseout();'}
+                        );
+                    {% endfor %}
+
+
+                    });
 
                 var REF = {};
                 {% for k,v in referenceValues.items %}
@@ -99,6 +121,16 @@
                         REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
                     {% endifnotequal %}
                 {% endfor %}
+
+                function bin_mouseover(evt, val){
+                    //alert(evt.clientX);
+
+                    $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
+                }
+
+                function bin_mouseout(){
+                    $('div#binDetails').hide();
+                }
         </script>
     </head>
     <body>
@@ -182,6 +214,8 @@
             <button id="button-plot">Plot</button>
         </div>
         </form>
+        <div id="binDetails"></div>
+        
         
     </body>
 </html>

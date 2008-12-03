@@ -451,9 +451,8 @@ class ConfDistPlot():
     # ******************************************************
     # Plots observations
     # ******************************************************
-    def PlotPoints(self, svg=None):
-        if not svg:
-            svg = SVG()
+    def PlotPoints(self):
+        bins = []
 
         # Only bins need to be painted, so cycle through the bins
         for key in self.plotBin.bins:
@@ -494,16 +493,16 @@ class ConfDistPlot():
                     #convert decimal RGB into HEX rgb
                     fill = '%s%s%s' % (hex(int(color[0]))[2:], hex(int(color[1]))[2:], hex(int(color[2]))[2:])
 
-                    # add rectangle to svg
-                    svg.rect( xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, 1, color='#%s' % fill, fill='#%s' % fill )
+                    # add rectangle to list
+                    bins.append( [xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, fill, fill, num] )
 
-        return svg
+        return bins
 
 
     # ******************************************************
     # Plots the points
     # ******************************************************
-    def Plot(self, svg=None):
+    def Plot(self):
 
         # Turn all the query results into an array of points
         protein = Protein.objects.filter(code=self.code)[0]
@@ -525,7 +524,7 @@ class ConfDistPlot():
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
         # Plot the bad boy
-        return self.PlotPoints(svg)
+        return self.PlotPoints()
 
 
     # *******************************************************************************

@@ -31,7 +31,7 @@ start = 0 - (searchSettings.segmentSize-1) / 2
 stop  = int(math.ceil((searchSettings.segmentSize-1) / 2.0))+1
 residueIndexes = range(start, stop, 1)
 for i in residueIndexes:
-    form_dict["aa_%i" % i]      = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
+    form_dict["aa_%i" % i]      = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["aa_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
     form_dict["ss_%i" % i]      = forms.ChoiceField(choices=SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
@@ -228,8 +228,8 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
             attribute       #property
     )
 
-    svg = cdp.Plot(svg)
-    return svg
+    boxes = cdp.Plot()
+    return (svg,boxes)
 
 def RGBTuple(rgbString):
     sub = rgbString[-6:]
@@ -320,24 +320,28 @@ def renderToSVG(request):
         svg = drawGraph(x,y,x1,y1,attribute,xProperty,yProperty,reference,residue,xBin,yBin)
         queryDict = request.GET
     else:
-        svg = drawGraph()
+        svg,boxes = drawGraph()
         queryDict = {}
 
     # create list of I values
-    n = 5
     iValues = []
-    for i in range(n, 0, -1):
-        iValues.append( (0-i,'i - %s' % i) )
-
-    iValues.append((0,'i'))
-
-    for i in range(1, n, 1):
-        iValues.append( (i,'i + %s' % i))
+    n = 5
+    start = 0 - (n) / 2
+    stop  = int(math.ceil((n-1) / 2.0))+1
+    for i in range(start,stop):
+        if i < 0:
+            iValues.append((i,'%i'%i))
+        elif i == 0:
+            iValues.append((i,'i'))
+        else:
+            iValues.append((i,'+%i'%i))
+    
 
     t = loader.get_template('graph.html')
     c = RequestContext(request, {
         'MEDIA_URL': settings.MEDIA_URL,
         'svg': svg,
+        'boxes': boxes,
         'iValues' : iValues,
         'requestDict' : queryDict,
         'referenceValues' : RefDefaults()
