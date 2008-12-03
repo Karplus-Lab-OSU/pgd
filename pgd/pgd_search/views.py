@@ -88,6 +88,36 @@ def search(request):
         'residueFields':residueFields
     })
 
+
+"""
+Encode a list of AA choices into an integer value
+"""
+def encodeAA(list):
+    aa = 0
+    for i in range(len(AA_CHOICES)):
+        if AA_CHOICES[i][0] in list:
+            # bitwise or to add value
+            aa = aa | (1 << i)
+        i += 1
+    return aa
+
+
+"""
+Decode an integer into a list of AA choices
+"""
+def decodeAA(val):
+    list = []
+    for i in range(23):
+        # bitwise shift check value
+        if (val & (1 << i)) != 0:
+            list.append(AA_CHOICES[i][0])
+
+    return list
+
+
+"""
+Process a search form copying its data into a search object
+"""
 def processSearchForm(form):
     data = form.cleaned_data
     length = searchSettings.segmentSize
@@ -108,22 +138,19 @@ def processSearchForm(form):
         searchCode = Search_code()
         searchCode.code = value
         search.codes.add(searchCode)
-        print value.__dict__
-
-
 
     #process per residue properties
-    start = (search.residueCount-1) / 2
+    start = 0 - (search.residueCount-1) / 2
     stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
     for i in range(start, stop, 1):
         residue = Search_residue()
         residue.index   = i
 
         #process ss
-        #residue.ss      = request.POST['ss_%s' % i]
+        residue.ss      = data['ss_%i' % i]
 
         #process aa
-        #residue.aa_int  = request.POST['aa_%s' % i]
+        residue.aa_int  = encodeAA([data['aa_%i' % i]])
 
         #process all other fields
         for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):

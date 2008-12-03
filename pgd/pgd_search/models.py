@@ -36,7 +36,7 @@ class Search_code(models.Model):
 # The search fields per residue
 class Search_residue(models.Model):
     search          = models.ForeignKey(Search, related_name='residues')
-    index           = models.PositiveIntegerField()
+    index           = models.IntegerField()
     chainID         = models.CharField(max_length=1, null=True)
     aa_int          = models.IntegerField(null=True)
 
