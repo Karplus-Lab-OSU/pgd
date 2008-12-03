@@ -18,7 +18,6 @@
             #button-plot {
                 margin-top:10px;
             }
-
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -28,6 +27,7 @@
             $(document).ready(function() {
                 $('#canvas').svg()
 
+                fix = .5;
                 x = 100;
                 y = 100;
                 height = 400;
@@ -36,20 +36,20 @@
                 var svg = $('#canvas').svg('get');
                  {% for rect in svg.rects %}
                     svg.rect(
-                        {{rect.x}},
-                        {{rect.y}},
-                        {{rect.height}},
-                        {{rect.width}},
-                        {fill: '{{rect.fill}}', stroke: '{{rect.color}}', 'stroke-width': {{rect.stroke}}}
+                        {{rect.x}}+fix,
+                        {{rect.y}}+fix,
+                        {{rect.height}}+fix,
+                        {{rect.width}}+fix,
+                        {fill: '{{rect.fill}}', stroke: '0', 'stroke-width': {{rect.stroke}}}
                     );
                 {% endfor %}
 
                 {% for line in svg.lines %}
                     svg.line(
-                        {{line.x}},
-                        {{line.y}},
-                        {{line.x1}},
-                        {{line.y1}},
+                        {{line.x}}+fix,
+                        {{line.y}}+fix,
+                        {{line.x1}}+fix,
+                        {{line.y1}}+fix,
                         {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
                     );
                 {% endfor %}
