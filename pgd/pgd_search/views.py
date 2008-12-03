@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext, Context, loader
 from django.conf import settings
 from django.shortcuts import render_to_response
@@ -53,11 +53,10 @@ SearchForm = type('SearchForm', (SearchFormBase,), form_dict)
 
 def search(request):
     if request.method == 'POST': # If the form has been submitted
-        form = ContactForm(request.POST) # A form bound to the POST data
+        form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
-            # Process the data in form.cleaned_data
-            #
-            return HttpResponseRedirect('/thanks/') # Redirect after POST
+            search = processSearchForm(form)
+            return HttpResponseRedirect('/results/') # Redirect after POST
     else:
         form = SearchForm() # An unbound form
 
@@ -81,13 +80,58 @@ def search(request):
             dict['index'] = i
         residueFields.append(dict)
 
-    return render_to_response('search2.html', {
+    return render_to_response('search.html', {
         'MEDIA_URL': settings.MEDIA_URL,
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields
     })
+
+def processSearchForm(form):
+    data = form.cleaned_data
+    length = searchSettings.segmentSize
+
+    #create a new search object
+    search = Search()
+
+    #get protein properties
+    search.residueCount  = int(data['residues'])
+    search.resolutionMin = float(data['resolutionMin'])
+    search.resolutionMax = float(data['resolutionMax'])
+
+    #save search object so its residue parameters can be added
+    search.save()
+
+    #get list of proteins to filter
+    for value in data['proteins']:
+        searchCode = Search_code()
+        searchCode.code = value
+        search.codes.add(searchCode)
+        print value.__dict__
+
+
+
+    #process per residue properties
+    start = (search.residueCount-1) / 2
+    stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
+    for i in range(start, stop, 1):
+        residue = Search_residue()
+        residue.index   = i
+
+        #process ss
+        #residue.ss      = request.POST['ss_%s' % i]
+
+        #process aa
+        #residue.aa_int  = request.POST['aa_%s' % i]
+
+        #process all other fields
+        for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+            residue.__dict__[prefix] = data['%s_%i' % (prefix, i)]
+            residue.__dict__['%s_include' % prefix] = data['%s_i_%i' % (prefix, i)]
+
+        search.residues.add(residue)
+
 
 """ 
 Renders a conformational distribution graph

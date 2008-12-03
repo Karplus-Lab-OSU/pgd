@@ -8,14 +8,42 @@
             * { font-family: Helvetica, Arial, Tahoma; font-size: 12px; font-color: #444; line-height: 25px; padding: 0px; margin: 0px; }
 
             .label {
-                padding-right:20px;
-                font-weight:bold;
+                padding-left:20px;
+                padding-right:0px;
+                font-weight:2;
                 font-size:12px;
-                width:80px;
+                width:50px;
             }
 
             TR.spacer {
                 height:20px;
+            }
+
+            TH {
+                padding-left:30px;
+            }
+
+            TD.field {
+                width:120px;
+                text-align:right;
+            }
+
+            TD.sectionheader {
+                padding-left:5px;
+                background-color:#a2ddff;
+                font-weight:bold;
+            }
+
+            TD.submit {
+                text-align:center;
+            }
+
+            #formContainer {
+                margin-left:50px;
+            }
+
+            #residuesContainer {
+                margin-top:20px;
             }
 
             input {
@@ -23,26 +51,34 @@
                 border: 1px solid #d4d4d4;
                 padding:1px;
                 font-size: 12px;
+                font-weight:2;
             }
 
             input.field {
                 margin:2px;
             }
 
-            td.field {
-                width:120px;
-                text-align:right;
+            input.submit {
+                border: 2px solid #000;
+                font-weight:bold;
             }
 
-            #formContainer {
-                margin-left:50px;
+            select {
+                border: 1px solid #d4d4d4;
+                margin-right:2px;
+                width:69px;
+                background-color:#ffffff;
+            }
+            
+            select#id_proteins {
+                height:150;
             }
 
             .toggle {
                 float:left;
                 position:relative;
                 top:4px;
-                margin-left:30px;
+                margin-left:20px;
                 width:15px;
                 height:15px;
                 background-repeat:repeat-x;
@@ -68,20 +104,11 @@
                 background-color:#ee9c98;
             }
 
-            .residues {
-                width:50px;
-             }
-
-            #residuesContainer {
-                margin-top:20px;
+            li.error {
+                color:red;
             }
 
-            select {
-                border: 1px solid #d4d4d4;
-                margin-right:2px;
-                width:69px;
-                background-color:#ffffff;
-            }
+
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -108,6 +135,7 @@
                     if (oldValue > newValue) {
                         for(i={{maxLength}}-1; i>=newValue; i--){
                             str = '.col_' + iArray[i-1]
+                            //$(str).fadeOut(500);
                             $(str).fadeOut(500);
                             $(str + ' input.field').attr("disabled", true);
                         }
@@ -119,9 +147,45 @@
                             $(str).fadeIn(500);
                         }
                     }
+                    //update length
                     $('#oldLength').val(newValue);
+
+                    //update size of table
+                    if (newValue < 5){
+                        width = 500;
+                    } else {
+                        width = 110*newValue+75;
+                    }
+                    $('table#residues').css({'width':110*newValue+75});
+                    $('table#protein').css({'width':600});
                 }
             }
+
+            function updateInclusionField(node){
+                if (isDefault(node)){
+                    $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
+                    $(node.parentNode).children(".include").val('').attr('disabled', true);
+                    $(node).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
+                }else{
+                    val = $(node.parentNode).children(".include").val()
+                    if (val == 1 &&  !$(node).hasClass('field_include') ){
+                        $(node.parentNode).children(".toggle").addClass('toggle_Include');
+                        $(node.parentNode).children(".include").val(1).attr('disabled',false);
+                        $(node).addClass('field_include').removeClass('field_exclude');
+                    }else if (val == 0 && !$(node).hasClass('field_exclude') ) {
+                        $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
+                        $(node.parentNode).children(".include").val(0).attr('disabled',false);
+                        $(node).addClass('field_exclude').removeClass('toggle_Include');
+                    }
+                }
+            };
+
+            // extend function to jquery
+            $.fn.updateInclusionField = function(){
+                this.each(function(){
+                    updateInclusionField(this);
+                });
+            };
 
             /*
             Determine if an element has the default value for that field type
@@ -134,32 +198,15 @@
                 //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});
 
                 $('input.field').keyup(function(evt){
-                    if (isDefault(evt.target)){
-                        $(evt.target.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
-                        $(evt.target.parentNode).children(".include").attr('disabled', true);
-                        $(evt.target).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
-                    }else{
-                        if (!($(evt.target).hasClass('field_include') || $(evt.target).hasClass('field_exclude'))){
-                            $(evt.target.parentNode).children(".toggle").addClass('toggle_Include');
-                            $(evt.target.parentNode).children(".include").val(1).attr('disabled',false);
-                            $(evt.target).addClass('field_include').removeClass('field_exclude');
-                        }
-                    }
-                });
+                        updateInclusionField(evt.target);
+                    });
+                $('input.field').updateInclusionField();
+
 
                 $('select.field').change(function(evt){
-                    if (isDefault(evt.target)){
-                        $(evt.target.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
-                        $(evt.target.parentNode).children(".include").attr('disabled', true);
-                        $(evt.target).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
-                    }else{
-                        if (!($(evt.target).hasClass('field_include') || $(evt.target).hasClass('field_exclude'))){
-                            $(evt.target.parentNode).children(".toggle").addClass('toggle_Include');
-                            $(evt.target.parentNode).children(".include").val(1).attr('disabled',false);
-                            $(evt.target).addClass('field_include').removeClass('field_exclude');
-                        }
-                    }
-                });
+                        updateInclusionField(evt.target);
+                    });
+                 $('select.field').updateInclusionField();
 
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
@@ -181,27 +228,40 @@
                 //force update of segments
                 $('#oldLength').val({{maxLength}});
                 sizeChange(1);
-
             });
 
         </script>
     </head>
     <body>
 
+    {% if form.errors %}
+        <ol>
+        {% for error in form.errors %}
+            <li class="error"><strong>{{ error|escape }}</strong></li>
+        {% endfor %}
+        </ol>
+    {% endif %}
+
+
     <div id="formContainer">
-
-        <form name="search">
-
-            <table>
+        <form name="search" method="POST" action="/search/">
+            <table id="protein">
             <tbody>
+
+            <tr><td colspan="100%" class="sectionheader">Protein Properties</td></tr>
+             <tr>
+                <td class="label" rowspan="4">{{form.proteins.label}}</td>
+                <td  rowspan="4">
+                    {{form.proteins}}
+                </td>
+            </tr>
             <tr>
-                <td class="label">{{form.residues.label}}</td>
+                <td class="label"> {{form.residues.label}}</td>
                 <td>
                     {{form.residues}}
                     <input type="hidden" id="oldLength" value="5">
                 </td>
             </tr>
-
             <tr>
                 <td class="label">Resolution</td>
                 <td>{{form.resolutionMin}} - {{form.resolutionMax}}</td>
@@ -210,23 +270,20 @@
                 <td class="label">{{form.threshold.label}}</td>
                 <td>{{form.threshold}}</td>
             </tr>
-            <tr>
-                <td class="label">{{form.proteins.label}}</td>
-                <td>
-                    {{form.proteins}}
-                </td>
-            </tr>
+
             </tbody>
             </table>
 
             <div id="residuesContainer">
-            <table>
+
+            <table id="residues" >
             <tbody>
             <tr><td/>
             {% for i in iValues %}
                 <th class="field col_{{i.0}}">{{i.1}}</th>
             {% endfor %}
 
+            <tr><td colspan="100%" class="sectionheader">Residue Properties</td></tr>
             <tr>
                 <td class="label">Peptide</td>
                 {% for r in residueFields %}
@@ -235,7 +292,14 @@
                     </td>
                 {% endfor %}
             </tr>
-
+            <tr>
+                <td class="label">SS</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
+                    </td>
+                {% endfor %}
+            </tr>
             <tr>
                 <td class="label">Phi</td>
                 {% for r in residueFields %}
@@ -249,14 +313,6 @@
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.psi}}{{r.psi_i}}
-                    </td>
-                {% endfor %}
-            </tr>
-            <tr>
-                <td class="label">SS</td>
-                {% for r in residueFields %}
-                    <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
                     </td>
                 {% endfor %}
             </tr>
@@ -284,9 +340,17 @@
                     </td>
                 {% endfor %}
             </tr>
+            <tr>
+                <td class="label">Omega</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
+                    </td>
+                {% endfor %}
+            </tr>
 
-            <tr class="spacer">
-
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader">Angles</td></tr>
             <div id="tao">
                 <tr>
                     <td class="label">Tao 1</td>
@@ -346,62 +410,55 @@
                 </tr>
             </div>
 
-            <tr class="spacer">
-
-            <div id="length">
-                <tr>
-                    <td class="label">Length 1</td>
-                    {% for r in residueFields %}
-                        <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.L1}}{{r.L1_i}}
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td class="label">Length 2</td>
-                    {% for r in residueFields %}
-                        <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td class="label">Length 3</td>
-                    {% for r in residueFields %}
-                        <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td class="label">Length 4</td>
-                    {% for r in residueFields %}
-                        <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.L4}}{{r.L4_i}}
-                    </td>
-                    {% endfor %}
-                </tr>
-                <tr>
-                    <td class="label">Length 5</td>
-                    {% for r in residueFields %}
-                        <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.L5}}{{r.L5_i}}
-                    </td>
-                    {% endfor %}
-                </tr>
-            </div>
-
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader">Lengths</td></tr>
             <tr>
-                <td class="label">Omega (abs)</td>
+                <td class="label">Length 1</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
-                    </td>
+                    <span class="toggle">&nbsp;</span>{{r.L1}}{{r.L1_i}}
+                </td>
                 {% endfor %}
             </tr>
+            <tr>
+                <td class="label">Length 2</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">Length 3</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">Length 4</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L4}}{{r.L4_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="label">Length 5</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L5}}{{r.L5_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer"/>
+            <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit"></td></tr>
             </tbody>
             </table>
-<!--             </div> -->
+            </div>
+            
         </form>
     </div>
     </body>

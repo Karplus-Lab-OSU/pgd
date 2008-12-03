@@ -24,7 +24,7 @@ if not searchSettings.requestedSegmentSize:
 # Search
 # A search query submitted by a user
 class Search(models.Model):
-    user = models.ForeignKey(User)
+    user = models.ForeignKey(User, null=True)
 
 # Search_code
 # Codes for the proteins searched on
@@ -67,8 +67,7 @@ class Search_residue(models.Model):
 
     def __init__(self):
         models.Model.__init__(self)
-        # make 'residues' a subscriptable way to access Residue onjects
-        Residue_subscripter(self, 'residues')
+
         # populate 'aa' with a dictionary of allowed 'aa' values
         self.aa = dict([(j[1],1 if self.aa_int == None else 1&self.aa_int>>i) for i,j in enumerate(AA_CHOICES)])
 
