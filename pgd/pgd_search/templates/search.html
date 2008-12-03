@@ -69,7 +69,7 @@
                 width:69px;
                 background-color:#ffffff;
             }
-            
+
             select#id_proteins {
                 height:150;
             }
@@ -168,6 +168,9 @@
                     $(node).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
                 }else{
                     val = $(node.parentNode).children(".include").val()
+                    if (val == '') {
+                        val = 1
+                    }
                     if (val == 1 &&  !$(node).hasClass('field_include') ){
                         $(node.parentNode).children(".toggle").addClass('toggle_Include');
                         $(node.parentNode).children(".include").val(1).attr('disabled',false);
