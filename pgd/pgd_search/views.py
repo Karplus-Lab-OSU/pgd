@@ -167,14 +167,15 @@ Renders a conformational distribution graph
 def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=0, xBin=10, yBin=10):
     svg = SVG()
 
-    x = 50;
-    y = 5;
+    x = 55;
+    y = 45;
     height = 400;
     width = 400;
     hashsize = 10
 
     #background
     svg.rect(x, y, width, height, 1, '#00fffff', '#222222');
+    #svg.rect(0, 0, width+90, height+90, 1, '#00fffff');
     #svg.rect(x, y, width, height, 1, '#666666');
 
     #border
@@ -198,7 +199,7 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
     for i in range(5):
         text = xtext + step*i
         hashx = x+(width/4)*i-(4*len(str(text)))
-        svg.text(hashx,y+height+hashsize*3,str(text),14)
+        svg.text(hashx, y+height+hashsize*3, str(text),12)
 
     #y axis text
     ytext  = -180
@@ -207,7 +208,17 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
     for i in range(5):
         text = xtext + step*i
         hashy = y+(height/4)*i+7
-        svg.text(x-20-(8*len(str(text))),hashy,str(text),14)
+        svg.text(x-20-(8*len(str(text))), hashy, str(text),12)
+
+    #title text
+    len1 = 220 - len(xProperty)*7/2 - len(xProperty)*7/2
+    len2 = 182 - len(attribute)*7/2
+    svg.text(len1,15, 'Plot of %s vs. %s' % (xProperty,yProperty), 12)
+    svg.text(len2,35, 'Shading Based Off of %s' % attribute, 12)
+
+#ob = 140
+#
+
 
     cdp = ConfDistPlot(
             400,            #height
@@ -301,50 +312,88 @@ def renderToPNG(request):
 
     return response
 
+
+
+ATTRIBUTE_CHOICES = [
+                    ("Observations","Observations"),
+                    ("L1","L1"),
+                    ("L2","L2"),
+                    ("L3","L3"),
+                    ("L4","L4"),
+                    ("L5","L5"),
+                    ("a1","a1"),
+                    ("a2","a2"),
+                    ("a3","a3"),
+                    ("a4","a4"),
+                    ("a5","a5"),
+                    ("a6","a6"),
+                    ("a7","a7"),
+                    ("ome","ome"),
+                    ("chi","chi"),
+                    ]
+                    
+PROPERTY_CHOICES = [
+                    ("L1","L1"),
+                    ("L2","L2"),
+                    ("L3","L3"),
+                    ("L4","L4"),
+                    ("L5","L5"),
+                    ("a1","a1"),
+                    ("a2","a2"),
+                    ("a3","a3"),
+                    ("a4","a4"),
+                    ("a5","a5"),
+                    ("a6","a6"),
+                    ("a7","a7"),
+                    ("ome","ome"),
+                    ("chi","chi"),
+                    ("phi","phi"),
+                    ("psi","psi"),
+                    ]
+
+class PlotForm(forms.Form):
+    attribute       = forms.ChoiceField(choices=ATTRIBUTE_CHOICES, initial='Observations')
+    xProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='phi')
+    yProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='psi')
+    reference       = forms.FloatField(required=False, widget=forms.TextInput(attrs={'size':8}))
+    x               = forms.IntegerField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
+    x1              = forms.IntegerField(initial=180, widget=forms.TextInput(attrs={'size':4}))
+    y               = forms.IntegerField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
+    y1              = forms.IntegerField(initial=180, widget=forms.TextInput(attrs={'size':4}))
+    residue         = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in range(start,stop)], initial=0)
+    xBin            = forms.IntegerField(initial=10, widget=forms.TextInput(attrs={'size':4}))
+    yBin            = forms.IntegerField(initial=10, widget=forms.TextInput(attrs={'size':4}))
+
+
 """
 render conf dist plot using jquery.svg
 """
 def renderToSVG(request):
-    if request.GET.has_key('xStart'):
-        x           = int(request.GET['xStart'])
-        y           = int(request.GET['yStart'])
-        x1          = int(request.GET['xEnd'])
-        y1          = int(request.GET['yEnd'])
-        attribute   = request.GET['attribute']
-        xProperty   = request.GET['xProperty']
-        yProperty   = request.GET['yProperty']
-        reference   = 1 #int(request.POST['reference'])
-        residue     = request.GET['residue']
-        xBin        = int(request.GET['xBin'])
-        yBin        = int(request.GET['yBin'])
-        svg = drawGraph(x,y,x1,y1,attribute,xProperty,yProperty,reference,residue,xBin,yBin)
-        queryDict = request.GET
+    if request.method == 'POST': # If the form has been submitted
+        form = PlotForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            data = form.cleaned_data
+            svg, boxes = drawGraph(
+                        data['x'],
+                        data['y'],
+                        data['x1'],
+                        data['y1'],
+                        data['attribute'],
+                        data['xProperty'],
+                        data['yProperty'],
+                        data['reference'],
+                        data['residue'],
+                        data['xBin'],
+                        data['yBin'])
+
     else:
+        form = PlotForm() # An unbound form
         svg,boxes = drawGraph()
-        queryDict = {}
 
-    # create list of I values
-    iValues = []
-    n = 5
-    start = 0 - (n) / 2
-    stop  = int(math.ceil((n-1) / 2.0))+1
-    for i in range(start,stop):
-        if i < 0:
-            iValues.append((i,'%i'%i))
-        elif i == 0:
-            iValues.append((i,'i'))
-        else:
-            iValues.append((i,'+%i'%i))
-    
-
-    t = loader.get_template('graph.html')
-    c = RequestContext(request, {
+    return render_to_response('graph.html', {
         'MEDIA_URL': settings.MEDIA_URL,
+        'form': form,
         'svg': svg,
         'boxes': boxes,
-        'iValues' : iValues,
-        'requestDict' : queryDict,
         'referenceValues' : RefDefaults()
     })
-
-    return HttpResponse(t.render(c))

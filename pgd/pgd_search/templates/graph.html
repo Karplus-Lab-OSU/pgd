@@ -7,7 +7,7 @@
         <style>
             #canvas {
                 width: 470;
-                height: 435;
+                height: 500;
                 margin: 10px;
             }
 
@@ -18,7 +18,7 @@
             #button-plot {
                 margin-top:10px;
             }
-            
+
             #binDetails {
                 position:absolute;
                 float:left;
@@ -75,9 +75,8 @@
                     );
                 {% endfor %}
 
-
+                    /*
                     $('#button-plot').click(function (evt) {
-
                         with(document.plotform) {
                             data = {
                                 'xStart' : xStart.value,
@@ -93,11 +92,10 @@
                                 'reference' : reference.value
                             }
                         }
-
-                    });
+                    });*/
 
                     $('#attribute_select').change(function (){
-                         $("#attribute_select option:selected").each(function () {
+                         $("#id_attribute option:selected").each(function () {
                             document.plotform.reference.value = REF[$(this).text()]['ref'];
                          });
                     })
@@ -123,8 +121,6 @@
                 {% endfor %}
 
                 function bin_mouseover(evt, val){
-                    //alert(evt.clientX);
-
                     $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
                 }
 
@@ -135,82 +131,23 @@
     </head>
     <body>
         <div id="canvas"></div>
-        <form name="plotform">
+        <form name="plot" method="POST" action="/search/plot/svg/">
         <div id="controls">
             <div id="attribute">Plotted Attribute 
-                <select id="attribute_select" name="attribute">
-                    <OPTION value="Observations" selected>Observations</OPTION>
-                    <OPTION value="L1">L1</OPTION>
-                    <OPTION value="L2">L2</OPTION>
-                    <OPTION value="L3">L3</OPTION>
-                    <OPTION value="L4">L4</OPTION>
-                    <OPTION value="L5">L5</OPTION>
-                    <OPTION value="a1">a1</OPTION>
-                    <OPTION value="a2">a2</OPTION>
-                    <OPTION value="a3">a3</OPTION>
-                    <OPTION value="a4">a4</OPTION>
-                    <OPTION value="a5">a5</OPTION>
-                    <OPTION value="a6">a6</OPTION>
-                    <OPTION value="a7">a7</OPTION>
-                    <OPTION value="ome">ome</OPTION>
-                    <OPTION value="chi">chi</OPTION>
-                </select>
+                {{form.attribute}}
              </div>
              <div>X Axis
-                <select id="xProperty" name="xProperty">
-                    <OPTION value="L1">L1</OPTION>
-                    <OPTION value="L2">L2</OPTION>
-                    <OPTION value="L3">L3</OPTION>
-                    <OPTION value="L4">L4</OPTION>
-                    <OPTION value="L5">L5</OPTION>
-                    <OPTION value="a1">a1</OPTION>
-                    <OPTION value="a2">a2</OPTION>
-                    <OPTION value="a3">a3</OPTION>
-                    <OPTION value="a4">a4</OPTION>
-                    <OPTION value="a5">a5</OPTION>
-                    <OPTION value="a6">a6</OPTION>
-                    <OPTION value="a7">a7</OPTION>
-                    <OPTION value="ome">ome</OPTION>
-                    <OPTION value="chi">chi</OPTION>
-                    <OPTION value="phi" selected>phi</OPTION>
-                    <OPTION value="psi">psi</OPTION>
-                </select>
+                {{form.xProperty}}
             </div>
             <div>Y Axis
-                <select name="yProperty">
-                    <OPTION value="L1">L1</OPTION>
-                    <OPTION value="L2">L2</OPTION>
-                    <OPTION value="L3">L3</OPTION>
-                    <OPTION value="L4">L4</OPTION>
-                    <OPTION value="L5">L5</OPTION>
-                    <OPTION value="a1">a1</OPTION>
-                    <OPTION value="a2">a2</OPTION>
-                    <OPTION value="a3">a3</OPTION>
-                    <OPTION value="a4">a4</OPTION>
-                    <OPTION value="a5">a5</OPTION>
-                    <OPTION value="a6">a6</OPTION>
-                    <OPTION value="a7">a7</OPTION>
-                    <OPTION value="ome">ome</OPTION>
-                    <OPTION value="chi">chi</OPTION>
-                    <OPTION value="phi">phi</OPTION>
-                    <OPTION value="psi" selected>psi</OPTION>
-                </select>
+                {{form.yProperty}}
             </div>
-            <div id="reference">Reference Value <input name="reference" type="text"/></div>
-            <div id="x">X Min, Max <input name="xStart" type="text" size="4" value="-180"/><input name="xEnd" type="text" size="4" value="180"/></div>
-            <div id="y">Y Min, Max <input name="yStart" type="text" size="4" value="-180"/><input name="yEnd" type="text" size="4" value="180"/></div>
-            <div id="residue">Residue <select name="residue">
-                {% for i, str in iValues %}
-                    {% if i %}
-                        <option value="{{i}}" >{{str}}</option>
-                    {% else %}
-                        <option value="{{i}}" selected>{{str}}</option>
-                    {% endif %}
-                {% endfor %}
+            <div id="reference">Reference Value {{form.reference}}</div>
+            <div id="x">X Min, Max {{form.x}}{{form.x1}}</div>
+            <div id="y">Y Min, Max {{form.y}}{{form.y1}}</div>
+            <div id="residue">Residue {{form.residue}}</div>
 
-            </select></div>
-
-            <div id="bin">Bin X, Y <input name="xBin" type="text" size="3" value="10"/><input name="yBin" type="text" size="3" value="10"/></div>
+            <div id="bin">Bin X, Y {{form.xBin}}{{form.yBin}}</div>
             <button id="button-plot">Plot</button>
         </div>
         </form>
