@@ -29,6 +29,16 @@
                 color:white;
                 border: 1px solid #aaaaaa;
             }
+            
+            .label {
+                display:inline;
+                width:160px;;
+                float:left;
+            }
+            
+            .field {
+                margin: 5px;
+            }
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -36,6 +46,7 @@
 
         <script type="text/javascript">
             $(document).ready(function() {
+                $('div#binDetails').hide();
                 $('#canvas').svg()
 
                 fix = .5;
@@ -75,28 +86,13 @@
                     );
                 {% endfor %}
 
-                    /*
-                    $('#button-plot').click(function (evt) {
-                        with(document.plotform) {
-                            data = {
-                                'xStart' : xStart.value,
-                                'xEnd' : xEnd.value,
-                                'yStart' : yStart.value,
-                                'yEnd' : yEnd.value,
-                                'attribute' : attribute.value,
-                                'xProperty' : xProperty.value,
-                                'yProperty' : yProperty.value,
-                                'residue' : residue.value,
-                                'xBin' : xBin.value,
-                                'yBin' : yBin.value,
-                                'reference' : reference.value
-                            }
-                        }
-                    });*/
+                    $('#button-save').click(function (evt) {
+                        $("form").attr('action','/search/plot/png/').submit().attr('action','/search/plot/svg/')
+                    });
 
-                    $('#attribute_select').change(function (){
-                         $("#id_attribute option:selected").each(function () {
-                            document.plotform.reference.value = REF[$(this).text()]['ref'];
+                    $('#id_attribute').change(function (){
+                         $('#id_attribute option:selected').each(function () {
+                            $('#id_reference').val(REF[$(this).text()]['ref']);
                          });
                     })
 
@@ -114,6 +110,7 @@
                     });
 
                 var REF = {};
+                REF['Observations'] = {'ref':'','stepsize':''}
                 {% for k,v in referenceValues.items %}
                     {% ifnotequal k 'Observations' %}
                         REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
@@ -131,28 +128,20 @@
     </head>
     <body>
         <div id="canvas"></div>
-        <form name="plot" method="POST" action="/search/plot/svg/">
         <div id="controls">
-            <div id="attribute">Plotted Attribute 
-                {{form.attribute}}
-             </div>
-             <div>X Axis
-                {{form.xProperty}}
-            </div>
-            <div>Y Axis
-                {{form.yProperty}}
-            </div>
-            <div id="reference">Reference Value {{form.reference}}</div>
-            <div id="x">X Min, Max {{form.x}}{{form.x1}}</div>
-            <div id="y">Y Min, Max {{form.y}}{{form.y1}}</div>
-            <div id="residue">Residue {{form.residue}}</div>
-
-            <div id="bin">Bin X, Y {{form.xBin}}{{form.yBin}}</div>
-            <button id="button-plot">Plot</button>
-        </div>
+        <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
+            <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
+            <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
+            <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
+            <div id="reference" class="field"><div class="label">Reference Value</div>{{form.reference}}</div>
+            <div id="x" class="field"><div class="label">X Min, Max</div>{{form.x}}{{form.x1}}</div>
+            <div id="y" class="field"><div class="label">Y Min, Max</div>{{form.y}}{{form.y1}}</div>
+            <div id="residue" class="field"><div class="label">Residue</div>{{form.residue}}</div>
+            <div id="bin" class="field"><div class="label">Bin X, Y</div>{{form.xBin}}{{form.yBin}}</div>
+            <button id="button-plot" class="field">Plot</button>
         </form>
+        <button id="button-save">Save</button>
+        </div>
         <div id="binDetails"></div>
-        
-        
     </body>
 </html>

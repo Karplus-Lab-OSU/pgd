@@ -278,29 +278,34 @@ this results in the image being downloaded by the user
 def renderToPNG(request):
     import cairo
 
-    if request.GET.has_key('xStart'):
-        x           = int(request.GET['xStart'])
-        y           = int(request.GET['yStart'])
-        x1          = int(request.GET['xEnd'])
-        y1          = int(request.GET['yEnd'])
-        attribute   = request.GET['attribute']
-        xProperty   = request.GET['xProperty']
-        yProperty   = request.GET['yProperty']
-        reference   = 1 #int(request.POST['reference'])
-        residue     = request.GET['residue']
-        xBin        = int(request.GET['xBin'])
-        yBin        = int(request.GET['yBin'])
-        svg = drawGraph(x,y,x1,y1,attribute,xProperty,yProperty,reference,residue,xBin,yBin)
+    if request.method == 'POST': # If the form has been submitted
+        form = PlotForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            data = form.cleaned_data
+            svg, boxes = drawGraph(
+                        data['x'],
+                        data['y'],
+                        data['x1'],
+                        data['y1'],
+                        data['attribute'],
+                        data['xProperty'],
+                        data['yProperty'],
+                        data['reference'],
+                        data['residue'],
+                        data['xBin'],
+                        data['yBin'])
+
     else:
-        svg = drawGraph()
+        form = PlotForm() # An unbound form
+        svg,boxes = drawGraph()
 
     width = 500
     height = 500
 
     response = HttpResponse(mimetype="image/png")
+    response['Content-Disposition'] = 'attachment; filename="plot.png"'
     surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
     ctx = cairo.Context (surface)
-    svg = drawGraph()
 
     for rec in svg.rects:
         rect(rec, ctx)
