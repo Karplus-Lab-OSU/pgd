@@ -250,26 +250,26 @@ def RGBTuple(rgbString):
     return (red,green,blue)
 
 def line(input, context):
-    context.move_to(input.x, input.y)
-    context.line_to(input.x1, input.y1)
+    context.move_to(input.x+.5, input.y+.5)
+    context.line_to(input.x1+.5, input.y1+.5)
     context.set_line_width(input.stroke)
     r,g,b = RGBTuple(input.color)
     context.set_source_rgba(r,g,b,1)
     context.stroke()
 
 def rect(input, context):
-    context.rectangle(input.x, input.y, input.width, input.height)
-
-    if input.fill:
-        r,g,b = RGBTuple(input.fill)
-        context.set_source_rgba(r,g,b,1)
-        context.fill()
+    context.rectangle(input.x+.5, input.y+.5, input.width, input.height)
 
     if input.color:
         red, green, blue = RGBTuple(input.color)
         context.set_source_rgba(red,green,blue,1)
         context.set_line_width(input.stroke)
-        context.stroke()
+        context.stroke_preserve()
+
+    if input.fill:
+        r,g,b = RGBTuple(input.fill)
+        context.set_source_rgba(r,g,b,1)
+        context.fill()
 
 """
 render the conf dist graph to a png and return it as the response
@@ -282,7 +282,7 @@ def renderToPNG(request):
         form = PlotForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
             data = form.cleaned_data
-            svg, boxes = drawGraph(
+            svg, bins = drawGraph(
                         data['x'],
                         data['y'],
                         data['x1'],
@@ -297,7 +297,7 @@ def renderToPNG(request):
 
     else:
         form = PlotForm() # An unbound form
-        svg,boxes = drawGraph()
+        svg,bins = drawGraph()
 
     width = 500
     height = 500
@@ -312,6 +312,17 @@ def renderToPNG(request):
 
     for action in svg.lines:
         line(action, ctx)
+
+    for bin in bins:
+        svgrec = Rect(bin[0], bin[1], bin[2], bin[3], 1, bin[4], bin[4])
+        rect(svgrec, ctx)
+
+    for text in svg.texts:
+        ctx.set_source_rgba(0,0,0,1)
+        ctx.set_font_size (12);
+        ctx.move_to (text.x, text.y);
+        ctx.show_text (text.text);
+
 
     surface.write_to_png(response)
 
