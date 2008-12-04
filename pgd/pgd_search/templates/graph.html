@@ -7,7 +7,7 @@
         <style>
             #canvas {
                 width: 470;
-                height: 435;
+                height: 500;
                 margin: 10px;
             }
 
@@ -18,7 +18,7 @@
             #button-plot {
                 margin-top:10px;
             }
-            
+
             #binDetails {
                 position:absolute;
                 float:left;
@@ -29,6 +29,16 @@
                 color:white;
                 border: 1px solid #aaaaaa;
             }
+            
+            .label {
+                display:inline;
+                width:160px;;
+                float:left;
+            }
+            
+            .field {
+                margin: 5px;
+            }
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -36,6 +46,7 @@
 
         <script type="text/javascript">
             $(document).ready(function() {
+                $('div#binDetails').hide();
                 $('#canvas').svg()
 
                 fix = .5;
@@ -75,30 +86,13 @@
                     );
                 {% endfor %}
 
-
-                    $('#button-plot').click(function (evt) {
-
-                        with(document.plotform) {
-                            data = {
-                                'xStart' : xStart.value,
-                                'xEnd' : xEnd.value,
-                                'yStart' : yStart.value,
-                                'yEnd' : yEnd.value,
-                                'attribute' : attribute.value,
-                                'xProperty' : xProperty.value,
-                                'yProperty' : yProperty.value,
-                                'residue' : residue.value,
-                                'xBin' : xBin.value,
-                                'yBin' : yBin.value,
-                                'reference' : reference.value
-                            }
-                        }
-
+                    $('#button-save').click(function (evt) {
+                        $("form").attr('action','/search/plot/png/').submit().attr('action','/search/plot/svg/')
                     });
 
-                    $('#attribute_select').change(function (){
-                         $("#attribute_select option:selected").each(function () {
-                            document.plotform.reference.value = REF[$(this).text()]['ref'];
+                    $('#id_attribute').change(function (){
+                         $('#id_attribute option:selected').each(function () {
+                            $('#id_reference').val(REF[$(this).text()]['ref']);
                          });
                     })
 
@@ -116,6 +110,7 @@
                     });
 
                 var REF = {};
+                REF['Observations'] = {'ref':'','stepsize':''}
                 {% for k,v in referenceValues.items %}
                     {% ifnotequal k 'Observations' %}
                         REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
@@ -123,8 +118,6 @@
                 {% endfor %}
 
                 function bin_mouseover(evt, val){
-                    //alert(evt.clientX);
-
                     $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
                 }
 
@@ -135,87 +128,20 @@
     </head>
     <body>
         <div id="canvas"></div>
-        <form name="plotform">
         <div id="controls">
-            <div id="attribute">Plotted Attribute 
-                <select id="attribute_select" name="attribute">
-                    <OPTION value="Observations" selected>Observations</OPTION>
-                    <OPTION value="L1">L1</OPTION>
-                    <OPTION value="L2">L2</OPTION>
-                    <OPTION value="L3">L3</OPTION>
-                    <OPTION value="L4">L4</OPTION>
-                    <OPTION value="L5">L5</OPTION>
-                    <OPTION value="a1">a1</OPTION>
-                    <OPTION value="a2">a2</OPTION>
-                    <OPTION value="a3">a3</OPTION>
-                    <OPTION value="a4">a4</OPTION>
-                    <OPTION value="a5">a5</OPTION>
-                    <OPTION value="a6">a6</OPTION>
-                    <OPTION value="a7">a7</OPTION>
-                    <OPTION value="ome">ome</OPTION>
-                    <OPTION value="chi">chi</OPTION>
-                </select>
-             </div>
-             <div>X Axis
-                <select id="xProperty" name="xProperty">
-                    <OPTION value="L1">L1</OPTION>
-                    <OPTION value="L2">L2</OPTION>
-                    <OPTION value="L3">L3</OPTION>
-                    <OPTION value="L4">L4</OPTION>
-                    <OPTION value="L5">L5</OPTION>
-                    <OPTION value="a1">a1</OPTION>
-                    <OPTION value="a2">a2</OPTION>
-                    <OPTION value="a3">a3</OPTION>
-                    <OPTION value="a4">a4</OPTION>
-                    <OPTION value="a5">a5</OPTION>
-                    <OPTION value="a6">a6</OPTION>
-                    <OPTION value="a7">a7</OPTION>
-                    <OPTION value="ome">ome</OPTION>
-                    <OPTION value="chi">chi</OPTION>
-                    <OPTION value="phi" selected>phi</OPTION>
-                    <OPTION value="psi">psi</OPTION>
-                </select>
-            </div>
-            <div>Y Axis
-                <select name="yProperty">
-                    <OPTION value="L1">L1</OPTION>
-                    <OPTION value="L2">L2</OPTION>
-                    <OPTION value="L3">L3</OPTION>
-                    <OPTION value="L4">L4</OPTION>
-                    <OPTION value="L5">L5</OPTION>
-                    <OPTION value="a1">a1</OPTION>
-                    <OPTION value="a2">a2</OPTION>
-                    <OPTION value="a3">a3</OPTION>
-                    <OPTION value="a4">a4</OPTION>
-                    <OPTION value="a5">a5</OPTION>
-                    <OPTION value="a6">a6</OPTION>
-                    <OPTION value="a7">a7</OPTION>
-                    <OPTION value="ome">ome</OPTION>
-                    <OPTION value="chi">chi</OPTION>
-                    <OPTION value="phi">phi</OPTION>
-                    <OPTION value="psi" selected>psi</OPTION>
-                </select>
-            </div>
-            <div id="reference">Reference Value <input name="reference" type="text"/></div>
-            <div id="x">X Min, Max <input name="xStart" type="text" size="4" value="-180"/><input name="xEnd" type="text" size="4" value="180"/></div>
-            <div id="y">Y Min, Max <input name="yStart" type="text" size="4" value="-180"/><input name="yEnd" type="text" size="4" value="180"/></div>
-            <div id="residue">Residue <select name="residue">
-                {% for i, str in iValues %}
-                    {% if i %}
-                        <option value="{{i}}" >{{str}}</option>
-                    {% else %}
-                        <option value="{{i}}" selected>{{str}}</option>
-                    {% endif %}
-                {% endfor %}
-
-            </select></div>
-
-            <div id="bin">Bin X, Y <input name="xBin" type="text" size="3" value="10"/><input name="yBin" type="text" size="3" value="10"/></div>
-            <button id="button-plot">Plot</button>
-        </div>
+        <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
+            <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
+            <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
+            <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
+            <div id="reference" class="field"><div class="label">Reference Value</div>{{form.reference}}</div>
+            <div id="x" class="field"><div class="label">X Min, Max</div>{{form.x}}{{form.x1}}</div>
+            <div id="y" class="field"><div class="label">Y Min, Max</div>{{form.y}}{{form.y1}}</div>
+            <div id="residue" class="field"><div class="label">Residue</div>{{form.residue}}</div>
+            <div id="bin" class="field"><div class="label">Bin X, Y</div>{{form.xBin}}{{form.yBin}}</div>
+            <button id="button-plot" class="field">Plot</button>
         </form>
+        <button id="button-save">Save</button>
+        </div>
         <div id="binDetails"></div>
-        
-        
     </body>
 </html>
