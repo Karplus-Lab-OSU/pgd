@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <style type="text/css">@import "jquery.svg.css";</style> 
+        <style>
+            #canvas {
+                width: 470;
+                height: 500;
+                margin: 10px;
+            }
+
+            #controls {
+                margin-top:30px;
+            }
+
+            #button-plot {
+                margin-top:10px;
+            }
+
+            #binDetails {
+                position:absolute;
+                float:left;
+                width:auto;
+                padding:4px;
+                background-color:grey;
+                font-size:10;
+                color:white;
+                border: 1px solid #aaaaaa;
+            }
+
+            .label {
+                display:inline;
+                width:160px;;
+                float:left;
+            }
+
+            .field {
+                margin: 5px;
+            }
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('div#binDetails').hide();
+                $('#canvas').svg()
+
+                fix = .5;
+                x = 100;
+                y = 100;
+                height = 400;
+                width = 400;
+                borderPadding = 40;
+                var svg = $('#canvas').svg('get');
+                {% for rect in svg.rects %}
+                    svg.rect(
+                        {{rect.x}}+fix,
+                        {{rect.y}}+fix,
+                        {{rect.height}},
+                        {{rect.width}},
+                        {fill: '{{rect.fill}}', stroke: '0', 'stroke-width': {{rect.stroke}}}
+                    );
+                {% endfor %}
+
+                {% for line in svg.lines %}
+                    svg.line(
+                        {{line.x}}+fix,
+                        {{line.y}}+fix,
+                        {{line.x1}}+fix,
+                        {{line.y1}}+fix,
+                        {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
+                    );
+                {% endfor %}
+
+
+                {% for text in svg.texts %}
+                    svg.text(
+                        {{text.x}},
+                        {{text.y}},
+                        '{{text.text}}',
+                        {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.fill}}"}
+                    );
+                {% endfor %}
+
+                    $('#button-save').click(function (evt) {
+                        $("form").attr('action','/search/plot/png/').submit().attr('action','/search/plot/svg/')
+                    });
+
+                    $('#id_attribute').change(function (){
+                         $('#id_attribute option:selected').each(function () {
+                            $('#id_reference').val(REF[$(this).text()]['ref']);
+                         });
+                    })
+
+                    {% for rect in boxes %}
+                        svg.rect(
+                            {{rect.0}}+fix,
+                            {{rect.1}}+fix,
+                            {{rect.2}},
+                            {{rect.3}},
+                            {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, {{rect.6}});', onmouseout:'bin_mouseout();'}
+                        );
+                    {% endfor %}
+
+
+                    });
+
+                var REF = {};
+                REF['Observations'] = {'ref':'','stepsize':''}
+                {% for k,v in referenceValues.items %}
+                    {% ifnotequal k 'Observations' %}
+                        REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
+                    {% endifnotequal %}
+                {% endfor %}
+
+                function bin_mouseover(evt, val){
+                    $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
+                }
+
+                function bin_mouseout(){
+                    $('div#binDetails').hide();
+                }
+        </script>
+    </head>
+    <body>
+        {% include 'header.html' %}
+        <div id="content">
+
+            <div id="canvas"></div>
+            <div id="controls">
+            <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
+                <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
+                <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
+                <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
+                <div id="reference" class="field"><div class="label">Reference Value</div>{{form.reference}}</div>
+                <div id="x" class="field"><div class="label">X Min, Max</div>{{form.x}}{{form.x1}}</div>
+                <div id="y" class="field"><div class="label">Y Min, Max</div>{{form.y}}{{form.y1}}</div>
+                <div id="residue" class="field"><div class="label">Residue</div>{{form.residue}}</div>
+                <div id="bin" class="field"><div class="label">Bin X, Y</div>{{form.xBin}}{{form.yBin}}</div>
+                <button id="button-plot" class="field">Plot</button>
+            </form>
+            <button id="button-save">Save</button>
+            </div>
+            <div id="binDetails"></div>
+
+        </div>
+    </body>
+</html>

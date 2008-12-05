@@ -15,9 +15,9 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/(.*)', admin.site.root),
-    (r'^tasks/', include('pgd.tasks.urls')),
-    (r'^settings/', include('pgd.dbsettings.urls')),
-
+    (r'^tasks/', include('tasks.urls')),
+    (r'^settings/', include('dbsettings.urls')),
+    (r'^search/*', include('pgd_search.urls')),
 )
 
 #The following is used to serve up local media files like images
