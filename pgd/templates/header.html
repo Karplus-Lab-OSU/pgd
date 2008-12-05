@@ -1,0 +1,60 @@
+<style>
+    div#headerContainer {
+        padding:0px;
+        text-align:center;
+        margin-bottom:10px;
+    }
+
+    div#mainmenu { 
+        color:white;
+        background-color:#1854d0;
+        padding:0px;
+        margin:0px;
+    }
+
+    div#submenu { 
+        background-color:#707070;
+        padding:0px;
+        margin:0px;
+    }
+
+    span.menuitem {
+        margin: 0px;
+        padding-left: 5px;
+        padding-right:5px;
+        border-style: solid;
+        border-width: 0px 1px 0px 0px;
+        border-color:black;
+    }
+
+    span.lastmenuitem {
+        border: 0px;
+    }
+
+    a.mainmenuitem {
+        font-size:14px;
+    }
+
+    a:link { 
+        color:white; 
+        text-decoration:none; 
+    }
+    a:visited           { color:white; text-decoration:none; }
+    a:hover             { color:white; text-decoration:underline; }
+    a:active            { color:white; text-decoration:none; font-weight:bold}
+</style>
+
+<div id="headerContainer">
+    <div id="mainmenu">
+        <span class="menuitem "><a class="mainmenuitem" href="/search/">New Search</a></span>
+        <span class="menuitem"><a class="mainmenuitem" href="/search/saved/">Saved Searches</a></span>
+        <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="">logout</a></span>
+    </div>
+    <div id="submenu">
+        <span class="menuitem"><a href="/search/edit">Edit Search</a></span>
+        <span class="menuitem"><a href="/search/plot/svg/">Plot</a></span>
+        <span class="menuitem"><a href="/search/statistics/">Statistics</a></span>
+        <span class="menuitem"><a href="/search/dump/">Data Dump</a></span>
+        <span class="menuitem lastmenuitem"><a href="/search/browse/">Browse Results</a></span>
+    </div>
+</div>

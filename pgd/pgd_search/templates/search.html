@@ -237,6 +237,8 @@
     </head>
     <body>
 
+    {% include 'header.html' %}
+
     {% if form.errors %}
         <ol>
         {% for error in form.errors %}
@@ -250,9 +252,7 @@
         <form name="search" method="POST" action="/search/">
             <table id="protein">
             <tbody>
-
-            <tr><td colspan="100%" class="sectionheader">Protein Properties</td></tr>
-             <tr>
+            <tr>
                 <td class="label" rowspan="4">{{form.proteins.label}}</td>
                 <td  rowspan="4">
                     {{form.proteins}}

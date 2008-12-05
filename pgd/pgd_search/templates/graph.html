@@ -29,13 +29,13 @@
                 color:white;
                 border: 1px solid #aaaaaa;
             }
-            
+
             .label {
                 display:inline;
                 width:160px;;
                 float:left;
             }
-            
+
             .field {
                 margin: 5px;
             }
@@ -127,21 +127,26 @@
         </script>
     </head>
     <body>
-        <div id="canvas"></div>
-        <div id="controls">
-        <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
-            <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
-            <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
-            <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
-            <div id="reference" class="field"><div class="label">Reference Value</div>{{form.reference}}</div>
-            <div id="x" class="field"><div class="label">X Min, Max</div>{{form.x}}{{form.x1}}</div>
-            <div id="y" class="field"><div class="label">Y Min, Max</div>{{form.y}}{{form.y1}}</div>
-            <div id="residue" class="field"><div class="label">Residue</div>{{form.residue}}</div>
-            <div id="bin" class="field"><div class="label">Bin X, Y</div>{{form.xBin}}{{form.yBin}}</div>
-            <button id="button-plot" class="field">Plot</button>
-        </form>
-        <button id="button-save">Save</button>
+        {% include 'header.html' %}
+        <div id="content">
+
+            <div id="canvas"></div>
+            <div id="controls">
+            <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
+                <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
+                <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
+                <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
+                <div id="reference" class="field"><div class="label">Reference Value</div>{{form.reference}}</div>
+                <div id="x" class="field"><div class="label">X Min, Max</div>{{form.x}}{{form.x1}}</div>
+                <div id="y" class="field"><div class="label">Y Min, Max</div>{{form.y}}{{form.y1}}</div>
+                <div id="residue" class="field"><div class="label">Residue</div>{{form.residue}}</div>
+                <div id="bin" class="field"><div class="label">Bin X, Y</div>{{form.xBin}}{{form.yBin}}</div>
+                <button id="button-plot" class="field">Plot</button>
+            </form>
+            <button id="button-save">Save</button>
+            </div>
+            <div id="binDetails"></div>
+
         </div>
-        <div id="binDetails"></div>
     </body>
 </html>
