@@ -130,8 +130,8 @@ class Segment_abstract(models.Model):
     protein = models.ForeignKey(Protein)
     chainID = models.CharField(max_length=1)
 
-    def __init__(self):
-        models.Model.__init__(self)
+    def __init__(self, *args, **kwargs):
+        super(Segment_abstract, self).__init__(*args, **kwargs)
         Residue_subscripter('residues', self)
 
     def __getattribute__(self,name):

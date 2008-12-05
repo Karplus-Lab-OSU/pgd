@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <style>
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+
+            });
+        </script>
+    </head>
+    <body>
+        {% include 'header.html' %}
+        <div id="content">
+            <table border="1">
+                <tbody>
+                <tr>
+                    <th>Type</th>
+                    <th>Total</th>
+                    <th>N/A</th>
+                    <th>e</th>
+                    <th>E</th>
+                    <th>S</th>
+                    <th>h</th>
+                    <th>H</th>
+                    <th>t</th>
+                    <th>T</th>
+                    <th>h</th>
+                    <th>g</th>
+                    <th>G</th>
+                    <th>B</th>
+                    <th>i</th>
+                    <th>I</th>
+                    {% for attribute in attributes %}
+                        <th>{{attribute}}</th>
+                    {% endfor %}
+                </tr>
+
+                {% for code, peptide in peptides.items %}
+                    <tr>
+                        <td>{{peptide.longCode}}</td>
+                        {% for value in peptide.counts %}
+                            <td>{{value}}</td>
+                        {% endfor %}
+                        {% for value in peptide.stats %}
+                            <td>
+                                {{value.mean|floatformat:2}}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+
+        </div>
+    </body>
+</html>
