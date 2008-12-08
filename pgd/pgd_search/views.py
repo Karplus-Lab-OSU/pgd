@@ -83,6 +83,7 @@ def search(request):
 
     return render_to_response('search.html', {
         'MEDIA_URL': settings.MEDIA_URL,
+        'SITE_ROOT': settings.SITE_ROOT,
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
@@ -408,6 +409,7 @@ def renderToSVG(request):
         svg,boxes = drawGraph()
 
     return render_to_response('graph.html', {
+        'SITE_ROOT': settings.SITE_ROOT,
         'MEDIA_URL': settings.MEDIA_URL,
         'form': form,
         'svg': svg,
@@ -485,6 +487,7 @@ def searchStatistics(request):
 
 
     return render_to_response('stats.html', {
+        'SITE_ROOT': settings.SITE_ROOT,
         'MEDIA_URL': settings.MEDIA_URL,
         'attributes': stat_attributes,
         'peptides':peptides

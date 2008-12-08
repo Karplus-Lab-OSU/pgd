@@ -33,14 +33,21 @@ SITE_ID = 1
 # to load the internationalization machinery.
 USE_I18N = True
 
+# prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>/
+# for the django built in server this should be /
+SITE_ROOT = '/pgd/'
+
+# absolute path to the docroot of this site
+DOC_ROOT = '/home/peter/work/pgd/pgd/'
+
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = '/var/www/media'
+MEDIA_ROOT = '%s/static' % DOC_ROOT
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = '/static/'
+MEDIA_URL = '%s%s' % (SITE_ROOT, 'static/')
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
