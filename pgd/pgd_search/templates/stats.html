@@ -20,7 +20,6 @@
 
             tr.row-a {
                 background-color:#12367e;
-                
             }
 
             tr.row-b {
@@ -32,12 +31,10 @@
             }
 
             .col-b {
-                
                 color:yellow;
             }
 
-            td{
-                
+            td {
                 color:white;
                 margin: 0px;
                 padding-right: 7px;
@@ -57,14 +54,38 @@
                 border-bottom: 1px solid black;
                 background-color:#1854d0;
             }
+
+            #statsDetail {
+                position: absolute;
+                border: 1px solid black;
+                width:230px;
+                height:5+0px;
+                background-color:white;
+                padding:10px;
+            }
+
+            span.label {
+                font-weight:bold;
+                float:left;
+            }
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
 
         <script type="text/javascript">
             $(document).ready(function() {
+                $('#statsDetail').hide();
 
+                $('.stats').mouseout( function() {$('#statsDetail').hide();})
             });
+
+            function showStats(stdev, range) {
+                if (stdev != '' && range != '') {
+                    $('#stdev').html(stdev);
+                    $('#range').html(range);
+                    $('div#statsDetail').css({left:100, top:100}).show();
+                }
+            }
         </script>
     </head>
     <body>
@@ -101,12 +122,18 @@
                             <td class="{%cycle colClass%}">{{value}}</td>
                         {% endfor %}
                         {% for value in peptide.stats %}
-                            <td class="{%cycle colClass%}">{{value.mean|floatformat:2}}</td>
+                            <td class="stats {%cycle colClass%}" onmouseover="showStats({{value.std}},{{value.statrange}})">{{value.mean|floatformat:2}}</td>
                         {% endfor %}
                     </tr>
                 {% endfor %}
               </tbody>
           </table>
+
+          <div id="statsDetail">
+                <span class="label">Standard Deviation:</span><div id="stdev"></div>
+                <span class="label">Range:</span><div id="range"></div>
+          </div>
+
         </div>
     </body>
 </html>
