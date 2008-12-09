@@ -143,22 +143,40 @@
                 }
             }
 
-            function updateInclusionField(node){
+            function validateField(val) {
+                // clean up field by removing whitespace and replacing OR synonyms with comma's
+                var regExp = /\s+/g;
+                val = val.replace(regExp,'')
+                regExp = /(\|){2}|(or){1}/g
+                val = val.replace(regExp,',')
+
+                if (val == '')
+                    return true;
+
+                if (val.match(/^(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?(,(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?)*$/)) {
+                    return true;
+                }
+                return false;
+            }
+
+            function updateInclusionField(node, syntax){
                 val = $(node).val()
 
                 // if field is not null check for syntax errors
-                if (val == '' || val.match(/^(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?(,(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?)*$/)) {
-                        $(node).removeClass('field_error');
-                } else {
-                        $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
-                        $(node).addClass('field_error').removeClass('field_exclude').removeClass('field_include')
+                if (syntax) {
+                    if (validateField(val)) {
+                            $(node).removeClass('field_error');
+                    } else {
+                            $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
+                            $(node).addClass('field_error').removeClass('field_exclude').removeClass('field_include')
 
-                        // return immediately so only the error class is applied
-                        return;
+                            // return immediately so only the error class is applied
+                            return;
+                    }
                 }
 
                 // set field style based on if the field has the default value
-                if (isDefault(node)){
+                if (isDefault(node, syntax)){
                     $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
                     $(node.parentNode).children(".include").val('').attr('disabled', true);
                     $(node).removeClass('field_exclude').removeClass('field_include')
@@ -184,14 +202,27 @@
             // extend function to jquery
             $.fn.updateInclusionField = function(){
                 this.each(function(){
-                    updateInclusionField(this);
+                    updateInclusionField(this, true);
+                });
+            };
+            $.fn.updateInclusionSelect = function(){
+                this.each(function(){
+                    updateInclusionField(this, false);
                 });
             };
 
             /*
             Determine if an element has the default value for that field type
             */
-            function isDefault(element){
+            function isDefault(element, field){
+                // strip whitespace for input boxes
+                if (field) {
+                    val = $(element).val();
+                    val = val.replace(/\s+/g, '');
+                    return val == '';
+                }
+
+                // select boxes just check for null
                 return $(element).val() == ''
             }
 
@@ -214,17 +245,15 @@
                 });
 
                 $('input.field').keyup(function(evt){
-                        updateInclusionField(evt.target);
+                        updateInclusionField(evt.target, true);
                     });
                 $('input.field').updateInclusionField();
 
 
                 $('select.field').change(function(evt){
-                        updateInclusionField(evt.target);
+                        updateInclusionField(evt.target, false);
                     });
-                $('select.field').updateInclusionField();
-
-                
+                $('select.field').updateInclusionSelect();
 
                 $('#id_residues').change(sizeChange);
 
