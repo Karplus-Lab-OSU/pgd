@@ -65,12 +65,12 @@
 
             .toggle_Include {
                 opacity:1;
-                background-image:url('http://doors.osuosl.org/media/green.png');
+                background-image:url('http://doors.osuosl.org/media/plus2.png');
             }
 
             .toggle_Exclude {
                 opacity:1;
-                background-image:url('http://doors.osuosl.org/media/red.png');
+                background-image:url('http://doors.osuosl.org/media/minus2.png');
             }
 
             .field_include {
@@ -80,6 +80,10 @@
             .field_exclude {
                 border-color:black;
                 background-color:#ee9c98;
+            }
+            .field_error {
+                border: 1px solid #c60017;
+                color:red;
             }
 
             li.error {
@@ -140,10 +144,26 @@
             }
 
             function updateInclusionField(node){
+                val = $(node).val()
+
+                // if field is not null check for syntax errors
+                if (val == '' || val.match(/^(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?(,(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?)*$/)) {
+                        $(node).removeClass('field_error');
+                } else {
+                        $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
+                        $(node).addClass('field_error').removeClass('field_exclude').removeClass('field_include')
+
+                        // return immediately so only the error class is applied
+                        return;
+                }
+
+                // set field style based on if the field has the default value
                 if (isDefault(node)){
                     $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
                     $(node.parentNode).children(".include").val('').attr('disabled', true);
-                    $(node).addClass('field_include').removeClass('field_exclude').removeClass('field_include')
+                    $(node).removeClass('field_exclude').removeClass('field_include')
+
+                // non-default value, indicate if field is inclusion or exclusion filter
                 }else{
                     val = $(node.parentNode).children(".include").val()
                     if (val == '') {
@@ -178,17 +198,6 @@
             $(document).ready(function() {
                 //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});
 
-                $('input.field').keyup(function(evt){
-                        updateInclusionField(evt.target);
-                    });
-                $('input.field').updateInclusionField();
-
-
-                $('select.field').change(function(evt){
-                        updateInclusionField(evt.target);
-                    });
-                 $('select.field').updateInclusionField();
-
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
                     if ( tar.hasClass('toggle_Include')) {
@@ -203,6 +212,19 @@
                         $(evt.target.parentNode).children(".field").addClass('field_include').removeClass('field_exclude');
                     }
                 });
+
+                $('input.field').keyup(function(evt){
+                        updateInclusionField(evt.target);
+                    });
+                $('input.field').updateInclusionField();
+
+
+                $('select.field').change(function(evt){
+                        updateInclusionField(evt.target);
+                    });
+                $('select.field').updateInclusionField();
+
+                
 
                 $('#id_residues').change(sizeChange);
 
