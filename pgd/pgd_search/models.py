@@ -161,6 +161,7 @@ for i in range(searchSettings.segmentSize):
     seq_dict["r%i_id" % i]              = models.PositiveIntegerField(null=True)
     seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)
     seq_dict["r%i_ss" % i]              = models.CharField(max_length=1, choices=SS_CHOICES, null=True)
+    seq_dict["r%i_aa" % i]              = models.CharField(max_length=1, choices=AA_CHOICES, null=True)
     seq_dict["r%i_terminal_flag" % i]   = models.BooleanField(null=True)
     seq_dict["r%i_xpr" % i]             = models.BooleanField(null=True) # probably should be replaced
 
