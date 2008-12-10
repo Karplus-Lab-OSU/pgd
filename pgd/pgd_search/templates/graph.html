@@ -87,7 +87,7 @@
                 {% endfor %}
 
                     $('#button-save').click(function (evt) {
-                        $("form").attr('action','/search/plot/png/').submit().attr('action','/search/plot/svg/')
+                        $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
                     });
 
                     $('#id_attribute').change(function (){
@@ -132,7 +132,7 @@
 
             <div id="canvas"></div>
             <div id="controls">
-            <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
+            <form id="plotform" name="plot" method="POST" action="{{SITE_ROOT}}search/plot/svg/">
                 <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
                 <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
                 <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
