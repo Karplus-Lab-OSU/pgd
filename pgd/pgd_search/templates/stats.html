@@ -5,7 +5,7 @@
     <head>
         <style>
 
-            table{
+            table {
                 border-collapse:collapse;
                 border-spacing:0px;
                 border: 1px solid black;
@@ -17,26 +17,22 @@
                 padding: 0px;
             }
 
+            tr.selected, td.selected {
+                background-color:#9adaff;
+            }
 
             tr.row-a {
-                background-color:#12367e;
+                background-color:#cbecff
             }
 
-            tr.row-b {
-                background-color:#002776;
-            }
+            tr.row-b {}
 
-            .col-a {
-                font-weight:bold;
-            }
+            .col-a {}
 
-            .col-b {
-                color:yellow;
-            }
+            .col-b {}
 
             td {
-                color:white;
-                margin: 0px;
+                color:black;
                 padding-right: 7px;
                 padding-left:7px;
                 border:: 1px solid black;
@@ -55,6 +51,12 @@
                 background-color:#1854d0;
             }
 
+            .section {
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                font-weight:bold;
+            }
+
             #statsDetail {
                 position: absolute;
                 border: 1px solid black;
@@ -68,6 +70,19 @@
                 font-weight:bold;
                 float:left;
             }
+
+            #stats {
+                /* Reset alignment to compensate for 'text-align:center': */
+                text-align: left;
+                /* Specify the width of the element. This should be the same
+                    as 'body min-width': */
+                width: 500px;
+                /* Set left and right margins to auto, thus centering the 
+                    element in the containing (body) tag: */
+                margin-left: auto;
+                margin-right: auto;
+            }
+
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -90,9 +105,14 @@
     </head>
     <body>
         {% include 'header.html' %}
-        <div id="content">
+        
             <table id="stats" >
                 <tbody>
+                <tr>
+                    <td colspan="2"></td>
+                    <td class="section" colspan="14">Secondary Structures</td>
+                    <td class="section" colspan="100%">Averages</td>
+                </tr>
                 <tr>
                     <th class="first {% cycle 'col-a' 'col-b' as colClass %}">Type</th>
                     <th class="first {%cycle colClass%}">Total</th>
@@ -127,13 +147,13 @@
                     </tr>
                 {% endfor %}
               </tbody>
-          </table>
+            </table>
 
-          <div id="statsDetail">
-                <span class="label">Standard Deviation:</span><div id="stdev"></div>
-                <span class="label">Range:</span><div id="range"></div>
-          </div>
+            <div id="statsDetail">
+                    <span class="label">Standard Deviation:</span><div id="stdev"></div>
+                    <span class="label">Range:</span><div id="range"></div>
+            </div>
 
-        </div>
+        
     </body>
 </html>
