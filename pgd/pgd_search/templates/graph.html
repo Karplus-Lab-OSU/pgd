@@ -17,6 +17,7 @@
                 text-align: left;
                 /* Specify the width of the element. This should be the same
                     as 'body min-width': */
+                width:20em;
                 /* Set left and right margins to auto, thus centering the 
                     element in the containing (body) tag: */
                 margin-left: auto;
@@ -56,15 +57,16 @@
                 margin: 5px;
             }
 
-            input {
-                width:50px;
-            }
-
             #id_attribute, #id_xProperty, #id_yProperty, #id_residue, #id_reference {
-                width:100px;
+                width:7.5em;
             }
 
-            #id_x1, #id_y1 {
+            #id_x, #id_y, #id_xBin {
+                width:3.75em;
+            }
+
+            #id_x1, #id_y1, #id_yBin {
+                width:3.75em;
                 border-left:0px;
             }
         </style>
@@ -129,7 +131,6 @@
                 $('#button-save').click(function (evt) {
                     $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
                 });
-
 
                 $('#id_attribute').change(function (){
                         $('#id_attribute option:selected').each(function () {
