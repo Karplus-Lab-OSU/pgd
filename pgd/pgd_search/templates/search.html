@@ -11,6 +11,7 @@
                 font-weight:2;
                 font-size:12px;
                 width:50px;
+                white-space : nowrap;
             }
 
             TR.spacer {
@@ -22,8 +23,10 @@
             }
 
             TD.field {
-                width:120px;
-                text-align:right;
+                padding-left:2em;
+                width:10em;
+                text-align:left;
+                white-space: nowrap;
             }
 
             TD.sectionheader {
@@ -45,7 +48,7 @@
             }
 
             input.field {
-                margin:2px;
+                margin:.2em;
             }
 
             select#id_proteins {
@@ -53,10 +56,9 @@
             }
 
             .toggle {
+                position: relative;
+                top:.35em;
                 float:left;
-                position:relative;
-                top:4px;
-                margin-left:20px;
                 width:15px;
                 height:15px;
                 background-repeat:repeat-x;
@@ -138,7 +140,9 @@
                     } else {
                         width = 110*newValue+75;
                     }
-                    $('table#residues').css({'width':110*newValue+75});
+
+                    val = 8*newValue+5
+                    $('table#residues').css({'width':val+'em'});
                     $('table#protein').css({'width':600});
                 }
             }

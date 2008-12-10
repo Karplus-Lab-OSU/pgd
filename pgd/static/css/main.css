@@ -12,6 +12,7 @@ input {
         padding:1px;
         font-size: 12px;
         font-weight:2;
+        width:5.5em;
 }
 
 input.submit {
@@ -21,8 +22,8 @@ input.submit {
 
 select {
         border: 1px solid #d4d4d4;
-        margin-right:2px;
-        width:69px;
+        width:  5.5em;
+        margin: 0.2em;
         background-color:#ffffff;
 }
 
