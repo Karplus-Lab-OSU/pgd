@@ -11,6 +11,7 @@ from svg import *
 from constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import *
 from pgd_core.models import *
+from statlib import stats
 
 
 residueCountChoices = []
@@ -82,6 +83,7 @@ def search(request):
 
     return render_to_response('search.html', {
         'MEDIA_URL': settings.MEDIA_URL,
+        'SITE_ROOT': settings.SITE_ROOT,
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
@@ -347,7 +349,7 @@ ATTRIBUTE_CHOICES = [
                     ("ome","ome"),
                     ("chi","chi"),
                     ]
-                    
+
 PROPERTY_CHOICES = [
                     ("L1","L1"),
                     ("L2","L2"),
@@ -407,9 +409,103 @@ def renderToSVG(request):
         svg,boxes = drawGraph()
 
     return render_to_response('graph.html', {
+        'SITE_ROOT': settings.SITE_ROOT,
         'MEDIA_URL': settings.MEDIA_URL,
         'form': form,
         'svg': svg,
         'boxes': boxes,
         'referenceValues' : RefDefaults()
     })
+
+"""
+display statistics about the search
+"""
+def searchStatistics(request):
+
+    stat_attributes = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7']
+    TOTAL_INDEX = {'total':0,' ':1,'e':2,'E':3,'S':4,'h':5,'H':6,'t':7,'T':8,'h':9,'g':10,'G':11,'B':12,'i':13,'I':14}
+    STAT_INDEX = {'L1':0,'L2':1,'L3':2,'L4':3,'L5':4,'a1':5,'a2':6,'a3':7,'a4':8,'a5':9,'a6':10,'a7':11}
+
+    # get search from session
+    search = Search()
+
+    # parse search into djangoQuery
+    #searchQuery = queryParser(search)
+    searchQuery = Segment.objects.all()[:500]#temp replacement for testing
+
+    peptides = {}
+    for code,long_code in AA_CHOICES:
+        peptides[code] = {
+                'longCode':long_code,
+                # attributes with just sums
+                'counts':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                # attributes with stats
+                'stats':[ [], [], [], [], [], [], [], [], [], [], [], [] ]
+            }
+
+    #iterate through all the segments
+    for segment in searchQuery:
+
+        #get the i protein
+        segment = segment.residues[4]
+
+        #get the peptide
+        peptide = peptides[segment.aa]
+
+        #calculate values
+        peptide['counts'][TOTAL_INDEX['total']] += 1
+        peptide['counts'][TOTAL_INDEX[segment.ss]] += 1
+
+        #calculate sums for all values of all proteins
+        for key in stat_attributes:
+            peptide['stats'][STAT_INDEX[key]].append(segment.__dict__[key])
+
+
+    # iterate through all the datastructures calculating statistics
+    for key in peptides:
+        peptide = peptides[key]
+        for attribute in stat_attributes:
+            list = peptide['stats'][STAT_INDEX[attribute]]
+            list_len = len(list)
+            if list_len > 1:
+                mean = stats.mean(list)
+                #now that we have mean calculate standard deviation
+                stdev = stats.stdev(list)
+                statrange = -1
+
+            # if theres only 1 item then the stats are simpler to calculate
+            elif list_len == 1:
+                mean = list[0]
+                std_dev = 0
+                statrange = 0
+
+            else:
+                mean = 0
+                stdev = 0
+                statrange = 0
+            peptide['stats'][STAT_INDEX[attribute]] = {'mean':mean,'std':stdev,'statrange':statrange}
+
+
+    return render_to_response('stats.html', {
+        'SITE_ROOT': settings.SITE_ROOT,
+        'MEDIA_URL': settings.MEDIA_URL,
+        'attributes': stat_attributes,
+        'peptides':peptides
+    })
+
+
+"""
+render the results of the search as a TSV (tab separated file)
+and return it to the user as a download
+"""
+def dataDump(request):
+    from DataDump import dumpSearch
+    response = HttpResponse(mimetype="text/tab-separated-values")
+    response['Content-Disposition'] = 'attachment; filename="data.tsv"'
+
+    # get search out of the session and pass it on
+    # TODO ^^
+
+    dumpSearch(None, response)
+
+    return response

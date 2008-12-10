@@ -5,6 +5,8 @@ import settings
 from django.contrib import admin
 admin.autodiscover()
 
+from pgd_search.views import search
+
 urlpatterns = patterns('',
     # Example:
     # (r'^pgd/', include('pgd.foo.urls')),
@@ -18,12 +20,14 @@ urlpatterns = patterns('',
     (r'^tasks/', include('tasks.urls')),
     (r'^settings/', include('dbsettings.urls')),
     (r'^search/*', include('pgd_search.urls')),
+
+    #default url
+    (r'^$',search),
 )
 
 #The following is used to serve up local media files like images
 #if settings.LOCAL_DEV:
 baseurlregex = r'^static/(?P<path>.*)$'
 urlpatterns += patterns('',
-    (baseurlregex, 'django.views.static.serve',
-    {'document_root':  settings.MEDIA_ROOT}),
+    (baseurlregex, 'django.views.static.serve', {'document_root':  settings.MEDIA_ROOT}),
 )

@@ -1,0 +1,33 @@
+* { 
+        font-family: Helvetica, Arial, Tahoma; 
+        font-size: 12px; 
+        font-color: #444; 
+        line-height: 25px; 
+        padding: 0px; 
+        margin: 0px; 
+}
+
+input {
+        background-color: #ffffff;
+        border: 1px solid #d4d4d4;
+        padding:1px;
+        font-size: 12px;
+        font-weight:2;
+}
+
+input.submit {
+        border: 2px solid #000;
+        font-weight:bold;
+}
+
+select {
+        border: 1px solid #d4d4d4;
+        margin-right:2px;
+        width:69px;
+        background-color:#ffffff;
+}
+
+#content{
+    width:100%;
+    text-align:center;
+}

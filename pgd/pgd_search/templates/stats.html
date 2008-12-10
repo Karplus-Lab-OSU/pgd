@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <style>
+
+            table{
+                border-collapse:collapse;
+                border-spacing:0px;
+                border: 1px solid black;
+                margin:20px;
+            }
+
+            tr {
+                margin: 0px;
+                padding: 0px;
+            }
+
+
+            tr.row-a {
+                background-color:#12367e;
+            }
+
+            tr.row-b {
+                background-color:#002776;
+            }
+
+            .col-a {
+                font-weight:bold;
+            }
+
+            .col-b {
+                color:yellow;
+            }
+
+            td {
+                color:white;
+                margin: 0px;
+                padding-right: 7px;
+                padding-left:7px;
+                border:: 1px solid black;
+                text-align:center;
+            }
+
+            td.first {
+                border-left: 1px solid black;
+            }
+
+            th {
+                color:white;
+                margin: 0px;
+                padding:5px;
+                border-bottom: 1px solid black;
+                background-color:#1854d0;
+            }
+
+            #statsDetail {
+                position: absolute;
+                border: 1px solid black;
+                width:230px;
+                height:5+0px;
+                background-color:white;
+                padding:10px;
+            }
+
+            span.label {
+                font-weight:bold;
+                float:left;
+            }
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+
+        <script type="text/javascript">
+            $(document).ready(function() {
+                $('#statsDetail').hide();
+
+                $('.stats').mouseout( function() {$('#statsDetail').hide();})
+            });
+
+            function showStats(stdev, range) {
+                if (stdev != '' && range != '') {
+                    $('#stdev').html(stdev);
+                    $('#range').html(range);
+                    $('div#statsDetail').css({left:100, top:100}).show();
+                }
+            }
+        </script>
+    </head>
+    <body>
+        {% include 'header.html' %}
+        <div id="content">
+            <table id="stats" >
+                <tbody>
+                <tr>
+                    <th class="first {% cycle 'col-a' 'col-b' as colClass %}">Type</th>
+                    <th class="first {%cycle colClass%}">Total</th>
+                    <th class="first {%cycle colClass%}">N/A</th>
+                    <th class="first {%cycle colClass%}">e</th>
+                    <th class="first {%cycle colClass%}">E</th>
+                    <th class="first {%cycle colClass%}">S</th>
+                    <th class="first {%cycle colClass%}">h</th>
+                    <th class="first {%cycle colClass%}">H</th>
+                    <th class="first {%cycle colClass%}">t</th>
+                    <th class="first {%cycle colClass%}">T</th>
+                    <th class="first {%cycle colClass%}">h</th>
+                    <th class="first {%cycle colClass%}">g</th>
+                    <th class="first {%cycle colClass%}">G</th>
+                    <th class="first {%cycle colClass%}">B</th>
+                    <th class="first {%cycle colClass%}">i</th>
+                    <th class="first {%cycle colClass%}">I</th>
+                    {% for attribute in attributes %}
+                        <th class="first {%cycle colClass%}">{{attribute}}</th>
+                    {% endfor %}
+                </tr>
+
+                {% for code, peptide in peptides.items %}
+                    <tr class="{% cycle 'row-a' 'row-b' %}">
+                        <td class="first {% cycle 'col-a' 'col-b' as colClass %}">{{peptide.longCode|upper}}</td>
+                        {% for value in peptide.counts %}
+                            <td class="{%cycle colClass%}">{{value}}</td>
+                        {% endfor %}
+                        {% for value in peptide.stats %}
+                            <td class="stats {%cycle colClass%}" onmouseover="showStats({{value.std}},{{value.statrange}})">{{value.mean|floatformat:2}}</td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+              </tbody>
+          </table>
+
+          <div id="statsDetail">
+                <span class="label">Standard Deviation:</span><div id="stdev"></div>
+                <span class="label">Range:</span><div id="range"></div>
+          </div>
+
+        </div>
+    </body>
+</html>
