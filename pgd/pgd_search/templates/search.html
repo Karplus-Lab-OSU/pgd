@@ -88,7 +88,22 @@
                 color:red;
             }
 
-            li.error {
+            div#errors {
+                color:red;
+                font-weight:bold;
+                text-align:left;
+                margin-left:25px;
+                margin-bottom:30px;
+            }
+
+            ul.errors {
+                color:red;
+                margin-left:30px;
+            }
+
+            ul.errorlist {
+                margin-left:45px;
+                font-weight:normal;
                 color:red;
             }
 
@@ -136,12 +151,12 @@
 
                     //update size of table
                     if (newValue < 5){
-                        width = 500;
+                        val = 45;
                     } else {
-                        width = 110*newValue+75;
+                        val = 9*newValue+6
                     }
 
-                    val = 8*newValue+5
+                    
                     $('table#residues').css({'width':val+'em'});
                     $('table#protein').css({'width':600});
                 }
@@ -219,15 +234,15 @@
             Determine if an element has the default value for that field type
             */
             function isDefault(element, field){
+                val = $(element).val();
                 // strip whitespace for input boxes
                 if (field) {
-                    val = $(element).val();
                     val = val.replace(/\s+/g, '');
                     return val == '';
                 }
 
                 // select boxes just check for null
-                return $(element).val() == ''
+                return val == '' || val == null;
             }
 
             $(document).ready(function() {
@@ -264,6 +279,15 @@
                 //force update of segments
                 $('#oldLength').val({{maxLength}});
                 sizeChange(1);
+
+                $('#foo').click(function(){
+                    val = $('#id_aa_0').val()
+                    alert(val);
+                });
+                $('#bar').click(function(){
+                    val = $('#id_ss_0').val()
+                    alert(val);
+                });
             });
 
         </script>
@@ -272,13 +296,16 @@
 
     {% include 'header.html' %}
 
-    {% if form.errors %}
-        <ol>
-        {% for error in form.errors %}
-            <li class="error"><strong>{{ error|escape }}</strong></li>
-        {% endfor %}
-        </ol>
-    {% endif %}
+    <div id="errors">
+        Please correct the following errors:
+        {% if form.errors %}
+            <ul class="errors">
+            {% for field, msg in form.errors.items %}
+                <li class="error"><strong>{{ field|escape }}</strong>{{msg|escape}}</li>
+            {% endfor %}
+            </ul>
+        {% endif %}
+    </div>
 
 
     <div id="formContainer">
@@ -309,6 +336,9 @@
 
             </tbody>
             </table>
+
+            <input type="button" name="foo" id="foo" value="foo"/>
+            <input type="button" name="bar" id="bar" value="bar"/>
 
             <div id="residuesContainer">
 

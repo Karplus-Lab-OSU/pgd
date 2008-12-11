@@ -32,10 +32,13 @@ start = 0 - (searchSettings.segmentSize-1) / 2
 stop  = int(math.ceil((searchSettings.segmentSize-1) / 2.0))+1
 residueIndexes = range(start, stop, 1)
 for i in residueIndexes:
-    form_dict["aa_%i" % i]      = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
+    form_dict["aa_%i" % i]      = forms.MultipleChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["aa_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
-    form_dict["ss_%i" % i]      = forms.ChoiceField(choices=SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
+    FORM_SS_CHOICES = [('','')]
+    for choice in SS_CHOICES:
+        FORM_SS_CHOICES.append(choice)
+    form_dict["ss_%i" % i]      = forms.ChoiceField(choices=FORM_SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
     form_dict["ss_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
     # the loops here are just to save on space/typing
@@ -57,7 +60,7 @@ def search(request):
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
             search = processSearchForm(form)
-            return HttpResponseRedirect('/results/') # Redirect after POST
+            return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
     else:
         form = SearchForm() # An unbound form
 
