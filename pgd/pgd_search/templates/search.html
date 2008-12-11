@@ -279,15 +279,6 @@
                 //force update of segments
                 $('#oldLength').val({{maxLength}});
                 sizeChange(1);
-
-                $('#foo').click(function(){
-                    val = $('#id_aa_0').val()
-                    alert(val);
-                });
-                $('#bar').click(function(){
-                    val = $('#id_ss_0').val()
-                    alert(val);
-                });
             });
 
         </script>
@@ -296,17 +287,16 @@
 
     {% include 'header.html' %}
 
-    <div id="errors">
+    {% if form.errors %}
+        <div id="errors">
         Please correct the following errors:
-        {% if form.errors %}
             <ul class="errors">
             {% for field, msg in form.errors.items %}
                 <li class="error"><strong>{{ field|escape }}</strong>{{msg|escape}}</li>
             {% endfor %}
             </ul>
-        {% endif %}
-    </div>
-
+        </div>
+    {% endif %}
 
     <div id="formContainer">
         <form name="search" method="POST" action="/search/">
@@ -336,9 +326,6 @@
 
             </tbody>
             </table>
-
-            <input type="button" name="foo" id="foo" value="foo"/>
-            <input type="button" name="bar" id="bar" value="bar"/>
 
             <div id="residuesContainer">
 
