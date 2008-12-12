@@ -203,8 +203,8 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
     step = (xtext1 - xtext) / 4
     for i in range(5):
         text = xtext + step*i
-        hashx = x+(width/4)*i-(4*len(str(text)))
-        svg.text(hashx, y+height+hashsize*3, str(text),12)
+        hashx = x+(width/4)*i-(2.5*len(str(text)))
+        svg.text(hashx, y+height+hashsize*2+3, str(text),12)
 
     #y axis text
     ytext  = yStart
@@ -212,8 +212,8 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
     step = (ytext1 - ytext) / 4
     for i in range(5):
         text = ytext + step*i
-        hashy = y+(height/4)*i+7
-        svg.text(x-20-(8*len(str(text))), hashy, str(text),12)
+        hashy = y+(height/4)*i+4
+        svg.text(x-5-(8*len(str(text))), hashy, str(text),12)
 
     #title text
     len1 = 220 - len(xProperty)*7/2 - len(xProperty)*7/2
@@ -374,10 +374,10 @@ class PlotForm(forms.Form):
     xProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='phi')
     yProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='psi')
     reference       = forms.FloatField(required=False, widget=forms.TextInput(attrs={'size':8}))
-    x               = forms.IntegerField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
-    x1              = forms.IntegerField(initial=180, widget=forms.TextInput(attrs={'size':4}))
-    y               = forms.IntegerField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
-    y1              = forms.IntegerField(initial=180, widget=forms.TextInput(attrs={'size':4}))
+    x               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
+    x1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
+    y               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
+    y1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
     residue         = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in range(start,stop)], initial=0)
     xBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
     yBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
