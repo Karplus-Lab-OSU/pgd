@@ -504,7 +504,7 @@ class ConfDistPlot():
     def Plot(self):
 
         # Turn all the query results into an array of points
-        segments = Segment.objects.filter(length=10)[:10]
+        segments = Segment.objects.filter(length=10)
         for segment in segments:
             #code = residue.code
             #id = residue.id
