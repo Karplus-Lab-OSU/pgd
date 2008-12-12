@@ -33,14 +33,14 @@ def parse_search(search):
                     lambda x,y: x|y,
                     (
                         (
-                            Q(**{seg_field+'__gte',float(range_re.split(constraint)[0])}) &
-                            Q(**{seg_field+'__lte':float(range_re.split(constraint)[1])})
+                            Q(**{seg_field+'__gte' : float(range_re.split(constraint)[0])}) &
+                            Q(**{seg_field+'__lte' : float(range_re.split(constraint)[1])})
                         ) if range_re.search(constraint) else (
                             Q(**(
-                                {seg_field+"__in" : (aa_choice[1] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index)}
+                                {seg_field+"__in"  : (aa_choice[1] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index)}
                                                                         if field == 'aa_int' else
-                                {seg_field        : int(constraint)}    if field == 'terminal_flag' else
-                                {seg_field        : float(constraint)}
+                                {seg_field         : int(constraint)}    if field == 'terminal_flag' else
+                                {seg_field         : float(constraint)}
                             ))
                         ) for constraint in str(segment.__dict__[field]).split(',')
                     )
