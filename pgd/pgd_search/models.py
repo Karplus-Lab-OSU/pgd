@@ -14,12 +14,11 @@ class SearchSettings(dbsettings.Group):
     requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available')
 searchSettings = SearchSettings('Splicer')
 
-#set defaults for settings
+# set defaults for settings
 if not searchSettings.segmentSize:
     set_setting_value('pgd_search.models', '', 'segmentSize', 10)
 if not searchSettings.requestedSegmentSize:
     set_setting_value('pgd_search.models', '', 'requestedSegmentSize', 10)
-
 
 # Search
 # A search query submitted by a user
