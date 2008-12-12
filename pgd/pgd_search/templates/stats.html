@@ -5,46 +5,24 @@
     <head>
         <style>
 
-            table{
+            table {
                 border-collapse:collapse;
                 border-spacing:0px;
-                border: 1px solid black;
                 margin:20px;
             }
 
-            tr {
-                margin: 0px;
-                padding: 0px;
-            }
-
-
-            tr.row-a {
-                background-color:#12367e;
-            }
-
-            tr.row-b {
-                background-color:#002776;
-            }
-
-            .col-a {
-                font-weight:bold;
-            }
-
-            .col-b {
-                color:yellow;
-            }
-
             td {
-                color:white;
-                margin: 0px;
+                color:black;
                 padding-right: 7px;
                 padding-left:7px;
-                border:: 1px solid black;
                 text-align:center;
             }
 
-            td.first {
+            .first {
                 border-left: 1px solid black;
+            }
+            .first {
+                border-right: 1px solid black;
             }
 
             th {
@@ -52,14 +30,46 @@
                 margin: 0px;
                 padding:5px;
                 border-bottom: 1px solid black;
+                border-top: 1px solid black;
                 background-color:#1854d0;
+                text-align:center;
+            }
+
+            tr {
+                margin: 0px;
+                padding: 0px;
+            }
+
+            tr.row-a {
+                background-color:#cbecff;
+            }
+
+            tr.selected, td.col_selected {
+                color:black;
+                background-color:#9adaff;
+            }
+
+            th.col_selected {
+                background-color:#3a76f1;
+            }
+
+            td.selected {
+                background-color:#3a76f1;
+                color:white;
+            }
+
+            .section {
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                border-top: 1px solid black;
+                font-weight:bold;
             }
 
             #statsDetail {
                 position: absolute;
                 border: 1px solid black;
                 width:230px;
-                height:5+0px;
+                height:50px;
                 background-color:white;
                 padding:10px;
             }
@@ -68,15 +78,67 @@
                 font-weight:bold;
                 float:left;
             }
+
+            .borderRight {
+                border-left:1px solid black;
+            }
+            .borderLeft {
+                border-right:1px solid black;
+            }
+
+            td.rowend {
+                width:0px;
+                background-color:white;
+                border-left: 1px solid black;
+            }
+            td.colend {
+                border-top:1px solid black;
+            }
+
+            #stats {
+                /* Reset alignment to compensate for 'text-align:center': */
+                text-align: left;
+                /* Specify the width of the element. This should be the same
+                    as 'body min-width': */
+                width: 500px;
+                /* Set left and right margins to auto, thus centering the 
+                    element in the containing (body) tag: */
+                margin-left: auto;
+                margin-right: auto;
+            }
+
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
 
         <script type="text/javascript">
+            var col = '';
+        
             $(document).ready(function() {
                 $('#statsDetail').hide();
 
                 $('.stats').mouseout( function() {$('#statsDetail').hide();})
+
+                $('tr.data')
+                    .mouseover(function() {
+                        $(this).addClass('selected');
+                    })
+                    .mouseout(function(){
+                        $(this).removeClass('selected');
+                    })
+
+                $('td.data')
+                    .mouseover(function() {
+                        id = $(this).attr('id');
+                        col = id.replace(/^(data_)[\w]{3}_/, '.');
+                        $(col).addClass('col_selected');
+                        $(this).addClass('selected');
+                    })
+                    .mouseout(function(){
+                        $(col).removeClass('col_selected');
+                        $(this).removeClass('selected');
+                    })
+
             });
 
             function showStats(stdev, range) {
@@ -90,50 +152,57 @@
     </head>
     <body>
         {% include 'header.html' %}
-        <div id="content">
+
             <table id="stats" >
                 <tbody>
                 <tr>
                     <th class="first {% cycle 'col-a' 'col-b' as colClass %}">Type</th>
-                    <th class="first {%cycle colClass%}">Total</th>
-                    <th class="first {%cycle colClass%}">N/A</th>
-                    <th class="first {%cycle colClass%}">e</th>
-                    <th class="first {%cycle colClass%}">E</th>
-                    <th class="first {%cycle colClass%}">S</th>
-                    <th class="first {%cycle colClass%}">h</th>
-                    <th class="first {%cycle colClass%}">H</th>
-                    <th class="first {%cycle colClass%}">t</th>
-                    <th class="first {%cycle colClass%}">T</th>
-                    <th class="first {%cycle colClass%}">h</th>
-                    <th class="first {%cycle colClass%}">g</th>
-                    <th class="first {%cycle colClass%}">G</th>
-                    <th class="first {%cycle colClass%}">B</th>
-                    <th class="first {%cycle colClass%}">i</th>
-                    <th class="first {%cycle colClass%}">I</th>
+                    <th class="{%cycle colClass%}">Total</th>
+                    <th class="borderleft"/>
+                    <th class="sum_na {%cycle colClass%}">N/A</th>
+                    <th class="sum_e {%cycle colClass%}">e</th>
+                    <th class="sum_E {%cycle colClass%}">E</th>
+                    <th class="sum_S {%cycle colClass%}">S</th>
+                    <th class="sum_h {%cycle colClass%}">h</th>
+                    <th class="sum_H {%cycle colClass%}">H</th>
+                    <th class="sum_t {%cycle colClass%}">t</th>
+                    <th class="sum_T {%cycle colClass%}">T</th>
+                    <th class="sum_g {%cycle colClass%}">g</th>
+                    <th class="sum_G {%cycle colClass%}">G</th>
+                    <th class="sum_B {%cycle colClass%}">B</th>
+                    <th class="sum_i {%cycle colClass%}">i</th>
+                    <th class="sum_I {%cycle colClass%}">I</th>
+                    <th class="borderright"/>
                     {% for attribute in attributes %}
-                        <th class="first {%cycle colClass%}">{{attribute}}</th>
+                        <th class="avg_{{attribute}} {%cycle colClass%}">{{attribute}}</th>
                     {% endfor %}
+                    <td class="end" />
                 </tr>
 
                 {% for code, peptide in peptides.items %}
-                    <tr class="{% cycle 'row-a' 'row-b' %}">
+                    <tr class="data {% cycle 'row-a' 'row-b' %}">
                         <td class="first {% cycle 'col-a' 'col-b' as colClass %}">{{peptide.longCode|upper}}</td>
-                        {% for value in peptide.counts %}
-                            <td class="{%cycle colClass%}">{{value}}</td>
+                        <td class="{%cycle colClass%}">{{peptide.total}}</td>
+                        <td class="borderleft"/>
+                        {% for list in peptide.counts %}
+                            <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum_{{list.0}} {%cycle colClass%}">{{list.1}}</td>
                         {% endfor %}
-                        {% for value in peptide.stats %}
-                            <td class="stats {%cycle colClass%}" onmouseover="showStats({{value.std}},{{value.statrange}})">{{value.mean|floatformat:2}}</td>
+                        <td class="borderright"/>
+                        {% for list in peptide.stats %}
+                            <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std}},{{list.1.statrange}})">{{list.1.mean|floatformat:2}}</td>
                         {% endfor %}
+                        <td class="rowend" />
                     </tr>
                 {% endfor %}
+                <tr><td class="colend" colspan="29"></tr>
               </tbody>
-          </table>
+            </table>
 
-          <div id="statsDetail">
-                <span class="label">Standard Deviation:</span><div id="stdev"></div>
-                <span class="label">Range:</span><div id="range"></div>
-          </div>
+            <div id="statsDetail">
+                    <span class="label">Standard Deviation:</span><div id="stdev"></div>
+                    <span class="label">Range:</span><div id="range"></div>
+            </div>
 
-        </div>
+        
     </body>
 </html>

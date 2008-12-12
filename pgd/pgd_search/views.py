@@ -32,10 +32,13 @@ start = 0 - (searchSettings.segmentSize-1) / 2
 stop  = int(math.ceil((searchSettings.segmentSize-1) / 2.0))+1
 residueIndexes = range(start, stop, 1)
 for i in residueIndexes:
-    form_dict["aa_%i" % i]      = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
+    form_dict["aa_%i" % i]      = forms.MultipleChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["aa_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
-    form_dict["ss_%i" % i]      = forms.ChoiceField(choices=SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
+    FORM_SS_CHOICES = [('','')]
+    for choice in SS_CHOICES:
+        FORM_SS_CHOICES.append(choice)
+    form_dict["ss_%i" % i]      = forms.ChoiceField(choices=FORM_SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
     form_dict["ss_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
     # the loops here are just to save on space/typing
@@ -57,7 +60,7 @@ def search(request):
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
             search = processSearchForm(form)
-            return HttpResponseRedirect('/results/') # Redirect after POST
+            return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
     else:
         form = SearchForm() # An unbound form
 
@@ -195,8 +198,8 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
         svg.line( x, hashy, x-hashsize, hashy, 1, '#000000');
 
     #x axis text
-    xtext  = -180
-    xtext1 = 180
+    xtext  = xStart
+    xtext1 = xEnd
     step = (xtext1 - xtext) / 4
     for i in range(5):
         text = xtext + step*i
@@ -204,11 +207,11 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
         svg.text(hashx, y+height+hashsize*3, str(text),12)
 
     #y axis text
-    ytext  = -180
-    ytext1 = 180
+    ytext  = yStart
+    ytext1 = yEnd
     step = (ytext1 - ytext) / 4
     for i in range(5):
-        text = xtext + step*i
+        text = ytext + step*i
         hashy = y+(height/4)*i+7
         svg.text(x-20-(8*len(str(text))), hashy, str(text),12)
 
@@ -423,7 +426,7 @@ display statistics about the search
 def searchStatistics(request):
 
     stat_attributes = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7']
-    TOTAL_INDEX = {'total':0,' ':1,'e':2,'E':3,'S':4,'h':5,'H':6,'t':7,'T':8,'h':9,'g':10,'G':11,'B':12,'i':13,'I':14}
+    TOTAL_INDEX = {'na':0,'e':1,'E':2,'S':3,'h':4,'H':5,'t':6,'T':7,'g':8,'G':9,'B':10,'i':11,'I':12}
     STAT_INDEX = {'L1':0,'L2':1,'L3':2,'L4':3,'L5':4,'a1':5,'a2':6,'a3':7,'a4':8,'a5':9,'a6':10,'a7':11}
 
     # get search from session
@@ -437,10 +440,12 @@ def searchStatistics(request):
     for code,long_code in AA_CHOICES:
         peptides[code] = {
                 'longCode':long_code,
+                #total
+                'total':0,
                 # attributes with just sums
-                'counts':[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],
+                'counts':[['na',0],['e',0],['E',0],['S',0],['h',0],['H',0],['t',0],['T',0],['g',0],['G',0],['B',0],['i',0],['I',0]],
                 # attributes with stats
-                'stats':[ [], [], [], [], [], [], [], [], [], [], [], [] ]
+                'stats':[['L1',[]],['L2',[]],['L3',[]],['L4',[]],['L5',[]],['a1',[]],['a2',[]],['a3',[]],['a4',[]],['a5',[]],['a6',[]],['a7',[]]]
             }
 
     #iterate through all the segments
@@ -453,19 +458,22 @@ def searchStatistics(request):
         peptide = peptides[segment.aa]
 
         #calculate values
-        peptide['counts'][TOTAL_INDEX['total']] += 1
-        peptide['counts'][TOTAL_INDEX[segment.ss]] += 1
+        peptide['total'] += 1
+        if segment.ss == ' ':
+            peptide['counts'][TOTAL_INDEX['na']][1] += 1
+        else:
+            peptide['counts'][TOTAL_INDEX[segment.ss]][1] += 1
 
-        #calculate sums for all values of all proteins
+        #store all values for attributes into arrays
         for key in stat_attributes:
-            peptide['stats'][STAT_INDEX[key]].append(segment.__dict__[key])
+            peptide['stats'][STAT_INDEX[key]][1].append(segment.__dict__[key])
 
 
     # iterate through all the datastructures calculating statistics
     for key in peptides:
         peptide = peptides[key]
         for attribute in stat_attributes:
-            list = peptide['stats'][STAT_INDEX[attribute]]
+            list = peptide['stats'][STAT_INDEX[attribute]][1]
             list_len = len(list)
             if list_len > 1:
                 mean = stats.mean(list)
@@ -483,7 +491,7 @@ def searchStatistics(request):
                 mean = 0
                 stdev = 0
                 statrange = 0
-            peptide['stats'][STAT_INDEX[attribute]] = {'mean':mean,'std':stdev,'statrange':statrange}
+            peptide['stats'][STAT_INDEX[attribute]][1] = {'mean':mean,'std':stdev,'statrange':statrange}
 
 
     return render_to_response('stats.html', {

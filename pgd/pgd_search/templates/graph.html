@@ -8,11 +8,20 @@
             #canvas {
                 width: 470;
                 height: 500;
-                margin: 10px;
+                margin: 5px;
             }
 
             #controls {
-                margin-top:30px;
+                margin-top:10px;
+                /* Reset alignment to compensate for 'text-align:center': */
+                text-align: left;
+                /* Specify the width of the element. This should be the same
+                    as 'body min-width': */
+                width:20em;
+                /* Set left and right margins to auto, thus centering the 
+                    element in the containing (body) tag: */
+                margin-left: auto;
+                margin-right: auto;
             }
 
             #button-plot {
@@ -30,14 +39,35 @@
                 border: 1px solid #aaaaaa;
             }
 
+            td {
+                white-space : nowrap;
+            }
+
             .label {
+                margin-right:10px;
                 display:inline;
-                width:160px;
-                float:left;
+            }
+
+            .col2 {
+                margin-left:30px;
             }
 
             .field {
+                text-align:left;
                 margin: 5px;
+            }
+
+            #id_attribute, #id_xProperty, #id_yProperty, #id_residue, #id_reference {
+                width:7.5em;
+            }
+
+            #id_x, #id_y, #id_xBin {
+                width:3.75em;
+            }
+
+            #id_x1, #id_y1, #id_yBin {
+                width:3.75em;
+                border-left:0px;
             }
         </style>
 
@@ -76,7 +106,6 @@
                     );
                 {% endfor %}
 
-
                 {% for text in svg.texts %}
                     svg.text(
                         {{text.x}},
@@ -86,67 +115,89 @@
                     );
                 {% endfor %}
 
-                    $('#button-save').click(function (evt) {
-                        $("form").attr('action','/search/plot/png/').submit().attr('action','/search/plot/svg/')
-                    });
-
-                    $('#id_attribute').change(function (){
-                         $('#id_attribute option:selected').each(function () {
-                            $('#id_reference').val(REF[$(this).text()]['ref']);
-                         });
-                    })
-
-                    {% for rect in boxes %}
-                        svg.rect(
-                            {{rect.0}}+fix,
-                            {{rect.1}}+fix,
-                            {{rect.2}},
-                            {{rect.3}},
-                            {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, {{rect.6}});', onmouseout:'bin_mouseout();'}
-                        );
-                    {% endfor %}
-
-
-                    });
-
-                var REF = {};
-                REF['Observations'] = {'ref':'','stepsize':''}
-                {% for k,v in referenceValues.items %}
-                    {% ifnotequal k 'Observations' %}
-                        REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
-                    {% endifnotequal %}
+                {% for rect in boxes %}
+                    svg.rect(
+                        {{rect.0}}+fix,
+                        {{rect.1}}+fix,
+                        {{rect.2}},
+                        {{rect.3}},
+                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, {{rect.6}});', onmouseout:'bin_mouseout();'}
+                    );
                 {% endfor %}
 
-                function bin_mouseover(evt, val){
-                    $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
-                }
+                $('#button-plot').click(function (evt) {
+                    $("form").submit();
+                });
+                $('#button-save').click(function (evt) {
+                    $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                });
 
-                function bin_mouseout(){
-                    $('div#binDetails').hide();
-                }
+                $('#id_attribute').change(function (){
+                        $('#id_attribute option:selected').each(function () {
+                        $('#id_reference').val(REF[$(this).text()]['ref']);
+                        });
+                })
+
+            });
+
+            var REF = {};
+            REF['Observations'] = {'ref':'','stepsize':''}
+            {% for k,v in referenceValues.items %}
+                {% ifnotequal k 'Observations' %}
+                    REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
+                {% endifnotequal %}
+            {% endfor %}
+
+            function bin_mouseover(evt, val){
+                $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
+            }
+
+            function bin_mouseout(){
+                $('div#binDetails').hide();
+            }
         </script>
     </head>
     <body>
         {% include 'header.html' %}
         <div id="content">
-
             <div id="canvas"></div>
-            <div id="controls">
-            <form id="plotform" name="plot" method="POST" action="/search/plot/svg/">
-                <div id="attribute" class="field"><div class="label">Plotted Attribute</div>{{form.attribute}}</div>
-                <div id='xaxis' class="field"><div class="label">X Axis</div>{{form.xProperty}}</div>
-                <div id='yaxis' class="field"><div class="label">Y Axis</div>{{form.yProperty}}</div>
-                <div id="reference" class="field"><div class="label">Reference Value</div>{{form.reference}}</div>
-                <div id="x" class="field"><div class="label">X Min, Max</div>{{form.x}}{{form.x1}}</div>
-                <div id="y" class="field"><div class="label">Y Min, Max</div>{{form.y}}{{form.y1}}</div>
-                <div id="residue" class="field"><div class="label">Residue</div>{{form.residue}}</div>
-                <div id="bin" class="field"><div class="label">Bin X, Y</div>{{form.xBin}}{{form.yBin}}</div>
-                <button id="button-plot" class="field">Plot</button>
-            </form>
-            <button id="button-save">Save</button>
-            </div>
-            <div id="binDetails"></div>
+            <table id="controls">
+            <form id="plotform" name="plot" method="POST" action="{{SITE_ROOT}}search/plot/svg/">
+                <tr>
+                    <td class="label">Plotted Attribute</td>
+                    <td>{{form.attribute}}</td>
+                    <td class="label col2">Reference</td>
+                    <td>{{form.reference}}</td>
+                </tr>
+                <tr>
+                    <td class="label">X Axis</td>
+                    <td>{{form.xProperty}}</td>
+                    <td class="label col2">X Min, Max</td>
+                    <td>{{form.x}}{{form.x1}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Y Axis</td>
+                    <td>{{form.yProperty}}</td>
+                    <td class="label col2">Y Min, Max</td>
+                    <td>{{form.y}}{{form.y1}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Residue</td>
+                    <td>{{form.residue}}</td>
+                    <td class="label col2">Bin X, Y</td>
+                    <td>{{form.xBin}}{{form.yBin}}</td>
+                    
+                </tr>
 
+            </form>
+            <tr>
+                <td colspan="100%" align="center">
+                <button id="button-plot" class="field">Plot</button>
+                <button id="button-save">Save</button>
+                </td>
+            </tr>
+            </table>
+            <div id="binDetails"></div>
         </div>
     </body>
 </html>

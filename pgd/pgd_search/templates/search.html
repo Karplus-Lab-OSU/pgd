@@ -11,6 +11,7 @@
                 font-weight:2;
                 font-size:12px;
                 width:50px;
+                white-space : nowrap;
             }
 
             TR.spacer {
@@ -22,8 +23,10 @@
             }
 
             TD.field {
-                width:120px;
-                text-align:right;
+                padding-left:2em;
+                width:10em;
+                text-align:left;
+                white-space: nowrap;
             }
 
             TD.sectionheader {
@@ -45,7 +48,7 @@
             }
 
             input.field {
-                margin:2px;
+                margin:.2em;
             }
 
             select#id_proteins {
@@ -53,10 +56,9 @@
             }
 
             .toggle {
+                position: relative;
+                top:.35em;
                 float:left;
-                position:relative;
-                top:4px;
-                margin-left:20px;
                 width:15px;
                 height:15px;
                 background-repeat:repeat-x;
@@ -86,7 +88,22 @@
                 color:red;
             }
 
-            li.error {
+            div#errors {
+                color:red;
+                font-weight:bold;
+                text-align:left;
+                margin-left:25px;
+                margin-bottom:30px;
+            }
+
+            ul.errors {
+                color:red;
+                margin-left:30px;
+            }
+
+            ul.errorlist {
+                margin-left:45px;
+                font-weight:normal;
                 color:red;
             }
 
@@ -134,11 +151,13 @@
 
                     //update size of table
                     if (newValue < 5){
-                        width = 500;
+                        val = 45;
                     } else {
-                        width = 110*newValue+75;
+                        val = 9*newValue+6
                     }
-                    $('table#residues').css({'width':110*newValue+75});
+
+                    
+                    $('table#residues').css({'width':val+'em'});
                     $('table#protein').css({'width':600});
                 }
             }
@@ -215,15 +234,15 @@
             Determine if an element has the default value for that field type
             */
             function isDefault(element, field){
+                val = $(element).val();
                 // strip whitespace for input boxes
                 if (field) {
-                    val = $(element).val();
                     val = val.replace(/\s+/g, '');
                     return val == '';
                 }
 
                 // select boxes just check for null
-                return $(element).val() == ''
+                return val == '' || val == null;
             }
 
             $(document).ready(function() {
@@ -269,13 +288,15 @@
     {% include 'header.html' %}
 
     {% if form.errors %}
-        <ol>
-        {% for error in form.errors %}
-            <li class="error"><strong>{{ error|escape }}</strong></li>
-        {% endfor %}
-        </ol>
+        <div id="errors">
+        Please correct the following errors:
+            <ul class="errors">
+            {% for field, msg in form.errors.items %}
+                <li class="error"><strong>{{ field|escape }}</strong>{{msg|escape}}</li>
+            {% endfor %}
+            </ul>
+        </div>
     {% endif %}
-
 
     <div id="formContainer">
         <form name="search" method="POST" action="/search/">

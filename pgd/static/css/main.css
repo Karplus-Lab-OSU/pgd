@@ -1,7 +1,6 @@
 * { 
         font-family: Helvetica, Arial, Tahoma; 
         font-size: 12px; 
-        font-color: #444; 
         line-height: 25px; 
         padding: 0px; 
         margin: 0px; 
@@ -13,6 +12,7 @@ input {
         padding:1px;
         font-size: 12px;
         font-weight:2;
+        width:5.5em;
 }
 
 input.submit {
@@ -22,12 +22,30 @@ input.submit {
 
 select {
         border: 1px solid #d4d4d4;
-        margin-right:2px;
-        width:69px;
+        width:  5.5em;
+        margin: 0.2em;
         background-color:#ffffff;
 }
 
-#content{
-    width:100%;
-    text-align:center;
+body {
+        /* MSIE 5 doesn't center based on auto left/right margins, 
+            but 'text-align:center' does center top-level divs: */
+        text-align: center;
+        /* Specify a min-width for the body as wide as the 'wrapper'
+            element itself. This prevents negative (i.e. inaccessible)
+            left-margins in narrow browser windows when using 
+            Navigator 6+/Mozilla on Win32: */
+        min-width: 500px;
+}
+
+#content {
+        /* Reset alignment to compensate for 'text-align:center': */
+        text-align: left;
+        /* Specify the width of the element. This should be the same
+            as 'body min-width': */
+        width: 500px;
+        /* Set left and right margins to auto, thus centering the 
+            element in the containing (body) tag: */
+        margin-left: auto;
+        margin-right: auto;
 }

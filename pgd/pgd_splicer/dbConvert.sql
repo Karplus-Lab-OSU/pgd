@@ -55,7 +55,7 @@ INSERT INTO pgd_core_chain (id, protein_id, code)
     FROM protein;
 
 -- import residues
-INSERT INTO pgd_core_residue (protein_id,chain_id,aa,chainID,chainIndex,a1,a2,a3,a4,a5,a6,a7,L1,L2,L3,L4,L5,ss,phi,psi,chi,ome,bm,bs,h_bond_energy,zeta,terminal_flag,xpr)
+INSERT INTO pgd_core_residue (protein_id,chain_id,aa,chainID,chainIndex,a1,a2,a3,a4,a5,a6,a7,L1,L2,L3,L4,L5,ss,phi,psi,chi,ome,bm,bs,bg,h_bond_energy,zeta,terminal_flag,xpr)
     SELECT
         code            AS protein_id,
         CONCAT(code, chainID)   AS chain_id,
@@ -81,6 +81,7 @@ INSERT INTO pgd_core_residue (protein_id,chain_id,aa,chainID,chainIndex,a1,a2,a3
         ome             AS ome,
         bm              AS bm,
         bs              AS bs,
+        bg              AS bg,
         H_bond_energy   AS h_bond_energy,
         Zeta            AS zeta,
         terminal_flag   AS terminal_flag,

@@ -8,7 +8,8 @@
     **************************************************************************  """
 
 import math
-from models import *
+from pgd_search.models import *
+from constants import AA_CHOICES
 
 def dumpSearch(search, writer):
 
@@ -20,6 +21,7 @@ def dumpSearch(search, writer):
     # A list of values that should not be printed out
     FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
     FIELD_LABEL_REPLACEMENTS = {'h_bond_energy':'H Bond', 'aa':'AA'}
+    FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
 
     total = len(querySet)
 
@@ -33,7 +35,6 @@ def dumpSearch(search, writer):
             writer.write(FIELD_LABEL_REPLACEMENTS[field])
         else:
             writer.write(field)
-
     writer.write('\n')
 
     #calculate list of iValues
@@ -77,7 +78,16 @@ def dumpSearch(search, writer):
             #field values
             for field in FIELDS:
                 writer.write('\t')
-                writer.write(segment.__dict__['r%i_%s' % (iIndex+offset, field) ])
+                # replace field with display value if needed
+                if field in FIELD_VALUE_REPLACEMENTS:
+                    code = segment.__dict__['r%i_%s' % (iIndex+offset, field)]
+                    if code:
+                        for k,v in FIELD_VALUE_REPLACEMENTS[field]:
+                            if k == code:
+                                writer.write(v)
+                # just write value
+                else:
+                    writer.write(segment.__dict__['r%i_%s' % (iIndex+offset, field)])
 
             #end residue with a newline
             writer.write('\n')
