@@ -5,6 +5,7 @@ urlpatterns = patterns('pgd_search.views',
     (r'^results/$', 'renderToSVG'),
     (r'^plot/svg/$', 'renderToSVG'),
     (r'^plot/png/$', 'renderToPNG'),
+    (r'^plot/dump/$', 'plotDump'),
     (r'^statistics/$', 'searchStatistics'),
     (r'^dump/$', 'dataDump'),
 )

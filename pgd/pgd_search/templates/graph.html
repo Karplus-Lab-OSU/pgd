@@ -132,6 +132,10 @@
                     $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
                 });
 
+                $('#button-data').click(function (evt) {
+                    $("form").attr('action','{{SITE_ROOT}}search/plot/dump/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                });
+
                 $('#id_attribute').change(function (){
                         $('#id_attribute option:selected').each(function () {
                         $('#id_reference').val(REF[$(this).text()]['ref']);
@@ -194,6 +198,7 @@
                 <td colspan="100%" align="center">
                 <button id="button-plot" class="field">Plot</button>
                 <button id="button-save">Save</button>
+                <button id="button-data">Data</button>
                 </td>
             </tr>
             </table>

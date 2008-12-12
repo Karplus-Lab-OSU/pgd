@@ -1,5 +1,3 @@
-SEQUENCE_SIZE = 10
-
 # The possible values for the 'aa' field (in Protein and elsewhere)
 AA_CHOICES = (
 	('g', 'gly'),
@@ -39,6 +37,25 @@ SS_CHOICES = (
 	('B', 'Isolated beta-bridge'),
 	('S', 'Bend'),
 )
+
+PLOT_PROPERTY_CHOICES = [
+    ("L1","L1"),
+    ("L2","L2"),
+    ("L3","L3"),
+    ("L4","L4"),
+    ("L5","L5"),
+    ("a1","a1"),
+    ("a2","a2"),
+    ("a3","a3"),
+    ("a4","a4"),
+    ("a5","a5"),
+    ("a6","a6"),
+    ("a7","a7"),
+    ("ome","ome"),
+    ("chi","chi"),
+    ("phi","phi"),
+    ("psi","psi"),
+    ]
 
 # This class makes a property subscriptable
 # (may get moved to pgd_search/models.py)

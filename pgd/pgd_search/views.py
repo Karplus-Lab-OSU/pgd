@@ -169,7 +169,7 @@ def processSearchForm(form):
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=0, xBin=10, yBin=10):
+def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
     svg = SVG()
 
     x = 55;
@@ -221,10 +221,6 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
     svg.text(len1,15, 'Plot of %s vs. %s' % (xProperty,yProperty), 12)
     svg.text(len2,35, 'Shading Based Off of %s' % attribute, 12)
 
-#ob = 140
-#
-
-
     cdp = ConfDistPlot(
             400,            #height
             400,            #width
@@ -240,8 +236,9 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
             yBin,           #Ybin
             xProperty,      #X property
             yProperty,      #Y property
-            '1sny',         #protein code
-            attribute       #property
+            attribute,      #property
+            residue         #residue Index
+            #reference
     )
 
     boxes = cdp.Plot()
@@ -296,7 +293,7 @@ def renderToPNG(request):
                         data['xProperty'],
                         data['yProperty'],
                         data['reference'],
-                        data['residue'],
+                        int(data['residue']),
                         data['xBin'],
                         data['yBin'])
 
@@ -403,7 +400,7 @@ def renderToSVG(request):
                         data['xProperty'],
                         data['yProperty'],
                         data['reference'],
-                        data['residue'],
+                        int(data['residue']),
                         data['xBin'],
                         data['yBin'])
 
@@ -419,6 +416,49 @@ def renderToSVG(request):
         'boxes': boxes,
         'referenceValues' : RefDefaults()
     })
+
+"""
+render the results of the search as a TSV (tab separated file)
+and return it to the user as a download
+"""
+def plotDump(request):
+    if request.method == 'POST': # If the form has been submitted
+        form = PlotForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            data = form.cleaned_data
+
+            cdp = ConfDistPlot(
+                400,            #height
+                400,            #width
+                0,              #Xpadding
+                0,              #Ypadding
+                55,              #Xoffset
+                45,              #Yoffset
+                data['x'],      #Xstart
+                data['x1'],           #Xend
+                data['y'],         #Ystart
+                data['y1'],           #Yend
+                data['xBin'],           #Xbin
+                data['yBin'],           #Ybin
+                data['xProperty'],      #X property
+                data['yProperty'],      #Y property
+                data['attribute'],#property
+                #data['reference'],
+                int(data['residue'])
+            )
+
+            response = HttpResponse(mimetype="text/tab-separated-values")
+            response['Content-Disposition'] = 'attachment; filename="plot.tsv"'
+
+            # get search out of the session and pass it on
+            # TODO ^^
+
+            cdp.Plot()
+            cdp.PrintDump(response)
+
+            return response
+
+    return None
 
 """
 display statistics about the search

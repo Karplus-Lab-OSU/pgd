@@ -8,6 +8,7 @@
    #-------------------------------------------------------------------------------------------------------------------
 
 from pgd_core.models import *
+from pgd_search.models import *
 from constants import *
 import math
 
@@ -62,16 +63,13 @@ class Bin():
         xFloor = math.floor( x / self.xLen )
         xFloor = self.xLen * xFloor
 
-        yFloor = floor ( y / self.yLen )
+        yFloor = math.floor ( y / self.yLen )
         yFloor = self.yLen * yFloor
 
         # Create a coordinate for the x and y bins that specificies the minimum and maximum
         # for the bin
-        coords[0] = Coord(xFloor, xFloor + self.xLen, 0, 0, None) 
-        coords[1] = Coord(yFloor, yFloor + self.yLen, 0, 0, None)
-
-        return coords
-
+        return (Coord(xFloor, xFloor + self.xLen, 0, 0, None),
+                Coord(yFloor, yFloor + self.yLen, 0, 0, None))
 
     # ******************************************************
     # Returns the bin at a specificied coordinate
@@ -123,7 +121,7 @@ class Bin():
 class BinPoint():
 
     numObs    = None    # Number of observations
-    avg       = None    # average for the bin    
+    avg       = None    # average for the bin
     sum       = None    # sum of all data
     deviation = None    # standard deviation of data
     obs       = None    # Array of observations
@@ -208,6 +206,8 @@ class BinPoint():
 
         if self.numObs > 1:
             self.deviation[key] = math.sqrt(sum / ( self.numObs - 1 ))
+        else:
+            self.deviation[key] = 0
 
 
 
@@ -225,10 +225,10 @@ class BinPoint():
     # Returns the standard deviation for a specified value    
     # ******************************************************
     def GetDev(self, key):
-        if self.dev[key] == None:
+        if not self.deviation.has_key(key):
             self.ComputeStats(key)
 
-        return self.dev[key]
+        return self.deviation[key]
 
 
 
@@ -282,7 +282,7 @@ class ConfDistPlot():
     # query:            sql query to use to get data for the plot
     # ref:                reference attribute for shading
     # ******************************************************
-    def __init__(self, x, y, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, code, ref):
+    def __init__(self, x, y, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue):
         self.xSize = x
         self.ySize = y
         self.xOff = xOffset
@@ -309,18 +309,18 @@ class ConfDistPlot():
         self.bin = None
         self.plotBin = None
 
-        #self.theQuery = query
-        #self.SetQuery(query)        # Runs the query
-        #self.MakeBasicImage()        #Creates the basic image
-        #self.table = table
-        self.code = code
+        #self.attribute = attribute
+        
+        #determine residue
+        if residue:
+            self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + residue
+        #default is index 0
+        else:
+            self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1)
 
         # Reference array that contains information for a specific type of value
         self.REF = RefDefaults()
         self.USEREF = self.REF
-
-
-    
 
     # ******************************************************
     # Returns reference values used
@@ -459,7 +459,6 @@ class ConfDistPlot():
                 bin = self.plotBin.bins[key]
 
                 # Determine actual image location of the bin
-
                 x = bin.xBin * self.plotBin.xLen
                 y = bin.yBin * self.plotBin.yLen
                 xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
@@ -505,12 +504,11 @@ class ConfDistPlot():
     def Plot(self):
 
         # Turn all the query results into an array of points
-        protein = Protein.objects.filter(code=self.code)[0]
-        for residue in protein.residues.all():
-        #while( row = mysql_fetch_array(self.queryResult) )
-
+        segments = Segment.objects.filter(length=10)[:10]
+        for segment in segments:
             #code = residue.code
             #id = residue.id
+            residue = segment.residues[self.residue]
 
             xOrig = residue.__dict__[self.xText]    # Original Values of X and Y
             yOrig = residue.__dict__[self.yText]
@@ -530,92 +528,70 @@ class ConfDistPlot():
     # *******************************************************************************
     # Prints out the query results in a dump file
     # *******************************************************************************
-    '''def PrintDump(self):
+    def PrintDump(self, writer):
 
-        # Determine the file name for a dump
-        handle = NULL
-        out = NULL
-        fileName = session_id() . "-plot.txt"
 
-        echo "<center><p><a href=\"dump/fileName\">Download info</a></p></center>"
-        handle = fopen("/var/www/pgd/database/dump/" . fileName, "w")
+        static_titles = ['PhiAvg', 'PhiDev', 'PsiAvg', 'PsiDev', 'L1Avg', 'L1Dev', 'L2Avg',
+        'L2Dev', 'L3Avg', 'L3Dev', 'L4Avg', 'L4Dev', 'L5Avg', 'L5Dev', 'a1Avg', 'a1Dev', 'a2Avg', 'a2Dev', 'a3Avg', 'a3Dev', 'a4Avg',
+        'a4Dev', 'a5Avg', 'a5Dev', 'a6Avg', 'a6Dev', 'a7Avg', 'a7Dev', 'OmeAvg', 'OmeDev']
 
-        out .= "PhiStart" . "\t" . "PhiStop" . "\t"
-        out .= "PsiStart" . "\t" . "PsiStop" . "\t"
-        out .= "Observations" . "\t"
-        out .= "PhiAvg" . "\t"
-        out .= "PhiDev" . "\t"
-        out .= "PsiAvg" . "\t"
-        out .= "PsiDev" . "\t"
-        out .= "L1Avg" . "\t"
-        out .= "L1Dev" . "\t"
-        out .= "L2Avg" . "\t"
-        out .= "L2Dev" . "\t"
-        out .= "L3Avg" . "\t"
-        out .= "L3Dev" . "\t"
-        out .= "L4Avg" . "\t"
-        out .= "L4Dev" . "\t"
-        out .= "L5Avg" . "\t"
-        out .= "L5Dev" . "\t"
-        out .= "a1Avg" . "\t"
-        out .= "a1Dev" . "\t"
-        out .= "a2Avg" . "\t"
-        out .= "a2Dev" . "\t"
-        out .= "a3Avg" . "\t"
-        out .= "a3Dev" . "\t"
-        out .= "a4Avg" . "\t"
-        out .= "a4Dev" . "\t"
-        out .= "a5Avg" . "\t"
-        out .= "a5Dev" . "\t"
-        out .= "a6Avg" . "\t"
-        out .= "a6Dev" . "\t"
-        out .= "a7Avg" . "\t"
-        out .= "a7Dev" . "\t"
-        out .= "OmeAvg" . "\t"
-        out .= "OmeDev" . "\t"
-        out .= "\n"
+        #output the dynamic titles
+        writer.write('%sstart' % self.xText)
+        writer.write('\t')
+        writer.write('%sstop' % self.xText)
+        writer.write('\t')
+        writer.write('%sstart' % self.yText)
+        writer.write('\t')
+        writer.write('%sstop' % self.yText)
+        writer.write('\t')
+        writer.write('%s' % self.ref)
 
-        # Cycle through the bin areas
-        # Derived from MakeMap()
-        while( list(xBin, yArr) = each(self.plotBin.bins) )
-            while( list(yBin, binVal) = each(yArr) )
-                xLen = self.plotBin.xLen
-                yLen = self.plotBin.yLen
+        #output the generic titles
+        for title in static_titles:
+            writer.write('\t')
+            writer.write(title)
 
-                # x and y points
-                x = xBin * xLen
-                y = yBin * yLen
+        # Cycle through the binPoints
+        for key in self.plotBin.bins:
+            bin = self.plotBin.bins[key]
+            writer.write('\n')
 
-                if( x < self.xRange[0] || x > self.xRange[1] )print svg
-                    break
-                if( y < self.yRange[0] || y > self.yRange[1] )
-                    break
+            xLen = self.plotBin.xLen
+            yLen = self.plotBin.yLen
 
-                box = self.plotBin.GetBinCoords(x, y)
+            # x and y points
+            x = bin.xBin * xLen
+            y = bin.yBin * yLen
 
-                out .= box[0].x . "\t" . box[0].y . "\t" # Phi range
-                out .= box[1].x . "\t" . box[1].y . "\t" # Psi range
-                out .= binVal.numObs . "\t" # Observations
-                # Start averages and standard deviations
-                out .= round(binVal.GetAvg('phi'), 1) . "\t" . round(binVal.GetDev('phi'), 3) . "\t" # Phi
-                out .= round(binVal.GetAvg('psi'), 1) . "\t" . round(binVal.GetDev('psi'), 3) . "\t" # Psi
-                out .= round(binVal.GetAvg('L1'), 3) . "\t" . round(binVal.GetDev('L1'), 3) . "\t" # L1
-                out .= round(binVal.GetAvg('L2'), 3) . "\t" . round(binVal.GetDev('L2'), 3) . "\t" # L2
-                out .= round(binVal.GetAvg('L3'), 3) . "\t" . round(binVal.GetDev('L3'), 3) . "\t" # L3
-                out .= round(binVal.GetAvg('L4'), 3) . "\t" . round(binVal.GetDev('L4'), 3) . "\t" # L4
-                out .= round(binVal.GetAvg('L5'), 3) . "\t" . round(binVal.GetDev('L5'), 3) . "\t" # L5
-                out .= round(binVal.GetAvg('a1'), 3) . "\t" . round(binVal.GetDev('a1'), 3) . "\t" # a1
-                out .= round(binVal.GetAvg('a2'), 3) . "\t" . round(binVal.GetDev('a2'), 3) . "\t" # a2
-                out .= round(binVal.GetAvg('a3'), 3) . "\t" . round(binVal.GetDev('a3'), 3) . "\t" # a3
-                out .= round(binVal.GetAvg('a4'), 3) . "\t" . round(binVal.GetDev('a4'), 3) . "\t" # a4
-                out .= round(binVal.GetAvg('a5'), 3) . "\t" . round(binVal.GetDev('a5'), 3) . "\t" # a5
-                out .= round(binVal.GetAvg('a6'), 3) . "\t" . round(binVal.GetDev('a6'), 3) . "\t" # a6
-                out .= round(binVal.GetAvg('a7'), 3) . "\t" . round(binVal.GetDev('a7'), 3) . "\t" # a7
-                out .= round(binVal.GetAvg('ome'), 1) . "\t" . round(binVal.GetDev('ome'), 3) . "\t" # Omega
-                out .= "\n"
+            if x < self.xRange[0] or x > self.xRange[1]:
+                break
+            if y < self.yRange[0] or y > self.yRange[1]:
+                break
 
-        fwrite( handle, out )
-'''
+            box = self.plotBin.GetBinCoords(x, y)
+
+            # Phi range
+            writer.write(box[0].x)
+            writer.write('\t')
+            writer.write(box[0].y)
+
+            # psi range
+            writer.write('\t')
+            writer.write(box[1].x)
+            writer.write('\t')
+            writer.write(box[1].y)
+
+            # observations
+            writer.write('\t')
+            writer.write(bin.numObs)
+
+            # Start averages and standard deviations
+            for field in PLOT_PROPERTY_CHOICES:
+                writer.write('\t')
+                writer.write(round(bin.GetAvg(field[0]), 1))
+                writer.write('\t')
+                writer.write(round(bin.GetDev(field[0]), 3))
+
 
 # ******************************************************
 # Returns default reference values
