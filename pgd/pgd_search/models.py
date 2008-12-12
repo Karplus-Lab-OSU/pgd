@@ -129,6 +129,7 @@ class Segment_abstract(models.Model):
 
     protein = models.ForeignKey(Protein)
     chainID = models.CharField(max_length=1)
+    length  = models.PositiveIntegerField()
 
     def __init__(self, *args, **kwargs):
         super(Segment_abstract, self).__init__(*args, **kwargs)
