@@ -379,8 +379,8 @@ class PlotForm(forms.Form):
     y               = forms.IntegerField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
     y1              = forms.IntegerField(initial=180, widget=forms.TextInput(attrs={'size':4}))
     residue         = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in range(start,stop)], initial=0)
-    xBin            = forms.IntegerField(initial=10, widget=forms.TextInput(attrs={'size':4}))
-    yBin            = forms.IntegerField(initial=10, widget=forms.TextInput(attrs={'size':4}))
+    xBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
+    yBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
 
 
 """
