@@ -65,10 +65,40 @@ class Search_residue(models.Model):
     terminal_flag   = models.BooleanField(null=True)
     xpr             = models.BooleanField(null=True) # this field may not be necessary; it has never been implemented
 
+    # '<field>_include' boolean determines how its query field should be handled
+    # Null  : field not included
+    # True  : field included as a positive assertion
+    # False : field included as a negative assertion
+    aa_int_include          = models.BooleanField(null=True)
+    a1_include              = models.BooleanField(null=True)
+    a2_include              = models.BooleanField(null=True)
+    a3_include              = models.BooleanField(null=True)
+    a4_include              = models.BooleanField(null=True)
+    a5_include              = models.BooleanField(null=True)
+    a6_include              = models.BooleanField(null=True)
+    a7_include              = models.BooleanField(null=True)
+    L1_include              = models.BooleanField(null=True)
+    L2_include              = models.BooleanField(null=True)
+    L3_include              = models.BooleanField(null=True)
+    L4_include              = models.BooleanField(null=True)
+    L5_include              = models.BooleanField(null=True)
+    ss_include              = models.BooleanField(null=True)
+    phi_include             = models.BooleanField(null=True)
+    psi_include             = models.BooleanField(null=True)
+    ome_include             = models.BooleanField(null=True)
+    chi_include             = models.BooleanField(null=True)
+    bm_include              = models.BooleanField(null=True)
+    bs_include              = models.BooleanField(null=True)
+    bg_include              = models.BooleanField(null=True)
+    h_bond_energy_include   = models.BooleanField(null=True)
+    zeta_include            = models.BooleanField(null=True)
+    terminal_flag_include   = models.BooleanField(null=True)
+    
+
     def __init__(self):
         models.Model.__init__(self)
 
-        # populate 'aa' with a dictionary of allowed 'aa' values
+        # populate 'aa' with a dictionary of allowed values from AA_CHOICES
         self.aa = dict([(j[1],1 if self.aa_int == None else 1&self.aa_int>>i) for i,j in enumerate(AA_CHOICES)])
 
 
