@@ -15,7 +15,7 @@ AA_CHOICES = (
 	('y', 'tyr'),
 	('n', 'asn'),
 	('q', 'gln'),
-	('d', 'aps'),
+	('d', 'asp'),
 	('e', 'glu'),
 	('k', 'lys'),
 	('r', 'arg'),
