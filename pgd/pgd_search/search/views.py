@@ -22,8 +22,8 @@ def search(request):
 
     #construct a list of values for i
     iValues = [
-                    # Generates a series of tuples (<value>,<signed string of value>); zero unsigned
-                    (i,('%+i' if i else '%i')%i) for i in RESIDUE_INDEXES
+                    # Generates a series of tuples (<value>,<signed string of value>); zero is 'i'
+                    (i,'%+i'%i if i else 'i') for i in RESIDUE_INDEXES
               ]
 
     #order the residue properties in way that django template can handle it better
