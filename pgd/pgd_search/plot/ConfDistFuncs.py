@@ -237,7 +237,7 @@ class BinPoint():
         if not self.stats.has_key(key):
             self.ComputeStats(key)
 
-        return self.stats[key][BNI_STATS_DEVIATION]
+        return self.stats[key][BIN_STATS_DEVIATION]
 
 
 
