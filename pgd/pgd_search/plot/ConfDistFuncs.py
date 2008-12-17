@@ -119,6 +119,7 @@ class Bin():
             if self.bins[key].numObs > self.maxObs:
                 self.maxObs = self.bins[key].numObs
 
+
 #-------------------------------------------------------------------------------------------------------------------
 # Class that contains information regarding an individual bin in a plot
 #-------------------------------------------------------------------------------------------------------------------
@@ -150,6 +151,8 @@ class BinPoint():
         self.obs = []
         self.stats = {}
         self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
+        avg = 0
+        dev = 0
 
     # ******************************************************
     # Returns the x bin #
@@ -189,7 +192,7 @@ class BinPoint():
     # ******************************************************
     # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
     # ******************************************************
-    def ComputeStats(self, key):
+    def ComputeStats(self, key, ref=None):
         #init stats structure
         self.stats[key] = [0,0]
 
@@ -212,6 +215,10 @@ class BinPoint():
             for i in range(self.numObs):
                 sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_DEVIATION]), 2 )
             self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
+
+        if key <> None and key == ref:
+            self.avg = self.stats[key][BIN_STATS_AVERAGE]
+            self.dev = self.stats[key][BIN_STATS_DEVIATION]
 
     # ******************************************************
     # Returns the average for a specificed value, such as phi, psi, L1
@@ -488,15 +495,13 @@ class ConfDistPlot():
                         color = self.DetermineColor( self.ref, num)
                     else:
                         color = self.DetermineColor( self.ref, self.plotBin.bins[key].GetAvg(self.ref) )
+                        #force stats to be evaluated
+                        bin.ComputeStats(self.ref, self.ref)
 
                     self.plotBin.bins['%s-%s'%(bin.xBin,bin.yBin)].SetColorStep(color[-1])
 
                     #convert decimal RGB into HEX rgb
                     fill = '%s%s%s' % (hex(int(color[0]))[2:], hex(int(color[1]))[2:], hex(int(color[2]))[2:])
-
-                    #force stats to be evaluated
-                    for field in STATS_FIELDS:
-                        bin.ComputeStats(field)
 
                     # add rectangle to list
                     bins.append( [xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, fill, fill, bin] )

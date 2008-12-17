@@ -84,8 +84,6 @@
                 width:3.75em;
                 border-left:0px;
             }
-            
-           
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -146,16 +144,8 @@
                     //add static fields
                     field_stats = {'observations':{{rect.6.numObs}} };
                     field_stats['bin'] = [{{rect.6.xBin}},{{rect.6.yBin}}];
-
-                    //get dynamic field values
-                    dynamic = {};
-                    //{{rect.6}}
-                    {% for key, stats in rect.6.stats.items %}
-                        dynamic['{{key}}'] = [{{stats.0|floatformat:3}},{{stats.1|floatformat:3}}]
-                    {% endfor %}
-
-                    //add the dynamic fields
-                    field_stats['dyn'] = dynamic
+                    field_stats['avg'] = '{{rect.6.avg|floatformat:3}}';
+                    field_stats['dev'] = '({{rect.6.dev|floatformat:3}})';
 
                     // add to main dict
                     stats['{{rect.6.xBin}}-{{rect.6.yBin}}'] = field_stats
@@ -200,13 +190,8 @@
                 $('#stat_bin td.x').html(""+field_stats['bin'][0])
                 $('#stat_bin td.y').html(""+field_stats['bin'][1])
                 $('#stat_observations').html(field_stats['observations'])
-
-                //set dynamic properties
-                dyn = field_stats['dyn']
-                {% for field in stats_fields %}
-                    $('#stat_{{field}} td.avg').html(""+dyn['{{field}}'][0]);
-                    $('#stat_{{field}} td.dev').html("("+dyn['{{field}}'][1]+")");
-                {% endfor %}
+                $('#stat_field td.avg').html(field_stats['avg']);
+                $('#stat_field td.dev').html(field_stats['dev']);
 
                 //show the div
                 $('div#binDetails').show()
@@ -264,10 +249,9 @@
                 <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
                 <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
                 <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
-                {% for field in stats_fields %}
-                    <tr id="stat_{{field}}"><td class="label">Avg {{field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
-                {% endfor %}
-                <tr><td class="label">Color Interval:</td><td></td></tr>
+                {% ifnotequal 'Observations' attribute %}
+                    <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
+                {% endifnotequal %}
                 <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
             </table>
         </div>

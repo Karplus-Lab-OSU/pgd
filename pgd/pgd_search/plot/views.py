@@ -206,9 +206,9 @@ def renderToSVG(request):
             # get values out of the form
             response_dict['xProperty'] = form.cleaned_data['xProperty']
             response_dict['yProperty'] =form.cleaned_data['yProperty']
-            print form.cleaned_data['xBin']
             response_dict['xBin'] = form.cleaned_data['xBin']
             response_dict['yBin'] = form.cleaned_data['yBin']
+            response_dict['attribute'] = form.cleaned_data['attribute']
 
     else:
         form = PlotForm() # An unbound form
@@ -218,6 +218,7 @@ def renderToSVG(request):
         response_dict['yProperty'] = form.fields['yProperty'].initial
         response_dict['xBin'] = form.fields['xBin'].initial
         response_dict['yBin'] = form.fields['yBin'].initial
+        response_dict['attribute'] = form.fields['attribute'].initial
 
     response_dict['form']   = form
     response_dict['svg']    = svg
