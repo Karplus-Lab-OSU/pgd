@@ -68,8 +68,8 @@
             #statsDetail {
                 position: absolute;
                 border: 1px solid black;
-                width:230px;
-                height:50px;
+                width:20em;
+                height:4em;
                 background-color:white;
                 padding:10px;
             }
@@ -77,6 +77,21 @@
             span.label {
                 font-weight:bold;
                 float:left;
+                width:10em;
+                text-align:right;
+                margin-right:1em;
+            }
+
+            #stdev {
+                text-align:left;
+            }
+
+            #min {
+                margin-right:1em;
+            }
+
+            #range {
+                text-align:left;
             }
 
             .borderRight {
@@ -142,10 +157,11 @@
 
             });
 
-            function showStats(stdev, range) {
-                if (stdev != '' && range != '') {
+            function showStats(stdev, min, max) {
+                if (stdev != '' && min != '' && max != '') {
                     $('#stdev').html(stdev);
-                    $('#range').html(range);
+                    $('#min').html(min);
+                    $('#max').html(max);
                     $('div#statsDetail').css({left:100, top:100}).show();
                 }
             }
@@ -191,7 +207,7 @@
                         {% endfor %}
                         <td class="borderright"/>
                         {% for list in peptide.stats %}
-                            <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},{{list.1.statrange}})">{{list.1.mean|floatformat:2}}</td>
+                            <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min}}','{{list.1.max}}')">{{list.1.mean|floatformat:2}}</td>
                         {% endfor %}
                         <td class="rowend" />
                     </tr>
@@ -202,7 +218,7 @@
 
             <div id="statsDetail">
                     <span class="label">Standard Deviation:</span><div id="stdev"></div>
-                    <span class="label">Range:</span><div id="range"></div>
+                    <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
             </div>
 
         
