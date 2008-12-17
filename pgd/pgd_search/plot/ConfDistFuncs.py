@@ -12,6 +12,10 @@ from pgd_search.models import *
 from constants import *
 import math
 
+# calculate stats for these fields when plotting
+STATS_FIELDS = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7']
+
+
 #-------------------------------------------------------------------------------------------------------------------
 # Stores a coordinate including actualy x,y values and x,y translated to pixel space
 # Coordinates also have a dat string which is a unique identifier for the coordinate
@@ -118,12 +122,13 @@ class Bin():
 #-------------------------------------------------------------------------------------------------------------------
 # Class that contains information regarding an individual bin in a plot
 #-------------------------------------------------------------------------------------------------------------------
+BIN_STATS_AVERAGE = 0
+BIN_STATS_DEVIATION = 1
 class BinPoint():
 
     numObs    = None    # Number of observations
-    avg       = None    # average for the bin
+    stats     = None
     sum       = None    # sum of all data
-    deviation = None    # standard deviation of data
     obs       = None    # Array of observations
     xP        = None    # X in pixel space
     yP        = None    # Y in pixel space
@@ -139,12 +144,11 @@ class BinPoint():
         self.xP = xP
         self.yP = yP
         self.numObs = 0
-        self.avg = {}
         self.colorStep = None
         self.xBin = xBin
         self.yBin = yBin
         self.obs = []
-        self.deviation = {}
+        self.stats = {}
         self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
 
     # ******************************************************
@@ -186,6 +190,9 @@ class BinPoint():
     # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
     # ******************************************************
     def ComputeStats(self, key):
+        #init stats structure
+        self.stats[key] = [0,0]
+
         # Average
         sum = 0
         for i in range(self.numObs):
@@ -197,38 +204,33 @@ class BinPoint():
 
             sum += self.obs[i].dat.__dict__[key]
 
-        self.avg[key] = sum / self.numObs
+        self.stats[key][BIN_STATS_AVERAGE] = sum / self.numObs
 
         # Std Deviation
-        sum = 0
-        for i in range(self.numObs):
-            sum += pow( (self.obs[i].dat.__dict__[key] - self.avg[key]), 2 )
-
         if self.numObs > 1:
-            self.deviation[key] = math.sqrt(sum / ( self.numObs - 1 ))
-        else:
-            self.deviation[key] = 0
-
-
+            sum = 0
+            for i in range(self.numObs):
+                sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_DEVIATION]), 2 )
+            self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
 
     # ******************************************************
-    # Returns the average for a specificed value, such as phi, psi, L1 ...
+    # Returns the average for a specificed value, such as phi, psi, L1
     # ******************************************************
     def GetAvg(self, key):
-        if not self.avg.has_key(key):
+        if not self.stats.has_key(key):
             self.ComputeStats(key)
 
-        return self.avg[key]
+        return self.stats[key][BIN_STATS_AVERAGE]
 
 
     # ******************************************************
-    # Returns the standard deviation for a specified value    
+    # Returns the standard deviation for a specified value
     # ******************************************************
     def GetDev(self, key):
-        if not self.deviation.has_key(key):
+        if not self.stats.has_key(key):
             self.ComputeStats(key)
 
-        return self.deviation[key]
+        return self.stats[key][BNI_STATS_DEVIATION]
 
 
 
@@ -492,8 +494,12 @@ class ConfDistPlot():
                     #convert decimal RGB into HEX rgb
                     fill = '%s%s%s' % (hex(int(color[0]))[2:], hex(int(color[1]))[2:], hex(int(color[2]))[2:])
 
+                    #force stats to be evaluated
+                    for field in STATS_FIELDS:
+                        bin.ComputeStats(field)
+
                     # add rectangle to list
-                    bins.append( [xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, fill, fill, num] )
+                    bins.append( [xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, fill, fill, bin] )
 
         return bins
 

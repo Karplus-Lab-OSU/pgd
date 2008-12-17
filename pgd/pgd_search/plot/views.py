@@ -179,6 +179,14 @@ def renderToPNG(request):
 render conf dist plot using jquery.svg
 """
 def renderToSVG(request):
+
+    response_dict = {
+        'SITE_ROOT': settings.SITE_ROOT,
+        'MEDIA_URL': settings.MEDIA_URL,
+        'referenceValues' : RefDefaults(),
+        'stats_fields':STATS_FIELDS
+        }
+
     if request.method == 'POST': # If the form has been submitted
         form = PlotForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
@@ -195,19 +203,27 @@ def renderToSVG(request):
                         int(data['residue']),
                         data['xBin'],
                         data['yBin'])
+            # get values out of the form
+            response_dict['xProperty'] = form.cleaned_data['xProperty']
+            response_dict['yProperty'] =form.cleaned_data['yProperty']
+            print form.cleaned_data['xBin']
+            response_dict['xBin'] = form.cleaned_data['xBin']
+            response_dict['yBin'] = form.cleaned_data['yBin']
 
     else:
         form = PlotForm() # An unbound form
         svg,boxes = drawGraph()
+        # get default values from the form
+        response_dict['xProperty'] = form.fields['xProperty'].initial
+        response_dict['yProperty'] = form.fields['yProperty'].initial
+        response_dict['xBin'] = form.fields['xBin'].initial
+        response_dict['yBin'] = form.fields['yBin'].initial
 
-    return render_to_response('graph.html', {
-        'SITE_ROOT': settings.SITE_ROOT,
-        'MEDIA_URL': settings.MEDIA_URL,
-        'form': form,
-        'svg': svg,
-        'boxes': boxes,
-        'referenceValues' : RefDefaults()
-    })
+    response_dict['form']   = form
+    response_dict['svg']    = svg
+    response_dict['boxes']  = boxes
+
+    return render_to_response('graph.html', response_dict)
 
 
 """
