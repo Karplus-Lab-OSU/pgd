@@ -21,14 +21,10 @@ def search(request):
         form = SearchForm() # An unbound form
 
     #construct a list of values for i
-    iValues = []
-    for i in RESIDUE_INDEXES:
-        if i < 0:
-            iValues.append((i,'%i'%i))
-        elif i == 0:
-            iValues.append((i,'i'))
-        else:
-            iValues.append((i,'+%i'%i))
+    iValues = [
+                    # Generates a series of tuples (<value>,<signed string of value>); zero unsigned
+                    (i,('%+i' if i else '%i')%i) for i in RESIDUE_INDEXES
+              ]
 
     #order the residue properties in way that django template can handle it better
     residueFields = []
