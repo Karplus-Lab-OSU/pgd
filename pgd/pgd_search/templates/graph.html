@@ -6,7 +6,7 @@
         <style type="text/css">@import "jquery.svg.css";</style> 
         <style>
             #canvas {
-                width: 470;
+                width: 500;
                 height: 500;
                 margin: 5px;
             }
@@ -30,13 +30,27 @@
 
             #binDetails {
                 position:absolute;
+                top:9em;
+                left:30px;
                 float:left;
-                width:auto;
-                padding:4px;
                 background-color:grey;
                 font-size:10;
                 color:white;
                 border: 1px solid #aaaaaa;
+                line-height:10px;
+            }
+
+            #binDetails td {
+                line-height:1em;
+                padding:.5em;
+                margin:3px;
+                width:6em;
+            }
+
+            #binDetails table {
+                margin: 0px;
+                border: 2px solid black;
+                width:20em;
             }
 
             td {
@@ -45,7 +59,8 @@
 
             .label {
                 margin-right:10px;
-                display:inline;
+                margin-left:10px;
+                font-weight:bold;
             }
 
             .col2 {
@@ -75,6 +90,8 @@
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
 
         <script type="text/javascript">
+            var stats = {};
+
             $(document).ready(function() {
                 $('div#binDetails').hide();
                 $('#canvas').svg()
@@ -121,8 +138,18 @@
                         {{rect.1}}+fix,
                         {{rect.2}},
                         {{rect.3}},
-                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, {{rect.6}});', onmouseout:'bin_mouseout();'}
+                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.6.xBin}}-{{rect.6.yBin}}");', onmouseout:'bin_mouseout();'}
                     );
+
+                    //add static fields
+                    field_stats = {'observations':{{rect.6.numObs}} };
+                    field_stats['bin'] = [{{rect.6.xBin}},{{rect.6.yBin}}];
+                    field_stats['avg'] = '{{rect.6.avg|floatformat:3}}';
+                    field_stats['dev'] = '({{rect.6.dev|floatformat:3}})';
+
+                    // add to main dict
+                    stats['{{rect.6.xBin}}-{{rect.6.yBin}}'] = field_stats
+
                 {% endfor %}
 
                 $('#button-plot').click(function (evt) {
@@ -130,6 +157,10 @@
                 });
                 $('#button-save').click(function (evt) {
                     $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                });
+
+                $('#button-data').click(function (evt) {
+                    $("form").attr('action','{{SITE_ROOT}}search/plot/dump/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
                 });
 
                 $('#id_attribute').change(function (){
@@ -149,7 +180,21 @@
             {% endfor %}
 
             function bin_mouseover(evt, val){
-                $('div#binDetails').html(val).css({left:evt.clientX + 20, top:evt.clientY - 20}).show()
+                field_stats = stats[val]
+
+                // set static properties
+                $('#stat_xattribute td.x').html(""+(field_stats['bin'][0]*{{xBin}}))
+                $('#stat_xattribute td.y').html(""+(field_stats['bin'][0]*{{xBin}}+{{xBin}}))
+                $('#stat_yattribute td.x').html(""+(field_stats['bin'][1]*{{yBin}}))
+                $('#stat_yattribute td.y').html(""+(field_stats['bin'][1]*{{yBin}}+{{yBin}}))
+                $('#stat_bin td.x').html(""+field_stats['bin'][0])
+                $('#stat_bin td.y').html(""+field_stats['bin'][1])
+                $('#stat_observations').html(field_stats['observations'])
+                $('#stat_field td.avg').html(field_stats['avg']);
+                $('#stat_field td.dev').html(field_stats['dev']);
+
+                //show the div
+                $('div#binDetails').show()
             }
 
             function bin_mouseout(){
@@ -186,7 +231,6 @@
                     <td>{{form.residue}}</td>
                     <td class="label col2">Bin X, Y</td>
                     <td>{{form.xBin}}{{form.yBin}}</td>
-                    
                 </tr>
 
             </form>
@@ -194,10 +238,23 @@
                 <td colspan="100%" align="center">
                 <button id="button-plot" class="field">Plot</button>
                 <button id="button-save">Save</button>
+                <button id="button-data">Data</button>
                 </td>
             </tr>
             </table>
-            <div id="binDetails"></div>
         </div>
+
+        <div id="binDetails">
+            <table>
+                <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+                <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+                <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
+                {% ifnotequal 'Observations' attribute %}
+                    <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
+                {% endifnotequal %}
+                <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
+            </table>
+        </div>
+
     </body>
 </html>

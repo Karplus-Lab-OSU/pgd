@@ -5,7 +5,7 @@ import settings
 from django.contrib import admin
 admin.autodiscover()
 
-from pgd_search.views import search
+from pgd_search.search.views import search
 
 urlpatterns = patterns('',
     # Example:

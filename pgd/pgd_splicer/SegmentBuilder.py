@@ -88,8 +88,8 @@ class SegmentBuilderTask(Task):
                         continue
 
                     #find existing segment or create new one
-                    iProperty = 'r%d_index' % iIndex
-                    kwargs = {'protein__code':protein.code, iProperty:segmentList[iIndex].chainIndex}
+                    iProperty = 'r%d_chainIndex' % iIndex
+                    kwargs = {'protein__code':str(protein.code), iProperty:int(segmentList[iIndex].chainIndex)}
                     try:
                         segment = Segment.objects.get(**kwargs)
                     except:
@@ -103,10 +103,13 @@ class SegmentBuilderTask(Task):
                     segment.chainID = chain.code
  
                     #calculate max length of this particular segment
-                    for i in range(iIndex):
+                    for i in range(1, length):
                         # have we reached the max size for segments or found a None
-                        if segmentList[iIndex+1] > lastIndex or segmentList[iIndex-1] < 0 or segmentList[iIndex+1] == None or segmentList[iIndex-1] == None:
-                                segment.length = i-1
+                        if iIndex+i > lastIndex or segmentList[iIndex+i] == None:
+                                segment.length = i*2-1
+                                break
+                        if iIndex-i < 0 or segmentList[iIndex-i] == None:
+                                segment.length = i*2
                                 break
 
                     #save segment
