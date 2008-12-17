@@ -213,7 +213,7 @@ class BinPoint():
         if self.numObs > 1:
             sum = 0
             for i in range(self.numObs):
-                sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_DEVIATION]), 2 )
+                sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_AVERAGE]), 2 )
             self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
 
         if key <> None and key == ref:
