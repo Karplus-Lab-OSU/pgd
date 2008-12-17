@@ -4,6 +4,7 @@ AA_CHOICES = (
 	('r', 'arg'),
 	('n', 'asn'),
 	('d', 'asp'),
+    ('c', 'cys'),
 	('q', 'gln'),
 	('e', 'glu'),
 	('g', 'gly'),
