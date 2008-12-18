@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.template import RequestContext
 from django.conf import settings
 from django.shortcuts import render_to_response
 
@@ -183,8 +184,6 @@ render conf dist plot using jquery.svg
 def renderToSVG(request):
 
     response_dict = {
-        'SITE_ROOT': settings.SITE_ROOT,
-        'MEDIA_URL': settings.MEDIA_URL,
         'referenceValues' : RefDefaults(),
         'stats_fields':STATS_FIELDS
         }
@@ -227,7 +226,7 @@ def renderToSVG(request):
     response_dict['svg']    = svg
     response_dict['boxes']  = boxes
 
-    return render_to_response('graph.html', response_dict)
+    return render_to_response('graph.html', response_dict, context_instance=RequestContext(request))
 
 
 """

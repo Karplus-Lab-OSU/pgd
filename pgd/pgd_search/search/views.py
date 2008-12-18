@@ -1,4 +1,5 @@
 from django.http import HttpResponseRedirect
+from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
 import math
@@ -44,13 +45,11 @@ def search(request):
         residueFields.append(dict)
 
     return render_to_response('search.html', {
-        'MEDIA_URL': settings.MEDIA_URL,
-        'SITE_ROOT': settings.SITE_ROOT,
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields
-    })
+    }, context_instance=RequestContext(request))
 
 
 """
