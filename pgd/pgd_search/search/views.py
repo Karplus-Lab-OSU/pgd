@@ -22,7 +22,6 @@ def search(request):
 
             #store search in session
             request.session['search'] = search
-            print 'session: %s' % search
 
             return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
     else:
