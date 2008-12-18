@@ -1,4 +1,5 @@
 import re
+from pgd_search.models import Segment
 
 """
 Validates a field to make sure that it has valid syntax for a search field
@@ -12,8 +13,11 @@ def validateQueryField(str):
 Parses a search into a Django query
 """
 def parse_search(search):
+    search_codes = (x.code for x in search.codes.all())
     query = Segment.objects
-    for res_index,search_res in enumerate(search.residues):
+    if len(search_codes):
+        query = query.filter(protein__in=search_codes)
+    for search_res in search.residues.all():
         for field in filter(
                 lambda x: search_res.__dict__[x+'_include'] != None,
                 (
@@ -27,7 +31,7 @@ def parse_search(search):
                     'zeta',
                     'terminal_flag',
                 )):
-            seg_field = 'r'+res_index+'_'+field
+            seg_field = 'r%i_field'%search_res.index
             query = query.__dict__['filter' if search_res.__dict__[field+'_include'] else 'exclude'](
                 reduce(
                     lambda x,y: x|y,
