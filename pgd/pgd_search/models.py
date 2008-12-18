@@ -24,7 +24,8 @@ if not searchSettings.requestedSegmentSize:
 # Search
 # A search query submitted by a user
 class Search(models.Model):
-    user = models.ForeignKey(User, null=True)
+    user             = models.ForeignKey(User, null=True)
+    codes_include    = models.BooleanField(null=True)
     _querySet = None
 
     # returns the query set that represents this search
@@ -105,7 +106,7 @@ class Search_residue(models.Model):
     h_bond_energy_include   = models.BooleanField(null=True)
     zeta_include            = models.BooleanField(null=True)
     terminal_flag_include   = models.BooleanField(null=True)
-    
+
 
     def __init__(self):
         models.Model.__init__(self)
