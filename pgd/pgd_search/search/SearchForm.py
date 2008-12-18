@@ -32,7 +32,7 @@ for i in RESIDUE_INDEXES:
 
     # the loops here are just to save on space/typing
     for j in range(1,8):
-        form_dict["a%i_%i" % (j,i)]     = forms.ChoiceField(choices=AA_CHOICES, required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["a%i_%i" % (j,i)]     = forms.FloatField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["a%i_i_%i" % (j,i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
     for j in range(1,6):
         form_dict["L%i_%i" % (j, i)]    = forms.FloatField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))

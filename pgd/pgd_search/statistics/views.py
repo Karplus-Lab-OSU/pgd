@@ -65,19 +65,23 @@ def searchStatistics(request):
                 mean = stats.mean(list)
                 #now that we have mean calculate standard deviation
                 stdev = stats.stdev(list)
-                statrange = -1
+                range_min = '%+.3f' % (min(list) - mean)
+                range_max = '%+.3f' % (max(list) - mean)
 
             # if theres only 1 item then the stats are simpler to calculate
             elif list_len == 1:
                 mean = list[0]
                 std_dev = 0
-                statrange = 0
+                range_min = 0
+                range_max = 0
 
             else:
                 mean = 0
                 stdev = 0
-                statrange = 0
-            peptide['stats'][STAT_INDEX[attribute]][1] = {'mean':mean,'std':stdev,'statrange':statrange}
+                range_min = 0
+                range_max = 0
+
+            peptide['stats'][STAT_INDEX[attribute]][1] = {'mean':mean,'std':stdev,'min':range_min, 'max':range_max}
 
 
     return render_to_response('stats.html', {

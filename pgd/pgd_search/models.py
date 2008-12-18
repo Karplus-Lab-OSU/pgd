@@ -23,7 +23,8 @@ if not searchSettings.requestedSegmentSize:
 # Search
 # A search query submitted by a user
 class Search(models.Model):
-    user = models.ForeignKey(User, null=True)
+    user            = models.ForeignKey(User, null=True)
+    codes_include    = models.BooleanField(null=True)
 
 # Search_code
 # Codes for the proteins searched on
