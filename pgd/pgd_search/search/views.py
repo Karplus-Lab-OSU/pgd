@@ -15,7 +15,14 @@ def search(request):
     if request.method == 'POST': # If the form has been submitted
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
+
+            #process search form into search object
             search = processSearchForm(form)
+
+            #store search in session
+            request.session['search'] = search
+            print 'session: %s' % search
+
             return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
     else:
         form = SearchForm() # An unbound form
@@ -124,3 +131,5 @@ def processSearchForm(form):
         # only add the residue if there was a value in the field
         if hasField:
             search.residues.add(residue)
+
+    return search

@@ -16,11 +16,8 @@ def searchStatistics(request):
     STAT_INDEX = {'L1':0,'L2':1,'L3':2,'L4':3,'L5':4,'a1':5,'a2':6,'a3':7,'a4':8,'a5':9,'a6':10,'a7':11}
 
     # get search from session
-    search = Search()
-
-    # parse search into djangoQuery
-    #searchQuery = queryParser(search)
-    searchQuery = Segment.objects.all()[:500]#temp replacement for testing
+    search = request.session['search']
+    searchQuery = search.querySet()
 
     peptides = {}
     for code,long_code in AA_CHOICES:

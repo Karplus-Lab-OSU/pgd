@@ -25,6 +25,18 @@ if not searchSettings.requestedSegmentSize:
 # A search query submitted by a user
 class Search(models.Model):
     user = models.ForeignKey(User, null=True)
+    _querySet = None
+
+    # returns the query set that represents this search
+    def querySet(self):
+        #create querySet if not needed
+        if not self._querySet:
+            #_querySet = parse_search(self)
+
+            #TODO until the _queryParser is working and merged in just return the first 50 full length segments
+            self._querySet = Segment.objects.all().filter(length=10)[:500]
+
+        return self._querySet
 
 # Search_code
 # Codes for the proteins searched on

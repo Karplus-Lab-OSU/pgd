@@ -14,7 +14,7 @@ from constants import AA_CHOICES
 def dumpSearch(search, writer):
 
     length   = 5
-    querySet = Segment.objects.all()[:500]#temp replacement for testing
+    querySet = search.querySet()
 
     count = 0
 
