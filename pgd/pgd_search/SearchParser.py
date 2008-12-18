@@ -14,9 +14,9 @@ Parses a search into a Django query
 """
 def parse_search(search):
     search_codes = (x.code for x in search.codes.all())
-    query = Segment.objects
-    if len(search_codes):
-        query = query.filter(protein__in=search_codes)
+    query = Segment.objects 
+    if search.codes_include:
+        query = query.__dict__['filter' if search.codes_include > 0 'exclude'](protein__in=search_codes)
     for search_res in search.residues.all():
         for field in filter(
                 lambda x: search_res.__dict__[x+'_include'] != None,
@@ -31,8 +31,8 @@ def parse_search(search):
                     'zeta',
                     'terminal_flag',
                 )):
-            seg_field = 'r%i_field'%search_res.index
-            query = query.__dict__['filter' if search_res.__dict__[field+'_include'] else 'exclude'](
+            seg_field = 'r%i_field'%(search_res.index+int(math.ceil(searchSettings.segmentSize/2.0)-1))
+            query = query.__dict__['filter' if search_res.__dict__[field+'_include'] > 0 else 'exclude'](
                 reduce(
                     lambda x,y: x|y,
                     (
