@@ -100,18 +100,27 @@ def processSearchForm(form):
     start = 0 - (search.residueCount-1) / 2
     stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
     for i in range(start, stop, 1):
+        hasField = False
         residue = Search_residue()
         residue.index   = i
 
         #process ss
-        residue.ss      = data['ss_%i' % i]
+        if data['ss_%i' % i]:
+            residue.ss      = data['ss_%i' % i]
+            hasField = True
 
         #process aa
-        residue.aa_int  = encodeAA([data['aa_%i' % i]])
+        if data['aa_%i' % i]:
+            residue.aa_int  = encodeAA([data['aa_%i' % i]])
+            hasField = True
 
         #process all other fields
         for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
-            residue.__dict__[prefix] = data['%s_%i' % (prefix, i)]
-            residue.__dict__['%s_include' % prefix] = data['%s_i_%i' % (prefix, i)]
+            if data['%s_%i' % (prefix, i)]:
+                residue.__dict__[prefix] = data['%s_%i' % (prefix, i)]
+                residue.__dict__['%s_include' % prefix] = data['%s_i_%i' % (prefix, i)]
+                hasField = True
 
-        search.residues.add(residue)
+        # only add the residue if there was a value in the field
+        if hasField:
+            search.residues.add(residue)
