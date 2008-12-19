@@ -95,8 +95,8 @@ class Search_residue(models.Model):
     terminal_flag_include   = models.BooleanField(null=True)
     
 
-    def __init__(self):
-        models.Model.__init__(self)
+    def __init__(self, *args, **kwargs):
+        models.Model.__init__(self, *args, **kwargs)
 
         # populate 'aa' with a dictionary of allowed values from AA_CHOICES
         self.aa = dict([(j[1],1 if self.aa_int == None else 1&self.aa_int>>i) for i,j in enumerate(AA_CHOICES)])
