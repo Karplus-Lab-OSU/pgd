@@ -10,9 +10,6 @@ def dataDump(request):
     response = HttpResponse(mimetype="text/tab-separated-values")
     response['Content-Disposition'] = 'attachment; filename="data.tsv"'
 
-    # get search out of the session and pass it on
-    # TODO ^^
-
     dumpSearch(request.session['search'], response)
 
     return response
