@@ -1,5 +1,11 @@
 import re
-from pgd_search.models import Segment
+from pgd_search.models import Segment,searchSettings
+from math import ceil
+import re
+from django.db.models import Q
+
+
+range_re = re.compile("(?<=[^-])-")
 
 """
 Validates a field to make sure that it has valid syntax for a search field
@@ -16,7 +22,7 @@ def parse_search(search):
     search_codes = (x.code for x in search.codes.all())
     query = Segment.objects 
     if search.codes_include:
-        query = query.__dict__['filter' if search.codes_include > 0 'exclude'](protein__in=search_codes)
+        query = query.__getattribute__('filter' if search.codes_include else 'exclude')(protein__in=search_codes)
     for search_res in search.residues.all():
         for field in filter(
                 lambda x: search_res.__dict__[x+'_include'] != None,
@@ -31,8 +37,8 @@ def parse_search(search):
                     'zeta',
                     'terminal_flag',
                 )):
-            seg_field = 'r%i_field'%(search_res.index+int(math.ceil(searchSettings.segmentSize/2.0)-1))
-            query = query.__dict__['filter' if search_res.__dict__[field+'_include'] > 0 else 'exclude'](
+            seg_field = 'r%i_%s'%((search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)),field)
+            query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(
                 reduce(
                     lambda x,y: x|y,
                     (
@@ -46,7 +52,7 @@ def parse_search(search):
                                 {seg_field         : int(constraint)}    if field == 'terminal_flag' else
                                 {seg_field         : float(constraint)}
                             ))
-                        ) for constraint in str(segment.__dict__[field]).split(',')
+                        ) for constraint in str(search_res.__dict__[field]).split(',')
                     )
                 ))
     return query
