@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <style>
+            table, td, th {
+                
+            }
+
+            td {
+                padding:.3em;
+                text-align:center;
+            }
+
+            tr.spacer {
+                height:20px;
+                border-bottom: 1px solid black;
+            }
+
+            a.pagination                   { color:blue; text-decoration:none; }
+            a.pagination:visited           { color:blue; text-decoration:none; }
+            a.pagination:hover             { color:blue; text-decoration:underline; }
+            a.pagination:active            { color:blue; text-decoration:none;}
+        
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+
+
+        <script type="text/javascript">
+            var col = '';
+
+            $(document).ready(function() {
+                
+
+            });
+
+          
+        </script>
+    </head>
+    <body>
+        {% include 'header.html' %}
+
+            <table id="results" >
+                <tr>
+                    <th>Match</th>
+                    <th>Code</th>
+                    <th>Residue</th>
+                    <th>ID</th>
+                    <th>AA</th>
+                    <th>a1</th>
+                    <th>a2</th>
+                    <th>a3</th>
+                    <th>a4</th>
+                    <th>a5</th>
+                    <th>a6</th>
+                    <th>a7</th>
+                    <th>L1</th>
+                    <th>L2</th>
+                    <th>L3</th>
+                    <th>L4</th>
+                    <th>L5</th>
+                    <th>ss</th>
+                    <th>phi</th>
+                    <th>psi</th>
+                    <th>ome</th>
+                    <th>chi</th>
+                    <th>bm</th>
+                    <th>bs</th>
+                    <th>bg</th>
+                    <th>H Bond</th>
+                    <th>Zeta</th>
+                </tr>  
+                               
+
+                {% for segment in segments.object_list %}
+                    <tr class="spacer"/>
+                    {% for r in segment.residues|slice:segmentSlice %}
+                        <tr>
+                            <td>[match]</td>
+                            <td>{{r.protein_id}}</td>
+                            <td>{{ iValues }}</td>
+                            <td>{{r.chainIndex}}</td>
+                            <td>{{r.aa}}</td>
+                            <td>{{r.a1|floatformat:2}}</td>
+                            <td>{{r.a2|floatformat:2}}</td>
+                            <td>{{r.a3|floatformat:2}}</td>
+                            <td>{{r.a4|floatformat:2}}</td>
+                            <td>{{r.a5|floatformat:2}}</td>
+                            <td>{{r.a6|floatformat:2}}</td>
+                            <td>{{r.a7|floatformat:2}}</td>
+                            <td>{{r.L1|floatformat:3}}</td>
+                            <td>{{r.L2|floatformat:3}}</td>
+                            <td>{{r.L3|floatformat:3}}</td>
+                            <td>{{r.L4|floatformat:3}}</td>
+                            <td>{{r.L5|floatformat:3}}</td>
+                            <td>{{r.ss}}</td>
+                            <td>{{r.phi|floatformat:2}}</td>
+                            <td>{{r.psi|floatformat:2}}</td>
+                            <td>{{r.ome|floatformat:2}}</td>
+                            <td>{{r.chi|floatformat:2}}</td>
+                            <td>{{r.bm|floatformat:2}}</td>
+                            <td>{{r.bs|floatformat:2}}</td>
+                            <td>{{r.bg|floatformat:2}}</td>
+                            <td>{{r.h_bond_energy|floatformat:2}}</td>
+                            <td>{{r.zeta|floatformat:2}}</td>
+                        </tr>
+                    {% endfor %}                    
+                {% endfor %}
+                
+            </table>
+        
+            <div class="pagination">
+                <span class="step-links">
+                    {% if segments.has_previous %}
+                        <a class="pagination" href="?page={{ segments.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ segments.number }} of {{ segments.paginator.num_pages }}.
+                    </span>
+
+                    {% if segments.has_next %}
+                        <a class="pagination" href="?page={{ segments.next_page_number }}">next</a>
+                    {% endif %}
+                </span>
+            </div>
+
+    </body>
+</html>
