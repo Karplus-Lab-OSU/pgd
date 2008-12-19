@@ -1,13 +1,90 @@
 import unittest
 from pgd_search.SearchParser import *
+from pgd_search.models import * 
+from pgd_core.models import * 
+from pgd_splicer.SegmentBuilder import SegmentBuilderTask
+from constants import AA_CHOICES, SS_CHOICES
 
+
+FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi','bm','bs','bg','h_bond_energy','zeta']
+FIELDS_DICT = {}
+for i in range(1, len(FIELDS)+1):
+    #shift values into decimels
+    FIELDS_DICT[FIELDS[i-1]] = i*.01
+
+class SearchParserValidation(unittest.TestCase):
+
+
+    def calculateAA(self, chainIndex):
+        aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
+        return AA_CHOICES[aa_choice][0]
+
+    def calculateSS(self, chainIndex):
+        ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
+        return SS_CHOICES[ss_choice][0]
+
+    #calculates a value for a field based on other properties
+    #   1) whole number indicates protein id
+    #   2) first 2 digits after decimal indicate field in FIELDS lookup list/dict
+    #   3) last 2 digits indicate chainIndex
+    #
+    #   example:  1.0305  =>  1.  03   05  =>  protein=1  field=03   chainindex=05
+    def calculateResidueField(self, proteinID, chainIndex, field):
+        return proteinID + FIELDS_DICT[field] + (chainIndex*.0001)
+
+    #creates a set objects with predictable values so we can predict search results
+    def setUp(self):
+        # create a series of proteins, chains, segments
+        for i in range(1,3):
+
+            # create protein
+            protein = Protein()
+            protein.code            = 'pro%i' %i
+            protein.threshold       = i
+            protein.resolution      = i + .01
+            protein.rfactor         = i + .02
+
+            protein.save()
+
+            #create chains
+            for chainID in ['A','B']:
+                chain = Chain()
+                chain.id = '%s%s' % (protein.code, chainID)
+                chain.protein = protein
+                chain.code = chainID
+                chain.save()
+
+                # create 15 residues per chain
+                for z in range(1, 16):
+                    residue = Residue()
+                    residue.protein = protein
+                    residue.chain = chain
+                    residue.chainID = chainID
+                    residue.chainIndex = z
+
+                    #set choice fields.  
+                    residue.aa = self.calculateAA(z)
+                    residue.ss = self.calculateSS(z)
+
+                    for field in FIELDS:
+                        residue.__dict__[field] = self.calculateResidueField(i, z, field)
+
+                    residue.save()
+
+        #core tables are populated, run SegmentBuilder to populate segments
+        print
+        builder = SegmentBuilderTask('Test Suite Builder')
+        builder._work(None)
+
+    def testFoo(self):
+        ##need at least 1 test or django wont run setUp() this can be removed when we have real tests
+        pass
 
 class SearchFieldValidationCase(unittest.TestCase):
     def setUp(self):
         pass
 
-    def testSpeaking(self):
-
+    def testFieldSyntaxParser(self):
         validFields = [
             '1',
             '1-1',

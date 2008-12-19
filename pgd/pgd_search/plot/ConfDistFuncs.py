@@ -213,7 +213,7 @@ class BinPoint():
         if self.numObs > 1:
             sum = 0
             for i in range(self.numObs):
-                sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_DEVIATION]), 2 )
+                sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_AVERAGE]), 2 )
             self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
 
         if key <> None and key == ref:
@@ -237,7 +237,7 @@ class BinPoint():
         if not self.stats.has_key(key):
             self.ComputeStats(key)
 
-        return self.stats[key][BNI_STATS_DEVIATION]
+        return self.stats[key][BIN_STATS_DEVIATION]
 
 
 
@@ -256,8 +256,7 @@ class ConfDistPlot():
     img         = None      # the image itself
     black       = None      # the color black
     white       = None      # the color white
-    queryResult = None      # the sql query result
-    theQuery    = None      # Query used
+    querySet     = None     # the django query set
     points      = None      # all data points
     plotBin     = None      # bins for the plot
     ref         = None      # Reference attribute for shading
@@ -291,7 +290,8 @@ class ConfDistPlot():
     # query:            sql query to use to get data for the plot
     # ref:                reference attribute for shading
     # ******************************************************
-    def __init__(self, x, y, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue):
+    def __init__(self, x, y, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet):
+        self.querySet = querySet
         self.xSize = x
         self.ySize = y
         self.xOff = xOffset
@@ -317,9 +317,8 @@ class ConfDistPlot():
         self.points = []
         self.bin = None
         self.plotBin = None
-
         #self.attribute = attribute
-        
+
         #determine residue
         if residue:
             self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + residue
@@ -515,8 +514,7 @@ class ConfDistPlot():
     def Plot(self):
 
         # Turn all the query results into an array of points
-        segments = Segment.objects.filter(length=10)
-        for segment in segments:
+        for segment in self.querySet:
             #code = residue.code
             #id = residue.id
             residue = segment.residues[self.residue]

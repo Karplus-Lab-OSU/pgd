@@ -13,6 +13,6 @@ def dataDump(request):
     # get search out of the session and pass it on
     # TODO ^^
 
-    dumpSearch(None, response)
+    dumpSearch(request.session['search'], response)
 
     return response

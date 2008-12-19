@@ -1,4 +1,5 @@
 from django.http import HttpResponse
+from django.template import RequestContext
 from django.conf import settings
 from django.shortcuts import render_to_response
 
@@ -12,7 +13,7 @@ from svg import *
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
+def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
     svg = SVG()
 
     x = 55;
@@ -80,8 +81,9 @@ def drawGraph(xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observati
             xProperty,      #X property
             yProperty,      #Y property
             attribute,      #property
-            residue         #residue Index
+            residue,         #residue Index
             #reference
+            request.session['search'].querySet()
     )
 
     boxes = cdp.Plot()
@@ -129,6 +131,7 @@ def renderToPNG(request):
         if form.is_valid(): # All validation rules pass
             data = form.cleaned_data
             svg, bins = drawGraph(
+                        request,
                         data['x'],
                         data['y'],
                         data['x1'],
@@ -143,7 +146,7 @@ def renderToPNG(request):
 
     else:
         form = PlotForm() # An unbound form
-        svg,bins = drawGraph()
+        svg,bins = drawGraph(request)
 
     width = 500
     height = 500
@@ -181,8 +184,6 @@ render conf dist plot using jquery.svg
 def renderToSVG(request):
 
     response_dict = {
-        'SITE_ROOT': settings.SITE_ROOT,
-        'MEDIA_URL': settings.MEDIA_URL,
         'referenceValues' : RefDefaults(),
         'stats_fields':STATS_FIELDS
         }
@@ -192,6 +193,7 @@ def renderToSVG(request):
         if form.is_valid(): # All validation rules pass
             data = form.cleaned_data
             svg, boxes = drawGraph(
+                        request,
                         data['x'],
                         data['y'],
                         data['x1'],
@@ -212,7 +214,7 @@ def renderToSVG(request):
 
     else:
         form = PlotForm() # An unbound form
-        svg,boxes = drawGraph()
+        svg,boxes = drawGraph(request)
         # get default values from the form
         response_dict['xProperty'] = form.fields['xProperty'].initial
         response_dict['yProperty'] = form.fields['yProperty'].initial
@@ -224,7 +226,7 @@ def renderToSVG(request):
     response_dict['svg']    = svg
     response_dict['boxes']  = boxes
 
-    return render_to_response('graph.html', response_dict)
+    return render_to_response('graph.html', response_dict, context_instance=RequestContext(request))
 
 
 """
@@ -254,7 +256,8 @@ def plotDump(request):
                 data['yProperty'],      #Y property
                 data['attribute'],#property
                 #data['reference'],
-                int(data['residue'])
+                int(data['residue']),
+                request.session['search'].querySet()
             )
 
             response = HttpResponse(mimetype="text/tab-separated-values")
