@@ -72,15 +72,14 @@
                     <th>H Bond</th>
                     <th>Zeta</th>
                 </tr>  
-                               
 
                 {% for segment in segments.object_list %}
                     <tr class="spacer"/>
                     {% for r in segment.residues|slice:segmentSlice %}
                         <tr>
-                            <td>[match]</td>
+                            <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%} </td>
                             <td>{{r.protein_id}}</td>
-                            <td>{{ iValues }}</td>
+                            <td>{% ifequal 0 r.chainIndex|add:segment.offset %}i{% else %}{{r.chainIndex|add:segment.offset}}{% endifequal %}</td>
                             <td>{{r.chainIndex}}</td>
                             <td>{{r.aa}}</td>
                             <td>{{r.a1|floatformat:2}}</td>

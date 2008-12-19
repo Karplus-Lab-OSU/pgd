@@ -3,6 +3,8 @@ from django.template import RequestContext
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 import math
 
+from pgd_search.models import searchSettings
+
 """
 display search results in tabular form
 """
@@ -26,7 +28,7 @@ def browse(request):
         paginatedSegments = paginator.page(paginator.num_pages)
 
     #generate iValues
-    iIndex = int(math.ceil(search.residueCount/2.0)-1)
+    iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
     start = 0 - (search.residueCount-1) / 2
     stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
     iValues = [
@@ -37,5 +39,6 @@ def browse(request):
     return render_to_response('browse.html', {
         'segments': paginatedSegments,
         'iValues' : iValues,
-        'segmentSlice':'%i:%i'%(iIndex+start,iIndex+stop)
+        'segmentSlice':'%i:%i'%(iIndex+start,iIndex+stop),
+        'pageStart':(page-1)*5
     }, context_instance=RequestContext(request))

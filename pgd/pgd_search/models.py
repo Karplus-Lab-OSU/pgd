@@ -4,6 +4,7 @@ from pgd_core.models import Protein,Residue
 from constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
 import re
+import math
 
 import dbsettings
 from dbsettings.loading import set_setting_value
@@ -175,6 +176,7 @@ proxyPattern = re.compile('^r([\d]+)_(?!id$)([\w]+)')
 
 # Segment_abstract
 # A base class for the Segment object
+iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
 class Segment_abstract(models.Model):
 
     protein = models.ForeignKey(Protein)
@@ -186,6 +188,9 @@ class Segment_abstract(models.Model):
         Residue_subscripter('residues', self)
 
     def __getattribute__(self,name):
+        if name == 'offset':
+            return 0-self.__dict__['r%i_chainIndex' % iIndex]
+    
         #check for properties proxied to a residue object
         match = proxyPattern.match(name)
         if match:
