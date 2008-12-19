@@ -140,6 +140,13 @@ class Residue_subscripter():
             else:
                 return None
 
+        except TypeError: # it wasn't an int, it must be a slice
+            #return the range of segments specified.  retrieve items through __getitem__() 
+            #so items are initialized if needed.
+            return [self.__getitem__(z) for z in range(i.start, i.stop, i.step if i.step else 1) ]
+            
+
+
     def __setitem__(self, i, v):
         #populate dict and set the FK
         if v:
