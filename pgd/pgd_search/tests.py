@@ -6,12 +6,6 @@ from pgd_splicer.SegmentBuilder import SegmentBuilderTask
 from constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 
-def setcompare(a,b):
-    (a,b) = (a.all(),b.all())
-    for y in [x for x in a if x not in b]:
-        return 0
-    return len(a) == len(b)
-
 FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi','bm','bs','bg','h_bond_energy','zeta']
 FIELDS_DICT = {}
 for i in range(1, len(FIELDS)+1):
@@ -21,12 +15,12 @@ for i in range(1, len(FIELDS)+1):
 class SearchParserValidation(unittest.TestCase):
     
     def calculateAA(self, chainIndex):
-        aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
-        return AA_CHOICES[aa_choice][0]
+        #aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
+        return AA_CHOICES[(chainIndex-1)%len(AA_CHOICES)][0]
 
     def calculateSS(self, chainIndex):
-        ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
-        return SS_CHOICES[ss_choice][0]
+        #ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
+        return SS_CHOICES[(chainIndex-1)%len(SS_CHOICES)][0]
 
     #calculates a value for a field based on other properties
     #   1) whole number indicates protein id
@@ -100,7 +94,25 @@ class SearchParserValidation(unittest.TestCase):
             search_residue.index = j
             search_residue.save()
 
-            self.assertEqual(setcompare(Segment.objects.filter(**{'r%i_a1__gte'%i:1 ,'r%i_a1__lte'%i:2}),parse_search(search)), True, "Single residue search failed on search index %i"%i)
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(**{'r%i_a1__gte'%i:1,'r%i_a1__lte'%i:2}).all()),
+                set(parse_search(search).all()),
+                "Single residue search failed on search index %i"%i
+            )
+
+    def testSearchMultiples(self):
+        
+        # create Search
+        search = Search()
+        search.save()
+        
+        search_residue = Search_residue()
+        search_residue.index = 500
+        search.residues.add(search_residue)
+        search_residue.search = search
+        search_residue.a1_include = True
+        search_residue.a1 = "1-2"
 
     def testFoo(self):
         ##need at least 1 test or django wont run setUp() this can be removed when we have real tests
