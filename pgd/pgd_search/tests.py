@@ -34,7 +34,7 @@ class SearchParserValidation(unittest.TestCase):
     #creates a set objects with predictable values so we can predict search results
     def setUp(self):
         # create a series of proteins, chains, segments
-        for i in (1,2,3):
+        for i in (-1,-2,1,2,3):
 
             # create protein
             protein = Protein()
@@ -76,7 +76,7 @@ class SearchParserValidation(unittest.TestCase):
         builder._work(None)
     
     
-    def testSearchPerSingles(self):
+    def testSearchSingleResidues(self):
         
         # create Search
         search = Search()
@@ -101,18 +101,41 @@ class SearchParserValidation(unittest.TestCase):
                 "Single residue search failed on search index %i"%i
             )
 
-    def testSearchMultiples(self):
+    def testSearchMultipleResidues(self):
         
         # create Search
         search = Search()
         search.save()
+
+        for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
+            search_residue = Search_residue()
+            search_residue.index = 500
+            search.residues.add(search_residue)
+            search_residue.search = search
+            search_residue.a1_include = True
+            search_residue.a1 = "1-2"
+            search_residue.index = j
+            search_residue.save()
+
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(
+                    reduce(
+                        lambda x,y: x&y,
+                        (Q(**{'r%i_a1__gte'%k:1,'r%i_a1__lte'%k:2})
+                        for k in range(i+1))
+                    )
+                    #**dict((
+                    #    ('r%i_a1__gte'%k:1,'r%i_a1__lte'%k:2)
+                    #    for k in range(i+1)
+                    #))
+                ).all()),
+                set(parse_search(search).all()),
+                "Multiple residue search failed on %i residues"%(i+1)
+            )
+            
+            
         
-        search_residue = Search_residue()
-        search_residue.index = 500
-        search.residues.add(search_residue)
-        search_residue.search = search
-        search_residue.a1_include = True
-        search_residue.a1 = "1-2"
 
     def testFoo(self):
         ##need at least 1 test or django wont run setUp() this can be removed when we have real tests
