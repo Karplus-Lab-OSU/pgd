@@ -19,10 +19,16 @@ def validateQueryField(str):
 Parses a search into a Django query
 """
 def parse_search(search):
-    search_codes = (x.code for x in search.codes.all())
     query = Segment.objects.all()
     if search.codes_include:
-        query = query.__getattribute__('filter' if search.codes_include else 'exclude')(protein__in=search_codes)
+        query = query.__getattribute__('filter' if search.codes_include else 'exclude')(protein__in=(x.code for x in search.codes.all()))
+    if search.resolution_min != None:
+        query = query.filter(resolution__gte=search.resolution_min)
+    if search.resolution_max != None:
+        query = query.filter(resolution__lte=search.resolution_max)
+    if search.threshold != None:
+        query = query.filter(threshold__eq=search.threshold)
+        
     for search_res in search.residues.all():
         for field in filter(
                 lambda x: search_res.__dict__[x+'_include'] != None,
