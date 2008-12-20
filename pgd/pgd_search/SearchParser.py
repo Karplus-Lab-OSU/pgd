@@ -20,7 +20,7 @@ Parses a search into a Django query
 """
 def parse_search(search):
     search_codes = (x.code for x in search.codes.all())
-    query = Segment.objects 
+    query = Segment.objects.all()
     if search.codes_include:
         query = query.__getattribute__('filter' if search.codes_include else 'exclude')(protein__in=search_codes)
     for search_res in search.residues.all():
