@@ -23,8 +23,20 @@ if not searchSettings.requestedSegmentSize:
 # Search
 # A search query submitted by a user
 class Search(models.Model):
-    user            = models.ForeignKey(User, null=True)
+    user             = models.ForeignKey(User, null=True)
     codes_include    = models.BooleanField(null=True)
+    _querySet = None
+
+    # returns the query set that represents this search
+    def querySet(self):
+        #create querySet if not needed
+        if not self._querySet:
+            #_querySet = parse_search(self)
+
+            #TODO until the _queryParser is working and merged in just return the first 50 full length segments
+            self._querySet = Segment.objects.all().filter(length=10)[:500]
+
+        return self._querySet
 
 # Search_code
 # Codes for the proteins searched on
@@ -93,7 +105,7 @@ class Search_residue(models.Model):
     h_bond_energy_include   = models.BooleanField(null=True)
     zeta_include            = models.BooleanField(null=True)
     terminal_flag_include   = models.BooleanField(null=True)
-    
+
 
     def __init__(self, *args, **kwargs):
         models.Model.__init__(self, *args, **kwargs)
@@ -126,6 +138,13 @@ class Residue_subscripter():
             # so they must always return a values or None
             else:
                 return None
+
+        except TypeError: # it wasn't an int, it must be a slice
+            #return the range of segments specified.  retrieve items through __getitem__() 
+            #so items are initialized if needed.
+            return [self.__getitem__(z) for z in range(i.start, i.stop, i.step if i.step else 1) ]
+            
+
 
     def __setitem__(self, i, v):
         #populate dict and set the FK

@@ -1,4 +1,5 @@
 from django.http import HttpResponseRedirect
+from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
 import math
@@ -15,7 +16,13 @@ def search(request):
     if request.method == 'POST': # If the form has been submitted
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
+
+            #process search form into search object
             search = processSearchForm(form)
+
+            #store search in session
+            request.session['search'] = search
+
             return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
     else:
         form = SearchForm() # An unbound form
@@ -37,13 +44,11 @@ def search(request):
         residueFields.append(dict)
 
     return render_to_response('search.html', {
-        'MEDIA_URL': settings.MEDIA_URL,
-        'SITE_ROOT': settings.SITE_ROOT,
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields
-    })
+    }, context_instance=RequestContext(request))
 
 
 """
@@ -124,3 +129,5 @@ def processSearchForm(form):
         # only add the residue if there was a value in the field
         if hasField:
             search.residues.add(residue)
+
+    return search

@@ -1,4 +1,3 @@
-
 if __name__ == '__main__':
     import sys
     import os
@@ -32,6 +31,11 @@ class SegmentBuilderTask(Task):
 
         #calculate offset of last index from iIndex
         lastIndexOffset = lastIndex - iIndex
+
+        #determine if there are any segments in the table
+        #   limit query with [0:0] instead of [0] this returns
+        #   an empty list instead of an exception if there are no segments    
+        existingSegments = len(Segment.objects.all()[0:0]) != 0      
 
         proteins = Protein.objects.all()
         self.proteinTotal = len(proteins)
@@ -87,12 +91,20 @@ class SegmentBuilderTask(Task):
                     if not segmentList[iIndex]:
                         continue
 
-                    #find existing segment or create new one
-                    iProperty = 'r%d_chainIndex' % iIndex
-                    kwargs = {'protein__code':str(protein.code), iProperty:int(segmentList[iIndex].chainIndex)}
-                    try:
-                        segment = Segment.objects.get(**kwargs)
-                    except:
+                    # Only check for existing version of the segment if there
+                    # are records in the segment table (wasted cycles otherwise)
+                    if existingSegments:
+                        #find existing segment or create new one
+                        iProperty = 'r%d_chainIndex' % iIndex
+                        kwargs = {'protein__code':str(protein.code), iProperty:int(segmentList[iIndex].chainIndex)}
+                        try:
+                            segment = Segment.objects.get(**kwargs)
+
+                        #an exception will be thrown if the segment doesnt exist
+                        #ignore the exception and create a new Segment
+                        except:
+                            segment = Segment()
+                    else:
                         segment = Segment()
 
                     #set residues in segment
