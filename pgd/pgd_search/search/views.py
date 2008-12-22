@@ -4,7 +4,7 @@ from django.shortcuts import render_to_response
 from django.conf import settings
 import math
 
-from pgd_search.models import Search, Search_residue, searchSettings
+from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from SearchForm import SearchForm
 from constants import AA_CHOICES
