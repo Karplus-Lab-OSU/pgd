@@ -53,7 +53,7 @@ def parse_search(search):
                             Q(**{seg_field+'__lte' : float(range_re.split(constraint)[1])})
                         ) if range_re.search(constraint) else (
                             Q(**(
-                                {seg_field+"__in"  : (aa_choice[1] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index)}
+                                {seg_field+"__in"  : (aa_choice[0] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index)}
                                                                         if field == 'aa_int' else
                                 {seg_field         : int(constraint)}    if field == 'terminal_flag' else
                                 {seg_field         : float(constraint)}
