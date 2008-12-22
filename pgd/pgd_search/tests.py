@@ -15,12 +15,12 @@ for i in range(1, len(FIELDS)+1):
 class SearchParserValidation(unittest.TestCase):
     
     def calculateAA(self, chainIndex):
-        #aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
-        return AA_CHOICES[(chainIndex-1)%len(AA_CHOICES)][0]
+        aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
+        return AA_CHOICES[aa_choice][0]
 
     def calculateSS(self, chainIndex):
-        #ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
-        return SS_CHOICES[(chainIndex-1)%len(SS_CHOICES)][0]
+        ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
+        return SS_CHOICES[ss_choice][0]
 
     #calculates a value for a field based on other properties
     #   1) whole number indicates protein id
