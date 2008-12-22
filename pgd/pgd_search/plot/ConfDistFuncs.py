@@ -513,20 +513,32 @@ class ConfDistPlot():
     # ******************************************************
     def Plot(self):
         # Turn all the query results into an array of points
-        residueIDs = self.querySet.values_list('r%i_id'%self.residue)
-        for rID in residueIDs:
 
-            # pick fields to query
-            if self.ref == 'Observations':
-                values = [self.xText, self.yText]
-            else:
-                #include attribute to analyze
-                values = [self.xText, self.yText, self.ref]
+        #construct property names
+        xProperty = 'r%i_%s' % (self.residue, self.xText)
+        yProperty = 'r%i_%s' % (self.residue, self.yText)
 
-            data = Residue.objects.filter(id=rID[0]).values(*values)[0]
+        # pick fields to query
+        if self.ref == 'Observations':
+            values = [xProperty, yProperty]
+        else:
+            #include attribute to analyze
+            attrProperty = 'r%i_%s' % (self.residue, self.ref)
+            values = [xProperty, yProperty, attrProperty]
 
-            xOrig = data[self.xText]    # Original Values of X and Y
-            yOrig = data[self.yText]
+        #query just the required fields for the segment table
+        residues = self.querySet.values(*values)
+
+        for data in residues:
+
+            if self.ref <> 'Observations':
+                #fix property name for later use
+                data[self.ref] = data[attrProperty]
+                del data[attrProperty]
+
+            # Original Values of X and Y
+            xOrig = data[xProperty]
+            yOrig = data[yProperty]
 
             x = (xOrig  - (self.xRange[0])) / self.xPixelSize + self.xOff
             y = (yOrig + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff
