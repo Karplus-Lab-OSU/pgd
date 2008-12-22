@@ -26,6 +26,9 @@ if not searchSettings.requestedSegmentSize:
 class Search(models.Model):
     user             = models.ForeignKey(User, null=True)
     codes_include    = models.BooleanField(null=True)
+    threshold        = models.IntegerField(null=True)
+    resolution_min   = models.FloatField(null=True)
+    resolution_max   = models.FloatField(null=True)
     _querySet = None
 
     # returns the query set that represents this search
