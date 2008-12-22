@@ -202,10 +202,10 @@ class BinPoint():
             # By adding 360 to omega when it's less than -90, we shift half of the tall peak
             # over to the far right of a -180 to +180 omega plot, into the 180-270 range.
             if key == "ome":
-                if self.obs[i].dat.__dict__[key] < -90:
-                    self.obs[i].dat.__dict__[key] = ( self.obs[i].dat.__dict__[key] + 360 )
+                if self.obs[i].dat[key] < -90:
+                    self.obs[i].dat[key] = ( self.obs[i].dat[key] + 360 )
 
-            sum += self.obs[i].dat.__dict__[key]
+            sum += self.obs[i].dat[key]
 
         self.stats[key][BIN_STATS_AVERAGE] = sum / self.numObs
 
@@ -213,7 +213,7 @@ class BinPoint():
         if self.numObs > 1:
             sum = 0
             for i in range(self.numObs):
-                sum += pow( (self.obs[i].dat.__dict__[key] - self.stats[key][BIN_STATS_AVERAGE]), 2 )
+                sum += pow( (self.obs[i].dat[key] - self.stats[key][BIN_STATS_AVERAGE]), 2 )
             self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
 
         if key <> None and key == ref:
@@ -512,24 +512,31 @@ class ConfDistPlot():
     # Plots the points
     # ******************************************************
     def Plot(self):
-
         # Turn all the query results into an array of points
-        for segment in self.querySet:
-            #code = residue.code
-            #id = residue.id
-            residue = segment.residues[self.residue]
+        residueIDs = self.querySet.values_list('r%i_id'%self.residue)
+        for rID in residueIDs:
 
-            xOrig = residue.__dict__[self.xText]    # Original Values of X and Y
-            yOrig = residue.__dict__[self.yText]
+            # pick fields to query
+            if self.ref == 'Observations':
+                values = [self.xText, self.yText]
+            else:
+                #include attribute to analyze
+                values = [self.xText, self.yText, self.ref]
+
+            data = Residue.objects.filter(id=rID[0]).values(*values)[0]
+
+            xOrig = data[self.xText]    # Original Values of X and Y
+            yOrig = data[self.yText]
 
             x = (xOrig  - (self.xRange[0])) / self.xPixelSize + self.xOff
             y = (yOrig + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff
 
-            self.points.append(Coord(xOrig, yOrig, x, y, residue))
+            self.points.append(Coord(xOrig, yOrig, x, y, data))
 
         # Create a bins for the values
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
+
         # Plot the bad boy
         return self.PlotPoints()
 
