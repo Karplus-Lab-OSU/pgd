@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from pgd_search.models import *
 from pgd_core.models import Protein,Residue
 from constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
@@ -33,12 +34,10 @@ class Search(models.Model):
 
     # returns the query set that represents this search
     def querySet(self):
+        from SearchParser import parse_search
         #create querySet if not needed
         if not self._querySet:
-            #_querySet = parse_search(self)
-
-            #TODO until the _queryParser is working and merged in just return the first 50 full length segments
-            self._querySet = Segment.objects.all().filter(length=10)[:500]
+            self._querySet = parse_search(self)
 
         return self._querySet
 

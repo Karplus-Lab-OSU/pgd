@@ -2,6 +2,8 @@ from django.http import HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
+from django.forms.util import ErrorList
+
 import math
 
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
@@ -20,10 +22,15 @@ def search(request):
             #process search form into search object
             search = processSearchForm(form)
 
-            #store search in session
-            request.session['search'] = search
+            #at least for now limit the size of the result set
+            if search.querySet().count() > 10000:
+                form._errors['Result Size'] = ErrorList(['Your query returned more than 10,000 records, refine your search'])
 
-            return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
+            else:
+                #store search in session
+                request.session['search'] = search
+
+                return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
     else:
         form = SearchForm() # An unbound form
 

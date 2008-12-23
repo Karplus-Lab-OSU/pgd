@@ -41,23 +41,17 @@ def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='
         svg.line( hashx, y+height, hashx, y+height+hashsize, 1, '#000000');
         svg.line( x, hashy, x-hashsize, hashy, 1, '#000000');
 
-    #x axis text
-    xtext  = xStart
-    xtext1 = xEnd
-    step = (xtext1 - xtext) / 4
+    #labels
+    xstep = (xEnd - xStart) / 4
+    ystep = (yEnd - yStart) / 4
     for i in range(5):
-        text = xtext + step*i
-        hashx = x+(width/4)*i-(2.5*len(str(text)))
-        svg.text(hashx, y+height+hashsize*2+3, str(text),12)
+        xtext = xStart + xstep*i
+        xhash = x+(width/4)*i-(2.5*len(str(xtext)))
+        svg.text(xhash, y+height+hashsize*2+3, str(xtext),12)
 
-    #y axis text
-    ytext  = yStart
-    ytext1 = yEnd
-    step = (ytext1 - ytext) / 4
-    for i in range(5):
-        text = ytext + step*i
-        hashy = y+(height/4)*i+4
-        svg.text(x-5-(8*len(str(text))), hashy, str(text),12)
+        ytext = yStart + ystep*i
+        yhash = y+(height/4)*i+4
+        svg.text(x-5-(8*len(str(ytext))), yhash, str(ytext),12)
 
     #title text
     len1 = 220 - len(xProperty)*7/2 - len(xProperty)*7/2

@@ -23,7 +23,7 @@ def dumpSearch(search, writer):
     FIELD_LABEL_REPLACEMENTS = {'h_bond_energy':'H Bond', 'aa':'AA'}
     FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
 
-    total = len(querySet)
+    total = querySet.count()
 
     # General query result information
     writer.write("Match\tCode\tResidue\tID")
