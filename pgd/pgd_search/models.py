@@ -115,7 +115,7 @@ class Search_residue(models.Model):
         models.Model.__init__(self, *args, **kwargs)
 
         # populate 'aa' with a dictionary of allowed values from AA_CHOICES
-        self.aa = dict([(j[1],1 if self.aa_int == None else 1&self.aa_int>>i) for i,j in enumerate(AA_CHOICES)])
+        self.aa = dict([(aa_choice[1],1 if self.aa_int == None else 1&self.aa_int>>aa_index) for aa_index,aa_choice in enumerate(AA_CHOICES)])
 
 
 # Residue_subscripter
