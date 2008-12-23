@@ -82,6 +82,8 @@ class Search(models.Model):
                                     {seg_field[0:-4]+"__in"  : [aa_choice[0] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index]}
                                                                             if field == 'aa_int' else
                                     {seg_field         : int(constraint)}    if field == 'terminal_flag' else
+                                    # The line below will need to be changed once 'ss' is reimplemented
+                                    {seg_field         : constraint}    if field == 'ss' else
                                     {seg_field         : float(constraint)}
                                 ))
                             ) for constraint in str(search_res.__dict__[field]).split(',')
