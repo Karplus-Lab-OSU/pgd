@@ -6,6 +6,8 @@ from pgd_splicer.SegmentBuilder import SegmentBuilderTask
 from constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 
+PRO_MIN = -1
+PRO_MAX = 3
 FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi','bm','bs','bg','h_bond_energy','zeta']
 FIELDS_DICT = {}
 for i in range(1, len(FIELDS)+1):
@@ -15,12 +17,12 @@ for i in range(1, len(FIELDS)+1):
 class SearchParserValidation(unittest.TestCase):
     
     def calculateAA(self, chainIndex):
-        aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
-        return AA_CHOICES[aa_choice][0]
+        #aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
+        return AA_CHOICES[(chainIndex-1)%len(AA_CHOICES)][0]
 
     def calculateSS(self, chainIndex):
-        ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
-        return SS_CHOICES[ss_choice][0]
+        #ss_choice = chainIndex-1 if chainIndex-1 < len(SS_CHOICES) else chainIndex-1-len(SS_CHOICES)
+        return SS_CHOICES[(chainIndex-1)%len(SS_CHOICES)][0]
 
     #calculates a value for a field based on other properties
     #   1) whole number indicates protein id
@@ -34,7 +36,7 @@ class SearchParserValidation(unittest.TestCase):
     #creates a set objects with predictable values so we can predict search results
     def setUp(self):
         # create a series of proteins, chains, segments
-        for i in (1,2,3):
+        for i in [x for x in range(PRO_MIN,PRO_MAX) if x]:
 
             # create protein
             protein = Protein()
@@ -76,47 +78,163 @@ class SearchParserValidation(unittest.TestCase):
         builder._work(None)
     
     
-    def testSearchPerSingles(self):
+    #def testSearchSingleResidues(self):
+    #    
+    #    # create Search
+    #    search = Search()
+    #    search.save()
+    #    
+    #    search_residue = Search_residue()
+    #    search_residue.index = 500 # a nonsense value to ensure 'index' isn't null for next line
+    #    search.residues.add(search_residue)
+    #    search_residue.search = search
+    #    search_residue.a1_include = True
+    #    search_residue.a1 = "1-2"
+    #
+    #    # create associated Search_residues (or not)
+    #    for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
+    #        search_residue.index = j
+    #        search_residue.save()
+    #
+    #        self.assertEqual(
+    #            # See that the intended query is executed by parse_search
+    #            set(Segment.objects.filter(**{'r%i_a1__gte'%i:1,'r%i_a1__lte'%i:2}).all()),
+    #            set(parse_search(search).all()),
+    #            "Single residue search failed on search index %i"%i
+    #        )
+    
+    def testSearchResolution(self):
+        
+        # create Search
+        search = Search()
+
+        for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
+            search.resolution_min = min
+            search.resolution_max = max
+            search.save()
+
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(protein__resolution__gte=min,protein__resolution__lte=max).all()),
+                set(Search.parse_search(search).all()),
+                "Resolution search failed on %i-%i"%(min,max)
+            )
+
+    def testSearchThreshold(self):
+        
+        # create Search
+        search = Search()
+
+        for index in range(PRO_MIN,PRO_MAX):
+            search.threshold = index
+            search.save()
+
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(protein__threshold=index).all()),
+                set(Search.parse_search(search).all()),
+                "Threshold search failed on %i"%(index)
+            )
+
+    def testSearchAa(self):
         
         # create Search
         search = Search()
         search.save()
-        
+
         search_residue = Search_residue()
-        search_residue.index = 500
+        search_residue.index = -4
         search.residues.add(search_residue)
         search_residue.search = search
-        search_residue.a1_include = True
-        search_residue.a1 = "1-2"
-
-        # create associated Search_residues (or not)
-        for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
-            search_residue.index = j
+        search_residue.aa_int_include = True
+        search_residue.aa_int = 0
+        for aa_index,aa_choice in enumerate(AA_CHOICES):
+            search_residue.aa_int = 1<<aa_index
             search_residue.save()
 
             self.assertEqual(
                 # See that the intended query is executed by parse_search
-                set(Segment.objects.filter(**{'r%i_a1__gte'%i:1,'r%i_a1__lte'%i:2}).all()),
-                set(parse_search(search).all()),
-                "Single residue search failed on search index %i"%i
+                set(Segment.objects.filter(r0_aa=aa_choice[0]).all()),
+                set(Search.parse_search(search).all()),
+                "Specific AA search failed on '%s'"%(aa_choice[1])
             )
-
-    def testSearchMultiples(self):
+        
+        search_residue.aa_int = 0
+        
+        for aa_index,aa_choice in enumerate(AA_CHOICES):
+            search_residue.aa_int += 1<<aa_index
+            search_residue.save()
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(r0_aa__in=[aa_c[0] for aa_i,aa_c in enumerate(AA_CHOICES) if search_residue.aa_int&1<<aa_i]).all()),
+                set(Search.parse_search(search).all()),
+                "Multiple AA search failed on '%s'"%'\', \''.join([aa_c[1] for aa_i,aa_c in enumerate(AA_CHOICES) if search_residue.aa_int&1<<aa_i])
+            )
+    
+    def testSearchMultipleResidues(self):
         
         # create Search
         search = Search()
         search.save()
+
+        for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
+            search_residue = Search_residue()
+            search_residue.index = j
+            search.residues.add(search_residue)
+            search_residue.search = search
+            search_residue.a1_include = True
+            search_residue.a1 = "1-2"
+            search_residue.save()
+
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(
+                    reduce(
+                        lambda x,y: x&y,
+                        (Q(**{'r%i_a1__gte'%k:1,'r%i_a1__lte'%k:2})
+                        for k in range(i+1))
+                    )
+                ).all()),
+                set(Search.parse_search(search).all()),
+                "Multiple residue search failed on %i residues"%(i+1)
+            )
+    
+    def testSearchMultipleFields(self):
         
+        # create Search
+        search = Search()
+        search.save()
         search_residue = Search_residue()
-        search_residue.index = 500
+        search_residue.index = -4
         search.residues.add(search_residue)
         search_residue.search = search
-        search_residue.a1_include = True
-        search_residue.a1 = "1-2"
 
-    def testFoo(self):
-        ##need at least 1 test or django wont run setUp() this can be removed when we have real tests
-        pass
+        for prot_dicts,filter_dict,search_dict in    [
+                        (
+                            True,
+                            {'protein__resolution__gte': 1, 'protein__resolution__lte': 2},
+                            {'resolution_min': 1, 'resolution_max': 2}
+                        ),
+                        (
+                            True,
+                            {'protein__threshold': 1},
+                            {'threshold': 1}
+                        )
+                    ] + [(
+                        False,
+                        {'r0_' + field + '__gte': 1, 'r0_' + field + '__lte': 2},
+                        {field+'_include': True, field: '1-2'}
+                    ) for field in ('a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi','bm','bs','bg','h_bond_energy','zeta')]:
+            (search if prot_dicts else search_residue).__dict__.update(search_dict)
+
+            search.save()                
+            search_residue.save()
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(**filter_dict).all()),
+                set(Search.parse_search(search).all()),
+                "Multiple fields search failed",
+            )
 
 class SearchFieldValidationCase(unittest.TestCase):
     def setUp(self):
