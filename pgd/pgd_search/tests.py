@@ -81,7 +81,7 @@ class SearchParserValidation(unittest.TestCase):
     #def testSearchSingleResidues(self):
     #    
     #    # create Search
-    #    search = Search()
+    #    search = Search(segmentLength=0)
     #    search.save()
     #    
     #    search_residue = Search_residue()
@@ -106,7 +106,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchResolution(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
 
         for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
             search.resolution_min = min
@@ -123,7 +123,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchThreshold(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
 
         for index in range(PRO_MIN,PRO_MAX):
             search.threshold = index
@@ -139,7 +139,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchAa(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
 
         search_residue = Search_residue()
@@ -174,7 +174,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchMultipleResidues(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
 
         for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
@@ -202,7 +202,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchMultipleFields(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
         search_residue = Search_residue()
         search_residue.index = -4
