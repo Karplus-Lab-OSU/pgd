@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-from pgd_search.models import *
 from pgd_core.models import Protein,Residue
 from constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
