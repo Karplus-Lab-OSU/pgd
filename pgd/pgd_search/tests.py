@@ -1,5 +1,4 @@
 import unittest
-from pgd_search.SearchParser import *
 from pgd_search.models import * 
 from pgd_core.models import * 
 from pgd_splicer.SegmentBuilder import SegmentBuilderTask
