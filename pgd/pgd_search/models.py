@@ -47,7 +47,7 @@ class Search(models.Model):
 
     def parse_search(self):
         query = Segment.objects.all()
-        if self.segmentLength:
+        if self.segmentLength > 1:
             query = query.filter(segmentLength__gte=self.segmentLength)
         if self.codes_include:
             query = query.__getattribute__('filter' if self.codes_include else 'exclude')(protein__in=(x.code for x in self.codes.all()))
