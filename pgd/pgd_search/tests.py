@@ -116,7 +116,7 @@ class SearchParserValidation(unittest.TestCase):
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(protein__resolution__gte=min,protein__resolution__lte=max).all()),
-                set(parse_search(search).all()),
+                set(Search.parse_search(search).all()),
                 "Resolution search failed on %i-%i"%(min,max)
             )
 
@@ -132,7 +132,7 @@ class SearchParserValidation(unittest.TestCase):
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(protein__threshold=index).all()),
-                set(parse_search(search).all()),
+                set(Search.parse_search(search).all()),
                 "Threshold search failed on %i"%(index)
             )
 
@@ -155,7 +155,7 @@ class SearchParserValidation(unittest.TestCase):
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(r0_aa=aa_choice[0]).all()),
-                set(parse_search(search).all()),
+                set(Search.parse_search(search).all()),
                 "Specific AA search failed on '%s'"%(aa_choice[1])
             )
         
@@ -167,7 +167,7 @@ class SearchParserValidation(unittest.TestCase):
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(r0_aa__in=[aa_c[0] for aa_i,aa_c in enumerate(AA_CHOICES) if search_residue.aa_int&1<<aa_i]).all()),
-                set(parse_search(search).all()),
+                set(Search.parse_search(search).all()),
                 "Multiple AA search failed on '%s'"%'\', \''.join([aa_c[1] for aa_i,aa_c in enumerate(AA_CHOICES) if search_residue.aa_int&1<<aa_i])
             )
     
@@ -195,12 +195,11 @@ class SearchParserValidation(unittest.TestCase):
                         for k in range(i+1))
                     )
                 ).all()),
-                set(parse_search(search).all()),
+                set(Search.parse_search(search).all()),
                 "Multiple residue search failed on %i residues"%(i+1)
             )
     
-    # TODO: fix this test -- something still wrong
-    def testSearchMultipleResidues(self):
+    def testSearchMultipleFields(self):
         
         # create Search
         search = Search()
@@ -232,8 +231,8 @@ class SearchParserValidation(unittest.TestCase):
             search_residue.save()
             self.assertEqual(
                 # See that the intended query is executed by parse_search
-                Segment.objects.filter(**filter_dict).all(),
-                set(parse_search(search).all()),
+                set(Segment.objects.filter(**filter_dict).all()),
+                set(Search.parse_search(search).all()),
                 "Multiple fields search failed",
             )
 
