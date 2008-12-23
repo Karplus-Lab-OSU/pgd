@@ -33,6 +33,7 @@ class Search(models.Model):
     threshold        = models.IntegerField(null=True)
     resolution_min   = models.FloatField(null=True)
     resolution_max   = models.FloatField(null=True)
+    segmentLength    = models.IntegerField()
     _querySet = None
 
     # returns the query set that represents this search

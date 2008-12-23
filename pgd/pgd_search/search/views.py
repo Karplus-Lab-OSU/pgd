@@ -102,7 +102,7 @@ def processSearchForm(form):
     search = Search()
 
     #get protein properties
-    search.residueCount  = int(data['residues'])
+    search.segmentLength = int(data['residues'])
     search.resolutionMin = float(data['resolutionMin'])
     search.resolutionMax = float(data['resolutionMax'])
 
@@ -116,8 +116,8 @@ def processSearchForm(form):
         search.codes.add(searchCode)
 
     #process per residue properties
-    start = 0 - (search.residueCount-1) / 2
-    stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
+    start = 0 - (search.segmentLength-1) / 2
+    stop  = int(math.ceil((search.segmentLength-1) / 2.0))+1
     for i in range(start, stop, 1):
         hasField = False
         residue = Search_residue()

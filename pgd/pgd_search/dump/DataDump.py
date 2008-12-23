@@ -13,7 +13,7 @@ from constants import AA_CHOICES
 
 def dumpSearch(search, writer):
 
-    length   = search.residueCount
+    length   = search.segmentLength
     querySet = search.querySet()
 
     count = 0
