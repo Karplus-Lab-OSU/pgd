@@ -5,6 +5,7 @@ from pgd_core.models import *
 from pgd_splicer.SegmentBuilder import SegmentBuilderTask
 from constants import AA_CHOICES, SS_CHOICES
 from math import ceil
+from search.views import validateQueryField
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -151,7 +152,7 @@ class SearchParserValidation(unittest.TestCase):
         for aa_index,aa_choice in enumerate(AA_CHOICES):
             search_residue.aa_int = 1<<aa_index
             search_residue.save()
-
+            
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(r0_aa=aa_choice[0]).all()),
@@ -266,9 +267,9 @@ class SearchFieldValidationCase(unittest.TestCase):
         ]
 
         invalidFields = []
-
+        
         for value in validFields:
             self.assertEqual(validateQueryField(value), True, "Valid Field Pattern Failed: '%s'" % value)
 
         for value in invalidFields:
-            self.assertEqual(validateQueryField(value), False)
+            self.assertEqual(validateQueryField(value), None)
