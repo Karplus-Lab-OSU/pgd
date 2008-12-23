@@ -93,7 +93,7 @@ class SearchParserValidation(unittest.TestCase):
         for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
             search_residue.a1 = "%g-%g"%(min,max)
             search_residue.save()
-            print Search.parse_search(search).all().count()
+
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(**{'r0_a1__gte':min,'r0_a1__lte':max}).all()),
