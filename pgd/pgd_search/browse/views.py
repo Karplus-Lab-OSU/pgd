@@ -29,8 +29,8 @@ def browse(request):
 
     #generate iValues
     iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
-    start = 0 - (search.residueCount-1) / 2
-    stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
+    start = 0 - (search.segmentLength-1) / 2
+    stop  = int(math.ceil((search.segmentLength-1) / 2.0))+1
     iValues = [
             # Generates a series of tuples (<value>,<signed string of value>); zero is 'i'
             '%+i'%i if i else 'i' for i in range(start,stop)

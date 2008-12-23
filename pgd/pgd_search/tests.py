@@ -77,36 +77,34 @@ class SearchParserValidation(unittest.TestCase):
         builder = SegmentBuilderTask('Test Suite Builder')
         builder._work(None)
     
-    
     def testSearchQueryStrings(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
         
         search_residue = Search_residue()
-        search_residue.index = 500 # a nonsense value to ensure 'index' isn't null for next line
+        search_residue.index = -4
         search.residues.add(search_residue)
         search_residue.search = search
         search_residue.a1_include = True
-        search_residue.index = -4
     
         # create associated Search_residues (or not)
         for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
             search_residue.a1 = "%g-%g"%(min,max)
             search_residue.save()
-    
+            print Search.parse_search(search).all().count()
             self.assertEqual(
                 # See that the intended query is executed by parse_search
-                set(Segment.objects.filter(**{'r0_a1__gte':1,'r0_a1__lte':2}).all()),
+                set(Segment.objects.filter(**{'r0_a1__gte':min,'r0_a1__lte':max}).all()),
                 set(Search.parse_search(search).all()),
-                "Query strings search test failed on range '%s''"%search_residue.a1
+                "Query strings search test failed on range '%s'"%search_residue.a1
             )
     
     def testSearchResolution(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
 
         for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
             search.resolution_min = min
@@ -123,7 +121,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchThreshold(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
 
         for index in range(PRO_MIN,PRO_MAX):
             search.threshold = index
@@ -139,7 +137,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchAa(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
 
         search_residue = Search_residue()
@@ -174,7 +172,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchMultipleResidues(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
 
         for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
@@ -202,7 +200,7 @@ class SearchParserValidation(unittest.TestCase):
     def testSearchMultipleFields(self):
         
         # create Search
-        search = Search()
+        search = Search(segmentLength=0)
         search.save()
         search_residue = Search_residue()
         search_residue.index = -4

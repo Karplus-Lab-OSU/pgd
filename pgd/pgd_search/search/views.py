@@ -75,7 +75,6 @@ def encodeAA(list):
         if AA_CHOICES[i][0] in list:
             # bitwise or to add value
             aa = aa | (1 << i)
-        i += 1
     return aa
 
 
@@ -84,7 +83,7 @@ Decode an integer into a list of AA choices
 """
 def decodeAA(val):
     list = []
-    for i in range(23):
+    for i in range(len(AA_CHOICES)):
         # bitwise shift check value
         if (val & (1 << i)) != 0:
             list.append(AA_CHOICES[i][0])
@@ -103,7 +102,7 @@ def processSearchForm(form):
     search = Search()
 
     #get protein properties
-    search.residueCount  = int(data['residues'])
+    search.segmentLength = int(data['residues'])
     search.resolutionMin = float(data['resolutionMin'])
     search.resolutionMax = float(data['resolutionMax'])
 
@@ -117,8 +116,8 @@ def processSearchForm(form):
         search.codes.add(searchCode)
 
     #process per residue properties
-    start = 0 - (search.residueCount-1) / 2
-    stop  = int(math.ceil((search.residueCount-1) / 2.0))+1
+    start = 0 - (search.segmentLength-1) / 2
+    stop  = int(math.ceil((search.segmentLength-1) / 2.0))+1
     for i in range(start, stop, 1):
         hasField = False
         residue = Search_residue()
@@ -126,12 +125,14 @@ def processSearchForm(form):
 
         #process ss
         if data['ss_%i' % i]:
-            residue.ss      = data['ss_%i' % i]
+            residue.ss          = data['ss_%i' % i]
+            residue.ss_include  = data['ss_i_%i' % i]
             hasField = True
 
         #process aa
         if data['aa_%i' % i]:
-            residue.aa_int  = encodeAA([data['aa_%i' % i]])
+            residue.aa_int          = encodeAA(data['aa_%i' % i])
+            residue.aa_int_include  = data['aa_i_%i' % i]
             hasField = True
 
         #process all other fields
@@ -144,5 +145,7 @@ def processSearchForm(form):
         # only add the residue if there was a value in the field
         if hasField:
             search.residues.add(residue)
+            residue.search = search
+            residue.save()
 
     return search
