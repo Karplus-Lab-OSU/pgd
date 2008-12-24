@@ -58,20 +58,41 @@ class Search(models.Model):
         if self.threshold != None:
             query = query.filter(protein__threshold=self.threshold)
         for search_res in self.residues.all():
+            
+            seg_prefix = "r%i_"%(search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1))
+
+            # handle boolean values
+            query = query.filter(**dict((
+                    (seg_prefix+field, search_res.__dict__[field])
+                    for field in (
+                        'terminal_flag',
+                        'xpr',
+                    ) if search_res.__dict__[field] != None
+                )))
+            # TODO: implement the new _int system
+            #for field,choices in filter(
+            #       lambda x: search_res.__dict__[x[0]],
+            #       (
+            #           ('aa_int', AA_CHOICES),
+            #           #('ss_int', SS_CHOICES),
+            #       )
+            #   ):
+            #   query = query.__getattribute__('filter' if not search_res.__dict__[field]&1<<len(choices) else 'exclude')(**{seg_prefix+field[0:-4]+"__in": [choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index]})
+
+            # handle query strings
             for field in filter(
                     lambda x: search_res.__dict__[x+'_include'] != None,
                     (
-                        'aa_int',
+                        'aa_int', # not properly implemented
                         'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                         'L1',   'L2',   'L3',   'L4',   'L5',
-                        'ss',
+                        'ss', # not properly implemented
                         'phi',  'psi',  'ome',  'chi',
                         'bm',   'bs',   'bg',
                         'h_bond_energy',
                         'zeta',
-                        'terminal_flag',
-                    )):
-                seg_field = 'r%i_%s'%((search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)),field)
+                )):
+                seg_field = seg_prefix+field
                 query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(
                     reduce(
                         lambda x,y: x|y,
@@ -81,9 +102,9 @@ class Search(models.Model):
                                 Q(**{seg_field+'__lte' : float(range_re.split(constraint)[1])})
                             ) if range_re.search(constraint) else (
                                 Q(**(
+                                    # The line below can be removed once 'aa_include' is reimplemented
                                     {seg_field[0:-4]+"__in"  : [aa_choice[0] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index]}
                                                                             if field == 'aa_int' else
-                                    {seg_field         : int(constraint)}    if field == 'terminal_flag' else
                                     # The line below will need to be changed once 'ss' is reimplemented
                                     {seg_field         : constraint}    if field == 'ss' else
                                     {seg_field         : float(constraint)}
@@ -159,7 +180,6 @@ class Search_residue(models.Model):
     bg_include              = models.BooleanField(null=True)
     h_bond_energy_include   = models.BooleanField(null=True)
     zeta_include            = models.BooleanField(null=True)
-    terminal_flag_include   = models.BooleanField(null=True)
 
 
     def __init__(self, *args, **kwargs):

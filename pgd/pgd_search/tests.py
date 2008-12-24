@@ -101,6 +101,38 @@ class SearchParserValidation(unittest.TestCase):
                 "Query strings search test failed on range '%s'"%search_residue.a1
             )
     
+    # TODO: the dataset in setup doesn't accomodate this test yet
+    def testSearchTerminalFlag(self):
+        
+        # create Search
+        search = Search(segmentLength=0)
+        search.save()
+
+        search_residue = Search_residue()
+        search_residue.index = -4
+        search.residues.add(search_residue)
+        search_residue.search = search
+        search_residue.terminal_flag = True
+        search_residue.save()
+
+        self.assertEqual(
+            # See that the intended query is executed by parse_search
+            set(Segment.objects.filter(r0_terminal_flag=True).all()),
+            set(Search.parse_search(search).all()),
+            "Resolution search failed on True"
+        )
+
+        search_residue.terminal_flag = False
+        search_residue.save()
+
+        self.assertEqual(
+            # See that the intended query is executed by parse_search
+            set(Segment.objects.filter(r0_terminal_flag=False).all()),
+            set(Search.parse_search(search).all()),
+            "Resolution search failed on False"
+        )
+
+
     def testSearchResolution(self):
         
         # create Search
