@@ -18,8 +18,8 @@ def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, att
 
     x = 55;
     y = 45;
-    height = 400;
-    width = 400;
+    height = 360;
+    width = 360;
     hashsize = 10
 
     #background
@@ -65,8 +65,8 @@ def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, att
     svg.text(len2,35, 'Shading Based Off of %s' % attribute, 12)
 
     cdp = ConfDistPlot(
-            400,            #height
-            400,            #width
+            360,            #height
+            360,            #width
             0,              #Xpadding
             0,              #Ypadding
             x,              #Xoffset
@@ -147,8 +147,8 @@ def renderToPNG(request):
         form = PlotForm() # An unbound form
         svg,bins = drawGraph(request)
 
-    width = 500
-    height = 500
+    width = 450
+    height = 450
 
     response = HttpResponse(mimetype="image/png")
     response['Content-Disposition'] = 'attachment; filename="plot.png"'
