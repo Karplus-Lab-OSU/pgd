@@ -49,7 +49,7 @@ def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='
         xhash = x+(width/4)*i-(2.5*len(str(xtext)))
         svg.text(xhash, y+height+hashsize*2+3, str(xtext),12)
 
-        ytext = yStart + ystep*i
+        ytext = yEnd - ystep*i
         yhash = y+(height/4)*i+4
         svg.text(x-5-(8*len(str(ytext))), yhash, str(ytext),12)
 
