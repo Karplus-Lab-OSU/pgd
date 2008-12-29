@@ -13,7 +13,7 @@ from svg import *
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
+def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
     svg = SVG()
 
     x = 55;
@@ -31,8 +31,13 @@ def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='
     svg.rect(x, y, width, height, 1, '#000000');
 
     #axis
-    svg.line( x, y+height/2, x+width, y+height/2, 1, '#666666');
-    svg.line( x+width/2, y, x+width/2, y+height, 1, '#666666');
+    if xStart < 0 and xEnd > 0:
+        xZero = (width/(xEnd-xStart)) * abs (xStart)
+        svg.line( x+xZero, y, x+xZero, y+height, 1, '#666666');
+
+    if yStart < 0 and xEnd > 0:
+        yZero = height+y - (height/(yEnd-yStart)) * abs (yStart)
+        svg.line( x, yZero, x+width, yZero, 1, '#666666');
 
     #hashes
     for i in range(9):
