@@ -8,16 +8,10 @@ import math
 
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES
-from SearchForm import SearchForm
+from SearchForm import SearchSyntaxField, SearchForm
 from constants import AA_CHOICES
 
 import re
-
-"""
-Validates a field to make sure that it has valid syntax for a search field
-"""
-def validateQueryField(str):
-    return re.compile(r'^(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?(,(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?)*$').match(str) != None
 
 """
 Handler for search form.

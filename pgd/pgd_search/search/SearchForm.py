@@ -1,4 +1,5 @@
 import math
+import re
 from django import forms
 
 from pgd_core.models import Protein
@@ -7,9 +8,35 @@ from pgd_search.views import RESIDUE_INDEXES
 from constants import AA_CHOICES, SS_CHOICES
 
 """
+Custom Field for fields that support query syntax parsing
+"""
+class SearchSyntaxField(forms.Field):
+    #Validates a field to make sure that it has valid syntax for a search field
+    syntaxPattern = re.compile(r'^(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?(,(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?)*$')
+
+    def clean(self, value):
+        if value == None:
+            return None
+
+        if value == '':
+            return value
+
+        # remove all whitespace
+        cleaned = value.replace(' ','')
+
+        # replace or synonyms with comma
+        p = re.compile( '(or|\|\|)')
+        cleaned = p.sub(',', cleaned)
+
+        # check that the field matches the syntax
+        if self.syntaxPattern.match(cleaned) == None:
+            raise forms.ValidationError('Input is not valid query syntax')
+
+        return cleaned
+
+"""
 Search form used by search handler.
 """
-
 class SearchFormBase(forms.Form):
     threshold       = forms.ChoiceField(choices=[(25,25),(90,90)], required=False)
     resolutionMin   = forms.FloatField(required=False, min_value=0, initial=0, widget=forms.TextInput(attrs={'size':3}))
@@ -32,13 +59,13 @@ for i in RESIDUE_INDEXES:
 
     # the loops here are just to save on space/typing
     for j in range(1,8):
-        form_dict["a%i_%i" % (j,i)]     = forms.CharField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["a%i_%i" % (j,i)]     = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["a%i_i_%i" % (j,i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
     for j in range(1,6):
-        form_dict["L%i_%i" % (j, i)]    = forms.CharField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["L%i_%i" % (j, i)]    = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["L%i_i_%i" % (j, i)]  = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
     for j in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta"):
-        form_dict["%s_%i" % (j, i)]     = forms.CharField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
 # Create the Search Form with the fields from the dict
