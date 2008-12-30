@@ -225,10 +225,10 @@ def processSearchObject(search):
     }
 
     #get list of proteins to filter
-    #for value in data['proteins']:
-    #    searchCode = Search_code()
-    #    searchCode.code = value
-    #    search.codes.add(searchCode)
+    codes = []
+    for code in search.codes.all():
+        codes.append(code.code)
+    data['proteins'] = codes
 
     #process per residue properties
     for residue in search.residues.all():
