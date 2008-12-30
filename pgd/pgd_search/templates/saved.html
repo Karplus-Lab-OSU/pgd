@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<html>
+    <head>
+        <style>
+            tr.odd {
+                background-color:gray;
+            }
+        </style>
+    </head>
+    <body>
+
+    {% include 'header.html' %}
+
+        <div id="content">
+            <table id="searches">
+                <tbody>
+                <tr>
+                    <th>ID</th>
+                    <th>Timestamp</th>
+                    <th>Results</th>
+                    <th>Note</th>
+                </tr>
+
+                {% for search in searches %}
+                    <tr class="{% cycle 'even' 'odd' %}">
+                        <td>{{search.id}}</td>
+                        <td>{{search.timestamp}}</td>
+                        <td>{{search.results}}</td>
+                        <td>{{search.note}}</td>
+                    </tr>
+                {% endfor %}
+               </tbody>
+            </table>
+        </div>
+    </body>
+</html>
+

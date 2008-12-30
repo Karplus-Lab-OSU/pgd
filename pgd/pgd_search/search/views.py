@@ -61,6 +61,40 @@ def search(request):
 
 
 """
+Handler for editing an existing search
+"""
+def editSearch(request):
+    #try:
+    search = request.session['search']
+    form = processSearchObject(search)
+    #except KeyError:
+    #    form = SearchForm() # An unbound form
+
+    #construct a list of values for i
+    iValues = [
+                    # Generates a series of tuples (<value>,<signed string of value>); zero is 'i'
+                    (i,'%+i'%i if i else 'i') for i in RESIDUE_INDEXES
+              ]
+
+    #order the residue properties in way that django template can handle it better
+    residueFields = []
+    for i in RESIDUE_INDEXES:
+        dict = {}
+        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+            dict[prefix] =  form['%s_%i' % (prefix, i)]
+            dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
+            dict['index'] = i
+        residueFields.append(dict)
+
+    return render_to_response('search.html', {
+        'form': form,
+        'maxLength' : searchSettings.segmentSize,
+        'iValues':iValues,
+        'residueFields':residueFields
+    }, context_instance=RequestContext(request))
+
+
+"""
 Encode a list of AA choices into an integer value
 """
 def encodeAA(list):
@@ -90,7 +124,7 @@ Encode a list of AA choices into an integer value
 def encodeSS(list):
     aa = 0
     for i in range(len(SS_CHOICES)):
-        if AA_CHOICES[i][0] in list:
+        if SS_CHOICES[i][0] in list:
             # bitwise or to add value
             aa = aa | (1 << i)
     return aa
@@ -167,3 +201,48 @@ def processSearchForm(form):
             residue.save()
 
     return search
+
+"""
+Process a search object copying its values into a searchForm
+"""
+def processSearchObject(search):
+    data = {
+        #get protein properties
+        'residues'      :search.segmentLength,
+        'resolutionMin' :search.resolutionMin,
+        'resolutionMax' :search.resolutionMax
+    }
+
+    #get list of proteins to filter
+    #for value in data['proteins']:
+    #    searchCode = Search_code()
+    #    searchCode.code = value
+    #    search.codes.add(searchCode)
+
+    #process per residue properties
+    for residue in search.residues.all():
+        i = residue.index
+
+        #process ss
+        if residue.ss_int:
+            data['ss_%i' % i]   = decodeSS(residue.ss_int)
+            data['ss_i_%i' % i] = residue.ss_int_include
+
+        #process aa
+        if residue.aa_int:
+            data['aa_%i' % i]   = decodeAA(residue.aa_int)
+            data['aa_i_%i' % i] = residue.aa_int_include
+
+        #process all other fields
+        for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+            data['%s_%i' % (prefix, i)] = residue.__dict__[prefix]
+            data['%s_i_%i' % (prefix, i)] = residue.__dict__['%s_include' % prefix]
+
+    return SearchForm(data)
+
+def saved(request):
+    return render_to_response('saved.html', {
+        'searches': Search.objects.all(),
+    }, context_instance=RequestContext(request))
+
+ 

@@ -1,10 +1,11 @@
 from django.conf.urls.defaults import *
 
-from pgd_search.search.views import search
+from pgd_search.search.views import search, saved, editSearch
 from pgd_search.plot.views import renderToSVG, renderToPNG, plotDump
 from pgd_search.statistics.views import searchStatistics
 from pgd_search.dump.views import dataDump
 from pgd_search.browse.views import browse
+
 
 urlpatterns = patterns('',
     (r'^$', search),
@@ -15,4 +16,6 @@ urlpatterns = patterns('',
     (r'^statistics/$', searchStatistics),
     (r'^dump/$', dataDump),
     (r'^browse/$', browse),
+    (r'^saved/$', saved),
+    (r'^edit/$', editSearch),
 )
