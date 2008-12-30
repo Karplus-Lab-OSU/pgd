@@ -153,7 +153,6 @@
                         val = 9*newValue+6
                     }
 
-                    
                     $('table#residues').css({'width':val+'em'});
                     $('table#protein').css({'width':600});
                 }
@@ -276,6 +275,22 @@
                 //force update of segments
                 $('#oldLength').val({{maxLength}});
                 sizeChange(1);
+
+                $('#peptide_header').click(function(evt){
+                    $('tr.peptide_row').toggle();
+                });
+                $('#ss_header').click(function(evt){
+                    $('tr.ss_row').toggle();
+                });
+                $('#residue_header').click(function(evt){
+                    $('tr.residue_row').toggle();
+                });
+                $('#angles_header').click(function(evt){
+                    $('tr.angles_row').toggle();
+                });
+                $('#lengths_header').click(function(evt){
+                    $('tr.lengths_row').toggle();
+                });
             });
 
         </script>
@@ -333,24 +348,30 @@
                 <th class="field col_{{i.0}}">{{i.1}}</th>
             {% endfor %}
 
-            <tr><td colspan="100%" class="sectionheader">Residue Properties</td></tr>
-            <tr>
-                <td class="label">Peptide</td>
+            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide</td></tr>
+            <tr class="peptide_row">
+                <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.aa}}{{r.aa_i}}
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
-                <td class="label">SS</td>
+
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure</td></tr>
+            <tr class="ss_row">
+                <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
+
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties</td></tr>
+            <tr class="residue_row">
                 <td class="label">Phi</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -358,7 +379,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="residue_row">
                 <td class="label">Psi</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -366,7 +387,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="residue_row">
                 <td class="label">Bm Max</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -374,7 +395,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="residue_row">
                 <td class="label">Bg Max</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -382,7 +403,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="residue_row">
                 <td class="label">BscMax</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -390,7 +411,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="residue_row">
                 <td class="label">Omega</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -400,9 +421,8 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader">Angles</td></tr>
-            <div id="tao">
-                <tr>
+            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles</td></tr>
+                <tr class="angles_row">
                     <td class="label">Tao 1</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -410,7 +430,7 @@
                     </td>
                     {% endfor %}
                     </tr>
-                <tr>
+                <tr class="angles_row">
                     <td class="label">Tao 2</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -418,7 +438,7 @@
                     </td>
                     {% endfor %}
                     </tr>
-                <tr>
+                <tr class="angles_row">
                     <td class="label">Tao 3</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -426,7 +446,7 @@
                     </td>
                     {% endfor %}
                     </tr>
-                <tr>
+                <tr class="angles_row">
                     <td class="label">Tao 4</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -434,7 +454,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr>
+                <tr class="angles_row">
                     <td class="label">Tao 5</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -442,7 +462,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr>
+                <tr class="angles_row">
                     <td class="label">Tao 6</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -450,7 +470,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr>
+                <tr class="angles_row">
                     <td class="label">Tao 7</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -458,11 +478,10 @@
                     </td>
                     {% endfor %}
                 </tr>
-            </div>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader">Lengths</td></tr>
-            <tr>
+            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths</td></tr>
+            <tr class="lengths_row">
                 <td class="label">Length 1</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -470,7 +489,7 @@
                 </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="lengths_row">
                 <td class="label">Length 2</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -478,7 +497,7 @@
                 </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="lengths_row">
                 <td class="label">Length 3</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -486,7 +505,7 @@
                 </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="lengths_row">
                 <td class="label">Length 4</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -494,7 +513,7 @@
                 </td>
                 {% endfor %}
             </tr>
-            <tr>
+            <tr class="lengths_row">
                 <td class="label">Length 5</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
