@@ -4,7 +4,7 @@ from pgd_core.models import *
 from pgd_splicer.SegmentBuilder import SegmentBuilderTask
 from constants import AA_CHOICES, SS_CHOICES
 from math import ceil
-from search.views import validateQueryField
+#from search.views import validateQueryField
 
 PRO_MIN = -1
 PRO_MAX = 3
