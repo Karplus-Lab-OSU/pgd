@@ -7,6 +7,15 @@
             tr.odd {
                 background-color:gray;
             }
+
+            div.pagination {
+                margin-top:10px;
+            }
+            a.pagination                   { color:blue; text-decoration:none; }
+            a.pagination:link              { color:blue; text-decoration:none; }
+            a.pagination:visited           { color:blue; text-decoration:none; }
+            a.pagination:hover             { color:blue; text-decoration:underline; }
+            a.pagination:active            { color:blue; text-decoration:none;}
         </style>
     </head>
     <body>
@@ -23,9 +32,9 @@
                     <th>Note</th>
                 </tr>
 
-                {% for search in searches %}
+                {% for search in searches.object_list %}
                     <tr class="{% cycle 'even' 'odd' %}">
-                        <td>{{search.id}}</td>
+                        <td><a href="{{SITE_ROOT}}search/edit/{{search.id}}">{{search.id}}</a></td>
                         <td>{{search.timestamp}}</td>
                         <td>{{search.results}}</td>
                         <td>{{search.note}}</td>
@@ -34,6 +43,21 @@
                </tbody>
             </table>
         </div>
+        <div class="pagination">
+                <span class="step-links">
+                    {% if searches.has_previous %}
+                        <a class="pagination" href="?page={{ searches.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ searches.number }} of {{ searches.paginator.num_pages }}.
+                    </span>
+
+                    {% if searches.has_next %}
+                        <a class="pagination" href="?page={{ searches.next_page_number }}">next</a>
+                    {% endif %}
+                </span>
+            </div>
     </body>
 </html>
 

@@ -18,4 +18,5 @@ urlpatterns = patterns('',
     (r'^browse/$', browse),
     (r'^saved/$', saved),
     (r'^edit/$', editSearch),
+    (r'^edit/(?P<search_id>\d+)/$', editSearch),
 )

@@ -3,6 +3,7 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.forms.util import ErrorList
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 import math
 
@@ -63,12 +64,20 @@ def search(request):
 """
 Handler for editing an existing search
 """
-def editSearch(request):
-    #try:
-    search = request.session['search']
-    form = processSearchObject(search)
-    #except KeyError:
-    #    form = SearchForm() # An unbound form
+def editSearch(request, search_id=None):
+
+    #load the search passed in
+    if search_id:
+        search = Search.objects.get(id=search_id)
+        print search.__dict__
+        form = processSearchObject(search)
+    #else use the search in the session if it exists
+    else:
+        try:
+            search = request.session['search']
+            form = processSearchObject(search)
+        except KeyError:
+            form = SearchForm() # An unbound form
 
     #construct a list of values for i
     iValues = [
@@ -155,8 +164,9 @@ def processSearchForm(form):
 
     #get protein properties
     search.segmentLength = int(data['residues'])
-    search.resolutionMin = float(data['resolutionMin'])
-    search.resolutionMax = float(data['resolutionMax'])
+    search.resolution_min = float(data['resolutionMin'])
+    search.resolution_max = float(data['resolutionMax'])
+    search.threshold      = int(data['threshold'])
 
     #save search object so its residue parameters can be added
     search.save()
@@ -209,8 +219,9 @@ def processSearchObject(search):
     data = {
         #get protein properties
         'residues'      :search.segmentLength,
-        'resolutionMin' :search.resolutionMin,
-        'resolutionMax' :search.resolutionMax
+        'resolutionMin' :search.resolution_min,
+        'resolutionMax' :search.resolution_max,
+        'threshold'     :search.threshold
     }
 
     #get list of proteins to filter
@@ -241,8 +252,25 @@ def processSearchObject(search):
     return SearchForm(data)
 
 def saved(request):
+
+    searches = Search.objects.all()
+
+    paginator = Paginator(searches, 20) # Show 20 searches per page
+
+    # Make sure page request is an int. If not, deliver first page.
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    # If page request (9999) is out of range, deliver last page of results.
+    try:
+        paginatedSearch = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        paginatedSearch = paginator.page(paginator.num_pages)
+
     return render_to_response('saved.html', {
-        'searches': Search.objects.all(),
+        'searches': paginatedSearch,
     }, context_instance=RequestContext(request))
 
  
