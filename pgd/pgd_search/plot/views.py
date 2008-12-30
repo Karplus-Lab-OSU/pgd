@@ -13,13 +13,13 @@ from svg import *
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
+def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
     svg = SVG()
 
     x = 55;
     y = 45;
-    height = 400;
-    width = 400;
+    height = 360;
+    width = 360;
     hashsize = 10
 
     #background
@@ -31,8 +31,13 @@ def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='
     svg.rect(x, y, width, height, 1, '#000000');
 
     #axis
-    svg.line( x, y+height/2, x+width, y+height/2, 1, '#666666');
-    svg.line( x+width/2, y, x+width/2, y+height, 1, '#666666');
+    if xStart < 0 and xEnd > 0:
+        xZero = (width/(xEnd-xStart)) * abs (xStart)
+        svg.line( x+xZero, y, x+xZero, y+height, 1, '#666666');
+
+    if yStart < 0 and xEnd > 0:
+        yZero = height+y - (height/(yEnd-yStart)) * abs (yStart)
+        svg.line( x, yZero, x+width, yZero, 1, '#666666');
 
     #hashes
     for i in range(9):
@@ -49,7 +54,7 @@ def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='
         xhash = x+(width/4)*i-(2.5*len(str(xtext)))
         svg.text(xhash, y+height+hashsize*2+3, str(xtext),12)
 
-        ytext = yStart + ystep*i
+        ytext = yEnd - ystep*i
         yhash = y+(height/4)*i+4
         svg.text(x-5-(8*len(str(ytext))), yhash, str(ytext),12)
 
@@ -60,8 +65,8 @@ def drawGraph(request, xStart=-180, yStart=-180, xEnd=180, yEnd=180, attribute='
     svg.text(len2,35, 'Shading Based Off of %s' % attribute, 12)
 
     cdp = ConfDistPlot(
-            400,            #height
-            400,            #width
+            360,            #height
+            360,            #width
             0,              #Xpadding
             0,              #Ypadding
             x,              #Xoffset
@@ -142,8 +147,8 @@ def renderToPNG(request):
         form = PlotForm() # An unbound form
         svg,bins = drawGraph(request)
 
-    width = 500
-    height = 500
+    width = 450
+    height = 450
 
     response = HttpResponse(mimetype="image/png")
     response['Content-Disposition'] = 'attachment; filename="plot.png"'

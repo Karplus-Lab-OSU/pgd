@@ -472,9 +472,9 @@ class ConfDistPlot():
                 xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
                 yC = ((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
 
-                if x < self.xRange[0] or x > self.xRange[1]:
+                if x < self.xRange[0] or x >= self.xRange[1]:
                     continue
-                if y < self.yRange[0] or y > self.yRange[1]:
+                if y < self.yRange[0] or y >= self.yRange[1]:
                     continue
 
                 # Bins are an area of pixel space, find the rectangle that describes
