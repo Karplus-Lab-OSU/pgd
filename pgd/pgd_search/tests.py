@@ -36,7 +36,7 @@ class SearchParserValidation(unittest.TestCase):
     #creates a set objects with predictable values so we can predict search results
     def setUp(self):
         # create a series of proteins, chains, segments
-        for i in [x for x in range(PRO_MIN,PRO_MAX) if x]:
+        for i in range(PRO_MIN,PRO_MAX):
 
             # create protein
             protein = Protein()
@@ -77,32 +77,62 @@ class SearchParserValidation(unittest.TestCase):
         builder = SegmentBuilderTask('Test Suite Builder')
         builder._work(None)
     
+    def testSearchQueryStrings(self):
+        
+        # create Search
+        search = Search(segmentLength=0)
+        search.save()
+        
+        search_residue = Search_residue()
+        search_residue.index = -4
+        search.residues.add(search_residue)
+        search_residue.search = search
+        search_residue.a1_include = True
     
-    #def testSearchSingleResidues(self):
-    #    
-    #    # create Search
-    #    search = Search(segmentLength=0)
-    #    search.save()
-    #    
-    #    search_residue = Search_residue()
-    #    search_residue.index = 500 # a nonsense value to ensure 'index' isn't null for next line
-    #    search.residues.add(search_residue)
-    #    search_residue.search = search
-    #    search_residue.a1_include = True
-    #    search_residue.a1 = "1-2"
-    #
-    #    # create associated Search_residues (or not)
-    #    for i,j in enumerate(range(int(ceil(1-searchSettings.segmentSize/2.0)),int(ceil(searchSettings.segmentSize/2.0+1.0)))):
-    #        search_residue.index = j
-    #        search_residue.save()
-    #
-    #        self.assertEqual(
-    #            # See that the intended query is executed by parse_search
-    #            set(Segment.objects.filter(**{'r%i_a1__gte'%i:1,'r%i_a1__lte'%i:2}).all()),
-    #            set(parse_search(search).all()),
-    #            "Single residue search failed on search index %i"%i
-    #        )
+        # create associated Search_residues (or not)
+        for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
+            search_residue.a1 = "%g-%g"%(min,max)
+            search_residue.save()
+
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(**{'r0_a1__gte':min,'r0_a1__lte':max}).all()),
+                set(Search.parse_search(search).all()),
+                "Query strings search test failed on range '%s'"%search_residue.a1
+            )
     
+    # TODO: the dataset in setup doesn't accomodate this test yet
+    def testSearchTerminalFlag(self):
+        
+        # create Search
+        search = Search(segmentLength=0)
+        search.save()
+
+        search_residue = Search_residue()
+        search_residue.index = -4
+        search.residues.add(search_residue)
+        search_residue.search = search
+        search_residue.terminal_flag = True
+        search_residue.save()
+
+        self.assertEqual(
+            # See that the intended query is executed by parse_search
+            set(Segment.objects.filter(r0_terminal_flag=True).all()),
+            set(Search.parse_search(search).all()),
+            "Resolution search failed on True"
+        )
+
+        search_residue.terminal_flag = False
+        search_residue.save()
+
+        self.assertEqual(
+            # See that the intended query is executed by parse_search
+            set(Segment.objects.filter(r0_terminal_flag=False).all()),
+            set(Search.parse_search(search).all()),
+            "Resolution search failed on False"
+        )
+
+
     def testSearchResolution(self):
         
         # create Search
@@ -151,7 +181,6 @@ class SearchParserValidation(unittest.TestCase):
         for aa_index,aa_choice in enumerate(AA_CHOICES):
             search_residue.aa_int = 1<<aa_index
             search_residue.save()
-            
             self.assertEqual(
                 # See that the intended query is executed by parse_search
                 set(Segment.objects.filter(r0_aa=aa_choice[0]).all()),
@@ -170,6 +199,61 @@ class SearchParserValidation(unittest.TestCase):
                 set(Search.parse_search(search).all()),
                 "Multiple AA search failed on '%s'"%'\', \''.join([aa_c[1] for aa_i,aa_c in enumerate(AA_CHOICES) if search_residue.aa_int&1<<aa_i])
             )
+
+        search_residue.aa_int = 1
+        search_residue.aa_int_include = False
+        search_residue.save()
+        self.assertEqual(
+            # See that the intended query is executed by parse_search
+            set(Segment.objects.exclude(r0_aa__in=[AA_CHOICES[0][0]]).all()),
+            set(Search.parse_search(search).all()),
+            "Negated SS search failed"
+        )
+
+    def testSearchSs(self):
+        
+        # create Search
+        search = Search(segmentLength=0)
+        search.save()
+
+        search_residue = Search_residue()
+        search_residue.index = -4
+        search.residues.add(search_residue)
+        search_residue.search = search
+        search_residue.ss_int_include = True
+        search_residue.ss_int = 0
+        for ss_index,ss_choice in enumerate(SS_CHOICES):
+            search_residue.ss_int = 1<<ss_index
+            search_residue.save()
+            
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(r0_ss=ss_choice[0]).all()),
+                set(Search.parse_search(search).all()),
+                "Specific SS search failed on '%s'"%(ss_choice[1])
+            )
+        
+        search_residue.ss_int = 0
+        
+        for ss_index,ss_choice in enumerate(SS_CHOICES):
+            search_residue.ss_int += 1<<ss_index
+            search_residue.save()
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(r0_ss__in=[ss_c[0] for ss_i,ss_c in enumerate(SS_CHOICES) if search_residue.ss_int&1<<ss_i]).all()),
+                set(Search.parse_search(search).all()),
+                "Multiple SS search failed on '%s'"%'\', \''.join([ss_c[1] for ss_i,ss_c in enumerate(SS_CHOICES) if search_residue.ss_int&1<<ss_i])
+            )
+
+        search_residue.ss_int = 1
+        search_residue.ss_int_include = False
+        search_residue.save()
+        self.assertEqual(
+            # See that the intended query is executed by parse_search
+            set(Segment.objects.exclude(r0_ss__in=[SS_CHOICES[0][0]]).all()),
+            set(Search.parse_search(search).all()),
+            "Negated SS search failed"
+        )
     
     def testSearchMultipleResidues(self):
         
