@@ -70,23 +70,23 @@ class Search(models.Model):
                     ) if search_res.__dict__[field] != None
                 )))
             # TODO: implement the new _int system
-            #for field,choices in filter(
-            #       lambda x: search_res.__dict__[x[0]],
-            #       (
-            #           ('aa_int', AA_CHOICES),
-            #           #('ss_int', SS_CHOICES),
-            #       )
-            #   ):
-            #   query = query.__getattribute__('filter' if not search_res.__dict__[field]&1<<len(choices) else 'exclude')(**{seg_prefix+field[0:-4]+"__in": [choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index]})
+            for field,choices in filter(
+                   lambda x: search_res.__dict__[x[0]+'_include'] != None,
+                   (
+                       ('aa_int', AA_CHOICES),
+                       ('ss_int', SS_CHOICES),
+                   )
+               ):
+               query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(**{seg_prefix+field[0:-4]+"__in": [choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index]})
 
             # handle query strings
             for field in filter(
                     lambda x: search_res.__dict__[x+'_include'] != None,
                     (
-                        'aa_int', # not properly implemented
+                        #'aa_int', # not properly implemented
                         'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                         'L1',   'L2',   'L3',   'L4',   'L5',
-                        'ss', # not properly implemented
+                        #'ss', # not properly implemented
                         'phi',  'psi',  'ome',  'chi',
                         'bm',   'bs',   'bg',
                         'h_bond_energy',
@@ -103,8 +103,8 @@ class Search(models.Model):
                             ) if range_re.search(constraint) else (
                                 Q(**(
                                     # The line below can be removed once 'aa_include' is reimplemented
-                                    {seg_field[0:-4]+"__in"  : [aa_choice[0] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index]}
-                                                                            if field == 'aa_int' else
+                                    #{seg_field[0:-4]+"__in"  : [aa_choice[0] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index]}
+                                    #                                       if field == 'aa_int' else
                                     # The line below will need to be changed once 'ss' is reimplemented
                                     {seg_field         : constraint}    if field == 'ss' else
                                     {seg_field         : float(constraint)}
@@ -140,7 +140,7 @@ class Search_residue(models.Model):
     L3              = models.CharField(max_length=30, null=True)
     L4              = models.CharField(max_length=30, null=True)
     L5              = models.CharField(max_length=30, null=True)
-    ss              = models.CharField(max_length=1, choices=SS_CHOICES, null=True) # new type (was blob, but all entries 1 char)
+    ss_int          = models.IntegerField(null=True)
     phi             = models.CharField(max_length=30, null=True)
     psi             = models.CharField(max_length=30, null=True)
     ome             = models.CharField(max_length=30, null=True)
@@ -170,7 +170,7 @@ class Search_residue(models.Model):
     L3_include              = models.BooleanField(null=True)
     L4_include              = models.BooleanField(null=True)
     L5_include              = models.BooleanField(null=True)
-    ss_include              = models.BooleanField(null=True)
+    ss_int_include          = models.BooleanField(null=True)
     phi_include             = models.BooleanField(null=True)
     psi_include             = models.BooleanField(null=True)
     ome_include             = models.BooleanField(null=True)
@@ -187,6 +187,8 @@ class Search_residue(models.Model):
 
         # populate 'aa' with a dictionary of allowed values from AA_CHOICES
         self.aa = dict([(aa_choice[1],1 if self.aa_int == None else 1&self.aa_int>>aa_index) for aa_index,aa_choice in enumerate(AA_CHOICES)])
+        # populate 'ss' with a dictionary of allowed values from SS_CHOICES
+        self.ss = dict([(ss_choice[1],1 if self.ss_int == None else 1&self.ss_int>>ss_index) for ss_index,ss_choice in enumerate(SS_CHOICES)])
 
 
 # Residue_subscripter
