@@ -9,7 +9,7 @@ import math
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from SearchForm import SearchSyntaxField, SearchForm
-from constants import AA_CHOICES
+from constants import AA_CHOICES, SS_CHOICES
 
 import re
 
@@ -84,6 +84,30 @@ def decodeAA(val):
 
     return list
 
+"""
+Encode a list of AA choices into an integer value
+"""
+def encodeSS(list):
+    aa = 0
+    for i in range(len(SS_CHOICES)):
+        if AA_CHOICES[i][0] in list:
+            # bitwise or to add value
+            aa = aa | (1 << i)
+    return aa
+
+
+"""
+Decode an integer into a list of SS choices
+"""
+def decodeSS(val):
+    list = []
+    for i in range(len(SS_CHOICES)):
+        # bitwise shift check value
+        if (val & (1 << i)) != 0:
+            list.append(SS_CHOICES[i][0])
+
+    return list
+
 
 """
 Process a search form copying its data into a search object
@@ -119,8 +143,8 @@ def processSearchForm(form):
 
         #process ss
         if data['ss_%i' % i]:
-            residue.ss          = data['ss_%i' % i]
-            residue.ss_include  = data['ss_i_%i' % i]
+            residue.ss_int           = encodeSS(data['ss_%i' % i])
+            residue.ss_int_include  = data['ss_i_%i' % i]
             hasField = True
 
         #process aa

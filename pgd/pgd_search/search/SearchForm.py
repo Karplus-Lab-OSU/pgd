@@ -54,7 +54,7 @@ for i in RESIDUE_INDEXES:
     FORM_SS_CHOICES = [('','')]
     for choice in SS_CHOICES:
         FORM_SS_CHOICES.append(choice)
-    form_dict["ss_%i" % i]      = forms.ChoiceField(choices=FORM_SS_CHOICES, required=False, widget=forms.Select(attrs={'class':'field'}))
+    form_dict["ss_%i" % i]      = forms.MultipleChoiceField(choices=SS_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["ss_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
     # the loops here are just to save on space/typing
