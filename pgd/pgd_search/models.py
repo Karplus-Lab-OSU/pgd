@@ -48,7 +48,7 @@ class Search(models.Model):
     def parse_search(self):
         query = Segment.objects.all()
         if self.segmentLength > 1:
-            query = query.filter(segmentLength__gte=self.segmentLength)
+            query = query.filter(length__gte=self.segmentLength)
         if self.codes_include:
             query = query.__getattribute__('filter' if self.codes_include else 'exclude')(protein__in=(x.code for x in self.codes.all()))
         if self.resolution_min != None:
@@ -57,8 +57,8 @@ class Search(models.Model):
             query = query.filter(protein__resolution__lte=self.resolution_max)
         if self.threshold != None:
             query = query.filter(protein__threshold=self.threshold)
+
         for search_res in self.residues.all():
-            
             seg_prefix = "r%i_"%(search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1))
 
             # handle boolean values
