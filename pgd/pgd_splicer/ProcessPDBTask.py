@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+if __name__ == '__main__':
+    import sys
+    import os
+
+    #python magic to add the current directory to the pythonpath
+    sys.path.append(os.getcwd())
+
+from tasks.tasks import *
+from pgd_splicer.models import *
 
 import math, sys, mmLib.Structure, mmLib.FileIO, mmLib.AtomMath
 import Bio.PDB
@@ -26,23 +35,62 @@ import os
 
 NO_VALUE = 999.9
 
-def processPDB(file):
-    bioPythonProps = parseWithBioPython(file)
-    #print 'props: %s' % bioPythonProps
-    return parseWithMMLib(file, bioPythonProps)
+"""
+Task that takes a list of pdbs and processes the files extracting
+geometry data from the files
+"""
+class ProcessPDBTask(Task):
+
+    """
+        Work function - expects a list of pdb file prefixes.
+    """
+    def _work(self, args):
+
+        for pdb in args:
+            filename = 'pdb%s.ent.Z' % pdb
+
+            # 1) parse with bioPython
+            bioPythonProps = parseWithBioPython(filename)
+            #print 'props: %s' % bioPythonProps
+
+            # 2) parse with MMLib merging the dictionaries
+            props = parseWithMMLib('%s/%s' % ('pdb', filename), bioPythonProps)
+
+            print props[9]
+
+            # 3) iterate through residue data creating residues
+            for id, residue_props in props:
+                # 3a) find the residue object so it can be updated or create a new one
+                try:
+                    residue = Protein.residues.objects.get(chainIndex=code)
+                except:
+                    residue = Residue()
+
+                # 3b) copy properties into a residue object
+                for key, value in residue_props:
+                    residue.__dict__[key] = value
+
+                # 3c) save
+                #residue.protein = protein
+                #residue.save()
+
+            # 3d) end transaction
 
 
-def decompressFile(src):
-    tempfile = 'tmp/%s' % src
-    dest = 'tmp/%s' % src[:-2]
+"""
+Uncompress using the UNIX uncompress command.  The PDB files are stored 
+used LZ algorithms i've tried will not decompress the files properly.
+For now use the linux decompress
+"""
+def uncompress(file, src_dir, dest_dir):
+    tempfile = '%s/%s' % (dest_dir, file)
+    dest = '%s/%s' % (dest_dir, file[:-2])
 
     try:
         # copy the file to the tmp directory
-        shutil.copyfile(src, tempfile)
+        shutil.copyfile('%s/%s' % (src_dir,file), tempfile)
 
-        # decompress using unix decompress.  The files are stored used LZ.
-        # algorithms i've tried will not decompress the files properly.  for
-        # now use the linux decompress
+        # decompress using unix decompress.  
         os.system('uncompress %s' % tempfile)
 
     except:
@@ -59,10 +107,16 @@ def decompressFile(src):
 
     return dest
 
+
+"""
+Parse values from file that can be parsed using BioPython library
+@return a dict containing the properties that were processed
+"""
 def parseWithBioPython(file):
     residueProps = {}
     decompressedFile = None
     tmp = './tmp'
+    pdb = './pdb'
 
     try:
         #create tmp workspace
@@ -73,7 +127,7 @@ def parseWithBioPython(file):
             os.mkdir(tmp)
 
         #prep and open file
-        decompressedFile = decompressFile(file)
+        decompressedFile = uncompress(file, pdb, tmp)
 
         if decompressedFile:
 
@@ -105,6 +159,11 @@ def parseWithBioPython(file):
 
     return residueProps
 
+
+"""
+Parse values from file that can be parsed using MMLib library
+@return a dict containing the properties that were processed
+"""
 def parseWithMMLib(file, props):
     struct = mmLib.FileIO.LoadStructure(file=file)
     lowerCaseIndicators = ['H','G','E','T']
@@ -172,13 +231,21 @@ def parseWithMMLib(file, props):
         if not r.ome:
             r.ome = math.radians(NO_VALUE)
 
-        # check for ends of consecutive groupings.  ends must be lowercase if they are in [hget]
+
+        #determine if SS should be lowercase
         ss = props[int(r.fragment_id)]['ss']
-        if ((prev_res == None or next_res == None)) and ss in lowerCaseIndicators:
-            ss = ss.lower()
-            print 'lower!'
+        if prev_res:
+            prev_ss = props[int(r.fragment_id)-1]['ss']
         else:
-            print '%s : %s %s %s' % (ss, prev_res, next_res, ss in lowerCaseIndicators)
+            prev_ss = None
+
+        if next_res:
+            next_ss = props[int(r.fragment_id)+1]['ss']
+        else:
+            prev_ss = None
+
+        if (prev_ss == '-' or next_ss == '-') and ss in lowerCaseIndicators:
+            ss = ss.lower()
 
 
         # This accounts for the possibility of missing atoms by initializing
@@ -248,9 +315,6 @@ def parseWithMMLib(file, props):
         except:
             r.b_gamma = NO_VALUE
 
-        
-        
-
 
         r.props = {
             'name': r.res_name,
@@ -293,6 +357,9 @@ def parseWithMMLib(file, props):
         ret[int(r.fragment_id)]= r.props
     return ret
 
+"""
+Initialize the dictionary for geometry data
+"""
 def initialize_geometry(residue, geometry_list, type):
     for item in geometry_list:
         if (getattr(residue, item)) is None:
@@ -304,10 +371,14 @@ def initialize_geometry(residue, geometry_list, type):
                 print "Don't know how to deal with type", type
     return residue
 
+
+"""
+Run if file is executed from the command line
+"""
 if __name__ == '__main__':
-    props = processPDB(sys.argv[1])
-    s = ''
-    for key in props:
-        s = '%s%s' % (s, props[key]['ss'])
-    print s
+    task = ProcessPDBTask('Command Line Processor')
+
+    args = ['1qe5']
+
+    task._work(args)
 

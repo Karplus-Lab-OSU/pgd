@@ -3,13 +3,14 @@ from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.forms.util import ErrorList
+from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 import math
 
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from SearchForm import SearchSyntaxField, SearchForm
-from constants import AA_CHOICES
+from constants import AA_CHOICES, SS_CHOICES
 
 import re
 
@@ -61,6 +62,48 @@ def search(request):
 
 
 """
+Handler for editing an existing search
+"""
+def editSearch(request, search_id=None):
+
+    #load the search passed in
+    if search_id:
+        search = Search.objects.get(id=search_id)
+        print search.__dict__
+        form = processSearchObject(search)
+    #else use the search in the session if it exists
+    else:
+        try:
+            search = request.session['search']
+            form = processSearchObject(search)
+        except KeyError:
+            form = SearchForm() # An unbound form
+
+    #construct a list of values for i
+    iValues = [
+                    # Generates a series of tuples (<value>,<signed string of value>); zero is 'i'
+                    (i,'%+i'%i if i else 'i') for i in RESIDUE_INDEXES
+              ]
+
+    #order the residue properties in way that django template can handle it better
+    residueFields = []
+    for i in RESIDUE_INDEXES:
+        dict = {}
+        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+            dict[prefix] =  form['%s_%i' % (prefix, i)]
+            dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
+            dict['index'] = i
+        residueFields.append(dict)
+
+    return render_to_response('search.html', {
+        'form': form,
+        'maxLength' : searchSettings.segmentSize,
+        'iValues':iValues,
+        'residueFields':residueFields
+    }, context_instance=RequestContext(request))
+
+
+"""
 Encode a list of AA choices into an integer value
 """
 def encodeAA(list):
@@ -84,6 +127,30 @@ def decodeAA(val):
 
     return list
 
+"""
+Encode a list of AA choices into an integer value
+"""
+def encodeSS(list):
+    aa = 0
+    for i in range(len(SS_CHOICES)):
+        if SS_CHOICES[i][0] in list:
+            # bitwise or to add value
+            aa = aa | (1 << i)
+    return aa
+
+
+"""
+Decode an integer into a list of SS choices
+"""
+def decodeSS(val):
+    list = []
+    for i in range(len(SS_CHOICES)):
+        # bitwise shift check value
+        if (val & (1 << i)) != 0:
+            list.append(SS_CHOICES[i][0])
+
+    return list
+
 
 """
 Process a search form copying its data into a search object
@@ -97,8 +164,9 @@ def processSearchForm(form):
 
     #get protein properties
     search.segmentLength = int(data['residues'])
-    search.resolutionMin = float(data['resolutionMin'])
-    search.resolutionMax = float(data['resolutionMax'])
+    search.resolution_min = float(data['resolutionMin'])
+    search.resolution_max = float(data['resolutionMax'])
+    search.threshold      = int(data['threshold'])
 
     #save search object so its residue parameters can be added
     search.save()
@@ -119,8 +187,8 @@ def processSearchForm(form):
 
         #process ss
         if data['ss_%i' % i]:
-            residue.ss          = data['ss_%i' % i]
-            residue.ss_include  = data['ss_i_%i' % i]
+            residue.ss_int           = encodeSS(data['ss_%i' % i])
+            residue.ss_int_include  = data['ss_i_%i' % i]
             hasField = True
 
         #process aa
@@ -143,3 +211,66 @@ def processSearchForm(form):
             residue.save()
 
     return search
+
+"""
+Process a search object copying its values into a searchForm
+"""
+def processSearchObject(search):
+    data = {
+        #get protein properties
+        'residues'      :search.segmentLength,
+        'resolutionMin' :search.resolution_min,
+        'resolutionMax' :search.resolution_max,
+        'threshold'     :search.threshold
+    }
+
+    #get list of proteins to filter
+    codes = []
+    for code in search.codes.all():
+        codes.append(code.code)
+    data['proteins'] = codes
+
+    #process per residue properties
+    for residue in search.residues.all():
+        i = residue.index
+
+        #process ss
+        if residue.ss_int:
+            data['ss_%i' % i]   = decodeSS(residue.ss_int)
+            data['ss_i_%i' % i] = residue.ss_int_include
+
+        #process aa
+        if residue.aa_int:
+            data['aa_%i' % i]   = decodeAA(residue.aa_int)
+            data['aa_i_%i' % i] = residue.aa_int_include
+
+        #process all other fields
+        for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+            data['%s_%i' % (prefix, i)] = residue.__dict__[prefix]
+            data['%s_i_%i' % (prefix, i)] = residue.__dict__['%s_include' % prefix]
+
+    return SearchForm(data)
+
+def saved(request):
+
+    searches = Search.objects.all()
+
+    paginator = Paginator(searches, 20) # Show 20 searches per page
+
+    # Make sure page request is an int. If not, deliver first page.
+    try:
+        page = int(request.GET.get('page', '1'))
+    except ValueError:
+        page = 1
+
+    # If page request (9999) is out of range, deliver last page of results.
+    try:
+        paginatedSearch = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        paginatedSearch = paginator.page(paginator.num_pages)
+
+    return render_to_response('saved.html', {
+        'searches': paginatedSearch,
+    }, context_instance=RequestContext(request))
+
+ 

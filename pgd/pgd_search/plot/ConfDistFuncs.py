@@ -469,26 +469,29 @@ class ConfDistPlot():
                 # Determine actual image location of the bin
                 x = bin.xBin * self.plotBin.xLen
                 y = bin.yBin * self.plotBin.yLen
-                xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
-                yC = ((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
 
                 if x < self.xRange[0] or x >= self.xRange[1]:
                     continue
                 if y < self.yRange[0] or y >= self.yRange[1]:
                     continue
 
-                # Bins are an area of pixel space, find the rectangle that describes
-                # the area the bin uses
-                xMin = math.floor(xC)
-                xMax = xMin + round(self.plotBin.xLen / self.xPixelSize)
-                yMax = math.floor(yC)
-                yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
-
                 # The number of observations in the bin and the max number of observations
                 num = self.plotBin.GetObs(x, y)
 
                 # As long as there is an observation, plot the rectangle for the bin
                 if( num >= 1 ):
+
+                    xC = ((x  - (self.xRange[0])) / self.xPixelSize + self.xOff)
+                    yC = ((-1 * y + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff)
+
+                    # Bins are an area of pixel space, find the rectangle that describes
+                    # the area the bin uses
+                    xMin = math.floor(xC)
+                    width = round(self.plotBin.xLen / self.xPixelSize)
+                    yMax = math.floor(yC)
+                    yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
+                    height = yMax-yMin
+
                     # Special Case for # obs
                     if self.ref == "Observations":
                         color = self.DetermineColor( self.ref, num)
@@ -502,8 +505,22 @@ class ConfDistPlot():
                     #convert decimal RGB into HEX rgb
                     fill = '%s%s%s' % (hex(int(color[0]))[2:], hex(int(color[1]))[2:], hex(int(color[2]))[2:])
 
+                    # adjust dimensions to create 1 pixel border around bins
+                    # do not adjust if creating the border will result in a height less than 1
+                    if self.xbin > 2:
+                        width -= 2
+                        xMin += 1
+                    else:
+                        width = 1
+
+                    if self.ybin > 2:
+                        height -= 2
+                        yMin += 1
+                    else:
+                        height = 1
+
                     # add rectangle to list
-                    bins.append( [xMin+1, yMin+1, xMax-2-xMin, yMax-2-yMin, fill, fill, bin] )
+                    bins.append( [xMin, yMin, width, height, fill, fill, bin] )
 
         return bins
 
