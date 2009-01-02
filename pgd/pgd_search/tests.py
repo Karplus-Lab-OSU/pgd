@@ -166,6 +166,26 @@ class SearchParserValidation(unittest.TestCase):
                 "Threshold search failed on %i"%(index)
             )
 
+    def testSearchCode(self):
+        
+        # create Search
+        search = Search(segmentLength=0)
+        search.codes_include = True
+        search.save()
+
+        search_code = Search_code(code='emty')
+        search.codes.add(search_code)
+
+        for i in range(PRO_MIN,PRO_MAX):
+            search_code.code = '%+i'%i
+            search_code.save()
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(protein='%+i'%i).all()),
+                set(Search.parse_search(search).all()),
+                "Code search failed on protein '%+i'"%i
+            )
+
     def testSearchAa(self):
         
         # create Search
