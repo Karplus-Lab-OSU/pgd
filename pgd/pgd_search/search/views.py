@@ -172,10 +172,12 @@ def processSearchForm(form):
     search.save()
 
     #get list of proteins to filter
-    for value in data['proteins']:
-        searchCode = Search_code()
-        searchCode.code = value
-        search.codes.add(searchCode)
+    if data['proteins_i']:
+        search.codes_include = data['proteins_i']
+        for value in data['proteins']:
+            searchCode = Search_code()
+            searchCode.code = value
+            search.codes.add(searchCode)
 
     #process per residue properties
     start = 0 - (search.segmentLength-1) / 2
@@ -225,10 +227,13 @@ def processSearchObject(search):
     }
 
     #get list of proteins to filter
-    codes = []
-    for code in search.codes.all():
-        codes.append(code.code)
-    data['proteins'] = codes
+    if search.codes_include:
+        data['proteins_i'] = search.codes_include
+        codes = []
+        for code in search.codes.all():
+            codes.append(code.code)
+        data['proteins'] = codes
+
 
     #process per residue properties
     for residue in search.residues.all():

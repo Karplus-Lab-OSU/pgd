@@ -41,7 +41,8 @@ class SearchFormBase(forms.Form):
     threshold       = forms.ChoiceField(choices=[(25,25),(90,90)], required=False)
     resolutionMin   = forms.FloatField(required=False, min_value=0, initial=0, widget=forms.TextInput(attrs={'size':3}))
     resolutionMax   = forms.FloatField(required=False, min_value=0, initial=1.5, widget=forms.TextInput(attrs={'size':3}))
-    proteins        = forms.ModelMultipleChoiceField(queryset=Protein.objects.all().order_by('code'), required=False)
+    proteins        = forms.ModelMultipleChoiceField(queryset=Protein.objects.all().order_by('code'), required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
+    proteins_i      = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
     residues        = forms.ChoiceField(choices=[(i,i) for i in range(1, searchSettings.segmentSize+1)], initial=5)
 
 # Build a dict for the fields of variable number
