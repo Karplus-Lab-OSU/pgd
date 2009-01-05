@@ -8,6 +8,9 @@ if __name__ == '__main__':
 
 from tasks.tasks import *
 from pgd_splicer.models import *
+from pgd_core.models import *
+
+from django.db import transaction
 
 import math, sys, mmLib.Structure, mmLib.FileIO, mmLib.AtomMath
 import Bio.PDB
@@ -44,37 +47,78 @@ class ProcessPDBTask(Task):
     """
         Work function - expects a list of pdb file prefixes.
     """
+    @transaction.commit_manually
     def _work(self, args):
 
         for pdb in args:
             filename = 'pdb%s.ent.Z' % pdb
 
+            #create datastructure
+            props = {
+                'chains':[],
+                'residues':{}
+            }
+
             # 1) parse with bioPython
-            bioPythonProps = parseWithBioPython(filename)
-            #print 'props: %s' % bioPythonProps
+            props = parseWithBioPython(filename, props)
+            print 'props: %s' % props
 
             # 2) parse with MMLib merging the dictionaries
-            props = parseWithMMLib('%s/%s' % ('pdb', filename), bioPythonProps)
+            props = parseWithMMLib('%s/%s' % ('pdb', filename), props)
 
-            print props[9]
+            # 3) Create/Get Protein and save values
+            try:
+                protein = Protein.objects.get(id=code)
+            except:
+                protein = Protein()
+            protein.code       = props['code']
+            #protein.threshold  = props['threshold']
+            #protein.resolution = props['resolution']
+            #protein.rfactor    = props['rfactor']
+            #protein.save()
 
-            # 3) iterate through residue data creating residues
-            for id, residue_props in props:
-                # 3a) find the residue object so it can be updated or create a new one
+            # 4) Get/Create Chains and save values
+            chains = {}
+            for chaincode in props['chains']:
+                chainId = '%s%s' % (protein.code, chaincode)
                 try:
-                    residue = Protein.residues.objects.get(chainIndex=code)
+                    chain = protein.chains.get(id=chainId)
+                    print '   Existing Chain: %s' % chaincode
                 except:
-                    residue = Residue()
+                    print '   Creating Chain: %s' % chaincode
+                    chain = Chain()
+                    chain.id      = chainId
+                    chain.protein = protein
+                    chain.code    = chaincode
+                    #chain.save()
+                    #protein.chains.add(chain)
+                #create dictionary of chains for quick access
+                chains[chaincode] = chain
 
-                # 3b) copy properties into a residue object
-                for key, value in residue_props:
+            # 5) iterate through residue data creating residues
+            for id, residue_props in props['residues'].items():
+                chain = chains[residue_props['chain_id']]
+
+                # 5a) find the residue object so it can be updated or create a new one
+                try:
+                    residue = chain.residues.objects.get(chainIndex=code)
+                except:
+                    #not found, create new residue
+                    residue = Residue()
+                    #residue.protein = protein
+                    #residue.chain   = chain
+
+                # 5b) copy properties into a residue object
+                #     property keys should match property name in object
+                for key, value in residue_props.items():
                     residue.__dict__[key] = value
 
-                # 3c) save
-                #residue.protein = protein
+                # 5c) save
                 #residue.save()
+                #chain.add(residue)
 
-            # 3d) end transaction
+            # 6) entire protein has been processed, commit transaction
+            #transaction.commit()
 
 
 """
@@ -112,8 +156,9 @@ def uncompress(file, src_dir, dest_dir):
 Parse values from file that can be parsed using BioPython library
 @return a dict containing the properties that were processed
 """
-def parseWithBioPython(file):
-    residueProps = {}
+def parseWithBioPython(file, props):
+    residues = props['residues']
+
     decompressedFile = None
     tmp = './tmp'
     pdb = './pdb'
@@ -147,8 +192,9 @@ def parseWithBioPython(file):
                 # get properties using dssp
                 residue, secondary_structure, accessibility, relative_accessibility = dssp[(chain, resseq)]
 
-                # save in dictionary for later use
-                residueProps[resseq] = {'ss':secondary_structure}
+                # save in dictionary
+                # this assumes the structure hasn't been created yet, speed optimization 
+                residues[resseq] = {'ss':secondary_structure}
     finally:
         #clean up any files in tmp directory no matter what
         if decompressedFile and os.path.exists(decompressedFile):
@@ -157,7 +203,7 @@ def parseWithBioPython(file):
         if ownTempDir and os.path.exists(tmp):
             os.removedirs(tmp)
 
-    return residueProps
+    return props
 
 
 """
@@ -165,10 +211,22 @@ Parse values from file that can be parsed using MMLib library
 @return a dict containing the properties that were processed
 """
 def parseWithMMLib(file, props):
+    residues = props['residues']
+
     struct = mmLib.FileIO.LoadStructure(file=file)
     lowerCaseIndicators = ['H','G','E','T']
-    ret = {}
+    
+    props['code']       = struct.structure_id
+    #props['threshold']  = struct. 
+    #props['resolution'] = struct.
+    #props['rfactor']    = struct.
+
     for r in struct.iter_amino_acids():
+
+        #get or create residue properties
+        #this assumes residue property was already created in parseWithBioPython, Speed Optimization
+        residueProps = residues[int(r.fragment_id)]
+
         # get offsets for residues left and right of this one
         next_res = r.get_offset_residue(1)
         prev_res = r.get_offset_residue(-1)
@@ -233,20 +291,20 @@ def parseWithMMLib(file, props):
 
 
         #determine if SS should be lowercase
-        ss = props[int(r.fragment_id)]['ss']
+        ss = residues[int(r.fragment_id)]['ss']
         if prev_res:
-            prev_ss = props[int(r.fragment_id)-1]['ss']
+            prev_ss = residues[int(r.fragment_id)-1]['ss']
         else:
             prev_ss = None
 
         if next_res:
-            next_ss = props[int(r.fragment_id)+1]['ss']
+            next_ss = residues[int(r.fragment_id)+1]['ss']
         else:
             prev_ss = None
 
         if (prev_ss == '-' or next_ss == '-') and ss in lowerCaseIndicators:
             ss = ss.lower()
-
+        
 
         # This accounts for the possibility of missing atoms by initializing
         # all of the values to NO_VALUE
@@ -315,47 +373,50 @@ def parseWithMMLib(file, props):
         except:
             r.b_gamma = NO_VALUE
 
+        #add chain id
+        if not r.chain_id in props['chains']:
+            props['chains'].append(r.chain_id)
 
-        r.props = {
-            'name': r.res_name,
-            'id': r.fragment_id,
-            'phi': math.degrees(r.phi),
-            'psi': math.degrees(r.psi),
-            'ome': math.degrees(r.ome),
-            'l1': r.l1,
-            'l2': r.l2,
-            'l3': r.l3,
-            'l4': r.l4,
-            'l5': r.l5,
-            'l6': r.l6,
-            'l7': r.l7,
-            'a1': math.degrees(r.a1),
-            'a2': math.degrees(r.a2),
-            'a3': math.degrees(r.a3),
-            'a4': math.degrees(r.a4),
-            'a5': math.degrees(r.a5),
-            'a6': math.degrees(r.a6),
-            'a7': math.degrees(r.a7),
-            'ss': ss,
-            'chain': r.chain_id,
-            'hb': 0.00,
-            'zeta': math.degrees(r.zeta),
-            'bg': r.b_gamma,
-            'bm': r.b_main,
-            'bs': r.b_side,
-            'zero': 0.00,
-            'x1': math.degrees(r.x1),
-            'x2': math.degrees(r.x2),
-            'x3': math.degrees(r.x3),
-            'x4': math.degrees(r.x4),
-            }
+        #add all properties to residue dict       
+        residueProps['name']    = r.res_name
+        residueProps['id']      = r.fragment_id
+        residueProps['phi']     = math.degrees(r.phi)
+        residueProps['psi']     = math.degrees(r.psi)
+        residueProps['ome']     = math.degrees(r.ome)
+        residueProps['l1']      = r.l1
+        residueProps['l2']      = r.l2
+        residueProps['l3']      = r.l3
+        residueProps['l4']      = r.l4
+        residueProps['l5']      = r.l5
+        residueProps['l6']      = r.l6
+        residueProps['l7']      = r.l7
+        residueProps['a1']      = math.degrees(r.a1)
+        residueProps['a2']      = math.degrees(r.a2)
+        residueProps['a3']      = math.degrees(r.a3)
+        residueProps['a4']      = math.degrees(r.a4)
+        residueProps['a5']      = math.degrees(r.a5)
+        residueProps['a6']      = math.degrees(r.a6)
+        residueProps['a7']      = math.degrees(r.a7)
+        residueProps['ss']      = ss
+        residueProps['chain_id']= r.chain_id
+        residueProps['hb']      = 0.00
+        residueProps['zeta']    = math.degrees(r.zeta)
+        residueProps['bg']      = r.b_gamma
+        residueProps['bm']      = r.b_main
+        residueProps['bs']      = r.b_side
+        residueProps['zero']    = 0.00
+        residueProps['x1']      = math.degrees(r.x1)
+        residueProps['x2']      = math.degrees(r.x2)
+        residueProps['x3']      = math.degrees(r.x3)
+        residueProps['x4']      = math.degrees(r.x4)
+            
 #        print '%(name)s%(id)6s%(phi)7.1f%(psi)6.1f%(ome)6.1f' % r.props,
         #print '%(name)s%(id)6s%(a6)7.1f%(a7)6.1f%(a1)6.1f' % r.props,
         #print '%(l1)5.3f%(l2)6.3f%(l4)6.3f%(l5)6.3f%(a3)6.1f%(a5)6.1f%(a2)6.1f%(a4)6.1f%(l3)6.3f' % r.props,
         #print
         #print r.props
-        ret[int(r.fragment_id)]= r.props
-    return ret
+        
+    return props
 
 """
 Initialize the dictionary for geometry data
