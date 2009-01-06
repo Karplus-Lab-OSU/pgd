@@ -38,12 +38,15 @@ class Search(models.Model):
 
     # returns the query set that represents this search
     def querySet(self):
-        #from SearchParser import parse_search
-        #create querySet if not needed
-        if not self._querySet:
-            self._querySet = self.parse_search()
 
-        return self._querySet
+        #create querySet if not needed
+        #if not self._querySet:
+        #    self._querySet = self.parse_search()
+
+        #return self._querySet
+
+        # for now parse query every time.  otherwise the query results will be stored in the session
+        return self.parse_search()
 
     def parse_search(self):
         query = Segment.objects.all()
