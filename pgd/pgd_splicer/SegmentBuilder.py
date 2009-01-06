@@ -36,7 +36,9 @@ class SegmentBuilderTask(Task):
         #determine if there are any segments in the table
         #   limit query with [0:0] instead of [0] this returns
         #   an empty list instead of an exception if there are no segments    
-        existingSegments = len(Segment.objects.all()[0:0]) != 0      
+        existingSegments = len(Segment.objects.all()[0:1]) != 0      
+	if not existingSegments:
+            print 'No Segments Found, skipping residue existence check for all residues'
 
         proteins = Protein.objects.all()
         self.proteinTotal = len(proteins)
