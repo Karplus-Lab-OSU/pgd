@@ -10,6 +10,7 @@
 import math
 from pgd_search.models import *
 from constants import AA_CHOICES
+from pgd_search.models import searchSettings
 
 def dumpSearch(search, writer):
 
@@ -50,7 +51,7 @@ def dumpSearch(search, writer):
             iValues.append((i,'(i+%i)'% i))
 
     #calculate iIndex
-    iIndex = int(math.ceil(length/2.0)-1)
+    iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
 
     # Go Time. Print out the data.
     for segment in querySet:
@@ -62,6 +63,8 @@ def dumpSearch(search, writer):
             if first:
                 writer.write(count)
                 first=False
+            else:
+                writer.write(' ')
             writer.write('\t')
 
             #protein code
