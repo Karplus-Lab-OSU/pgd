@@ -292,7 +292,6 @@ class Segment_abstract(models.Model):
 seq_dict = {'__module__' : 'pgd_search.models'}
 for i in range(searchSettings.segmentSize):
 
-    seq_dict["r%i_oldID" % i]           = models.CharField(max_length=5, null=True)
     seq_dict["r%i_id" % i]              = models.PositiveIntegerField(null=True)
     seq_dict["r%i_oldID" % i]           = models.CharField(max_length=5, null=True)
     seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)
