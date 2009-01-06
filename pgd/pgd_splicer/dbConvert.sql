@@ -26,11 +26,12 @@ INSERT INTO aa_codes values('c' , 'cys');
 INSERT INTO aa_codes values('y' , 'tyr');
 INSERT INTO aa_codes values('n' , 'asn');
 INSERT INTO aa_codes values('q' , 'gln');
-INSERT INTO aa_codes values('d' , 'aps');
+INSERT INTO aa_codes values('d' , 'asp');
 INSERT INTO aa_codes values('e' , 'glu');
 INSERT INTO aa_codes values('k' , 'lys');
 INSERT INTO aa_codes values('r' , 'arg');
 INSERT INTO aa_codes values('h' , 'his');
+INSERT INTO aa_codes values('1' , 'pca');
 
 -- delete existing data
 TRUNCATE pgd_core_protein;
@@ -49,7 +50,7 @@ INSERT INTO pgd_core_protein
 -- import chains
 INSERT INTO pgd_core_chain (id, protein_id, code)
     SELECT DISTINCT 
-        CONCAT(code, chainID) AS id, 
+        CONCAT(code, chainID) AS id,
         code                  AS protein_id,
         chainID               AS code
     FROM protein;
