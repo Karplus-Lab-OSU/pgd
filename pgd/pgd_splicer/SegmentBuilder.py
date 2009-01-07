@@ -116,16 +116,21 @@ class SegmentBuilderTask(Task):
 
                     segment.protein = protein
                     segment.chainID = chain.code
- 
+
                     #calculate max length of this particular segment
-                    for i in range(1, length):
-                        # have we reached the max size for segments or found a None
-                        if iIndex+i > lastIndex or segmentList[iIndex+i] == None:
-                                segment.length = i*2-1
-                                break
-                        if iIndex-i < 0 or segmentList[iIndex-i] == None:
-                                segment.length = i*2
-                                break
+                    #first, last, and any residue with terminal flag always have length 1
+                    if segmentList[iIndex].chainIndex == 1 or segmentList[iIndex].chainIndex == chainLength or segmentList[iIndex].terminal_flag:
+                            segment.length = 1
+
+                    else:                    
+                        for i in range(1, length):
+                            # have we reached the max size for segments or found a None
+                            if iIndex+i > lastIndex or segmentList[iIndex+i].terminal_flag or segmentList[iIndex+i].chainIndex==chainLength:
+                                    segment.length = i*2-1
+                                    break
+                            if iIndex-i < 0 or segmentList[iIndex-i].terminal_flag:
+                                    segment.length = i*2
+                                    break
 
                     #save segment
                     #print '            segment: %s' % segment
