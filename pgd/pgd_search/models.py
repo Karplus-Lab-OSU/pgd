@@ -12,6 +12,7 @@ from dbsettings.loading import set_setting_value
 from django.db.models import Q
 
 range_re = re.compile("(?<=[^-])-")
+comp_re  = re.compile("^([<>]=?)?")
 
 # Search settngs
 class SearchSettings(dbsettings.Group):
@@ -68,7 +69,6 @@ class Search(models.Model):
             query = query.filter(**dict((
                     (seg_prefix+field, search_res.__dict__[field])
                     for field in (
-                        'terminal_flag',
                         'xpr',
                     ) if search_res.__dict__[field] != None
                 )))
@@ -86,32 +86,34 @@ class Search(models.Model):
             for field in filter(
                     lambda x: search_res.__dict__[x+'_include'] != None,
                     (
-                        #'aa_int', # not properly implemented
                         'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                         'L1',   'L2',   'L3',   'L4',   'L5',
-                        #'ss', # not properly implemented
                         'phi',  'psi',  'ome',  'chi',
                         'bm',   'bs',   'bg',
                         'h_bond_energy',
                         'zeta',
                 )):
                 seg_field = seg_prefix+field
+
                 query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(
                     reduce(
                         lambda x,y: x|y,
                         (
-                            (
-                                Q(**{seg_field+'__gte' : float(range_re.split(constraint)[0])}) &
-                                Q(**{seg_field+'__lte' : float(range_re.split(constraint)[1])})
-                            ) if range_re.search(constraint) else (
-                                Q(**(
-                                    # The line below can be removed once 'aa_include' is reimplemented
-                                    #{seg_field[0:-4]+"__in"  : [aa_choice[0] for aa_index,aa_choice in enumerate(AA_CHOICES) if search_res.aa_int&1<<aa_index]}
-                                    #                                       if field == 'aa_int' else
-                                    # The line below will need to be changed once 'ss' is reimplemented
-                                    {seg_field         : constraint}    if field == 'ss' else
-                                    {seg_field         : float(constraint)}
-                                ))
+                            Q(
+                                **(
+                                    {
+                                        seg_field+'__gte' : float(range_re.split(constraint)[0]),
+                                        seg_field+'__lte' : float(range_re.split(constraint)[1]),
+                                    } if range_re.search(constraint) else {
+                                        seg_field + '__' + {
+                                            ''   : 'eq',
+                                            '>'  : 'gt',
+                                            '>=' : 'gte',
+                                            '<'  : 'lt',
+                                            '<=' : 'lte',
+                                        }[comp_re.search(constraint).group(0)]
+                                    }
+                                )
                             ) for constraint in str(search_res.__dict__[field]).split(',')
                         )
                     ))
