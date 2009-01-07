@@ -419,6 +419,14 @@
                     </td>
                 {% endfor %}
             </tr>
+            <tr class="residue_row">
+                <td class="label">Terminal</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.terminal_flag}}
+                    </td>
+                {% endfor %}
+            </tr>
 
             <tr class="spacer"/>
             <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles</td></tr>
