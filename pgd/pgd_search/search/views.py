@@ -50,8 +50,7 @@ def search(request):
         for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
-        dict['index'] = i
-        dict['terminal_flag'] = form['terminal_flag_%i' % i]
+            dict['index'] = i
         residueFields.append(dict)
 
     return render_to_response('search.html', {
@@ -93,8 +92,7 @@ def editSearch(request, search_id=None):
         for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
-        dict['index'] = i
-        dict['terminal_flag'] = form['terminal_flag_%i' % i]
+            dict['index'] = i
         residueFields.append(dict)
 
     return render_to_response('search.html', {
@@ -184,7 +182,6 @@ def processSearchForm(form):
     #process per residue properties
     start = 0 - (search.segmentLength-1) / 2
     stop  = int(math.ceil((search.segmentLength-1) / 2.0))+1
-    iStop = stop-1
     for i in range(start, stop, 1):
         hasField = False
         residue = Search_residue()
@@ -200,11 +197,6 @@ def processSearchForm(form):
         if data['aa_%i' % i]:
             residue.aa_int          = encodeAA(data['aa_%i' % i])
             residue.aa_int_include  = data['aa_i_%i' % i]
-            hasField = True
-
-        #process terminal flag
-        if i==start or i==iStop:
-            residue.terminal_flag = data['terminal_flag_%i' % i]
             hasField = True
 
         #process all other fields
@@ -256,11 +248,6 @@ def processSearchObject(search):
         if residue.aa_int:
             data['aa_%i' % i]   = decodeAA(residue.aa_int)
             data['aa_i_%i' % i] = residue.aa_int_include
-
-        #process terminal flag
-        if residue.terminal_flag:
-           data['terminal_flag_%i' % i] = 1
-
 
         #process all other fields
         for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):

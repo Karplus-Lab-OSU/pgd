@@ -49,7 +49,6 @@ class SearchFormBase(forms.Form):
 form_dict = {'__module__' : 'pgd_search.views'}
 
 for i in RESIDUE_INDEXES:
-    form_dict['terminal_flag_%i' % i] = forms.BooleanField(required=False)
     form_dict["aa_%i" % i]      = forms.MultipleChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["aa_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
