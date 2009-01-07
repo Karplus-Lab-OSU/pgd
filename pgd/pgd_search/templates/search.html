@@ -49,6 +49,7 @@
 
             input.field {
                 margin:.2em;
+                color:gray;
             }
 
             select#id_proteins {
@@ -75,15 +76,17 @@
                 background-image:url('http://doors.osuosl.org/media/minus2.png');
             }
 
-            .field_include {
+            select.field_include, input.field_include {
+                color:black;
                 background-color:#c2e192;
                 border-color:black;
             }
-            .field_exclude {
+            select.field_exclude, input.field_exclude {
+                color:black;
                 border-color:black;
                 background-color:#ee9c98;
             }
-            .field_error {
+            input.field_error {
                 border: 1px solid #c60017;
                 color:red;
             }
@@ -234,6 +237,13 @@
                 // strip whitespace for input boxes
                 if (field) {
                     val = val.replace(/\s+/g, '');
+                    
+                    if ($(element).is('[name^=bg],[name^=bm],[name^=bs]')) {
+                        return val == '0-25' || val == ''
+                    }
+                    if ($(element).is('[name^=ome]')) {
+                        return val == '-180--90,90-180' || val == ''
+                    }
                     return val == '';
                 }
 
