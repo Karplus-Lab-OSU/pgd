@@ -68,7 +68,6 @@ class Search(models.Model):
             query = query.filter(**dict((
                     (seg_prefix+field, search_res.__dict__[field])
                     for field in (
-                        'terminal_flag',
                         'xpr',
                     ) if search_res.__dict__[field] != None
                 )))
@@ -153,7 +152,6 @@ class Search_residue(models.Model):
     bg              = models.CharField(max_length=30, null=True)
     h_bond_energy   = models.CharField(max_length=30, null=True)
     zeta            = models.CharField(max_length=30, null=True)
-    terminal_flag   = models.BooleanField(null=True)
     xpr             = models.BooleanField(null=True) # this field may not be necessary; it has never been implemented
 
     # '<field>_include' boolean determines how its query field should be handled
@@ -297,7 +295,6 @@ for i in range(searchSettings.segmentSize):
     seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)
     seq_dict["r%i_ss" % i]              = models.CharField(max_length=1, choices=SS_CHOICES, null=True)
     seq_dict["r%i_aa" % i]              = models.CharField(max_length=1, choices=AA_CHOICES, null=True)
-    seq_dict["r%i_terminal_flag" % i]   = models.BooleanField(null=True)
     seq_dict["r%i_xpr" % i]             = models.BooleanField(null=True) # probably should be replaced
 
     # the loops here are just to save on space/typing
