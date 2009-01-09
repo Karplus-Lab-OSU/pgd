@@ -105,13 +105,15 @@ class Search(models.Model):
                                         seg_field+'__gte' : float(range_re.split(constraint)[0]),
                                         seg_field+'__lte' : float(range_re.split(constraint)[1]),
                                     } if range_re.search(constraint) else {
-                                        seg_field + '__' + {
-                                            ''   : 'eq',
-                                            '>'  : 'gt',
-                                            '>=' : 'gte',
-                                            '<'  : 'lt',
-                                            '<=' : 'lte',
-                                        }[comp_re.search(constraint).group(0)]
+                                        seg_field + {
+                                            ''   : '',
+                                            '>'  : '__gt',
+                                            '>=' : '__gte',
+                                            '<'  : '__lt',
+                                            '<=' : '__lte',
+                                        }[comp_re.search(constraint).group(0)] :
+                                        constraint.strip('><=')
+
                                     }
                                 )
                             ) for constraint in str(search_res.__dict__[field]).split(',')
