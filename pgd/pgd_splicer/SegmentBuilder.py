@@ -89,9 +89,9 @@ class SegmentBuilderTask(Task):
                     del segmentList[0]
                     #print '            list: %s' % segmentList
 
-                    #if i is None then skip this segment
+                    #if i is None, or it is a terminal residue then skip this segment
                     #its maxLength would be 0 and the segment would never be returned in any search
-                    if not segmentList[iIndex]:
+                    if not (segmentList[iIndex] and segmentList[iIndex-1] and segmentList[iIndex+1]):
                         continue
 
                     # Only check for existing version of the segment if there
@@ -119,18 +119,14 @@ class SegmentBuilderTask(Task):
 
                     #calculate max length of this particular segment
                     #first, last, and any residue with terminal flag always have length 1
-                    if segmentList[iIndex].chainIndex == 1 or segmentList[iIndex].chainIndex == chainLength or segmentList[iIndex].terminal_flag:
-                            segment.length = 1
-
-                    else:                    
-                        for i in range(1, length):
-                            # have we reached the max size for segments or found a None
-                            if iIndex+i > lastIndex or segmentList[iIndex+i].terminal_flag or segmentList[iIndex+i].chainIndex==chainLength:
-                                    segment.length = i*2-1
-                                    break
-                            if iIndex-i < 0 or segmentList[iIndex-i].terminal_flag:
-                                    segment.length = i*2
-                                    break
+                    for i in range(1, length):
+                        # have we reached the max size for segments or found a None
+                        if iIndex+i > lastIndex or segmentList[iIndex+i].terminal_flag or segmentList[iIndex+i].chainIndex==chainLength:
+                                segment.length = i*2-1
+                                break
+                        if iIndex-i < 0 or segmentList[iIndex-i].terminal_flag:
+                                segment.length = i*2
+                                break
 
                     #save segment
                     #print '            segment: %s' % segment
