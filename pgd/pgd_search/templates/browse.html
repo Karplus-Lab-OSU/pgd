@@ -79,7 +79,7 @@
                         <tr>
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%} </td>
                             <td>{{r.protein_id}}</td>
-                            <td>{% ifequal 0 r.chainIndex|add:segment.offset %}i{% else %}{{r.chainIndex|add:segment.offset}}{% endifequal %}</td>
+                            <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
                             <td>{{r.aa}}</td>
                             <td>{{r.a1|floatformat:2}}</td>
