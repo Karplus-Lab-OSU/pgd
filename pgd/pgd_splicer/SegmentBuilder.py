@@ -91,7 +91,7 @@ class SegmentBuilderTask(Task):
 
                     #if i is None, or it is a terminal residue then skip this segment
                     #its maxLength would be 0 and the segment would never be returned in any search
-                    if not (segmentList[iIndex] and segmentList[iIndex-1] and segmentList[iIndex+1]):
+                    if not (segmentList[iIndex] and segmentList[iIndex-1] and segmentList[iIndex+1]) or segmentList[iIndex].terminal_flag:
                         continue
 
                     # Only check for existing version of the segment if there
