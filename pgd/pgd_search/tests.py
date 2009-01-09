@@ -89,7 +89,7 @@ class SearchParserValidation(unittest.TestCase):
         search_residue.search = search
         search_residue.a1_include = True
     
-        # create associated Search_residues (or not)
+        # create associated Search_residues
         for min,max in [(x,y) for x in range(PRO_MIN,PRO_MAX) for y in range(x+1,PRO_MAX)]:
             search_residue.a1 = "%g-%g"%(min,max)
             search_residue.save()
@@ -100,37 +100,28 @@ class SearchParserValidation(unittest.TestCase):
                 set(Search.parse_search(search).all()),
                 "Query strings search test failed on range '%s'"%search_residue.a1
             )
-    
-    # TODO: the dataset in setup doesn't accomodate this test yet
-    def testSearchTerminalFlag(self):
         
-        # create Search
-        search = Search(segmentLength=0)
-        search.save()
+        # create associated Search_residues
+        for letters,symbols in (('lt','<'),('lte','<='),('gt','>'),('gte','>=')):
+            search_residue.a1 = symbols+'0'
+            search_residue.save()
 
-        search_residue = Search_residue()
-        search_residue.index = -4
-        search.residues.add(search_residue)
-        search_residue.search = search
-        search_residue.terminal_flag = True
-        search_residue.save()
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(**{'r0_a1__'+letters:0}).all()),
+                set(Search.parse_search(search).all()),
+                "Query strings search with operators test failed on range '%s'"%search_residue.a1
+            )
 
-        self.assertEqual(
-            # See that the intended query is executed by parse_search
-            set(Segment.objects.filter(r0_terminal_flag=True).all()),
-            set(Search.parse_search(search).all()),
-            "Resolution search failed on True"
-        )
+            search_residue.a1 = '0'
+            search_residue.save()
 
-        search_residue.terminal_flag = False
-        search_residue.save()
-
-        self.assertEqual(
-            # See that the intended query is executed by parse_search
-            set(Segment.objects.filter(r0_terminal_flag=False).all()),
-            set(Search.parse_search(search).all()),
-            "Resolution search failed on False"
-        )
+            self.assertEqual(
+                # See that the intended query is executed by parse_search
+                set(Segment.objects.filter(**{'r0_a1':0}).all()),
+                set(Search.parse_search(search).all()),
+                "Query strings search with operators test failed on range '%s'"%search_residue.a1
+            )
 
 
     def testSearchResolution(self):

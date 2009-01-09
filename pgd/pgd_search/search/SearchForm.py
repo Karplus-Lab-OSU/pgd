@@ -12,7 +12,13 @@ Custom Field for fields that support query syntax parsing
 """
 class SearchSyntaxField(forms.Field):
     #Validates a field to make sure that it has valid syntax for a search field
-    syntaxPattern = re.compile(r'^(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?(,(-?([1-9]\d*|0)(\.\d+)?|(\.\d+))(-(-?([1-9]\d*|0)(\.\d+)?|(\.\d+)))?)*$')
+    #floatNum    = r'(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))'
+    #compOp      = r'([<>]=?)'
+    #argEntry    = r'(floatNum(-floatNum)?|compOpfloatNum)'
+    #synPat      = r'(argEngry)(,argEntry)*'
+    syntaxPattern = re.compile(
+        r'^(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))(,(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))))*$'
+    )
 
     def clean(self, value):
         if value == None:
