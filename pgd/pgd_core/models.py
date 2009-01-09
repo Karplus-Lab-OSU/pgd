@@ -35,7 +35,7 @@ class Residue(models.Model):
     chain           = models.ForeignKey(Chain, related_name='residues')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1)
-    oldID           = models.CharField(max_length=5)
+    oldID           = models.CharField(max_length=5, null=True)
     chainIndex      = models.PositiveIntegerField()
     a1              = models.FloatField()
     a2              = models.FloatField()
