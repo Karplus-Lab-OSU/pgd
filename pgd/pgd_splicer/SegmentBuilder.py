@@ -36,7 +36,9 @@ class SegmentBuilderTask(Task):
         #determine if there are any segments in the table
         #   limit query with [0:0] instead of [0] this returns
         #   an empty list instead of an exception if there are no segments    
-        existingSegments = len(Segment.objects.all()[0:0]) != 0      
+        existingSegments = len(Segment.objects.all()[0:1]) != 0      
+	if not existingSegments:
+            print 'No Segments Found, skipping residue existence check for all residues'
 
         proteins = Protein.objects.all()
         self.proteinTotal = len(proteins)
@@ -87,9 +89,9 @@ class SegmentBuilderTask(Task):
                     del segmentList[0]
                     #print '            list: %s' % segmentList
 
-                    #if i is None then skip this segment
+                    #if i is None, or it is a terminal residue then skip this segment
                     #its maxLength would be 0 and the segment would never be returned in any search
-                    if not segmentList[iIndex]:
+                    if not (segmentList[iIndex] and segmentList[iIndex-1] and segmentList[iIndex+1]):
                         continue
 
                     # Only check for existing version of the segment if there
@@ -114,14 +116,15 @@ class SegmentBuilderTask(Task):
 
                     segment.protein = protein
                     segment.chainID = chain.code
- 
+
                     #calculate max length of this particular segment
+                    #first, last, and any residue with terminal flag always have length 1
                     for i in range(1, length):
                         # have we reached the max size for segments or found a None
-                        if iIndex+i > lastIndex or segmentList[iIndex+i] == None:
+                        if iIndex+i > lastIndex or segmentList[iIndex+i].terminal_flag or segmentList[iIndex+i].chainIndex==chainLength:
                                 segment.length = i*2-1
                                 break
-                        if iIndex-i < 0 or segmentList[iIndex-i] == None:
+                        if iIndex-i < 0 or segmentList[iIndex-i].terminal_flag:
                                 segment.length = i*2
                                 break
 
