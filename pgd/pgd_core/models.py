@@ -1,5 +1,5 @@
 from django.db import models
-from constants import AA_CHOICES, SS_CHOICES
+from constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 
 # Protein model
 # (was 'protein_info')
@@ -64,3 +64,11 @@ class Residue(models.Model):
 
     def __str__(self):
         return '%d' % self.chainIndex
+
+    def __getattribute__(self,name):
+        if name == 'aa_full':
+            return AA_CHOICES_DICT[self.aa]
+    
+        # normal attribute
+        else:
+            return object.__getattribute__(self, name)

@@ -4,8 +4,11 @@
 <html>
     <head>
         <style>
-            table, td, th {
-                
+
+            table {
+                border-collapse:collapse;
+                border-spacing:0px;
+                margin:20px;
             }
 
             td {
@@ -13,10 +16,23 @@
                 text-align:center;
             }
 
-            tr.spacer {
-                height:20px;
+            tr.spacer-top {
+                height:10px;
                 border-bottom: 1px solid black;
             }
+
+            tr.spacer-bottom {
+                height:10px;
+                border-top: 1px solid black;
+            }
+
+            {% for class, color in indexColors.items %}
+                {{class}}{
+                    background-color:#{{color.0}}{{color.1}}{{color.2}};
+                    border-left:1px solid black;
+                    border-right:1px solid black;
+                }
+            {% endfor %}
 
             a.pagination                   { color:blue; text-decoration:none; }
             a.pagination:visited           { color:blue; text-decoration:none; }
@@ -33,6 +49,7 @@
 
             $(document).ready(function() {
                 
+                $("td:contains('999.90')").html('--');
 
             });
 
@@ -74,14 +91,14 @@
                 </tr>  
 
                 {% for segment in segments.object_list %}
-                    <tr class="spacer"/>
+                    <tr class="spacer-top"/>
                     {% for r in segment.residues|slice:segmentSlice %}
-                        <tr>
-                            <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%} </td>
-                            <td>{{r.protein_id}}</td>
+                        <tr class="index{{r.chainIndex|add:segment.offset}}">
+                            <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
+                            <td>{% if forloop.first %}{{r.protein_id}}{%endif%}</td>
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
-                            <td>{{r.aa}}</td>
+                            <td>{{r.aa_full|capfirst}}</td>
                             <td>{{r.a1|floatformat:2}}</td>
                             <td>{{r.a2|floatformat:2}}</td>
                             <td>{{r.a3|floatformat:2}}</td>
@@ -105,7 +122,8 @@
                             <td>{{r.h_bond_energy|floatformat:2}}</td>
                             <td>{{r.zeta|floatformat:2}}</td>
                         </tr>
-                    {% endfor %}                    
+                    {% endfor %}
+                    <tr class="spacer-bottom"/>        
                 {% endfor %}
                 
             </table>

@@ -21,6 +21,9 @@ AA_CHOICES = (
 	('y', 'tyr'),
 	('v', 'val'),
 )
+AA_CHOICES_DICT = {}
+for choice in AA_CHOICES:
+    AA_CHOICES_DICT[choice[0]] = choice[1]
 
 # The possible values for the 'ss' field (in Protein and elsewhere)
 SS_CHOICES = (
