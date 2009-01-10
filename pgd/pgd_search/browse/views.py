@@ -34,16 +34,17 @@ def browse(request):
 
     # use ranges for RGB to introduce colorful steps
     colors = {} 
-    rStart = 50;
-    gStart = 180;
-    bStart = 50;
-    rInterval = round((255-rStart)/stop)
-    gInterval = round((255-gStart)/stop)
-    bInterval = round((200-bStart)/stop)
+    rRange = (75,200);
+    gRange = (180,240);
+    bRange = (240,255);
+    rInterval = round((rRange[1]-rRange[0])/stop)
+    gInterval = round((gRange[1]-gRange[0])/stop)
+    bInterval = round((bRange[1]-bRange[0])/stop)
     for i in range(stop):
-        red = '%s' % hex(int(i*rInterval+rStart))[2:] if i*rInterval+rStart > 9 else '%02d' % int(hex(int(i*rInterval+rStart))[2:])
-        green = '%s' % hex(int(i*gInterval+gStart))[2:] if i*gInterval+gStart > 9 else '%02d' % int(hex(int(i*gInterval+gStart))[2:])
-        blue = '%s' % hex(int(i*bInterval+bStart))[2:] if i*bInterval+bStart > 9 else '%02d' % int(hex(int(i*bInterval+bStart))[2:])
+
+        red = '%s' % hex(int(i*rInterval+rRange[0]))[2:] if i*rInterval+rRange[0] > 9 else '%02d' % int(hex(int(i*rInterval+rRange[0]))[2:])
+        green = '%s' % hex(int(i*gInterval+gRange[0]))[2:] if i*gInterval+gRange[0] > 9 else '%02d' % int(hex(int(i*gInterval+gRange[0]))[2:])
+        blue = '%s' % hex(int(i*bInterval+bRange[0]))[2:] if i*bInterval+bRange[0] > 9 else '%02d' % int(hex(int(i*bInterval+bRange[0]))[2:])
         colors['.index%i, .index-%i' % (i,i)] = (red,green,blue)
 
     return render_to_response('browse.html', {
