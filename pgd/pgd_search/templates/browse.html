@@ -18,20 +18,19 @@
                 border-right:1px solid black;
             }
 
-            tr.spacer, tbody.spacer{
-                border-top:1px solid black;
-                height:20px;
-            }
-
             td {
                 padding:.3em;
                 text-align:center;
             }
 
-            tbody.segment{
-                margin: 20px;
+            tr.spacer-top {
+                height:10px;
+                border-bottom:1px solid black;
+            }
+
+            tr.spacer-bottom{
+                height:20px;
                 border-top: 1px solid black;
-                border-bottom: 1px solid black;
             }
 
             {% for class, color in indexColors.items %}
@@ -77,20 +76,16 @@
                 id = element.id;
                 re = /^data_([\w]+)_([-\w]+)/;
                 matches = re.exec(id);
-                attribute = "td." +matches[1]
-                offset = "tr.index" + matches[2]
+                attribute = "td." +matches[1];
+                offset = parseInt(matches[2])+1;
                 result = element.parentNode.parentNode.parentNode.id
 
-                //highlight cell mouse is over
-                $('tbody#' + result + ' td#' + id).addClass('selected');
-
                 //highlight same result in other tables
-                $('tbody ' + offset +' ' + attribute).addClass('selected');
+                $('tbody tr:nth-child(7n+'+offset+') ' + attribute).addClass('selected');
             }
 
             function dOut(){
-                $('tbody#' + result + ' td#' + id).removeClass('selected');
-                $('tbody ' + offset +' ' + attribute).removeClass('selected');
+                $('tbody tr:nth-child(7n+'+offset+') ' + attribute).removeClass('selected');
             }
 
             $(document).ready(function() {
@@ -137,45 +132,50 @@
                     <th>Zeta</th>
                 </tr>
                 </thead>
-
+                <tbody>
                 {% for segment in segments.object_list %}
-                    <tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'>
+                    <!--tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'-->
+                    <tr class="spacer-top"/>
                     {% for r in segment.residues|slice:segmentSlice %}
-                        <tr class="data index{{r.chainIndex|add:segment.offset}}">
+                        
+                        <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                             <td>{% if forloop.first %}{{r.protein_id}}{%endif%}</td>
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
-                            <td id="data_aa_{{r.chainIndex|add:segment.offset}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa_full|capfirst}}</td>
+                            <td id="data_aa_" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa_full|capfirst}}</td>
                             <td class='borderLeft'/>
-                            <td id="data_a1_{{r.chainIndex|add:segment.offset}}" class="data a1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:2}}</td>
-                            <td id="data_a2_{{r.chainIndex|add:segment.offset}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:2}}</td>
-                            <td id="data_a3_{{r.chainIndex|add:segment.offset}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|floatformat:2}}</td>
-                            <td id="data_a4_{{r.chainIndex|add:segment.offset}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|floatformat:2}}</td>
-                            <td id="data_a5_{{r.chainIndex|add:segment.offset}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|floatformat:2}}</td>
-                            <td id="data_a6_{{r.chainIndex|add:segment.offset}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|floatformat:2}}</td>
-                            <td id="data_a7_{{r.chainIndex|add:segment.offset}}" class="data a7" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|floatformat:2}}</td>
-                            <td id="data_l1_{{r.chainIndex|add:segment.offset}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|floatformat:3}}</td>
-                            <td id="data_l2_{{r.chainIndex|add:segment.offset}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|floatformat:3}}</td>
-                            <td id="data_l3_{{r.chainIndex|add:segment.offset}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|floatformat:3}}</td>
-                            <td id="data_l4_{{r.chainIndex|add:segment.offset}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|floatformat:3}}</td>
-                            <td id="data_l5_{{r.chainIndex|add:segment.offset}}" class="data l5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|floatformat:3}}</td>
+                            <td id="data_a1_{{forloop.counter}}" class="data a1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:2}}</td>
+                            <td id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:2}}</td>
+                            <td id="data_a3_{{forloop.counter}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|floatformat:2}}</td>
+                            <td id="data_a4_{{forloop.counter}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|floatformat:2}}</td>
+                            <td id="data_a5_{{forloop.counter}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|floatformat:2}}</td>
+                            <td id="data_a6_{{forloop.counter}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|floatformat:2}}</td>
+                            <td id="data_a7_{{forloop.counter}}" class="data a7" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|floatformat:2}}</td>
+                            <td id="data_l1_{{forloop.counter}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|floatformat:3}}</td>
+                            <td id="data_l2_{{forloop.counter}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|floatformat:3}}</td>
+                            <td id="data_l3_{{forloop.counter}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|floatformat:3}}</td>
+                            <td id="data_l4_{{forloop.counter}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|floatformat:3}}</td>
+                            <td id="data_l5_{{forloop.counter}}" class="data l5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|floatformat:3}}</td>
                             <td class='borderRight'/>
-                            <td id="data_ss_{{r.chainIndex|add:segment.offset}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
-                            <td id="data_phi_{{r.chainIndex|add:segment.offset}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|floatformat:2}}</td>
-                            <td id="data_psi_{{r.chainIndex|add:segment.offset}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|floatformat:2}}</td>
-                            <td id="data_ome_{{r.chainIndex|add:segment.offset}}" class="data ome" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ome|floatformat:2}}</td>
-                            <td id="data_chi_{{r.chainIndex|add:segment.offset}}" class="data chi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi|floatformat:2}}</td>
-                            <td id="data_bm_{{r.chainIndex|add:segment.offset}}" class="data bm" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bm|floatformat:2}}</td>
-                            <td id="data_bs_{{r.chainIndex|add:segment.offset}}" class="data bs" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bs|floatformat:2}}</td>
-                            <td id="data_bg_{{r.chainIndex|add:segment.offset}}" class="data bg" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bg|floatformat:2}}</td>
-                            <td id="data_hbond_{{r.chainIndex|add:segment.offset}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|floatformat:2}}</td>
-                            <td id="data_zeta_{{r.chainIndex|add:segment.offset}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|floatformat:2}}</td>
+                            <td id="data_ss_{{forloop.counter}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
+                            <td id="data_phi_{{forloop.counter}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|floatformat:2}}</td>
+                            <td id="data_psi_{{forloop.counter}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|floatformat:2}}</td>
+                            <td id="data_ome_{{forloop.counter}}" class="data ome" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ome|floatformat:2}}</td>
+                            <td id="data_chi_{{forloop.counter}}" class="data chi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi|floatformat:2}}</td>
+                            <td id="data_bm_{{forloop.counter}}" class="data bm" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bm|floatformat:2}}</td>
+                            <td id="data_bs_{{forloop.counter}}" class="data bs" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bs|floatformat:2}}</td>
+                            <td id="data_bg_{{forloop.counter}}" class="data bg" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bg|floatformat:2}}</td>
+                            <td id="data_hbond_{{forloop.counter}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|floatformat:2}}</td>
+                            <td id="data_zeta_{{forloop.counter}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|floatformat:2}}</td>
                         </tr>
+                        
                     {% endfor %}
-                </tbody>
-                <tbody><tr class="spacer"/></tbody>
+                    <tr class="spacer-bottom"/>
+                <!--/tbody>
+                <tbody><tr class="spacer"/></tbody-->
                 {% endfor %}
+                </tbody>
             </table>
 
             <div class="pagination">
