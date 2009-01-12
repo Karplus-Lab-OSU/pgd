@@ -196,17 +196,6 @@ class BinPoint():
         #init stats structure
         self.stats[key] = [0,0]
 
-        # Average
-        #sum = 0
-        #for i in range(self.numObs):
-        #    # By adding 360 to omega when it's less than -90, we shift half of the tall peak
-        #    # over to the far right of a -180 to +180 omega plot, into the 180-270 range.
-        #    if key == "ome":
-        #        if self.obs[i].dat[key] < -90:
-        #            self.obs[i].dat[key] = ( self.obs[i].dat[key] + 360 )
-        #    sum += self.obs[i].dat[key]
-        #self.stats[key][BIN_STATS_AVERAGE] = sum / self.numObs
-
         if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): # Use special formulas for angles...
 
             # Average
@@ -241,13 +230,6 @@ class BinPoint():
                         for i in range(self.numObs)
                     ])/(self.numObs - 1)
                 )
-
-        # Std Deviation
-        #if self.numObs > 1:
-        #    sum = 0
-        #    for i in range(self.numObs):
-        #        sum += pow( (self.obs[i].dat[key] - self.stats[key][BIN_STATS_AVERAGE]), 2 )
-        #    self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
 
         if key <> None and key == ref:
             self.avg = self.stats[key][BIN_STATS_AVERAGE]
