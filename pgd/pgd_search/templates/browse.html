@@ -10,6 +10,13 @@
                 border-spacing:0px;
                 margin:20px;
             }
+            
+            .borderRight {
+                border-left:1px solid black;
+            }
+            .borderLeft {
+                border-right:1px solid black;
+            }
 
             td {
                 padding:.3em;
@@ -66,6 +73,7 @@
                     <th>Residue</th>
                     <th>ID</th>
                     <th>AA</th>
+                    <th/>
                     <th>a1</th>
                     <th>a2</th>
                     <th>a3</th>
@@ -78,6 +86,7 @@
                     <th>L3</th>
                     <th>L4</th>
                     <th>L5</th>
+                    <th/>
                     <th>ss</th>
                     <th>phi</th>
                     <th>psi</th>
@@ -99,6 +108,7 @@
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
                             <td>{{r.aa_full|capfirst}}</td>
+                            <td class='borderLeft'/>
                             <td>{{r.a1|floatformat:2}}</td>
                             <td>{{r.a2|floatformat:2}}</td>
                             <td>{{r.a3|floatformat:2}}</td>
@@ -111,6 +121,7 @@
                             <td>{{r.L3|floatformat:3}}</td>
                             <td>{{r.L4|floatformat:3}}</td>
                             <td>{{r.L5|floatformat:3}}</td>
+                            <td class='borderRight'/>
                             <td>{{r.ss}}</td>
                             <td>{{r.phi|floatformat:2}}</td>
                             <td>{{r.psi|floatformat:2}}</td>
