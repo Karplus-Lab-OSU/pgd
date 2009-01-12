@@ -60,7 +60,7 @@ class Search(models.Model):
         if self.resolution_max != None:
             query = query.filter(protein__resolution__lte=self.resolution_max)
         if self.threshold != None:
-            query = query.filter(protein__threshold=self.threshold)
+            query = query.filter(protein__threshold__lte=self.threshold)
 
         for search_res in self.residues.all():
             seg_prefix = "r%i_"%(search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1))

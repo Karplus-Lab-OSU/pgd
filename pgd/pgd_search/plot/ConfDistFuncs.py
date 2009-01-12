@@ -196,25 +196,40 @@ class BinPoint():
         #init stats structure
         self.stats[key] = [0,0]
 
-        # Average
-        sum = 0
-        for i in range(self.numObs):
-            # By adding 360 to omega when it's less than -90, we shift half of the tall peak
-            # over to the far right of a -180 to +180 omega plot, into the 180-270 range.
-            if key == "ome":
-                if self.obs[i].dat[key] < -90:
-                    self.obs[i].dat[key] = ( self.obs[i].dat[key] + 360 )
+        if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): # Use special formulas for angles...
 
-            sum += self.obs[i].dat[key]
+            # Average
+            radAngles = [math.radians(self.obs[i].dat[key]%360) for i in range(self.numObs)]
+            radAvg = math.atan2(
+                sum([math.sin(radAngle) for radAngle in radAngles])/self.numObs,
+                sum([math.cos(radAngle) for radAngle in radAngles])/self.numObs
+            )
+            self.stats[key][BIN_STATS_AVERAGE] = math.degrees(radAvg)
 
-        self.stats[key][BIN_STATS_AVERAGE] = sum / self.numObs
+            # Standard Deviation
+            if self.numObs > 1:
+                sum = 0
+                for radAngle in radAngles:
+                    straight = radAngle - radAvg
+                    rotation = (radAngle + math.pi)%(2*math.pi) - (radAngle + math.pi)%(2*math.pi)
+                    sum += pow(straight if straight < rotation else rotation, 2)
+                self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum/(self.numObs - 1))
 
-        # Std Deviation
-        if self.numObs > 1:
-            sum = 0
-            for i in range(self.numObs):
-                sum += pow( (self.obs[i].dat[key] - self.stats[key][BIN_STATS_AVERAGE]), 2 )
-            self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum / ( self.numObs - 1 ))
+        else: # ... otherwise, use the traditional formulas
+
+            # Average
+            self.stats[key][BIN_STATS_AVERAGE] = sum(
+                [self.obs[i].dat[key] for i in range(self.numObs)]
+            )/self.numObs
+
+            # Standard Deviation
+            if self.numObs > 1:
+                self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(
+                    sum([
+                        pow(self.obs[i].dat[key] - self.stats[key][BIN_STATS_AVERAGE], 2)
+                        for i in range(self.numObs)
+                    ])/(self.numObs - 1)
+                )
 
         if key <> None and key == ref:
             self.avg = self.stats[key][BIN_STATS_AVERAGE]

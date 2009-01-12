@@ -145,7 +145,7 @@
 
                 $('td.data')
                     .mouseover(function() {
-                        id = $(this).attr('id');
+                        id = this.id;
                         col = id.replace(/^(data_)[\w]{3}_/, '.');
                         $(col).addClass('col_selected');
                         $(this).addClass('selected');

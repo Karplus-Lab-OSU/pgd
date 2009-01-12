@@ -127,7 +127,7 @@
                     svg.text(
                         {{text.x}},
                         {{text.y}},
-                        '{{text.text}}',
+                        '{{text.text|floatformat}}',
                         {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.fill}}"}
                     );
                 {% endfor %}
