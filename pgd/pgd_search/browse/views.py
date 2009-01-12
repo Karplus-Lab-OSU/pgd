@@ -13,7 +13,7 @@ def browse(request):
     # get search from session
     search = request.session['search']
     segments = search.querySet()
-    paginator = Paginator(segments, 5) # Show 10 segments per page
+    paginator = Paginator(segments, 25) # Show 25 segments per page
 
     # Make sure page request is an int. If not, deliver first page.
     try:
