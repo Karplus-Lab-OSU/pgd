@@ -193,45 +193,59 @@ class BinPoint():
     # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
     # ******************************************************
     def ComputeStats(self, key, ref=None):
-        #init stats structure
-        self.stats[key] = [0,0]
+        #store functions and variables locally for speed optimization
+        lobs = self.obs
 
-        if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): # Use special formulas for angles...
+        # if there is only 1 observation then avg is the only value and deviation is zero
+        if self.numObs == 1:
+            self.stats[key] = [lobs[0].dat[key],0]
 
-            # Average
-            radAngles = [math.radians(self.obs[i].dat[key]%360) for i in range(self.numObs)]
-            radAvg = math.atan2(
-                sum([math.sin(radAngle) for radAngle in radAngles])/self.numObs,
-                sum([math.cos(radAngle) for radAngle in radAngles])/self.numObs
-            )
-            self.stats[key][BIN_STATS_AVERAGE] = math.degrees(radAvg)
+        #if there is more than one observation then we must calculate the values
+        else:
+            lsum = sum
+            lpow = pow
 
-            # Standard Deviation
-            if self.numObs > 1:
-                sum = 0
+            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): # Use special formulas for angles...
+                #store locals for speed
+                lsin = math.sin
+                lcos = math.cos
+                lpi = math.pi
+                lradians = math.radians
+
+                # Average
+                radAngles = [lradians(lobs[i].dat[key]%360) for i in range(self.numObs) if lobs[i].dat[key] not in (0,999.90)]
+                len_radAngle = len(radAngles)
+                radAvg = math.atan2(
+                    lsum([lsin(radAngle) for radAngle in radAngles])/len_radAngle,
+                    lsum([lcos(radAngle) for radAngle in radAngles])/len_radAngle
+                )
+                avg = math.degrees(radAvg)
+
+                # Standard Deviation
+                msum = 0
                 for radAngle in radAngles:
                     straight = radAngle - radAvg
-                    rotation = (radAngle + math.pi)%(2*math.pi) - (radAngle + math.pi)%(2*math.pi)
-                    sum += pow(straight if straight < rotation else rotation, 2)
-                self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(sum/(self.numObs - 1))
+                    rotation = (radAngle + lpi)%(2*lpi) - (radAngle + lpi)%(2*lpi)
+                    msum += lpow(straight if straight < rotation else rotation, 2)
 
-        else: # ... otherwise, use the traditional formulas
+                #save calculated values
+                self.stats[key] = [avg, math.sqrt(msum/(len_radAngle - 1))]
 
-            # Average
-            self.stats[key][BIN_STATS_AVERAGE] = sum(
-                [self.obs[i].dat[key] for i in range(self.numObs)]
-            )/self.numObs
+            else: # ... otherwise, use the traditional formulas
 
-            # Standard Deviation
-            if self.numObs > 1:
-                self.stats[key][BIN_STATS_DEVIATION] = math.sqrt(
-                    sum([
-                        pow(self.obs[i].dat[key] - self.stats[key][BIN_STATS_AVERAGE], 2)
-                        for i in range(self.numObs)
-                    ])/(self.numObs - 1)
-                )
+                # Average
+                values = [lobs[i].dat[key] for i in range(self.numObs) if lobs[i].dat[key] not in (0.0,999.90)]
+                avg = lsum(values)/len(values)
 
-        if key <> None and key == ref:
+                # Standard Deviation
+                self.stats[key] = [avg, math.sqrt(
+                    lsum([
+                        lpow(value - avg, 2)
+                        for value in values
+                    ])/(len(values) - 1)
+                )]
+
+        if key and key == ref:
             self.avg = self.stats[key][BIN_STATS_AVERAGE]
             self.dev = self.stats[key][BIN_STATS_DEVIATION]
 
@@ -562,7 +576,6 @@ class ConfDistPlot():
         residues = self.querySet.values(*values)
 
         for data in residues:
-
             if self.ref <> 'Observations':
                 #fix property name for later use
                 data[self.ref] = data[attrProperty]
