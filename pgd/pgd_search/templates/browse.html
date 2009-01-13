@@ -33,8 +33,8 @@
                 border-top: 1px solid black;
             }
 
-            {% for class, color in indexColors.items %}
-                {{class}}{
+            {% for color in indexColors %}
+                .index{{forloop.counter0}}, .index-{{forloop.counter0}}{
                     background-color:#{{color.0}}{{color.1}}{{color.2}};
                     border-left:1px solid black;
                     border-right:1px solid black;

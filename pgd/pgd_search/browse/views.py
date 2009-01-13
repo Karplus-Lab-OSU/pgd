@@ -10,6 +10,10 @@ display search results in tabular form
 """
 def browse(request):
 
+    #saving globals as locals for speed
+    lhex = hex
+    lint = int
+
     # get search from session
     search = request.session['search']
     segments = search.querySet()
@@ -17,7 +21,7 @@ def browse(request):
 
     # Make sure page request is an int. If not, deliver first page.
     try:
-        page = int(request.GET.get('page', '1'))
+        page = lint(request.GET.get('page', '1'))
     except ValueError:
         page = 1
 
@@ -28,29 +32,30 @@ def browse(request):
         paginatedSegments = paginator.page(paginator.num_pages)
 
     #generate iValues
-    iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
+    iIndex = lint(math.ceil(searchSettings.segmentSize/2.0)-1)
     start = 0 - (search.segmentLength-1) / 2
-    stop  = int(math.ceil((search.segmentLength-1) / 2.0))+1
+    stop  = lint(math.ceil((search.segmentLength-1) / 2.0))+1
 
     # use ranges for RGB to introduce colorful steps
-    colors = {} 
-    rRange = (75,200);
-    gRange = (180,240);
-    bRange = (240,255);
-    rInterval = round((rRange[1]-rRange[0])/stop)
-    gInterval = round((gRange[1]-gRange[0])/stop)
-    bInterval = round((bRange[1]-bRange[0])/stop)
-    for i in range(stop):
+    colors = [] 
+    colorstop=searchSettings.segmentSize/2
+    rRange = (75,245);
+    gRange = (180,245);
+    bRange = (240,245);
+    rInterval = round((rRange[1]-rRange[0])/colorstop)
+    gInterval = round((gRange[1]-gRange[0])/colorstop)
+    bInterval = round((bRange[1]-bRange[0])/colorstop)
 
-        red = '%s' % hex(int(i*rInterval+rRange[0]))[2:] if i*rInterval+rRange[0] > 9 else '%02d' % int(hex(int(i*rInterval+rRange[0]))[2:])
-        green = '%s' % hex(int(i*gInterval+gRange[0]))[2:] if i*gInterval+gRange[0] > 9 else '%02d' % int(hex(int(i*gInterval+gRange[0]))[2:])
-        blue = '%s' % hex(int(i*bInterval+bRange[0]))[2:] if i*bInterval+bRange[0] > 9 else '%02d' % int(hex(int(i*bInterval+bRange[0]))[2:])
-        colors['.index%i, .index-%i' % (i,i)] = (red,green,blue)
+    for i in range(colorstop-stop+1, colorstop+1):
+        red = '%s' % lhex(lint(i*rInterval+rRange[0]))[2:] if i*rInterval+rRange[0] > 9 else '%02d' % lint(lhex(lint(i*rInterval+rRange[0]))[2:])
+        green = '%s' % lhex(lint(i*gInterval+gRange[0]))[2:] if i*gInterval+gRange[0] > 9 else '%02d' % lint(lhex(lint(i*gInterval+gRange[0]))[2:])
+        blue = '%s' % lhex(lint(i*bInterval+bRange[0]))[2:] if i*bInterval+bRange[0] > 9 else '%02d' % lint(lhex(lint(i*bInterval+bRange[0]))[2:])
+        colors.append((red,green,blue))
 
     return render_to_response('browse.html', {
         'segments': paginatedSegments,
         'segmentSlice':'%i:%i'%(iIndex+start,iIndex+stop),
         'iIndex':iIndex,
         'pageStart':(page-1)*5,
-        'indexColors':colors        
+        'indexColors':colors
     }, context_instance=RequestContext(request))
