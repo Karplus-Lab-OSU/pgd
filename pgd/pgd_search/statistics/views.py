@@ -1,7 +1,7 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.conf import settings
-from statlib import stats
+import math
 
 from constants import AA_CHOICES
 from pgd_search.models import Search, Segment, iIndex
@@ -10,6 +10,13 @@ from pgd_search.models import Search, Segment, iIndex
 display statistics about the search
 """
 def searchStatistics(request):
+
+    #store globals locally for speed optimization
+    local_len = len
+    local_sum = sum
+    local_pow = pow
+    local_min = min
+    local_max = max
 
     stat_attributes_base = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7']
     TOTAL_INDEX = {'na':0,'e':1,'E':2,'S':3,'h':4,'H':5,'t':6,'T':7,'g':8,'G':9,'B':10,'i':11,'I':12}
@@ -22,12 +29,12 @@ def searchStatistics(request):
     fieldNames      = ['r%i_%s'%(iIndex, f) for f in stat_attributes_base]
     fieldNames.append(ss_field)
 
-    for i in range(len(stat_attributes)):
+    for i in range(local_len(stat_attributes)):
         STAT_INDEX[stat_attributes[i]] = i
 
     # get search from session
     search = request.session['search']
-    searchQuery = search.querySet()
+    local_query_filter = search.querySet().filter
 
     peptides = {}
     #iterate through the aa_choices
@@ -44,8 +51,8 @@ def searchStatistics(request):
             }
 
         #query segments matching this AA with just the fields we want to perform calcuations on
-        residueData = searchQuery.filter(**{aa_field:code}).values(*fieldNames)
-        peptide['total'] = searchQuery.filter(**{aa_field:code}).count()
+        residueData = local_query_filter(**{aa_field:code}).values(*fieldNames)
+        peptide['total'] = local_query_filter(**{aa_field:code}).count()
 
         #iterate through all the segment data
         for data in residueData:
@@ -63,13 +70,21 @@ def searchStatistics(request):
         #calculate statistics
         for attribute in stat_attributes:
             list = peptide['stats'][STAT_INDEX[attribute]][1]
-            list_len = len(list)
+            list_len = local_len(list)
             if list_len > 1:
-                mean = stats.mean(list)
+                #Average/mean
+                mean = local_sum(list)/list_len
+
                 #now that we have mean calculate standard deviation
-                stdev = stats.stdev(list)
-                range_min = '%+.3f' % (min(list) - mean)
-                range_max = '%+.3f' % (max(list) - mean)
+                stdev = math.sqrt(
+                    local_sum([
+                        local_pow(value - mean, 2)
+                        for value in list
+                    ])/(list_len - 1)
+                )
+
+                range_min = '%+.3f' % (local_min(list) - mean)
+                range_max = '%+.3f' % (local_max(list) - mean)
 
             # if theres only 1 item then the stats are simpler to calculate
             elif list_len == 1:
