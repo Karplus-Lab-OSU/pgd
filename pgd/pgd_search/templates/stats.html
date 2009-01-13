@@ -155,6 +155,9 @@
                         $(this).removeClass('selected');
                     })
 
+                $('td.sum:contains(0)').html('-')
+                $('td.data:contains(0.00)').html('--')
+
             });
 
             function showStats(stdev, min, max) {
@@ -203,7 +206,7 @@
                         <td class="{%cycle colClass%}">{{peptide.total}}</td>
                         <td class="borderleft"/>
                         {% for list in peptide.counts %}
-                            <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum_{{list.0}} {%cycle colClass%}">{{list.1}}</td>
+                            <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {%cycle colClass%}">{{list.1}}</td>
                         {% endfor %}
                         <td class="borderright"/>
                         {% for list in peptide.stats %}
