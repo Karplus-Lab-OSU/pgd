@@ -536,13 +536,13 @@ class ConfDistPlot():
 
                     # adjust dimensions to create 1 pixel border around bins
                     # do not adjust if creating the border will result in a height less than 1
-                    if self.xbin > 2:
+                    if width > 2:
                         width -= 2
                         xMin += 1
                     else:
                         width = 1
 
-                    if self.ybin > 2:
+                    if height > 2:
                         height -= 2
                         yMin += 1
                     else:
