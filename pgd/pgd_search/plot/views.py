@@ -14,6 +14,11 @@ Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
 def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
+    
+    #store functions locally for speed optimization
+    local_len = len
+    local_int = int
+
     svg = SVG()
 
     x = 65;
@@ -51,16 +56,18 @@ def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, att
     ystep = (yEnd - yStart) / 4
     for i in range(5):
         xtext = xStart + xstep*i
-        xhash = x+(width/4)*i-(2.5*len(str(xtext)))
-        svg.text(xhash, y+height+hashsize*2+3, str(xtext),12)
+        xtext = '%s' % local_int(xtext) if not xtext%1 else xtext
+        xhash = x+(width/4)*i-(2.6*local_len(xtext))
+        svg.text(xhash, y+height+hashsize*2+3, xtext,12)
 
         ytext = yEnd - ystep*i
+        ytext = '%s' % local_int(ytext) if not ytext%1 else ytext
         yhash = y+(height/4)*i+4
-        svg.text(x-5-(8*len(str(ytext))), yhash, str(ytext),12)
+        svg.text(x-15-(6*local_len(ytext)), yhash, ytext,12)
 
     #title text
-    len1 = 220 - len(xProperty)*7/2 - len(xProperty)*7/2
-    len2 = 182 - len(attribute)*7/2
+    len1 = 220 - local_len(xProperty)*7/2 - local_len(xProperty)*7/2
+    len2 = 182 - local_len(attribute)*7/2
     svg.text(len1,15, 'Plot of %s vs. %s' % (xProperty,yProperty), 12)
     svg.text(len2,35, 'Shading Based Off of %s' % attribute, 12)
 
