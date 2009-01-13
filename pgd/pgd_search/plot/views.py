@@ -16,7 +16,7 @@ Renders a conformational distribution graph
 def drawGraph(request, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10):
     svg = SVG()
 
-    x = 55;
+    x = 65;
     y = 45;
     height = 360;
     width = 360;
@@ -162,7 +162,7 @@ def renderToPNG(request):
         line(action, ctx)
 
     for bin in bins:
-        svgrec = Rect(bin[0], bin[1], bin[2], bin[3], 1, bin[4], bin[4])
+        svgrec = Rect(bin[0], bin[1], bin[3], bin[2], 1, bin[4], bin[4])
         rect(svgrec, ctx)
 
     for text in svg.texts:
@@ -204,6 +204,7 @@ def renderToSVG(request):
                         int(data['residue']),
                         data['xBin'],
                         data['yBin'])
+
             # get values out of the form
             response_dict['xProperty'] = form.cleaned_data['xProperty']
             response_dict['yProperty'] =form.cleaned_data['yProperty']
@@ -214,6 +215,7 @@ def renderToSVG(request):
     else:
         form = PlotForm() # An unbound form
         svg,boxes = drawGraph(request)
+
         # get default values from the form
         response_dict['xProperty'] = form.fields['xProperty'].initial
         response_dict['yProperty'] = form.fields['yProperty'].initial
