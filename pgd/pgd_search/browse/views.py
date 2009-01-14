@@ -16,7 +16,8 @@ def browse(request):
 
     # get search from session
     search = request.session['search']
-    segments = search.querySet()
+    iIndex = lint(math.ceil(searchSettings.segmentSize/2.0)-1)
+    segments = search.querySet().order_by('protein','r%i_chainIndex' % iIndex)
     paginator = Paginator(segments, 25) # Show 25 segments per page
 
     # Make sure page request is an int. If not, deliver first page.
