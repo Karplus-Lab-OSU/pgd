@@ -69,11 +69,30 @@
                 border-bottom:1px solid black;
             }
 
-            a.pagination                   { color:blue; text-decoration:none; }
-            a.pagination:visited           { color:blue; text-decoration:none; }
-            a.pagination:hover             { color:blue; text-decoration:underline; }
-            a.pagination:active            { color:blue; text-decoration:none;}
-        
+            a.pagination { 
+                border: 1px solid #3a76f1;
+                padding: 2px 4px 2px 4px;
+            }
+
+            .current_page {
+                color:white;
+                background-color:#3a76f1;
+                border: 1px solid blue;
+                padding: 2px 4px 2px 4px;
+                font-style:bold;
+            }
+
+            a.pagination:link { 
+                color:#3a76f1; 
+                text-decoration:none;
+            }
+            a.pagination:visited           { color:#3a76f1; text-decoration:none; }
+            a.pagination:hover             { 
+                color:black; 
+                text-decoration:none; 
+                border-color:black;
+            }
+            a.pagination:active            { color:#3a76f1; text-decoration:none;}
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -196,15 +215,26 @@
             <div class="pagination">
                 <span class="step-links">
                     {% if segments.has_previous %}
-                        <a class="pagination" href="?page={{ segments.previous_page_number }}">previous</a>
+                        <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
                     {% endif %}
 
                     <span class="current">
-                        Page {{ segments.number }} of {{ segments.paginator.num_pages }}.
+                        {% for section in pages %}
+                            {% if section %}
+                                {% if not forloop.first %}...{% endif%}
+                                {% for page in section %}
+                                    {% ifequal page segments.number %}
+                                        <span class="current_page">{{page}}</span>
+                                    {% else %}
+                                        <a class="pagination " href="?page={{ page }}">{{page}}</a>
+                                    {%endifequal%}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
                     </span>
 
                     {% if segments.has_next %}
-                        <a class="pagination" href="?page={{ segments.next_page_number }}">next</a>
+                        <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
                     {% endif %}
                 </span>
             </div>

@@ -29,7 +29,13 @@ def browse(request):
     try:
         paginatedSegments = paginator.page(page)
     except (EmptyPage, InvalidPage):
-        paginatedSegments = paginator.page(paginator.num_pages)
+        page = paginator.num_pages
+        paginatedSegments = paginator.page(page)
+
+    #generate a list of pages to display in the pagination bar
+    pages = ([i for i in range(1, 11 if page < 8 else 3)],
+            [i for i in range(page-5,page+5)] if page > 7 and page < paginator.num_pages-6 else None,
+            [i for i in range(paginator.num_pages-(1 if page < paginator.num_pages-6 else 9), paginator.num_pages+1)])
 
     #generate iValues
     iIndex = lint(math.ceil(searchSettings.segmentSize/2.0)-1)
@@ -57,5 +63,6 @@ def browse(request):
         'segmentSlice':'%i:%i'%(iIndex+start,iIndex+stop),
         'iIndex':iIndex,
         'pageStart':(page-1)*5,
-        'indexColors':colors
+        'indexColors':colors,
+        'pages':pages
     }, context_instance=RequestContext(request))
