@@ -6,8 +6,8 @@
         <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
         <style>
             #canvas {
-                width: 460;
-                height: 450;
+                width: 472;
+                height: 472;
                 margin: 5px;
             }
 
@@ -26,6 +26,10 @@
 
             #button-plot {
                 margin-top:10px;
+            }
+
+            input{
+                margin-right:10px;
             }
 
             #binDetails {
@@ -72,17 +76,39 @@
                 margin: 5px;
             }
 
-            #id_attribute, #id_xProperty, #id_yProperty, #id_residue, #id_reference {
+            #id_attribute, #id_xProperty, #id_yProperty, #id_residue, #id_reference, #id_background_color, #id_hash_color, #id_plot_hue, #id_graph_color, #id_text_color {
                 width:7.5em;
             }
 
-            #id_x, #id_y, #id_xBin {
+            #id_x, #id_y, #id_xBin, #id_height{
                 width:3.75em;
+                margin-right: 0px;
             }
 
-            #id_x1, #id_y1, #id_yBin {
+            #id_x1, #id_y1, #id_yBin, #id_width {
                 width:3.75em;
                 border-left:0px;
+            }
+
+            #buttons {
+                text-align:center;
+            }
+
+            #advanced {
+                border-top: 1px solid black;
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                border-bottom: 1px solid black;
+            }
+
+            .header {
+                background-color:#3a76f1;
+                color:white;
+                font-weight:bold;
+                padding-left:10px;
+            }
+            tr.spacer {
+                height:10px;
             }
         </style>
 
@@ -109,7 +135,7 @@
                         {{rect.y}}+fix,
                         {{rect.height}},
                         {{rect.width}},
-                        {fill: '{{rect.fill}}', stroke: '0', 'stroke-width': {{rect.stroke}}}
+                        {fill: '{{rect.fill}}', stroke:  "{{rect.stroke}}", 'stroke-width':0}
                     );
                 {% endfor %}
 
@@ -128,7 +154,7 @@
                         {{text.x}},
                         {{text.y}},
                         '{{text.text}}',
-                        {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.fill}}"}
+                        {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.color}}"}
                     );
                 {% endfor %}
 
@@ -168,6 +194,15 @@
                         $('#id_reference').val(REF[$(this).text()]['ref']);
                         });
                 })
+                $('#advanced').hide()
+                $('#advanced_toggle').click(function(){
+                    $('#advanced').toggle();
+                    if ($(this).html()=='Colors &gt;&gt;') {
+                        $(this).html('Colors <<');
+                    }else{
+                        $(this).html('Colors >>');
+                    }
+                })
 
             });
 
@@ -206,42 +241,68 @@
         {% include 'header.html' %}
         <div id="content">
             <div id="canvas"></div>
-            <table id="controls">
-            <form id="plotform" name="plot" method="POST" action="{{SITE_ROOT}}search/plot/svg/">
-                <tr>
-                    <td class="label">Plotted Attribute</td>
-                    <td>{{form.attribute}}</td>
-                    <td class="label col2">Reference</td>
-                    <td>{{form.reference}}</td>
-                </tr>
-                <tr>
-                    <td class="label">X Axis</td>
-                    <td>{{form.xProperty}}</td>
-                    <td class="label col2">X Min, Max</td>
-                    <td>{{form.x}}{{form.x1}}</td>
-                </tr>
-                <tr>
-                    <td class="label">Y Axis</td>
-                    <td>{{form.yProperty}}</td>
-                    <td class="label col2">Y Min, Max</td>
-                    <td>{{form.y}}{{form.y1}}</td>
-                </tr>
-                <tr>
-                    <td class="label">Residue</td>
-                    <td>{{form.residue}}</td>
-                    <td class="label col2">Bin X, Y</td>
-                    <td>{{form.xBin}}{{form.yBin}}</td>
-                </tr>
-
-            </form>
-            <tr>
-                <td colspan="100%" align="center">
+            <div id="buttons">
                 <button id="button-plot" class="field">Plot</button>
                 <button id="button-save">Save</button>
                 <button id="button-data">Data</button>
-                </td>
-            </tr>
-            </table>
+            </div>
+            <form id="plotform" name="plot" method="POST" action="{{SITE_ROOT}}search/plot/svg/">
+                
+                <table id="controls">
+                    <tbody>
+                    <tr><td class="header" colspan="100%">General</td></tr>
+                    <tr>
+                        <td class="label">Plotted Attribute</td>
+                        <td>{{form.attribute}}</td>
+                        <td class="label col2">Reference</td>
+                        <td>{{form.reference}}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">X Axis</td>
+                        <td>{{form.xProperty}}</td>
+                        <td class="label col2">X Min, Max</td>
+                        <td>{{form.x}}{{form.x1}}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Y Axis</td>
+                        <td>{{form.yProperty}}</td>
+                        <td class="label col2">Y Min, Max</td>
+                        <td>{{form.y}}{{form.y1}}</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Residue</td>
+                        <td>{{form.residue}}</td>
+                        <td class="label col2">Bin X, Y</td>
+                        <td>{{form.xBin}}{{form.yBin}}</td>
+                    </tr>
+
+                </tbody>
+
+                <tr class="spacer"/>
+                <tr><td id="advanced_toggle" class="header" colspan="100%">Colors >></td></tr>
+                <tbody id="advanced">
+                        <tr>
+                            <td class="label">Image Background</td>
+                            <td>{{form.background_color}}</td>
+                            <td class="label">Graph Background</td>
+                            <td>{{form.graph_color}}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Text Color</td>
+                            <td>{{form.text_color}}</td>
+                            <td class="label">Bin Shading</td>
+                            <td>{{form.plot_hue}}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Height/Width</td>
+                            <td>{{form.height}}{{form.width}}</td>
+                            <td class="label">Hash Color</td>
+                            <td>{{form.hash_color}}</td>
+                        </tr>
+                        </tbody>
+                </table>
+            </form>
+            
         </div>
 
         <div id="binDetails">

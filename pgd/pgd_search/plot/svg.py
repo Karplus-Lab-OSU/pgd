@@ -42,12 +42,12 @@ class Rect():
         self.fill = fill
 
 class Text():
-    def __init__(self, x,y,text, size,fontfamily='Verdana', fill=None):
+    def __init__(self, x,y,text, size,color='#000000', fontfamily='Verdana'):
         self.x = x
         self.y = y
         self.text = text
         self.size = size
         self.fontfamily = fontfamily
-        self.fill = fill
+        self.color = color
 
 
