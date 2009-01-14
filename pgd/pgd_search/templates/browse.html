@@ -93,6 +93,12 @@
                 border-color:black;
             }
             a.pagination:active            { color:#3a76f1; text-decoration:none;}
+            
+            #page_jump {
+                width:2.9em;
+                margin-left:3px;
+                margin-right:3px;
+            }
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -131,6 +137,8 @@
     </head>
     <body>
         {% include 'header.html' %}
+
+            <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
 
             <table id="results" >
                 <thead>
