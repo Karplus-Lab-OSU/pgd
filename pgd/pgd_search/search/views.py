@@ -27,7 +27,7 @@ def search(request):
 
             #at least for now limit the size of the result set
             if search.querySet().count() > 20000:
-                form._errors['Result Size'] = ErrorList(['Your query returned more than 10,000 records, refine your search'])
+                form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
 
             else:
                 #store search in session
