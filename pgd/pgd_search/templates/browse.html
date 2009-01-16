@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 
+{% load search_extras %}
+
 <html>
     <head>
         <style>
@@ -178,14 +180,14 @@
                 {% for segment in segments.object_list %}
                     <!--tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'-->
                     <tr class="spacer-top"/>
-                    {% for r in segment.residues|slice:segmentSlice %}
-                        
+                    {% for r in segment.residueProxies|slice:segmentSlice %}
+
                         <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                             <td>{% if forloop.first %}{{r.protein_id}}{%endif%}</td>
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
-                            <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa_full|capfirst}}</td>
+                            <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
                             <td class='borderLeft'/>
                             <td id="data_a1_{{forloop.counter}}" class="data a1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:2}}</td>
                             <td id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:2}}</td>
@@ -211,7 +213,7 @@
                             <td id="data_hbond_{{forloop.counter}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|floatformat:2}}</td>
                             <td id="data_zeta_{{forloop.counter}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|floatformat:2}}</td>
                         </tr>
-                        
+
                     {% endfor %}
                     <tr class="spacer-bottom"/>
                 <!--/tbody>

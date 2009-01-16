@@ -7,7 +7,7 @@ from constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 class Protein(models.Model):
     code        = models.CharField(max_length=4, primary_key=True, unique=True)
     threshold   = models.IntegerField() # new type; this should probably be a boolean type
-    resolution  = models.FloatField()
+    resolution  = models.FloatField(db_index=True)
     rfactor     = models.FloatField()
     
     def __unicode__(self):

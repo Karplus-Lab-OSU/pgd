@@ -14,17 +14,20 @@ from django.db.models import Q
 range_re = re.compile("(?<=[^-])-")
 comp_re  = re.compile("^([<>]=?)?")
 
-# Search settngs
+""" ================================
+Search Settings
+================================ """
 class SearchSettings(dbsettings.Group):
     segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches')
     requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available')
-searchSettings = SearchSettings('Splicer')
+searchSettings = SearchSettings('Search')
 
 # set defaults for settings
 if not searchSettings.segmentSize:
     set_setting_value('pgd_search.models', '', 'segmentSize', 10)
 if not searchSettings.requestedSegmentSize:
     set_setting_value('pgd_search.models', '', 'requestedSegmentSize', 10)
+
 
 # Search
 # A search query submitted by a user
@@ -197,8 +200,64 @@ class Search_residue(models.Model):
         self.ss = dict([(ss_choice[1],1 if self.ss_int == None else 1&self.ss_int>>ss_index) for ss_index,ss_choice in enumerate(SS_CHOICES)])
 
 
+""" ================================================================
+# ResidueProxy
+#
+# This is a proxy to properties stored in the segment.  It is used
+# to emulate having a Residue but really just returns properties
+# that are stored in the segment object.  This is used because
+# it is faster than fetching the Residue from the database
+#
+# This class is used in conjunction with ResidueProxy_subscripter
+================================================================ """
+class ResidueProxy():
+    def __init__(self, index, parent):
+        self.parent = parent
+        self.string = 'r%i_%%s' % index
+
+    def __getitem__(self, i):
+        return self.parent.__dict__[self.string % i]
+
+""" ================================================================
+# ResidueProxy_subscripter
+#
+# This class emulates a list of residues.  It returns ResidueProxy 
+# objects that emulate a real residue object.
+================================================================ """
+class ResidueProxy_subscripter():
+    def __init__(self, key, parent):
+        self.parent = parent
+        #add this instance to the parent. doing this here
+        #makes defining subscriptor instance simpler because
+        #you only need to specify the key once
+        parent.__dict__[key] = self
+
+        # create a list of proxy objects for the residues in this segment
+        self.proxies = []
+        l_append = self.proxies.append
+        for i in range(searchSettings.segmentSize):
+            l_append(ResidueProxy(i, parent))
+
+    def __getitem__(self, i):
+        try: # Get the object, if it's been instantiated...
+            return self.proxies[i]
+
+        except TypeError: # it wasn't an int, it must be a slice
+            #return the range of segments specified.  retrieve items through __getitem__() 
+            #so items are initialized if needed.
+            return self.proxies[i.start:i.stop:i.step if i.step else 1]
+
+
+""" ================================================================
 # Residue_subscripter
-# A subscripter for iterating through the Residues in a Segment
+#
+# This is a lazy loading list of residues that a segment contains
+# When residues are requested the id's are fetched from the parent
+# segment and used to lookup the residue.  Residues are cached so
+# repeat lookups do not require database interaction
+#
+# additionally this class also allows iteration of residues
+================================================================ """
 class Residue_subscripter():
     def __init__(self, key, parent):
         self.parent = parent
@@ -207,28 +266,29 @@ class Residue_subscripter():
         #you only need to specify the key once
         parent.__dict__[key] = self
 
+    # called when an index is requested (ie. residues[1])
     def __getitem__(self, i):
         try: # Get the object, if it's been instantiated...
-            return self.parent.__dict__['r%i' % i]
+            return self.foos[i]
 
         except KeyError: # ...otherwise, instantiate it.
+            pass
             # If the object can be instantiated, return it
-            if self.parent.__dict__['r%i_id' % i]:
+            '''if self.parent.__dict__['r%i_id' % i]:
                 self.parent.__dict__['r%i' % i] = Residue.objects.filter(id=self.parent.__dict__['r%i_id' % i])[0]
                 return self.parent.__dict__['r%i' % i]
 
             # otherwise return None.  These objects are proxies to underlying properties 
             # so they must always return a values or None
             else:
-                return None
+                return None'''
 
         except TypeError: # it wasn't an int, it must be a slice
             #return the range of segments specified.  retrieve items through __getitem__() 
             #so items are initialized if needed.
-            return [self.__getitem__(z) for z in range(i.start, i.stop, i.step if i.step else 1) ]
-            
+            return self.foo[i.start:i.stop:i.step if i.step else 1]
 
-
+    # called when an index is set (ie. residues[1]=foo)
     def __setitem__(self, i, v):
         #populate dict and set the FK
         if v:
@@ -254,9 +314,21 @@ class Residue_subscripter():
 #this pattern matches any property that is proxied to a residue
 proxyPattern = re.compile('^r([\d]+)_(?!id$)([\w]+)')
 
+""" ====================================================================
+Segment Model
 
-# Segment_abstract
-# A base class for the Segment object
+This model consists of 2 parts:
+   1) an abstract base class that contains all of the normal properties
+       and function definitions
+   2) a dynamically created child class that contains a set of fields
+      that dynamically resize depending on maximum possible segment
+      length.  This works by defining a dictionary of fields and 
+      passing it to the type() function which creates a class bound
+      to the namespace of this file
+
+This allows the segment model to change size dynamically at runtime.
+
+==================================================================== """
 iIndex = int(ceil(searchSettings.segmentSize/2.0)-1)
 class Segment_abstract(models.Model):
 
@@ -267,11 +339,12 @@ class Segment_abstract(models.Model):
     def __init__(self, *args, **kwargs):
         super(Segment_abstract, self).__init__(*args, **kwargs)
         Residue_subscripter('residues', self)
+        ResidueProxy_subscripter('residueProxies', self)
 
     def __getattribute__(self,name):
         if name == 'offset':
             return 0-self.__dict__['r%i_chainIndex' % iIndex]
-    
+
         #check for properties proxied to a residue object
         match = proxyPattern.match(name)
         if match:
@@ -310,5 +383,5 @@ for i in range(searchSettings.segmentSize):
     for j in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta"):
         seq_dict["r%i_%s" % (i,j)] = models.FloatField(null=True)
 
-# Create the Segment model with the fields from the dict
+# Create the Segment model class with the fields from the dict
 Segment = type('Segment', (Segment_abstract,), seq_dict)

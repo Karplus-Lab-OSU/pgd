@@ -9,15 +9,20 @@ from pgd_search.models import searchSettings
 display search results in tabular form
 """
 def browse(request):
-
     #saving globals as locals for speed
     lhex = hex
     lint = int
 
     # get search from session
     search = request.session['search']
+
+    #generate iValues
+    start = 0 - (search.segmentLength-1) / 2
+    stop  = lint(math.ceil((search.segmentLength-1) / 2.0))+1
     iIndex = lint(math.ceil(searchSettings.segmentSize/2.0)-1)
-    segments = search.querySet().order_by('protein','r%i_chainIndex' % iIndex)
+
+    #paginate
+    segments = search.querySet().order_by('protein')
     paginator = Paginator(segments, 25) # Show 25 segments per page
 
     # Make sure page request is an int. If not, deliver first page.
@@ -37,11 +42,6 @@ def browse(request):
     pages = ([i for i in range(1, 11 if page < 8 else 3)],
             [i for i in range(page-5,page+5)] if page > 7 and page < paginator.num_pages-6 else None,
             [i for i in range(paginator.num_pages-(1 if page < paginator.num_pages-6 else 9), paginator.num_pages+1)])
-
-    #generate iValues
-    iIndex = lint(math.ceil(searchSettings.segmentSize/2.0)-1)
-    start = 0 - (search.segmentLength-1) / 2
-    stop  = lint(math.ceil((search.segmentLength-1) / 2.0))+1
 
     # use ranges for RGB to introduce colorful steps
     colors = [] 
