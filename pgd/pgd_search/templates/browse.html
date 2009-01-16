@@ -184,7 +184,7 @@
 
                         <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
-                            <td>{% if forloop.first %}{{r.protein_id}}{%endif%}</td>
+                            <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
                             <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
