@@ -205,15 +205,18 @@ class BinPoint():
             lsum = sum
             lpow = pow
 
-            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): # Use special formulas for angles...
+            # Circular Values - some angles require that formulas for circular mean and stdev are used 
+            # this is required because the values 'wrap around' at 180.  
+            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): 
                 #store locals for speed
                 lsin = math.sin
                 lcos = math.cos
                 lpi = math.pi
                 lradians = math.radians
 
-                # Average
-                radAngles = [lradians(lobs[i].dat[key]%360) for i in range(self.numObs) if lobs[i].dat[key] not in (0,999.90)]
+                # Circular Average - use some fancy trig that takes circular values into account.  This
+                #                    requires all values to be converted to radians.   
+                radAngles = [lradians(lobs[i].dat[key]) for i in range(self.numObs) if lobs[i].dat[key] not in (0,999.90)]
                 len_radAngle = len(radAngles)
                 radAvg = math.atan2(
                     lsum([lsin(radAngle) for radAngle in radAngles])/len_radAngle,
@@ -221,17 +224,21 @@ class BinPoint():
                 )
                 avg = math.degrees(radAvg)
 
-                # Standard Deviation
+                # Standard Deviation - shift the range of deviations +180 by applying %(2*pi) to all angles
+                #                      this creates a range of deviations -180-540.  Values greater than 180
+                #                      are then shifted back by substracting from 360, resulting in deviations
+                #                      -180-180.  From there the Stdev formula is the same.
                 msum = 0
+                lpi_2 = lpi*2
                 for radAngle in radAngles:
-                    straight = radAngle - radAvg
-                    rotation = (radAngle + lpi)%(2*lpi) - (radAngle + lpi)%(2*lpi)
-                    msum += lpow(straight if straight < rotation else rotation, 2)
+                    straight = radAngle%lpi_2 - radAvg
+                    msum += lpow(straight if straight < lpi else lpi_2, 2)
 
                 #save calculated values
                 self.stats[key] = [avg, math.sqrt(msum/(len_radAngle - 1))]
 
-            else: # ... otherwise, use the traditional formulas
+            # ... otherwise, use the traditional formulas
+            else: 
 
                 # Average
                 values = [lobs[i].dat[key] for i in range(self.numObs) if lobs[i].dat[key] not in (0.0,999.90)]
