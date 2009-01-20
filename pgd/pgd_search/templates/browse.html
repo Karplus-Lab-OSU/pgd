@@ -7,10 +7,20 @@
     <head>
         <style>
 
-            table {
+            table#results {
                 border-collapse:collapse;
                 border-spacing:0px;
-                margin:20px;
+                margin-top:20px;
+
+                /* Reset alignment to compensate for 'text-align:center': */
+                text-align: left;
+                /* Specify the width of the element. This should be the same
+                    as 'body min-width': */
+                width: 500px;
+                /* Set left and right margins to auto, thus centering the 
+                    element in the containing (body) tag: */
+                margin-left: auto;
+                margin-right: auto;
             }
 
             .borderRight {
@@ -23,6 +33,10 @@
             td {
                 padding:.3em;
                 text-align:center;
+            }
+
+            tr.header {
+                border: 1px solid black;
             }
 
             tr.spacer-top {
@@ -49,9 +63,12 @@
             }
 
             th {
-                padding-left:3px;
+                padding-left:4px;
+                padding-right:4px;
                 background-color:#1854d0;
                 color:white;
+                white-space: nowrap;
+                text-align:center;
             }
 
             th.col_selected {
@@ -140,48 +157,81 @@
     <body>
         {% include 'header.html' %}
 
+        
+
             <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if segments.has_previous %}
+                        <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
+                    {% endif %}
+
+                    <span class="current">
+                        {% for section in pages %}
+                            {% if section %}
+                                {% if not forloop.first %}...{% endif%}
+                                {% for page in section %}
+                                    {% ifequal page segments.number %}
+                                        <span class="current_page">{{page}}</span>
+                                    {% else %}
+                                        <a class="pagination " href="?page={{ page }}">{{page}}</a>
+                                    {%endifequal%}
+                                {% endfor %}
+                            {% endif %}
+                        {% endfor %}
+                    </span>
+
+                    {% if segments.has_next %}
+                        <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
+                    {% endif %}
+                </span>
+            </div>
 
             <table id="results" >
                 <thead>
-                <tr class="header">
-                    <th>Match  </th>
-                    <th>Code</th>
-                    <th>Residue</th>
-                    <th>ID</th>
-                    <th class='aa'>AA</th>
-                    <th/>
-                    <th class='a1'>a1</th>
-                    <th class='a2'>a2</th>
-                    <th class='a3'>a3</th>
-                    <th class='a4'>a4</th>
-                    <th class='a5'>a5</th>
-                    <th class='a6'>a6</th>
-                    <th class='a7'>a7</th>
-                    <th class='l1'>L1</th>
-                    <th class='l2'>L2</th>
-                    <th class='l3'>L3</th>
-                    <th class='l4'>L4</th>
-                    <th class='l5'>L5</th>
-                    <th/>
-                    <th class='ss'>ss</th>
-                    <th class='phi'>phi</th>
-                    <th class='psi'>psi</th>
-                    <th class='ome'>ome</th>
-                    <th class='chi'>chi</th>
-                    <th class='bm'>bm</th>
-                    <th class='bs'>bs</th>
-                    <th class='bg'>bg</th>
-                    <th class='hbond'>H Bond</th>
-                    <th class='zeta'>Zeta</th>
-                </tr>
+                
                 </thead>
                 <tbody>
                 {% for segment in segments.object_list %}
                     <!--tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'-->
-                    <tr class="spacer-top"/>
-                    {% for r in segment.residueProxies|slice:segmentSlice %}
 
+                    {% if forloop.counter0|divisibleby:5 %}
+                        <tr class="header">
+                            <th>Match  </th>
+                            <th>Code</th>
+                            <th>Residue</th>
+                            <th>ID</th>
+                            <th class='aa'>AA</th>
+                            <th class='borderLeft'/>
+                            <th class='a1'>a1</th>
+                            <th class='a2'>a2</th>
+                            <th class='a3'>a3</th>
+                            <th class='a4'>a4</th>
+                            <th class='a5'>a5</th>
+                            <th class='a6'>a6</th>
+                            <th class='a7'>a7</th>
+                            <th class='l1'>L1</th>
+                            <th class='l2'>L2</th>
+                            <th class='l3'>L3</th>
+                            <th class='l4'>L4</th>
+                            <th class='l5'>L5</th>
+                            <th class='borderRight'/>
+                            <th class='ss'>ss</th>
+                            <th class='phi'>phi</th>
+                            <th class='psi'>psi</th>
+                            <th class='ome'>ome</th>
+                            <th class='chi'>chi</th>
+                            <th class='bm'>bm</th>
+                            <th class='bs'>bs</th>
+                            <th class='bg'>bg</th>
+                            <th class='hbond'>H Bond</th>
+                            <th class='zeta'>Zeta</th>
+                        </tr>
+                    {% else %}
+                        <tr class="spacer-top"/>                       
+                    {% endif %} 
+                    {% for r in segment.residueProxies|slice:segmentSlice %}
+                        
                         <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                             <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
@@ -222,6 +272,7 @@
                 </tbody>
             </table>
 
+            <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
             <div class="pagination">
                 <span class="step-links">
                     {% if segments.has_previous %}
