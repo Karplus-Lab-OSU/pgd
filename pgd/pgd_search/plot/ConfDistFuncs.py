@@ -211,7 +211,6 @@ class BinPoint():
                 #store locals for speed
                 lsin = math.sin
                 lcos = math.cos
-                lpi = math.pi
                 lradians = math.radians
 
                 # Circular Average - use some fancy trig that takes circular values into account.  This
@@ -229,10 +228,11 @@ class BinPoint():
                 #                      are then shifted back by substracting from 360, resulting in deviations
                 #                      -180-180.  From there the Stdev formula is the same.
                 msum = 0
+                lpi = math.pi
                 lpi_2 = lpi*2
                 for radAngle in radAngles:
                     straight = radAngle%lpi_2 - radAvg
-                    msum += lpow(straight if straight < lpi else lpi_2, 2)
+                    msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
 
                 #save calculated values
                 self.stats[key] = [avg, math.sqrt(msum/(len_radAngle - 1))]
