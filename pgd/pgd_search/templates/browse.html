@@ -138,18 +138,20 @@
                 result = element.parentNode.parentNode.parentNode.id
 
                 //highlight same result in other tables
-                $('tbody tr:nth-child(7n+'+offset+') ' + attribute).addClass('selected');
+                $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).addClass('selected');
                 $('tr.header th.'+matches[1]).addClass('col_selected');
             }
 
             function dOut(){
-                $('tbody tr:nth-child(7n+'+offset+') ' + attribute).removeClass('selected');
+                $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).removeClass('selected');
                 $('tr.header th.col_selected').removeClass('col_selected');
             }
 
             $(document).ready(function() {
                 // replace invalid values with something to make them stand out from valid data
                 $("td:contains('999.90')").html('--');
+                $("td:contains('0.000')").html('--');
+                $("td:contains('0.00')").html('--');
             });
 
         </script>
