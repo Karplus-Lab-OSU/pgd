@@ -65,5 +65,7 @@ def browse(request):
         'iIndex':iIndex,
         'pageStart':(page-1)*5,
         'indexColors':colors,
-        'pages':pages
+        'pages':pages,
+        'segmentLength':search.segmentLength
+
     }, context_instance=RequestContext(request))
