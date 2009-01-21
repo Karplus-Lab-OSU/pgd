@@ -234,6 +234,14 @@ def processSearchObject(search):
             codes.append(code.code)
         data['proteins'] = codes
 
+    #setup defaults - initial values are not set when passing a dict to the form constructor
+    # so any value with a default value must be initialized prior to values are pulled out
+    # of the Search object
+    for i in range(searchSettings.segmentSize):
+        data['bm_%i' % i ]  = SearchForm.base_fields['bm_%i' % i].initial
+        data['bg_%i' % i ]  = SearchForm.base_fields['bg_%i' % i].initial
+        data['bs_%i' % i ]  = SearchForm.base_fields['bs_%i' % i].initial
+        data['ome_%i' % i ] = SearchForm.base_fields['ome_%i' % i].initial
 
     #process per residue properties
     for residue in search.residues.all():
