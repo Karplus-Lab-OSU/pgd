@@ -235,7 +235,7 @@ class BinPoint():
                     msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
 
                 #save calculated values
-                self.stats[key] = [avg, math.sqrt(msum/(len_radAngle - 1))]
+                self.stats[key] = [avg, math.degrees(math.sqrt(msum/(len_radAngle - 1)))]
 
             # ... otherwise, use the traditional formulas
             else: 
