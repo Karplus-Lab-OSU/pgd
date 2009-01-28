@@ -198,7 +198,10 @@ class BinPoint():
 
         # if there is only 1 observation then avg is the only value and deviation is zero
         if self.numObs == 1:
-            self.stats[key] = [lobs[0].dat[key],0]
+            if lobs[0].dat[key] in (0.0,999.90):
+                self.stats[key] = [lobs[0].dat[key],0]
+            else:
+                self.stats[key] = [0,0]
 
         #if there is more than one observation then we must calculate the values
         else:
@@ -217,40 +220,61 @@ class BinPoint():
                 #                    requires all values to be converted to radians.   
                 radAngles = [lradians(lobs[i].dat[key]) for i in range(self.numObs) if lobs[i].dat[key] not in (0,999.90)]
                 len_radAngle = len(radAngles)
-                radAvg = math.atan2(
-                    lsum([lsin(radAngle) for radAngle in radAngles])/len_radAngle,
-                    lsum([lcos(radAngle) for radAngle in radAngles])/len_radAngle
-                )
-                avg = math.degrees(radAvg)
 
-                # Standard Deviation - shift the range of deviations +180 by applying %(2*pi) to all angles
-                #                      this creates a range of deviations -180-540.  Values greater than 180
-                #                      are then shifted back by substracting from 360, resulting in deviations
-                #                      -180-180.  From there the Stdev formula is the same.
-                msum = 0
-                lpi = math.pi
-                lpi_2 = lpi*2
-                for radAngle in radAngles:
-                    straight = radAngle%lpi_2 - radAvg
-                    msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
+                #check for valid values
+                if len_radAngle:
 
-                #save calculated values
-                self.stats[key] = [avg, math.degrees(math.sqrt(msum/(len_radAngle - 1)))]
+                    #when there is only one valid value calculations aren't needed
+                    if len_radAngle == 1:
+                        self.stats[key] = [lobs[0].dat[key], 0]
+
+                    else:
+                        radAvg = math.atan2(
+                            lsum([lsin(radAngle) for radAngle in radAngles])/len_radAngle,
+                            lsum([lcos(radAngle) for radAngle in radAngles])/len_radAngle
+                        )
+                        avg = math.degrees(radAvg)
+
+                        # Standard Deviation - shift the range of deviations +180 by applying %(2*pi) to all angles
+                        #                      this creates a range of deviations -180-540.  Values greater than 180
+                        #                      are then shifted back by substracting from 360, resulting in deviations
+                        #                      -180-180.  From there the Stdev formula is the same.
+                        msum = 0
+                        lpi = math.pi
+                        lpi_2 = lpi*2
+                        for radAngle in radAngles:
+                            straight = radAngle%lpi_2 - radAvg
+                            msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
+
+                        #save calculated values
+                        self.stats[key] = [avg, math.degrees(math.sqrt(msum/(len_radAngle)))]
 
             # ... otherwise, use the traditional formulas
             else: 
 
                 # Average
                 values = [lobs[i].dat[key] for i in range(self.numObs) if lobs[i].dat[key] not in (0.0,999.90)]
-                avg = lsum(values)/len(values)
+                #check to make sure there was at least one valid value
+                len_values = len(values)
+                if len_values:
 
-                # Standard Deviation
-                self.stats[key] = [avg, math.sqrt(
-                    lsum([
-                        lpow(value - avg, 2)
-                        for value in values
-                    ])/(len(values) - 1)
-                )]
+                    #when there is only one valid value calculations aren't needed
+                    if len_values == 1:
+                        self.stats[key] = [values[0], 0]
+
+                    else:
+                        avg = lsum(values)/len_values
+                        # Standard Deviation
+                        self.stats[key] = [avg, math.sqrt(
+                            lsum([
+                                lpow(value - avg, 2)
+                                for value in values
+                            ])/(len_values)
+                        )]
+
+                #no valid values
+                else:
+                     self.stats[key] = [0,0]
 
         if key and key == ref:
             self.avg = self.stats[key][BIN_STATS_AVERAGE]
