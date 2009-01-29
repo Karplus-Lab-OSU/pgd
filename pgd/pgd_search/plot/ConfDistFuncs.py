@@ -235,7 +235,7 @@ class BinPoint():
                     msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
 
                 #save calculated values
-                self.stats[key] = [avg, math.degrees(math.sqrt(msum/(self.numObs)))]
+                self.stats[key] = [avg, math.degrees(math.sqrt(msum/(self.numObs-1)))]
 
             # ... otherwise, use the traditional formulas
             else: 
@@ -249,7 +249,7 @@ class BinPoint():
                     lsum([
                         lpow(value - avg, 2)
                         for value in values
-                    ])/self.numObs
+                    ])/(self.numObs-1)
                 )]
 
 
