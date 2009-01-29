@@ -576,8 +576,8 @@ class ConfDistPlot():
         # excluding invalid values from the results
         if self.ref == 'Observations':
             residues = self.querySet.exclude(
-                                                  Q(**{'%s__in'%xProperty:(999.90,0)}) 
-                                                | Q(**{'%s__in'%yProperty:(999.90,0)})
+                                                  Q(**{str('%s__in'%xProperty):(999.90,0)}) 
+                                                | Q(**{str('%s__in'%yProperty):(999.90,0)})
                                             ).values(*(xProperty, yProperty))
         else:
             #include attribute to analyze
