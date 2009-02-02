@@ -531,7 +531,15 @@ class ConfDistPlot():
 
                     # Special Case for # obs
                     if self.ref == "Observations":
-                        color = self.DetermineColor( self.ref, num)
+                        #color = self.DetermineColor( self.ref, num)
+                        color = map(
+                            lambda x: x*math.log(
+                                num+1,
+                                self.maxObs+1
+                            ),
+                            (255.0,180.0,200.0)
+                        )
+                        color[1] += 75
                     else:
                         color = self.DetermineColor( self.ref, self.plotBin.bins[key].GetAvg(self.ref) )
                         #force stats to be evaluated
