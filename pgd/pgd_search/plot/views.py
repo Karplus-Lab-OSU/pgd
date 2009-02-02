@@ -313,7 +313,7 @@ def plotDump(request):
             response = HttpResponse(mimetype="text/tab-separated-values")
             response['Content-Disposition'] = 'attachment; filename="plot.tsv"'
 
-            cdp.Plot()
+            cdp.Plot(True)
             cdp.PrintDump(response)
 
             return response

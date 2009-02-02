@@ -565,7 +565,7 @@ class ConfDistPlot():
     # ******************************************************
     # Plots the points
     # ******************************************************
-    def Plot(self):
+    def Plot(self, all_fields=False):
         # Turn all the query results into an array of points
 
         #construct property names
@@ -573,20 +573,27 @@ class ConfDistPlot():
         yProperty = 'r%i_%s' % (self.residue, self.yText)
 
         # pick fields to query
-        # excluding invalid values from the results
+        if all_fields:
+            fields = ['r%i_%s' % (self.residue, field[0]) for field in PLOT_PROPERTY_CHOICES]
+        else: 
+            fields = [xProperty, yProperty]
+
+        # excluding invalid values from the results, only for the three fields were selecting on
         if self.ref == 'Observations':
             residues = self.querySet.exclude(
                                                   Q(**{str('%s__in'%xProperty):(999.90,0)}) 
                                                 | Q(**{str('%s__in'%yProperty):(999.90,0)})
-                                            ).values(*(xProperty, yProperty))
+                                            ).values(*fields)
         else:
             #include attribute to analyze
             attrProperty = 'r%i_%s' % (self.residue, self.ref)
+            if attrProperty not in fields:            
+                fields.append(attrProperty) 
             residues = self.querySet.exclude(
                                                   Q(**{str('%s__in'%xProperty):(999.90,0)}) 
                                                 | Q(**{str('%s__in'%yProperty):(999.90,0)})
                                                 | Q(**{str('%s__in'%attrProperty):(999.90,0)})
-                                            ).values(*(xProperty, yProperty, attrProperty))
+                                            ).values(*fields)
 
         for data in residues:
             if self.ref <> 'Observations':
@@ -616,6 +623,7 @@ class ConfDistPlot():
     # *******************************************************************************
     def PrintDump(self, writer):
 
+        residue = self.residue
 
         static_titles = ['PhiAvg', 'PhiDev', 'PsiAvg', 'PsiDev', 'L1Avg', 'L1Dev', 'L2Avg',
         'L2Dev', 'L3Avg', 'L3Dev', 'L4Avg', 'L4Dev', 'L5Avg', 'L5Dev', 'a1Avg', 'a1Dev', 'a2Avg', 'a2Dev', 'a3Avg', 'a3Dev', 'a4Avg',
@@ -674,9 +682,9 @@ class ConfDistPlot():
             # Start averages and standard deviations
             for field in PLOT_PROPERTY_CHOICES:
                 writer.write('\t')
-                writer.write(round(bin.GetAvg(field[0]), 1))
+                writer.write(round(bin.GetAvg('r%i_%s' % (residue, field[0])) , 1))
                 writer.write('\t')
-                writer.write(round(bin.GetDev(field[0]), 3))
+                writer.write(round(bin.GetDev('r%i_%s' % (residue, field[0])) , 3))
 
 
 # ******************************************************
