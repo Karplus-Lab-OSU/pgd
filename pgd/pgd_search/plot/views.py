@@ -226,7 +226,6 @@ def renderToSVG(request):
 
     response_dict = {
         'referenceValues' : RefDefaults(),
-        'stats_fields':STATS_FIELDS
         }
 
     if request.method == 'POST': # If the form has been submitted
