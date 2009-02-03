@@ -12,6 +12,15 @@ from pgd_search.models import *
 from constants import *
 import math
 
+# Takes angles between -180 and 180 and returns the
+# angle of the shortest arc between the two
+def shortCircle(first,second):
+    straight = second - first
+    return  (
+                straight
+            ) if -180 < straight < 180 else (
+                (360 if straight < 0 else -360) + straight
+            )
 
 #-------------------------------------------------------------------------------------------------------------------
 # Stores a coordinate including actualy x,y values and x,y translated to pixel space
@@ -351,6 +360,7 @@ class ConfDistPlot():
         self.points = []
         self.bin = None
         self.plotBin = None
+        self.dataAvg = 0
         #self.attribute = attribute
 
         #determine residue
@@ -464,6 +474,19 @@ class ConfDistPlot():
     def PlotPoints(self):
         bins = []
 
+        if self.ref != 'Observations':
+            self.minPropAvg = None
+            self.maxPropAvg = None
+            self.avgPropAvg = 0
+            for key in self.plotBin.bins:
+                    bin = self.plotBin.bins[key].GetAvg(self.ref)
+                    self.avgPropAvg += bin
+                    if (self.minPropAvg == None or self.minPropAvg > bin):
+                        self.minPropAvg = bin
+                    if (self.maxPropAvg == None or self.maxPropAvg < bin):
+                        self.maxPropAvg = bin
+            self.avgPropAvg /= len(self.plotBin.bins)
+
         # Only bins need to be painted, so cycle through the bins
         for key in self.plotBin.bins:
                 bin = self.plotBin.bins[key]
@@ -493,6 +516,7 @@ class ConfDistPlot():
                     yMax = math.floor(yC)
                     yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
                     height = yMax-yMin
+                    avg = self.plotBin.bins[key].GetAvg(self.ref) if self.ref != 'Observations' else 0
 
                     # Special Case for # obs
                     if self.ref == "Observations":
@@ -505,10 +529,29 @@ class ConfDistPlot():
                             (255.0,180.0,200.0)
                         )
                         color[1] += 75
-                    else:
-                        color = self.DetermineColor( self.ref, self.plotBin.bins[key].GetAvg(self.ref) )
+                    elif self.ref == 'ome':
+                        color = self.DetermineColor( self.ref, avg )
                         #force stats to be evaluated
                         bin.ComputeStats(self.ref, self.ref)
+                    else:
+                        color = map(
+                            lambda x: (0.5+((
+                                math.log(
+                                    avg-self.avgPropAvg+1,
+                                    self.maxPropAvg-self.avgPropAvg+1
+                                )
+                            ) if avg > self.avgPropAvg else (
+                                -math.log(
+                                    self.avgPropAvg-avg+1,
+                                    self.avgPropAvg-self.minPropAvg+1
+                                )
+                            ))/2)*x,
+                            (255.0,180.0,200.0)
+                        )
+                        color[1] += 75
+                        #force stats to be evaluated
+                        bin.ComputeStats(self.ref, self.ref)
+                    
 
                     self.plotBin.bins['%s-%s'%(bin.xBin,bin.yBin)].SetColorStep(color[-1])
 
@@ -552,27 +595,23 @@ class ConfDistPlot():
             fields = [xProperty, yProperty]
 
         # excluding invalid values from the results, only for the three fields were selecting on
-        if self.ref == 'Observations':
-            residues = self.querySet.exclude(
+        residues = self.querySet.exclude(
                                                   Q(**{str('%s__in'%xProperty):(999.90,0)}) 
                                                 | Q(**{str('%s__in'%yProperty):(999.90,0)})
-                                            ).values(*fields)
-        else:
+                                            )
+        if self.ref != 'Observations':
             #include attribute to analyze
             attrProperty = 'r%i_%s' % (self.residue, self.ref)
             if attrProperty not in fields:            
                 fields.append(attrProperty) 
-            residues = self.querySet.exclude(
-                                                  Q(**{str('%s__in'%xProperty):(999.90,0)}) 
-                                                | Q(**{str('%s__in'%yProperty):(999.90,0)})
-                                                | Q(**{str('%s__in'%attrProperty):(999.90,0)})
-                                            ).values(*fields)
-
-        for data in residues:
+            residues = residues.exclude(Q(**{str('%s__in'%attrProperty):(999.90,0)}))
+        
+        for data in residues.values(*fields):
             if self.ref <> 'Observations':
                 #fix property name for later use
                 data[self.ref] = data[attrProperty]
-                data[attrProperty]
+                if self.ref not in ('ome',):
+                    self.dataAvg += data[attrProperty]
 
             # Original Values of X and Y
             xOrig = data[xProperty]
@@ -586,6 +625,7 @@ class ConfDistPlot():
         # Create a bins for the values
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
+        self.dataAvg /= len(data)
 
         # Plot the bad boy
         return self.PlotPoints()
