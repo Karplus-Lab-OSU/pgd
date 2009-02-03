@@ -12,9 +12,6 @@ from pgd_search.models import *
 from constants import *
 import math
 
-# calculate stats for these fields when plotting
-STATS_FIELDS = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7']
-
 
 #-------------------------------------------------------------------------------------------------------------------
 # Stores a coordinate including actualy x,y values and x,y translated to pixel space
@@ -607,7 +604,7 @@ class ConfDistPlot():
             if self.ref <> 'Observations':
                 #fix property name for later use
                 data[self.ref] = data[attrProperty]
-                del data[attrProperty]
+                data[attrProperty]
 
             # Original Values of X and Y
             xOrig = data[xProperty]
@@ -633,25 +630,43 @@ class ConfDistPlot():
 
         residue = self.residue
 
-        static_titles = ['PhiAvg', 'PhiDev', 'PsiAvg', 'PsiDev', 'L1Avg', 'L1Dev', 'L2Avg',
-        'L2Dev', 'L3Avg', 'L3Dev', 'L4Avg', 'L4Dev', 'L5Avg', 'L5Dev', 'a1Avg', 'a1Dev', 'a2Avg', 'a2Dev', 'a3Avg', 'a3Dev', 'a4Avg',
-        'a4Dev', 'a5Avg', 'a5Dev', 'a6Avg', 'a6Dev', 'a7Avg', 'a7Dev', 'OmeAvg', 'OmeDev']
+        #fields to include, order in this list is important
+        STATS_FIELDS = ['phi','psi','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta','h_bond_energy']
+        lower_case_fields = ['a1','a2','a3','a4','a5','a6','a7']
+        field_replacements = {'h_bond_energy':'HBond'}
+
+        #capitalize parameters where needed
+        if self.xText in lower_case_fields:
+            xText = self.xText
+        else:
+            xText = self.xText.capitalize()
+
+        if self.yText in lower_case_fields:
+            yText = self.yText
+        else:
+            yText = self.yText.capitalize()
 
         #output the dynamic titles
-        writer.write('%sstart' % self.xText)
+        writer.write('%sstart' % xText)
         writer.write('\t')
-        writer.write('%sstop' % self.xText)
+        writer.write('%sstop' % xText)
         writer.write('\t')
-        writer.write('%sstart' % self.yText)
+        writer.write('%sstart' % yText)
         writer.write('\t')
-        writer.write('%sstop' % self.yText)
+        writer.write('%sstop' % yText)
         writer.write('\t')
-        writer.write('%s' % self.ref)
+        writer.write('Observations')
 
         #output the generic titles
-        for title in static_titles:
+        for title in STATS_FIELDS:
+            if title in field_replacements:
+                title = field_replacements[title]
+            elif not title in lower_case_fields:
+                title = title.capitalize()
             writer.write('\t')
-            writer.write(title)
+            writer.write('%sAvg' % title)
+            writer.write('\t')
+            writer.write('%sDev' % title)
 
         # Cycle through the binPoints
         for key in self.plotBin.bins:
@@ -672,12 +687,12 @@ class ConfDistPlot():
 
             box = self.plotBin.GetBinCoords(x, y)
 
-            # Phi range
+            # x axis range
             writer.write(box[0].x)
             writer.write('\t')
             writer.write(box[0].y)
 
-            # psi range
+            # y-axis range
             writer.write('\t')
             writer.write(box[1].x)
             writer.write('\t')
@@ -688,11 +703,11 @@ class ConfDistPlot():
             writer.write(bin.numObs)
 
             # Start averages and standard deviations
-            for field in PLOT_PROPERTY_CHOICES:
+            for field in STATS_FIELDS:
                 writer.write('\t')
-                writer.write(round(bin.GetAvg('r%i_%s' % (residue, field[0])) , 1))
+                writer.write(round(bin.GetAvg('r%i_%s' % (residue, field)) , 1))
                 writer.write('\t')
-                writer.write(round(bin.GetDev('r%i_%s' % (residue, field[0])) , 3))
+                writer.write(round(bin.GetDev('r%i_%s' % (residue, field)) , 3))
 
 
 # ******************************************************
