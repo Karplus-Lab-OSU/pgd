@@ -392,38 +392,6 @@ class ConfDistPlot():
         self.USEREF[key] = self.REF[key]
 
     # ******************************************************
-    # Creates a color array 
-    # colorInterval: Interval for colors 
-    # ******************************************************
-    def CreateColors(self, colorInterval):
-
-        COLORS = {
-                        -10 :[colorInterval * 0,colorInterval * 0,colorInterval * 0],
-                         -9 :[colorInterval * 1,colorInterval * 1,colorInterval * 1],
-                         -8 :[colorInterval * 2,colorInterval * 2,colorInterval * 2],
-                         -7 :[colorInterval * 3,colorInterval * 3,colorInterval * 3],
-                         -6 :[colorInterval * 4,colorInterval * 4,colorInterval * 4],
-                         -5 :[colorInterval * 5,colorInterval * 5,colorInterval * 5],
-                         -4 :[colorInterval * 6,colorInterval * 6,colorInterval * 6],
-                         -3 :[colorInterval * 7,colorInterval * 7,colorInterval * 7],
-                         -2 :[colorInterval * 8,colorInterval * 8,colorInterval * 8],
-                         -1 :[colorInterval * 9,colorInterval * 9,colorInterval * 9],
-                         0  :[ colorInterval * 10,colorInterval * 10,colorInterval * 10],
-                         1  :[ colorInterval * 11,colorInterval * 11,colorInterval * 11],
-                         2  :[ colorInterval * 12,colorInterval * 12,colorInterval * 12],
-                         3  :[ colorInterval * 13,colorInterval * 13,colorInterval * 13],
-                         4  :[ colorInterval * 14,colorInterval * 14,colorInterval * 14],
-                         5  :[ colorInterval * 15,colorInterval * 15,colorInterval * 15],
-                         6  :[ colorInterval * 16,colorInterval * 16,colorInterval * 16],
-                         7  :[ colorInterval * 17,colorInterval * 17,colorInterval * 17],
-                         8  :[ colorInterval * 18,colorInterval * 18,colorInterval * 18],
-                         9  :[ colorInterval * 19,colorInterval * 19,colorInterval * 19],
-                         10 :[ colorInterval * 20,colorInterval * 20,colorInterval * 20]
-                       }
-        return COLORS
-
-
-    # ******************************************************
     # Determines color coding for a bin
     # key: value of interest
     # val: value of the value
