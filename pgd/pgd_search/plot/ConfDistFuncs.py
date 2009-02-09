@@ -627,7 +627,7 @@ class ConfDistPlot():
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
         if residues.count():
-            self.dataAvg /= len(residues.count())
+            self.dataAvg /= residues.count()
 
         # Plot the bad boy
         return self.PlotPoints()
