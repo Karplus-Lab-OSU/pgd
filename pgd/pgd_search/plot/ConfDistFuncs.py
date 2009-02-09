@@ -485,7 +485,8 @@ class ConfDistPlot():
                         self.minPropAvg = bin
                     if (self.maxPropAvg == None or self.maxPropAvg < bin):
                         self.maxPropAvg = bin
-            self.avgPropAvg /= len(self.plotBin.bins)
+            if len(self.plotBin.bins):
+                self.avgPropAvg /= len(self.plotBin.bins)
 
         # Only bins need to be painted, so cycle through the bins
         for key in self.plotBin.bins:
@@ -625,7 +626,8 @@ class ConfDistPlot():
         # Create a bins for the values
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
         self.maxObs = self.plotBin.maxObs
-        self.dataAvg /= len(data)
+        if residues.count():
+            self.dataAvg /= len(residues.count())
 
         # Plot the bad boy
         return self.PlotPoints()
