@@ -29,8 +29,11 @@ if not searchSettings.requestedSegmentSize:
     set_setting_value('pgd_search.models', '', 'requestedSegmentSize', 10)
 
 
+""" ================================
 # Search
-# A search query submitted by a user
+#
+# A query submitted by a user
+================================ """
 class Search(models.Model):
     user             = models.ForeignKey(User, null=True)
     codes_include    = models.BooleanField(null=True)
@@ -52,41 +55,73 @@ class Search(models.Model):
         # for now parse query every time.  otherwise the query results will be stored in the session
         return self.parse_search()
 
+    # Return the segments matched by the search.
     def parse_search(self):
+
+        # Start with all segments...
         query = Segment.objects.all()
+
+        # ...filter by segmentLength...
         if self.segmentLength > 1:
             query = query.filter(length__gte=self.segmentLength)
+
+        # ...filter by code lists...
         if self.codes_include:
             query = query.__getattribute__('filter' if self.codes_include else 'exclude')(protein__in=(x.code for x in self.codes.all()))
+
+        # ...filter by code lists...
         if self.resolution_min != None:
             query = query.filter(protein__resolution__gte=self.resolution_min)
+
+        # ...filter by resolution...
         if self.resolution_max != None:
             query = query.filter(protein__resolution__lte=self.resolution_max)
+
+        # ...filter by threshold...
         if self.threshold != None:
             query = query.filter(protein__threshold__lte=self.threshold)
 
-        for search_res in self.residues.all():
-            seg_prefix = "r%i_"%(search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1))
+        # ...filter by query strings (for values and value ranges)...
+        for search_res in self.residues.all(): # iterate through all search residues in self
+            seg_prefix = "r%i_"%(
+                # convert from the search residue index to indexes 0...n
+                search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)
+            )
 
-            # handle boolean values
+            # ...handle boolean values...
+            #   (Filter on each binary field that is not set to NULL/None.)
             query = query.filter(**dict((
                     (seg_prefix+field, search_res.__dict__[field])
                     for field in (
                         'xpr',
                     ) if search_res.__dict__[field] != None
                 )))
-            # TODO: implement the new _int system
+
+            # ...handle the '_int' values...
+            #   ('_int' values are a series of booleans stored grouped in an integer.)
             for field,choices in filter(
+                   # use only those (_int,_CHOICES) pairs with a '_include' value.
                    lambda x: search_res.__dict__[x[0]+'_include'] != None,
                    (
                        ('aa_int', AA_CHOICES),
                        ('ss_int', SS_CHOICES),
                    )
-               ):
-               query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(**{seg_prefix+field[0:-4]+"__in": [choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index]})
+                ):
+                query = query.__getattribute__(
+                    # call either 'filter' or 'exclude', depending on the value of '_include'
+                    'filter' if search_res.__dict__[field+'_include'] else 'exclude'
+                )(
+                    # check to see that the value of the segment residue is in the set of
+                    # residues described in the '_int' of the search residue.
+                    **{seg_prefix+field[0:-4]+"__in": [
+                        # get the designated choice names as stored in the database.
+                        choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index
+                    ]}
+                )
 
-            # handle query strings
+            # ...handle query strings...
             for field in filter(
+                    # use only the fields with a '_include' value. 
                     lambda x: search_res.__dict__[x+'_include'] != None,
                     (
                         'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
@@ -96,18 +131,26 @@ class Search(models.Model):
                         'h_bond_energy',
                         'zeta',
                 )):
+
+                # seg_field is the name of the property of the given residue in the database
                 seg_field = seg_prefix+field
 
-                query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(
+                query = query.__getattribute__(
+                    # call either 'filter' or 'exclude', depending on the value of '_include'
+                    'filter' if search_res.__dict__[field+'_include'] else 'exclude'
+                )(
+                    # OR each of the statements in the query string together
                     reduce(
                         lambda x,y: x|y,
                         (
                             Q(
                                 **(
                                     {
+                                        # check if a value falls within a range
                                         seg_field+'__gte' : float(range_re.split(constraint)[0]),
                                         seg_field+'__lte' : float(range_re.split(constraint)[1]),
                                     } if range_re.search(constraint) else {
+                                        # apply one (or none) of the following comparison operators
                                         seg_field + {
                                             ''   : '',
                                             '>'  : '__gt',
@@ -115,27 +158,44 @@ class Search(models.Model):
                                             '<'  : '__lt',
                                             '<=' : '__lte',
                                         }[comp_re.search(constraint).group(0)] :
+                                        # extract the numeric value
                                         constraint.strip('><=')
 
                                     }
                                 )
+                            # take each statement of the query string in turn
                             ) for constraint in str(search_res.__dict__[field]).split(',')
                         )
                     ))
         return query
 
+""" ================================
 # Search_code
-# Codes for the proteins searched on
+#
+# Codes indicating to which proteins
+# a Search is applied.
+================================ """
 class Search_code(models.Model):
     search  = models.ForeignKey(Search, related_name='codes')
     code    = models.CharField(max_length=4)
 
+""" ================================
+# Search_code
+#
+# The per-residue properties of a
+# Search
+================================ """
 # Search_residue
 # The search fields per residue
 class Search_residue(models.Model):
     search          = models.ForeignKey(Search, related_name='residues')
     index           = models.IntegerField()
     chainID         = models.CharField(max_length=1, null=True)
+    
+    # Performing bitwise operations on aa_int gives the set of amino acids to check against.
+    # aa_int&1<<i   AA_CHOICE[i]
+    # 0 : Not in set
+    # 1 : In set
     aa_int          = models.IntegerField(null=True)
 
     a1              = models.CharField(max_length=30, null=True)
@@ -150,7 +210,13 @@ class Search_residue(models.Model):
     L3              = models.CharField(max_length=30, null=True)
     L4              = models.CharField(max_length=30, null=True)
     L5              = models.CharField(max_length=30, null=True)
+
+    # Performing bitwise operations on ss_int gives the set of secondary structures to check against.
+    # ss_int&1<<i   AA_CHOICE[i]
+    # 0 : Not in set
+    # 1 : In set
     ss_int          = models.IntegerField(null=True)
+
     phi             = models.CharField(max_length=30, null=True)
     psi             = models.CharField(max_length=30, null=True)
     ome             = models.CharField(max_length=30, null=True)
