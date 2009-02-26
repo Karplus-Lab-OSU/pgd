@@ -258,10 +258,10 @@ class BinPoint():
                     ])/(self.numObs-1)
                 )]
 
-
-        if key and key == ref:
-            self.avg = self.stats[key][BIN_STATS_AVERAGE]
-            self.dev = self.stats[key][BIN_STATS_DEVIATION]
+        # big change
+        #if key and key == ref:
+        self.avg = self.stats[key][BIN_STATS_AVERAGE]
+        self.dev = self.stats[key][BIN_STATS_DEVIATION]
 
     # ******************************************************
     # Returns the average for a specificed value, such as phi, psi, L1
@@ -472,25 +472,37 @@ class ConfDistPlot():
     # Plots observations
     # ******************************************************
     def PlotPoints(self):
-        bins = []
+        binVals = []
+        bins = self.plotBin.bins
+        
+        if self.ref != 'Observations' and len(bins):
+            
+            if self.ref in ('ome',):
+                radAngles = [math.radians(val.GetAvg(self.ref)) for val in bins.values()]
 
-        if self.ref != 'Observations':
-            self.minPropAvg = None
-            self.maxPropAvg = None
-            self.avgPropAvg = 0
-            for key in self.plotBin.bins:
-                    bin = self.plotBin.bins[key].GetAvg(self.ref)
-                    self.avgPropAvg += bin
-                    if (self.minPropAvg == None or self.minPropAvg > bin):
-                        self.minPropAvg = bin
-                    if (self.maxPropAvg == None or self.maxPropAvg < bin):
-                        self.maxPropAvg = bin
-            if len(self.plotBin.bins):
-                self.avgPropAvg /= len(self.plotBin.bins)
+                meanPropAvg = math.degrees(math.atan2(
+                    sum([math.sin(radAngle) for radAngle in radAngles])/len(radAngles),
+                    sum([math.cos(radAngle) for radAngle in radAngles])/len(radAngles)
+                ))
+                #stdPropAvg = radAngles[0] if len(radAngles) == 2 else math.sqrt(reduce(
+                #    lambda x,y: x+y,
+                #    [(x-meanPropAvg)**2 for x in radAngles]
+                #)/(len(radAngles)-1))
+                
+                    
+            else:
+                propAvgs = [x.GetAvg(self.ref) for x in bins.values()]
+                meanPropAvg = sum(propAvgs)/len(propAvgs)
+                stdPropAvg = propAvgs[0] if len(propAvgs) == 2 else math.sqrt(reduce(
+                    lambda x,y: x+y,
+                    [(x-meanPropAvg)**2 for x in propAvgs]
+                )/(len(propAvgs)-1))
+                minPropAvg = meanPropAvg - 3*stdPropAvg
+                maxPropAvg = meanPropAvg + 3*stdPropAvg
 
         # Only bins need to be painted, so cycle through the bins
-        for key in self.plotBin.bins:
-                bin = self.plotBin.bins[key]
+        for key in bins:
+                bin = bins[key]
 
                 # Determine actual image location of the bin
                 x = bin.xBin * self.plotBin.xLen
@@ -517,9 +529,7 @@ class ConfDistPlot():
                     yMax = math.floor(yC)
                     yMin = yMax - round(self.plotBin.yLen / self.yPixelSize)
                     height = yMax-yMin
-                    avg = self.plotBin.bins[key].GetAvg(self.ref) if self.ref != 'Observations' else 0
 
-                    # Special Case for # obs
                     if self.ref == "Observations":
                         #color = self.DetermineColor( self.ref, num)
                         color = map(
@@ -529,36 +539,54 @@ class ConfDistPlot():
                             ),
                             (255.0,180.0,200.0)
                         )
-                        color[1] += 75
-                    elif self.ref == 'ome':
-                        color = self.DetermineColor( self.ref, avg )
-                        #force stats to be evaluated
-                        bin.ComputeStats(self.ref, self.ref)
-                    else:
+                    elif self.ref in ('ome',):
+                        avg = bin.GetAvg(self.ref)
+                        difference = shortCircle(avg,meanPropAvg)
+
                         color = map(
                             lambda x: (0.5+((
                                 math.log(
-                                    avg-self.avgPropAvg+1,
-                                    self.maxPropAvg-self.avgPropAvg+1
+                                    difference+1,
+                                    180+1
                                 )
-                            ) if avg > self.avgPropAvg else (
+                            ) if difference >= 0 else (
                                 -math.log(
-                                    self.avgPropAvg-avg+1,
-                                    self.avgPropAvg-self.minPropAvg+1
+                                    -difference+1,
+                                    180+1
                                 )
                             ))/2)*x,
                             (255.0,180.0,200.0)
                         )
-                        color[1] += 75
-                        #force stats to be evaluated
-                        bin.ComputeStats(self.ref, self.ref)
-                    
 
-                    self.plotBin.bins['%s-%s'%(bin.xBin,bin.yBin)].SetColorStep(color[-1])
+                        
+
+                        #force stats to be evaluated
+                        #bin.ComputeStats(self.ref, self.ref)
+                    else:
+                        avg = bin.GetAvg(self.ref)
+                        color = [255,-75,255] if avg <= minPropAvg else [255,-75,255] if avg >= maxPropAvg else map(
+                            lambda x: (0.5+((
+                                math.log(
+                                    avg-meanPropAvg+1,
+                                    maxPropAvg-meanPropAvg+1
+                                )
+                            ) if avg > meanPropAvg else (
+                                -math.log(
+                                    meanPropAvg-avg+1,
+                                    meanPropAvg-minPropAvg+1
+                                )
+                            ))/2)*x,
+                            (255.0,180.0,200.0)
+                        )
+                    color[1] += 75
+                    #force stats to be evaluated
+                    #bin.ComputeStats(self.ref, self.ref)
+                    
+                    
+                    bins['%s-%s'%(bin.xBin,bin.yBin)].SetColorStep(color[-1])
 
                     #convert decimal RGB into HEX rgb
-                    fill = '%s%s%s' % (hex(int(color[0]))[2:], hex(int(color[1]))[2:], hex(int(color[2]))[2:])
-
+                    fill = ''.join('%02x'%round(x) for x in color)
                     # adjust dimensions to create 1 pixel border around bins
                     # do not adjust if creating the border will result in a height less than 1
                     if width > 2:
@@ -574,9 +602,9 @@ class ConfDistPlot():
                         height = 1
 
                     # add rectangle to list
-                    bins.append( [xMin, yMin, width, height, fill, fill, bin] )
+                    binVals.append( [xMin, yMin, width, height, fill, fill, bin] )
 
-        return bins
+        return binVals
 
 
     # ******************************************************
