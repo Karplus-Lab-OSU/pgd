@@ -23,21 +23,6 @@ def shortCircle(first,second):
             )
 
 #-------------------------------------------------------------------------------------------------------------------
-# Stores a coordinate including actualy x,y values and x,y translated to pixel space
-# Coordinates also have a dat string which is a unique identifier for the coordinate
-class Coord():
-
-    # ******************************************************
-    # Constructor
-    # ******************************************************
-    def __init__(self, x, y, xP, yP, dat):
-        self.dat    = dat   # ID and CODE forming a unique key for the object
-        self.x      = x     # actual x
-        self.y      = y     # actual y
-        self.xP     = xP    # pixel x
-        self.yP     = yP    # pixel y
-
-#-------------------------------------------------------------------------------------------------------------------
 # Class that divides an array of coordinates
 # into bins specificed by an area
 #-------------------------------------------------------------------------------------------------------------------
@@ -48,21 +33,21 @@ class Bin():
     # ******************************************************
     def __init__(self, xLen, yLen, xMin, xMax, yMin, yMax, points):
 
-        self.xLen       = xLen    # size of bounding box
+        self.xLen       = xLen      # size of bounding box
         self.yLen       = yLen
-        self.xMin       = xMin # Boundaries for x and y
+        self.xMin       = xMin      # Boundaries for x and y
         self.xMax       = xMax
         self.yMin       = yMin
         self.yMax       = yMax
         self.bins       = {}        # Bins
-        self.points     = points # list of points
-        self.maxObs     = 0 # initial max observed
+        self.points     = points    # list of points
+        self.maxObs     = 0         # initial max observed
 
         # Create the bins
-        for i in range(len(self.points)):
+        for point in self.points:
             # Determine which bin a particular point belongs to
-            xBin = math.floor( self.points[i]['x'] / self.xLen )
-            yBin = math.floor( self.points[i]['y'] / self.yLen )
+            xBin = math.floor( point['x'] / self.xLen )
+            yBin = math.floor( point['y'] / self.yLen )
 
             key = '%s-%s' % (xBin,yBin)
 
@@ -70,10 +55,10 @@ class Bin():
 
             if self.bins.has_key(key):
                 # add to the bin a new observation
-                self.bins[key].AddObs( self.points[i] )
+                self.bins[key].AddObs( point )
             #otherwise create the bin
             else:
-                self.bins[key] = BinPoint( self.points[i], self.points[i]['xP'], self.points[i]['yP'], xBin, yBin )
+                self.bins[key] = BinPoint( point, xBin, yBin )
 
             if self.bins[key].numObs > self.maxObs:
                 self.maxObs = self.bins[key].numObs
@@ -123,44 +108,21 @@ BIN_STATS_AVERAGE = 0
 BIN_STATS_DEVIATION = 1
 class BinPoint():
 
-    #numObs    = None    # Number of observations
-    #stats     = None
-    #sum       = None    # sum of all data
-    #obs       = None    # Array of observations
-    #xP        = None    # X in pixel space
-    #yP        = None    # Y in pixel space
-    #colorStep = None    # The color that should be used for the bin
-    #xBin      = None    # the bin's location in the grand scheme of things
-    #yBin      = None
-
     # ******************************************************
     # Saves original data x, y and pixel space x1 y1
     # and which xbin ybin the point belongs to
     # ******************************************************
     def __init__(self, coord, xP, yP, xBin, yBin):
-        self.xP = xP
-        self.yP = yP
-        self.numObs = 0
-        self.colorStep = None
-        self.xBin = xBin
-        self.yBin = yBin
-        self.obs = []
-        self.stats = {}
-        self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
+        self.xP = point['xP']   # X in pixel space
+        self.yP = point['yP']   # Y in pixel space
+        self.numObs = 0         # Number of observations
+        self.xBin = xBin        # The bin's location
+        self.yBin = yBin        # ^^
+        self.obs = []           # Array of observations
+        self.stats = {}         # 
+        self.AddObs(coord)      # add the original x,y data to the list of observations for self bin
         avg = 0
         dev = 0
-    # ******************************************************
-    # Sets color bin
-    # ******************************************************
-    def SetColorStep(self, color):
-        self.colorStep = color
-
-
-    # ******************************************************
-    # Gets color bin
-    # ******************************************************
-    def GetColor(self):
-        return self.colorStep
 
     # ******************************************************
     # Saves original data x, y into the observation array
@@ -168,7 +130,6 @@ class BinPoint():
     def AddObs(self, coord):
         self.obs.append(coord)
         self.numObs = self.numObs + 1
-
 
     # ******************************************************
     # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
@@ -188,7 +149,7 @@ class BinPoint():
 
             # Circular Values - some angles require that formulas for circular mean and stdev are used 
             # this is required because the values 'wrap around' at 180.  
-            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'): 
+            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'):
                 #store locals for speed
                 lsin = math.sin
                 lcos = math.cos
@@ -266,30 +227,6 @@ class BinPoint():
 #                             Query to used to populate plot
 #-------------------------------------------------------------------------------------------------------------------
 class ConfDistPlot():
-
-    #points      all data points
-    #plotBin     bins for the plot
-    #ref         Reference attribute for shading
-
-    #xRange      X min and Max
-    #yRange      Y min and Max
-    #xPlotSize   X dimension for plot
-    #yPlotSize   Y dimension for plot
-    #xPixelSize  size of one x pixel
-    #yPixelSize  size of one y pixel
-     
-    #xText       text for x axis
-    #yText       test for y axis
-    #fontSize    size of font
-    #fontHeight  height of font
-    #fontWidth   width of font
-     
-    #maxObs      maximum number of observations
-    #REF         Reference values
-    #USEREF      
-    #table       table to use
-    #xbin        
-    #ybin        
 
     # ******************************************************
     # Constructor
@@ -402,56 +339,53 @@ class ConfDistPlot():
                     height = yMax-yMin
 
                     if self.ref == "Observations":
+                        scale = math.log(num+1, self.maxObs+1)
                         color = map(
-                            lambda x: x*math.log(
-                                num+1,
-                                self.maxObs+1
-                            ),
+                            lambda x: x*scale,
                             (255.0,180.0,200.0)
                         )
                     elif self.ref in ('ome',):
                         avg = bin.GetAvg(self.ref)
                         difference = shortCircle(avg,meanPropAvg)
-                        color = [255,-75,255] if -difference >= stdPropAvgX3 else [255,-75,255] if difference >= stdPropAvgX3 else map(
-                            lambda x: (0.5+((
-                                math.log(
-                                    difference+1,
-                                    stdPropAvgX3+1
-                                )
-                            ) if difference >= 0 else (
-                                -math.log(
-                                    -difference+1,
-                                    stdPropAvgX3+1
-                                )
-                            ))/2)*x,
-                            (255.0,180.0,200.0)
-                        )
-                        
-
-                        #force stats to be evaluated
-                        #bin.ComputeStats(self.ref, self.ref)
+                        if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
+                            color = [255,-75,255]
+                        else:
+                            scale = 0.5+((
+                                    math.log(
+                                        difference+1,
+                                        stdPropAvgX3+1
+                                    )
+                                ) if difference >= 0 else (
+                                    -math.log(
+                                        -difference+1,
+                                        stdPropAvgX3+1
+                                  )
+                               ))/2
+                            color = map(
+                                lambda x: x*scale,
+                                (255.0,180.0,200.0)
+                            )
                     else:
                         avg = bin.GetAvg(self.ref)
-                        color = [255,-75,255] if avg <= minPropAvg else [255,-75,255] if avg >= maxPropAvg else map(
-                            lambda x: (0.5+((
-                                math.log(
-                                    avg-meanPropAvg+1,
-                                    maxPropAvg-meanPropAvg+1
-                                )
-                            ) if avg > meanPropAvg else (
-                                -math.log(
-                                    meanPropAvg-avg+1,
-                                    meanPropAvg-minPropAvg+1
-                                )
-                            ))/2)*x,
-                            (255.0,180.0,200.0)
-                        )
+                        if avg <= minPropAvg or avg >= maxPropAvg:
+                            color = [255,-75,255]
+                        else:
+                            scale = 0.5+((
+                                    math.log(
+                                        avg-meanPropAvg+1,
+                                        maxPropAvg-meanPropAvg+1
+                                    )
+                                ) if avg > meanPropAvg else (
+                                    -math.log(
+                                        meanPropAvg-avg+1,
+                                        meanPropAvg-minPropAvg+1
+                                    )
+                                ))/2
+                            color = map(
+                                lambda x: x*scale,
+                                (255.0,180.0,200.0)
+                            )
                     color[1] += 75
-                    #force stats to be evaluated
-                    #bin.ComputeStats(self.ref, self.ref)
-                    
-                    
-                    bins['%s-%s'%(bin.xBin,bin.yBin)].SetColorStep(color[-1])
 
                     #convert decimal RGB into HEX rgb
                     fill = ''.join('%02x'%round(x) for x in color)
