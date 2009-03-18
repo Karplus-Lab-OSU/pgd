@@ -27,21 +27,15 @@ def shortCircle(first,second):
 # Coordinates also have a dat string which is a unique identifier for the coordinate
 class Coord():
 
-    x   =  None # actual x,y values and pixel space x,y
-    y   = None
-    xP  = None
-    yP  = None 
-    dat = None                # ID and CODE forming a unique key for the object
-
     # ******************************************************
     # Constructor
     # ******************************************************
     def __init__(self, x, y, xP, yP, dat):
-        self.dat = dat
-        self.x = x
-        self.y = y
-        self.xP = xP
-        self.yP = yP
+        self.dat    = dat   # ID and CODE forming a unique key for the object
+        self.x      = x     # actual x
+        self.y      = y     # actual y
+        self.xP     = xP    # pixel x
+        self.yP     = yP    # pixel y
 
 #-------------------------------------------------------------------------------------------------------------------
 # Class that divides an array of coordinates
@@ -53,16 +47,37 @@ class Bin():
     # Constructor
     # ******************************************************
     def __init__(self, xLen, yLen, xMin, xMax, yMin, yMax, points):
-        self.xLen = xLen    # size of bounding box
-        self.yLen = yLen
-        self.xMin = xMin # Boundaries for x and y
-        self.xMax = xMax
-        self.yMin = yMin
-        self.yMax = yMax
-        self.bins   = {}        # Bins
-        self.points = points # list of points
-        self.maxObs = 0 # initial max observed
-        self.MakeBins() # Create the bins
+
+        self.xLen       = xLen    # size of bounding box
+        self.yLen       = yLen
+        self.xMin       = xMin # Boundaries for x and y
+        self.xMax       = xMax
+        self.yMin       = yMin
+        self.yMax       = yMax
+        self.bins       = {}        # Bins
+        self.points     = points # list of points
+        self.maxObs     = 0 # initial max observed
+
+        # Create the bins
+        for i in range(len(self.points)):
+            # Determine which bin a particular point belongs to
+            xBin = math.floor( self.points[i]['x'] / self.xLen )
+            yBin = math.floor( self.points[i]['y'] / self.yLen )
+
+            key = '%s-%s' % (xBin,yBin)
+
+            # If no bin currently exists, make a new binpoint
+
+            if self.bins.has_key(key):
+                # add to the bin a new observation
+                self.bins[key].AddObs( self.points[i] )
+            #otherwise create the bin
+            else:
+                self.bins[key] = BinPoint( self.points[i], self.points[i]['xP'], self.points[i]['yP'], xBin, yBin )
+
+            if self.bins[key].numObs > self.maxObs:
+                self.maxObs = self.bins[key].numObs
+        
 
     # ******************************************************
     # Returns the bin coordinates for a specified location
@@ -78,8 +93,8 @@ class Bin():
 
         # Create a coordinate for the x and y bins that specificies the minimum and maximum
         # for the bin
-        return (Coord(xFloor, xFloor + self.xLen, 0, 0, None),
-                Coord(yFloor, yFloor + self.yLen, 0, 0, None))
+        return ({'x': xFloor, 'y': xFloor + self.xLen, 'xP': 0, 'yP': 0, 'dat': None},
+                {'x': yFloor, 'y': yFloor + self.yLen, 'xP': 0, 'yP': 0, 'dat': None})
 
     # ******************************************************
     # Returns the bin at a specificied coordinate
@@ -99,31 +114,6 @@ class Bin():
         bin = self.GetBin(x, y)
         return bin.numObs
 
-    # ******************************************************
-    # Makes the bins
-    # ******************************************************
-    def MakeBins(self):
-        # Iterate through all the points in the plot that need to be binned
-
-        for i in range(len(self.points)):
-            # Determine which bin a particular point belongs to
-            xBin = math.floor( self.points[i].x / self.xLen )
-            yBin = math.floor( self.points[i].y / self.yLen )
-
-            key = '%s-%s' % (xBin,yBin)
-
-            # If no bin currently exists, make a new binpoint
-
-            if self.bins.has_key(key):
-                # add to the bin a new observation
-                self.bins[key].AddObs( self.points[i] )
-            #otherwise create the bin
-            else:
-                self.bins[key] = BinPoint( self.points[i], self.points[i].xP, self.points[i].yP, xBin, yBin )
-
-            # if the bin now holds the max number of observations, increased the max num of observations for ANY bin
-            if self.bins[key].numObs > self.maxObs:
-                self.maxObs = self.bins[key].numObs
 
 
 #-------------------------------------------------------------------------------------------------------------------
@@ -133,15 +123,15 @@ BIN_STATS_AVERAGE = 0
 BIN_STATS_DEVIATION = 1
 class BinPoint():
 
-    numObs    = None    # Number of observations
-    stats     = None
-    sum       = None    # sum of all data
-    obs       = None    # Array of observations
-    xP        = None    # X in pixel space
-    yP        = None    # Y in pixel space
-    colorStep = None    # The color that should be used for the bin
-    xBin      = None    # the bin's location in the grand scheme of things
-    yBin      = None
+    #numObs    = None    # Number of observations
+    #stats     = None
+    #sum       = None    # sum of all data
+    #obs       = None    # Array of observations
+    #xP        = None    # X in pixel space
+    #yP        = None    # Y in pixel space
+    #colorStep = None    # The color that should be used for the bin
+    #xBin      = None    # the bin's location in the grand scheme of things
+    #yBin      = None
 
     # ******************************************************
     # Saves original data x, y and pixel space x1 y1
@@ -159,21 +149,6 @@ class BinPoint():
         self.AddObs(coord)    # add the original x,y data to the list of observations for self bin
         avg = 0
         dev = 0
-
-    # ******************************************************
-    # Returns the x bin #
-    # ******************************************************
-    def GetXBin(self):
-        return self.xBin
-
-
-    # ******************************************************
-    # Returns the y bin #
-    # ******************************************************
-    def GetYBin(self):
-        return self.yBin
-
-
     # ******************************************************
     # Sets color bin
     # ******************************************************
@@ -204,7 +179,7 @@ class BinPoint():
 
         # if there is only 1 observation then avg is the only value and deviation is zero
         if self.numObs == 1:
-            self.stats[key] = [lobs[0].dat[key],0]
+            self.stats[key] = [lobs[0]['dat'][key],0]
 
         #if there is more than one observation then we must calculate the values
         else:
@@ -221,7 +196,7 @@ class BinPoint():
 
                 # Circular Average - use some fancy trig that takes circular values into account.  This
                 #                    requires all values to be converted to radians.
-                radAngles = [lradians(obs.dat[key]) for obs in lobs]
+                radAngles = [lradians(obs['dat'][key]) for obs in lobs]
 
                 radAvg = math.atan2(
                     lsum([lsin(radAngle) for radAngle in radAngles])/self.numObs,
@@ -245,7 +220,7 @@ class BinPoint():
 
             # ... otherwise, use the traditional formulas
             else: 
-                values = [obs.dat[key] for obs in lobs]
+                values = [obs['dat'][key] for obs in lobs]
 
                 # Average
                 avg = lsum(values)/self.numObs
@@ -292,37 +267,29 @@ class BinPoint():
 #-------------------------------------------------------------------------------------------------------------------
 class ConfDistPlot():
 
-    xSize       = None      # Size of image horizontally
-    ySize       = None      # Size of image vertically
-    xOff        = None      # Horizontal offset to start plot
-    yOff        = None      # Vertical offset to start plot
-    img         = None      # the image itself
-    black       = None      # the color black
-    white       = None      # the color white
-    querySet     = None     # the django query set
-    points      = None      # all data points
-    plotBin     = None      # bins for the plot
-    ref         = None      # Reference attribute for shading
+    #points      all data points
+    #plotBin     bins for the plot
+    #ref         Reference attribute for shading
 
-    xRange      = None      # X min and Max
-    yRange      = None      # Y min and Max
-    xPlotSize   = None      # X dimension for plot
-    yPlotSize   = None      # Y dimension for plot
-    xPixelSize  = None      # size of one x pixel
-    yPixelSize  = None      # size of one y pixel
-
-    xText       = None      # text for x axis
-    yText       = None      # test for y axis
-    fontSize    = None      # size of font
-    fontHeight  = None      # height of font
-    fontWidth   = None      # width of font
-
-    maxObs      = None      # maximum number of observations
-    REF         = None      # Reference values
-    USEREF      = None
-    table       = None      # table to use
-    xbin        = None
-    ybin        = None
+    #xRange      X min and Max
+    #yRange      Y min and Max
+    #xPlotSize   X dimension for plot
+    #yPlotSize   Y dimension for plot
+    #xPixelSize  size of one x pixel
+    #yPixelSize  size of one y pixel
+     
+    #xText       text for x axis
+    #yText       test for y axis
+    #fontSize    size of font
+    #fontHeight  height of font
+    #fontWidth   width of font
+     
+    #maxObs      maximum number of observations
+    #REF         Reference values
+    #USEREF      
+    #table       table to use
+    #xbin        
+    #ybin        
 
     # ******************************************************
     # Constructor
@@ -334,23 +301,23 @@ class ConfDistPlot():
     # ref:                reference attribute for shading
     # ******************************************************
     def __init__(self, x, y, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet):
-        self.querySet = querySet
-        self.xSize = x
-        self.ySize = y
-        self.xOff = xOffset
-        self.yOff = yOffset
-        self.xPadding = xPadding
-        self.yPadding = yPadding
-        self.ref = ref
-        self.xbin = xbin
-        self.ybin = ybin
+        self.querySet   = querySet  # the django query set
+        self.xSize      = x         # Size of image horizontally
+        self.ySize      = y         # Size of image vertically
+        self.xOff       = xOffset   # Horizontal offset to start plot
+        self.yOff       = yOffset   # Vertical offset to start plot
+        self.xPadding   = xPadding  # 
+        self.yPadding   = yPadding  # 
+        self.ref        = ref       #
+        self.xbin       = xbin      #
+        self.ybin       = ybin      #
 
         # Plotting region is the space allowed inside the image
         # excluding the border area of offsets
-        self.xPlotSize = self.xSize - 2 * self.xPadding
-        self.yPlotSize = self.ySize - 2 * self.yPadding
-        self.xRange = [xMin, xMax]
-        self.yRange = [yMin, yMax]
+        self.xPlotSize  = self.xSize - 2 * self.xPadding
+        self.yPlotSize  = self.ySize - 2 * self.yPadding
+        self.xRange     = [xMin, xMax]
+        self.yRange     = [yMin, yMax]
 
         self.xPixelSize = (self.xRange[1] - self.xRange[0]) / float(self.xPlotSize)    # Range / PlotSize = PixelSize
         self.yPixelSize = (self.yRange[1] - self.yRange[0]) / float(self.yPlotSize)
@@ -364,109 +331,12 @@ class ConfDistPlot():
         #self.attribute = attribute
 
         #determine residue
-        if residue:
-            self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + residue
-        #default is index 0
-        else:
-            self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1)
+        
+        self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue if residue else 0)
 
         # Reference array that contains information for a specific type of value
         self.REF = RefDefaults()
         self.USEREF = self.REF
-
-    # ******************************************************
-    # Returns reference values used
-    # key: value of interest
-    # ******************************************************
-    def GetColorRefs(self, key):
-        arr[0] = self.USEREF[key]['ref']
-        arr[1] = self.USEREF[key]['stepsize']
-        return arr
-
-    # ******************************************************
-    # Sets reference value for a certain key
-    # key: variable
-    # attrib: attribute
-    # value: value to set to
-    # ******************************************************
-    def SetRefAttrib(self, key, attrib, value):
-        self.USEREF[key][attrib] = value
-        self.USEREF[key]['custom'] = true
-
-
-    # ******************************************************
-    # Resets reference value for a certain key
-    # key: variable
-    # ******************************************************
-    def ResetRefAttrib(self, key):
-        self.USEREF[key] = self.REF[key]
-
-    # ******************************************************
-    # Determines color coding for a bin
-    # key: value of interest
-    # val: value of the value
-    # ******************************************************
-    def DetermineColor(self, key, val):
-
-        colorMax = 255 # Maximum color value
-        colorInterval = round(255 / 21, 0 )    # intervals of color
-        #COLORS = self.CreateColors(colorInterval)
-
-        # use ranges for RGB to introduce colorful steps
-        COLORS = {}
-        redStart = 0;
-        greenStart = 75;
-        blueStart = 0;
-        redInterval = round((255-redStart)/21)
-        greenInterval = round((255-greenStart)/21)
-        blueInterval = round((200-blueStart)/21)
-        for i in range(21):
-            COLORS[i-10] = [
-                i*redInterval+redStart,
-                i*greenInterval+greenStart,
-                i*blueInterval+blueStart,
-            ]
-
-        colorStep = 0
-
-        #Observations setup
-        if key == 'Observations':
-            if val == 1:
-                    colorStep = self.REF['Observations'][1]
-            elif val == 2:
-                    colorStep = self.REF['Observations'][2]
-            elif val == 5:
-                    colorStep = self.REF['Observations'][3]
-            elif val == 10:
-                    colorStep = self.REF['Observations'][4]
-            elif val == 25:
-                    colorStep = self.REF['Observations'][5]
-            elif val == 50:
-                    colorStep = self.REF['Observations'][6]
-            elif val == 100:
-                    colorStep = self.REF['Observations'][7]
-            elif val == 250:
-                    colorStep = self.REF['Observations'][8]
-            elif val == 500:
-                    colorStep = self.REF['Observations'][9]
-            elif val == 1000:
-                    colorStep = self.REF['Observations'][10]
-            else:
-                    colorStep = 0
-
-        else:
-            variance = val - self.USEREF[key]['ref'] # Variance from the reference value
-            colorStep = round(variance / self.USEREF[key]['stepsize'], 0 ) # color to be used based on how far from teh reference value
-            if  colorStep < -10:
-                colorStep = -10    # Bounds on the color
-            if colorStep > 10:
-                colorStep = 10
-
-        color = COLORS[colorStep]    # Color to be used
-        color.append(colorStep)        # Store color bin after the actual colors, I do self to save the color into the bin at a later point
-
-        return color
-
 
     # ******************************************************
     # Plots observations
@@ -475,21 +345,22 @@ class ConfDistPlot():
         binVals = []
         bins = self.plotBin.bins
         
+        # Calculate stats regarding the distribution of averages in cells
         if self.ref != 'Observations' and len(bins):
-            
             if self.ref in ('ome',):
-                radAngles = [math.radians(val.GetAvg(self.ref)) for val in bins.values()]
+                propAvgs = [val.GetAvg(self.ref) for val in bins.values()]
+                radAngles = [math.radians(avg) for avg in propAvgs]
 
                 meanPropAvg = math.degrees(math.atan2(
                     sum([math.sin(radAngle) for radAngle in radAngles])/len(radAngles),
                     sum([math.cos(radAngle) for radAngle in radAngles])/len(radAngles)
                 ))
-                #stdPropAvg = radAngles[0] if len(radAngles) == 2 else math.sqrt(reduce(
-                #    lambda x,y: x+y,
-                #    [(x-meanPropAvg)**2 for x in radAngles]
-                #)/(len(radAngles)-1))
-                
-                    
+                stdPropAvgX3 = propAvgs[0] if len(propAvgs) == 2 else 3*math.sqrt(reduce(
+                    lambda x,y: x+y,
+                    [shortCircle(x,meanPropAvg)**2 for x in propAvgs]
+                )/(len(propAvgs)-1))
+                if stdPropAvgX3 > 180:
+                    stdPropAvgX3 = 180
             else:
                 propAvgs = [x.GetAvg(self.ref) for x in bins.values()]
                 meanPropAvg = sum(propAvgs)/len(propAvgs)
@@ -531,7 +402,7 @@ class ConfDistPlot():
                     height = yMax-yMin
 
                     if self.ref == "Observations":
-                        #color = self.DetermineColor( self.ref, num)
+                        print self.maxObs
                         color = map(
                             lambda x: x*math.log(
                                 num+1,
@@ -542,22 +413,20 @@ class ConfDistPlot():
                     elif self.ref in ('ome',):
                         avg = bin.GetAvg(self.ref)
                         difference = shortCircle(avg,meanPropAvg)
-
-                        color = map(
+                        color = [255,-75,255] if -difference >= stdPropAvgX3 else [255,-75,255] if difference >= stdPropAvgX3 else map(
                             lambda x: (0.5+((
                                 math.log(
                                     difference+1,
-                                    180+1
+                                    stdPropAvgX3+1
                                 )
                             ) if difference >= 0 else (
                                 -math.log(
                                     -difference+1,
-                                    180+1
+                                    stdPropAvgX3+1
                                 )
                             ))/2)*x,
                             (255.0,180.0,200.0)
                         )
-
                         
 
                         #force stats to be evaluated
@@ -649,7 +518,7 @@ class ConfDistPlot():
             x = (xOrig  - (self.xRange[0])) / self.xPixelSize + self.xOff
             y = (yOrig + self.yRange[0]) / self.yPixelSize + self.yPlotSize + self.yOff
 
-            self.points.append(Coord(xOrig, yOrig, x, y, data))
+            self.points.append({'x': xOrig, 'y': yOrig, 'xP': x, 'yP': y, 'dat': data})
 
         # Create a bins for the values
         self.plotBin = Bin(self.xbin, self.ybin, self.xRange[0], self.xRange[1], self.yRange[0], self.yRange[1], self.points)
