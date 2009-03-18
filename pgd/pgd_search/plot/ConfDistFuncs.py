@@ -402,7 +402,6 @@ class ConfDistPlot():
                     height = yMax-yMin
 
                     if self.ref == "Observations":
-                        print self.maxObs
                         color = map(
                             lambda x: x*math.log(
                                 num+1,
