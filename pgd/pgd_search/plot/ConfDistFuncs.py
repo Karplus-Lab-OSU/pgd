@@ -112,9 +112,9 @@ class BinPoint():
     # Saves original data x, y and pixel space x1 y1
     # and which xbin ybin the point belongs to
     # ******************************************************
-    def __init__(self, coord, xP, yP, xBin, yBin):
-        self.xP = point['xP']   # X in pixel space
-        self.yP = point['yP']   # Y in pixel space
+    def __init__(self, coord, xBin, yBin):
+        self.xP = coord['xP']   # X in pixel space
+        self.yP = coord['yP']   # Y in pixel space
         self.numObs = 0         # Number of observations
         self.xBin = xBin        # The bin's location
         self.yBin = yBin        # ^^
