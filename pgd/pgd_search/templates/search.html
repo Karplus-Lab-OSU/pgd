@@ -262,6 +262,9 @@
                 $('input.field').keyup(function(evt){
                         updateInclusionField(evt.target, true);
                     });
+                $('input.field').change(function(evt){
+                        updateInclusionField(evt.target, true);
+                    });
                 $('input.field').updateInclusionField();
 
 
