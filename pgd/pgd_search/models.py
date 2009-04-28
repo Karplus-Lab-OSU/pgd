@@ -36,7 +36,7 @@ if not searchSettings.requestedSegmentSize:
 ================================ """
 class Search(models.Model):
     user             = models.ForeignKey(User, null=True)
-    codes_include    = models.BooleanField(null=True)
+    codes_include    = models.NullBooleanField(null=True)
     threshold        = models.IntegerField(null=True)
     resolution_min   = models.FloatField(null=True)
     resolution_max   = models.FloatField(null=True)
@@ -226,35 +226,35 @@ class Search_residue(models.Model):
     bg              = models.CharField(max_length=30, null=True)
     h_bond_energy   = models.CharField(max_length=30, null=True)
     zeta            = models.CharField(max_length=30, null=True)
-    xpr             = models.BooleanField(null=True) # this field may not be necessary; it has never been implemented
+    xpr             = models.NullBooleanField(null=True) # this field may not be necessary; it has never been implemented
 
     # '<field>_include' boolean determines how its query field should be handled
     # Null  : field not included
     # True  : field included as a positive assertion
     # False : field included as a negative assertion
-    aa_int_include          = models.BooleanField(null=True)
-    a1_include              = models.BooleanField(null=True)
-    a2_include              = models.BooleanField(null=True)
-    a3_include              = models.BooleanField(null=True)
-    a4_include              = models.BooleanField(null=True)
-    a5_include              = models.BooleanField(null=True)
-    a6_include              = models.BooleanField(null=True)
-    a7_include              = models.BooleanField(null=True)
-    L1_include              = models.BooleanField(null=True)
-    L2_include              = models.BooleanField(null=True)
-    L3_include              = models.BooleanField(null=True)
-    L4_include              = models.BooleanField(null=True)
-    L5_include              = models.BooleanField(null=True)
-    ss_int_include          = models.BooleanField(null=True)
-    phi_include             = models.BooleanField(null=True)
-    psi_include             = models.BooleanField(null=True)
-    ome_include             = models.BooleanField(null=True)
-    chi_include             = models.BooleanField(null=True)
-    bm_include              = models.BooleanField(null=True)
-    bs_include              = models.BooleanField(null=True)
-    bg_include              = models.BooleanField(null=True)
-    h_bond_energy_include   = models.BooleanField(null=True)
-    zeta_include            = models.BooleanField(null=True)
+    aa_int_include          = models.NullBooleanField(null=True)
+    a1_include              = models.NullBooleanField(null=True)
+    a2_include              = models.NullBooleanField(null=True)
+    a3_include              = models.NullBooleanField(null=True)
+    a4_include              = models.NullBooleanField(null=True)
+    a5_include              = models.NullBooleanField(null=True)
+    a6_include              = models.NullBooleanField(null=True)
+    a7_include              = models.NullBooleanField(null=True)
+    L1_include              = models.NullBooleanField(null=True)
+    L2_include              = models.NullBooleanField(null=True)
+    L3_include              = models.NullBooleanField(null=True)
+    L4_include              = models.NullBooleanField(null=True)
+    L5_include              = models.NullBooleanField(null=True)
+    ss_int_include          = models.NullBooleanField(null=True)
+    phi_include             = models.NullBooleanField(null=True)
+    psi_include             = models.NullBooleanField(null=True)
+    ome_include             = models.NullBooleanField(null=True)
+    chi_include             = models.NullBooleanField(null=True)
+    bm_include              = models.NullBooleanField(null=True)
+    bs_include              = models.NullBooleanField(null=True)
+    bg_include              = models.NullBooleanField(null=True)
+    h_bond_energy_include   = models.NullBooleanField(null=True)
+    zeta_include            = models.NullBooleanField(null=True)
 
 
     def __init__(self, *args, **kwargs):
@@ -439,7 +439,7 @@ for i in range(searchSettings.segmentSize):
     seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)
     seq_dict["r%i_ss" % i]              = models.CharField(max_length=1, choices=SS_CHOICES, null=True)
     seq_dict["r%i_aa" % i]              = models.CharField(max_length=1, choices=AA_CHOICES, null=True)
-    seq_dict["r%i_xpr" % i]             = models.BooleanField(null=True) # probably should be replaced
+    seq_dict["r%i_xpr" % i]             = models.NullBooleanField(null=True) # probably should be replaced
 
     # the loops here are just to save on space/typing
     for j in range(1,8):
