@@ -121,66 +121,7 @@ class BinPoint():
     # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
     # ******************************************************
     def ComputeStats(self, key, ref=None):
-        #store functions and variables locally for speed optimization
-        bin = self.bins[key]
-        obs = bin['obs']
-        bin['count'] = len(obs)
-
-        # if there is only 1 observation then avg is the only value and deviation is zero
-        if self.numObs == 1:
-            self.stats[key] = [lobs[0]['dat'][key],0]
-
-        #if there is more than one observation then we must calculate the values
-        else:
-            lsum = sum
-            lpow = pow
-
-            # Circular Values - some angles require that formulas for circular mean and stdev are used 
-            # this is required because the values 'wrap around' at 180.  
-            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'):
-                #store locals for speed
-                lsin = math.sin
-                lcos = math.cos
-                lradians = math.radians
-
-                # Circular Average - use some fancy trig that takes circular values into account.  This
-                #                    requires all values to be converted to radians.
-                radAngles = [lradians(obs['dat'][key]) for obs in lobs]
-
-                radAvg = math.atan2(
-                    lsum([lsin(radAngle) for radAngle in radAngles])/self.numObs,
-                    lsum([lcos(radAngle) for radAngle in radAngles])/self.numObs
-                )
-                avg = math.degrees(radAvg)
-
-                # Standard Deviation - shift the range of deviations +180 by applying %(2*pi) to all angles
-                #                      this creates a range of deviations -180-540.  Values greater than 180
-                #                      are then shifted back by substracting from 360, resulting in deviations
-                #                      -180-180.  From there the Stdev formula is the same.
-                msum = 0
-                lpi = math.pi
-                lpi_2 = lpi*2
-                for radAngle in radAngles:
-                    straight = radAngle%lpi_2 - radAvg
-                    msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
-
-                #save calculated values
-                self.stats[key] = [avg, math.degrees(math.sqrt(msum/(self.numObs-1)))]
-
-            # ... otherwise, use the traditional formulas
-            else: 
-                values = [obs['dat'][key] for obs in lobs]
-
-                # Average
-                avg = lsum(values)/self.numObs
-
-                # Standard Deviation
-                self.stats[key] = [avg, math.sqrt(
-                    lsum([
-                        lpow(value - avg, 2)
-                        for value in values
-                    ])/(self.numObs-1)
-                )]
+    #mark
 
         # big change
         #if key and key == ref:
@@ -270,7 +211,71 @@ class ConfDistPlot():
 
         # </firstloop>
         # <secondloop>
-        for key in self.bins():
+        for bin in self.bins.values():
+            for field in self.fields:
+                if field in (self.xProperty, self.yProperty) continue
+                #store functions and variables locally for speed optimization
+                obs = bin['obs']
+                bin['count'] = len(obs)
+
+                # if there is only 1 observation then avg is the only value and deviation is zero
+                if bin['count'] == 1:
+                    bin['%s_avg'%field] = obs[0][field]
+                    bin['%s_std'%field] = 0
+
+                #if there is more than one observation then we must calculate the values
+                else:
+                    lsum = sum
+                    lpow = pow
+
+                    # Circular Values - some angles require that formulas for circular mean and stdev are used 
+                    # this is required because the values 'wrap around' at 180.  
+                    if field in ('ome', 'phi', 'psi', 'chi', 'zeta'):
+                        #store locals for speed
+                        lsin = math.sin
+                        lcos = math.cos
+                        lradians = math.radians
+
+                        # Circular Average - use some fancy trig that takes circular values into account.  This
+                        #                    requires all values to be converted to radians.
+                        radAngles = [lradians(ob[field]) for ob in obs]
+
+                        radAvg = math.atan2(
+                            lsum([lsin(radAngle) for radAngle in radAngles])/bin['count'],
+                            lsum([lcos(radAngle) for radAngle in radAngles])/bin['count']
+                        )
+                        avg = math.degrees(radAvg)
+
+                        # Standard Deviation - shift the range of deviations +180 by applying %(2*pi) to all angles
+                        #                      this creates a range of deviations -180-540.  Values greater than 180
+                        #                      are then shifted back by substracting from 360, resulting in deviations
+                        #                      -180-180.  From there the Stdev formula is the same.
+                        msum = 0
+                        lpi = math.pi
+                        lpi_2 = lpi*2
+                        for radAngle in radAngles:
+                            straight = radAngle%lpi_2 - radAvg
+                            msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
+
+                        #save calculated values
+                        bin['%s_avg'%field] = avg
+                        bin['%s_std'%field] = math.degrees(math.sqrt(msum/(bin['count']-1)))]
+
+                    # ... otherwise, use the traditional formulas
+                    else: 
+                        values = [ob[field] for ob in obs]
+
+                        # Average
+                        avg = lsum(values)/bin['count']
+
+                        # Standard Deviation
+                        bin['%s_avg'%field] = avg
+                        bin['%s_std'%field] = math.sqrt(
+                            lsum([
+                                lpow(value - avg, 2)
+                                for value in values
+                            ])/(bin['count']-1)
+                        )]
             
             
         # </secondloop>
