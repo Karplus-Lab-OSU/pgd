@@ -528,15 +528,15 @@ class ConfDistPlot():
             box = self.plotBin.GetBinCoords(x, y)
 
             # x axis range
-            writer.write(box[0].x)
+            writer.write(box[0]['x'])
             writer.write('\t')
-            writer.write(box[0].y)
+            writer.write(box[0]['y'])
 
             # y-axis range
             writer.write('\t')
-            writer.write(box[1].x)
+            writer.write(box[1]['x'])
             writer.write('\t')
-            writer.write(box[1].y)
+            writer.write(box[1]['y'])
 
             # observations
             writer.write('\t')
