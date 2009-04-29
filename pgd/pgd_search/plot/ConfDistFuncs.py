@@ -471,7 +471,7 @@ class ConfDistPlot():
         residue = self.residue
 
         #fields to include, order in this list is important
-        STATS_FIELDS = ['phi','psi','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta','h_bond_energy']
+        STATS_FIELDS = ['phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta','h_bond_energy']
         lower_case_fields = ['a1','a2','a3','a4','a5','a6','a7']
         field_replacements = {'h_bond_energy':'HBond'}
 
@@ -487,13 +487,13 @@ class ConfDistPlot():
             yText = self.yText.capitalize()
 
         #output the dynamic titles
-        writer.write('%sstart' % xText)
+        writer.write('%sStart' % xText)
         writer.write('\t')
-        writer.write('%sstop' % xText)
+        writer.write('%sStop' % xText)
         writer.write('\t')
-        writer.write('%sstart' % yText)
+        writer.write('%sStart' % yText)
         writer.write('\t')
-        writer.write('%sstop' % yText)
+        writer.write('%sStop' % yText)
         writer.write('\t')
         writer.write('Observations')
 
