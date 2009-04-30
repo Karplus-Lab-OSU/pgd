@@ -143,7 +143,7 @@ class Search(models.Model):
                     # The constraint may be a range...
                     if range_re.search(constraint):
 
-                        min,max = range_re.split(constraint)
+                        min,max = [float(lim) for lim in range_re.split(constraint)]
                         
                         limits = (
                             Q(**{seg_field+'__gte' : float(min)}),
