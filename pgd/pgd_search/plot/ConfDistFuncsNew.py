@@ -121,7 +121,6 @@ class BinPoint():
     # Computes stats(Avg, standard deviation) for the bin and a specific stat, such as phi, psi, chi ...
     # ******************************************************
     def ComputeStats(self, key, ref=None):
-    #mark
 
         # big change
         #if key and key == ref:
@@ -188,7 +187,14 @@ class ConfDistPlot():
         self.querySet = querySet.exclude(reduce(
             lambda x,y: Q(**{'%s__in'%x:(999.90,0)})|y,
             self.fields
-        ))
+        )).filter(
+            **{
+                '%s__gte'%self.xProperty: xMin,
+                '%s__lte'%self.xProperty: xMax,
+                '%s__gte'%self.yProperty: yMin,
+                '%s__lte'%self.yProperty: yMax,
+              }
+        )
         
         for entry in self.querySet.values(*self.fields):
 
