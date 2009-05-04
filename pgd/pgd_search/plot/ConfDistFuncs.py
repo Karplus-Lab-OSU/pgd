@@ -22,6 +22,50 @@ def shortCircle(first,second):
                 (360 if straight < 0 else -360) + straight
             )
 
+def getCircularStats(values,size):
+
+    # Store locals for speed
+    lsin = math.sin
+    lcos = math.cos
+    lradians = math.radians
+    
+
+    # Circular Average - use some fancy trig that takes circular values
+    #   into account.  This requires all values to be converted to radians.
+    radAngles = [lradians(val) for val in values]
+    radAvg = math.atan2(
+        sum([lsin(radAngle) for radAngle in radAngles])/size,
+        sum([lcos(radAngle) for radAngle in radAngles])/size,
+    )
+    
+    # Standard Deviation - shift the range of deviations +180 by applying
+    #   %(2*pi) to all angles.  This creates a range of deviations -180-540.
+    #   Values greater than 180 are then shifted back by substracting from
+    #   360, resulting in deviations -180-180.  From there the Stdev formula
+    #   is the same.
+    msum = 0
+    lpi = math.pi
+    lpi_2 = lpi*2
+    for radAngle in radAngles:
+        straight = radAngle%lpi_2 - radAvg
+        msum += pow(straight if straight < lpi else lpi_2 - straight, 2)
+
+    return math.degrees(radAvg),math.degrees(math.sqrt(msum/(size-1)))
+
+
+def getLinearStats(values,size):
+
+    # Average
+    avg = sum(values)/float(size)
+
+    # Standard Deviation
+    return avg,math.sqrt(
+        sum([
+            pow(value - avg, 2)
+            for value in values
+        ])/float(size-1)
+    )
+
 #-------------------------------------------------------------------------------------------------------------------
 # Class that divides an array of coordinates
 # into bins specificed by an area
@@ -144,56 +188,8 @@ class BinPoint():
 
         #if there is more than one observation then we must calculate the values
         else:
-            lsum = sum
-            lpow = pow
-
-            # Circular Values - some angles require that formulas for circular mean and stdev are used 
-            # this is required because the values 'wrap around' at 180.  
-            if key in ('ome', 'phi', 'psi', 'chi', 'zeta'):
-                #store locals for speed
-                lsin = math.sin
-                lcos = math.cos
-                lradians = math.radians
-
-                # Circular Average - use some fancy trig that takes circular values into account.  This
-                #                    requires all values to be converted to radians.
-                radAngles = [lradians(obs['dat'][key]) for obs in lobs]
-
-                radAvg = math.atan2(
-                    lsum([lsin(radAngle) for radAngle in radAngles])/self.numObs,
-                    lsum([lcos(radAngle) for radAngle in radAngles])/self.numObs
-                )
-                avg = math.degrees(radAvg)
-
-                # Standard Deviation - shift the range of deviations +180 by applying %(2*pi) to all angles
-                #                      this creates a range of deviations -180-540.  Values greater than 180
-                #                      are then shifted back by substracting from 360, resulting in deviations
-                #                      -180-180.  From there the Stdev formula is the same.
-                msum = 0
-                lpi = math.pi
-                lpi_2 = lpi*2
-                for radAngle in radAngles:
-                    straight = radAngle%lpi_2 - radAvg
-                    msum += lpow(straight if straight < lpi else lpi_2 - straight, 2)
-
-                #save calculated values
-                self.stats[key] = [avg, math.degrees(math.sqrt(msum/(self.numObs-1)))]
-
-            # ... otherwise, use the traditional formulas
-            else: 
-                values = [obs['dat'][key] for obs in lobs]
-
-                # Average
-                avg = lsum(values)/self.numObs
-
-                # Standard Deviation
-                self.stats[key] = [avg, math.sqrt(
-                    lsum([
-                        lpow(value - avg, 2)
-                        for value in values
-                    ])/(self.numObs-1)
-                )]
-
+            self.stats[key] = (getCircularStats if key in ('ome', 'phi', 'psi', 'chi', 'zeta') else getLinearStats)([obs['dat'][key] for obs in lobs], len(lobs))
+        print self.stats[key][BIN_STATS_DEVIATION]
         # big change
         #if key and key == ref:
         self.avg = self.stats[key][BIN_STATS_AVERAGE]
@@ -256,8 +252,8 @@ class ConfDistPlot():
         self.xRange     = [xMin, xMax]
         self.yRange     = [yMin, yMax]
 
-        self.xPixelSize = (self.xRange[1] - self.xRange[0]) / float(self.xPlotSize)    # Range / PlotSize = PixelSize
-        self.yPixelSize = (self.yRange[1] - self.yRange[0]) / float(self.yPlotSize)
+        self.xPixelSize = (xMax - xMin) / float(self.xSize - 2 * self.xPadding)    # Range / PlotSize = PixelSize
+        self.yPixelSize = (yMax - yMin) / float(self.ySize - 2 * self.yPadding)
         self.xText = xText
         self.yText = yText
         self.maxObs = 0
@@ -284,29 +280,15 @@ class ConfDistPlot():
         
         # Calculate stats regarding the distribution of averages in cells
         if self.ref != 'Observations' and len(bins):
-            if self.ref in ('ome',):
-                propAvgs = [val.GetAvg(self.ref) for val in bins.values()]
-                radAngles = [math.radians(avg) for avg in propAvgs]
-
-                meanPropAvg = math.degrees(math.atan2(
-                    sum([math.sin(radAngle) for radAngle in radAngles])/len(radAngles),
-                    sum([math.cos(radAngle) for radAngle in radAngles])/len(radAngles)
-                ))
-                stdPropAvgX3 = propAvgs[0] if len(propAvgs) == 2 else 3*math.sqrt(reduce(
-                    lambda x,y: x+y,
-                    [shortCircle(x,meanPropAvg)**2 for x in propAvgs]
-                )/(len(propAvgs)-1))
-                if stdPropAvgX3 > 180:
+            
+            meanPropAvg,stdPropAvg = (getCircularStats if self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta') else getLinearStats)([val.GetAvg(self.ref) for val in bins.values()], len(bins))
+            stdPropAvgX3 = 3*stdPropAvg
+            if self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta'):
+                if (stdPropAvg > 60):
                     stdPropAvgX3 = 180
             else:
-                propAvgs = [x.GetAvg(self.ref) for x in bins.values()]
-                meanPropAvg = sum(propAvgs)/len(propAvgs)
-                stdPropAvg = propAvgs[0] if len(propAvgs) == 2 else math.sqrt(reduce(
-                    lambda x,y: x+y,
-                    [(x-meanPropAvg)**2 for x in propAvgs]
-                )/(len(propAvgs)-1))
-                minPropAvg = meanPropAvg - 3*stdPropAvg
-                maxPropAvg = meanPropAvg + 3*stdPropAvg
+                minPropAvg = meanPropAvg - stdPropAvgX3
+                maxPropAvg = meanPropAvg + stdPropAvgX3
 
         # Only bins need to be painted, so cycle through the bins
         for key in bins:
@@ -344,7 +326,7 @@ class ConfDistPlot():
                             lambda x: x*scale,
                             (255.0,180.0,200.0)
                         )
-                    elif self.ref in ('ome',):
+                    elif self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta'):
                         avg = bin.GetAvg(self.ref)
                         difference = shortCircle(avg,meanPropAvg)
                         if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
@@ -441,7 +423,7 @@ class ConfDistPlot():
             if self.ref <> 'Observations':
                 #fix property name for later use
                 data[self.ref] = data[attrProperty]
-                if self.ref not in ('ome',):
+                if self.ref not in ('ome', 'phi', 'psi', 'chi', 'zeta'):
                     self.dataAvg += data[attrProperty]
 
             # Original Values of X and Y
