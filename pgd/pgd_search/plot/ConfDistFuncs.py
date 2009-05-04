@@ -283,17 +283,18 @@ class ConfDistPlot():
                 # do not adjust if creating the border will result in a height less than 1
 
                 # add rectangle to list
-                binVals.append([
-                    math.floor(bin['pixCoords']['x']) + (width > 2),
-                    math.floor(bin['pixCoords']['y']) - round(self.ybin / self.yPixelSize) + (height > 2),
-                    width,
-                    height,
-                    fill,
-                    fill,
-                    bin,
-                    key,
-                    0 if self.ref in ('Observations', 'all') else bin['%s_avg'%self.refString]
-                ])
+                binVals.append(
+                    [
+                        math.floor(bin['pixCoords']['x']) + (width > 2),
+                        math.floor(bin['pixCoords']['y']) - round(self.ybin / self.yPixelSize) + (height > 2),
+                        width,
+                        height,
+                        fill,
+                        fill,
+                        bin,
+                        key,
+                    ] + ([0,0] if self.ref in ('Observations', 'all') else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
+                )
 
         return binVals
 
