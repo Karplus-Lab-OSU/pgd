@@ -61,7 +61,7 @@ def getLinearStats(values,size):
     # Standard Deviation
     return avg,math.sqrt(
         sum([
-            lpow(value - avg, 2)
+            pow(value - avg, 2)
             for value in values
         ])/(size-1)
     )
@@ -92,16 +92,17 @@ class ConfDistPlot():
         self.xPixelSize = (xMax - xMin) / float(ySize - 2 * yPadding)
         self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue if residue else 0)
         resString   = "r%i_%%s"%self.residue
-        self.refString = resString%self.residue
+        self.refString = resString%ref
         self.ref = ref
         self.bins   = {}
+        xText,yText,ref = [str(field) for field in (xText,yText,ref)]
         self.xProperty,self.yProperty = resString%xText,resString%yText
         self.maxObs = 0
 
         # <firstloop>
 
         # pick fields to query
-        self.fields     = [resString%field for field in (
+        self.fields     = [resString%str(field) for field in (
             [
                 xText, yText,
             ] if ref == "Observations" else [
@@ -112,7 +113,7 @@ class ConfDistPlot():
         )]
         self.querySet = querySet.exclude(reduce(
             lambda x,y: x|y,
-            [Q(**{'%s__in'%field:(999.90,0)}) for field in self.fields]
+            [Q(**{"%s__in"%field:(999.90,0)}) for field in self.fields]
         )).filter(
             Q(**{
                 '%s__gte'%self.xProperty: xMin,
@@ -207,12 +208,13 @@ class ConfDistPlot():
             height = 1
 
         # Calculate stats regarding the distribution of averages in cells
-        if self.ref not in ('Observations', 'all') and len(bins):
-            if self.ref in ('ome',):
-                meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for val in bins.values()], len(bins))
+        if self.ref not in ('Observations', 'all') and len(self.bins):
+            if self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta',):
+                meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for val in self.bins.values()], self.len(bins))
                 stdPropAvgX3 = 180 if stdPropAvg > 60 else 3*stdPropAvg
             else:
-                meanPropAvg,stdPropAvg = getLinearStats([bin['%s_avg'%self.refString] for val in bins.values()], len(bins))
+                print self.refString,self.ref
+                meanPropAvg,stdPropAvg = getLinearStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
                 minPropAvg = meanPropAvg - 3*stdPropAvg
                 maxPropAvg = meanPropAvg + 3*stdPropAvg
 
@@ -232,7 +234,7 @@ class ConfDistPlot():
                         lambda x: x*scale,
                         (255.0,180.0,200.0)
                     )
-                elif self.ref in ('ome',):
+                elif self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta',):
                     avg = bin['%s_avg'%self.refString]
                     difference = shortCircle(avg,meanPropAvg)
                     if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
