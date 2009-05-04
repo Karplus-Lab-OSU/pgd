@@ -164,12 +164,12 @@
                         {{rect.1}}+fix,
                         {{rect.2}},
                         {{rect.3}},
-                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.6.xBin}}-{{rect.6.yBin}}");', onmouseout:'bin_mouseout();'}
+                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");', onmouseout:'bin_mouseout();'}
                     );
 
                     //add static fields
-                    field_stats = {'observations':{{rect.6.numObs}} };
-                    field_stats['bin'] = [{{rect.6.xBin}},{{rect.6.yBin}}];
+                    field_stats = {'observations':{{rect.6.count}} };
+                    field_stats['bin'] = [{{rect.7.1}},{{rect.7.1}}];
                     field_stats['avg'] = '{{rect.6.avg|floatformat:3}}';
                     field_stats['dev'] = '({{rect.6.dev|floatformat:3}})';
 
