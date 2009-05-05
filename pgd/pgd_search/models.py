@@ -11,7 +11,7 @@ from dbsettings.loading import set_setting_value
 
 from django.db.models import Q
 
-range_re = re.compile("(?<=[^-])-")
+range_re = re.compile("(?<=[^-<>=])-")
 comp_re  = re.compile("^([<>]=?)?")
 
 """ ================================
