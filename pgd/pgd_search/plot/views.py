@@ -303,7 +303,8 @@ def plotDump(request):
                 data['yBin'],           #Ybin
                 data['xProperty'],      #X property
                 data['yProperty'],      #Y property
-                data['attribute'],#property
+                #data['attribute'],#property
+                'all',#property
                 #data['reference'],
                 int(data['residue']),
                 request.session['search'].querySet()
@@ -312,7 +313,7 @@ def plotDump(request):
             response = HttpResponse(mimetype="text/tab-separated-values")
             response['Content-Disposition'] = 'attachment; filename="plot.tsv"'
 
-            cdp.Plot(True)
+            cdp.Plot()
             cdp.PrintDump(response)
 
             return response

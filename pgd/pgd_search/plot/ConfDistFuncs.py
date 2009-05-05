@@ -86,23 +86,25 @@ class ConfDistPlot():
     def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet):
 
         #<john>
+        xText,yText,ref = [str(field) for field in (xText,yText,ref)]
+        self.xText = xText
+        self.yText = yText
         self.ybin = ybin
         self.xbin = xbin
         self.yPixelSize = (yMax - yMin) / float(ySize - 2 * yPadding)
         self.xPixelSize = (xMax - xMin) / float(ySize - 2 * yPadding)
         self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue if residue else 0)
-        resString   = "r%i_%%s"%self.residue
-        self.refString = resString%ref
+        self.resString   = "r%i_%%s"%self.residue
+        self.refString = self.resString%ref
         self.ref = ref
         self.bins   = {}
-        xText,yText,ref = [str(field) for field in (xText,yText,ref)]
-        self.xProperty,self.yProperty = resString%xText,resString%yText
+        self.xProperty,self.yProperty = self.resString%xText,self.resString%yText
         self.maxObs = 0
 
         # <firstloop>
 
         # pick fields to query
-        self.fields     = [resString%str(field) for field in (
+        self.fields     = [self.resString%str(field) for field in (
             [
                 xText, yText,
             ] if ref == "Observations" else [
@@ -134,6 +136,8 @@ class ConfDistPlot():
                 )
             )
         )
+
+        self.numObs = self.querySet.count()
         
         # save these beforehand to avoid recalculating per bin
         xScale = (xMax - xMin) / float(xSize - 2 * xPadding)
@@ -166,7 +170,7 @@ class ConfDistPlot():
                 self.maxObs = bin['count']
 
             for field in self.fields:
-                if field in (self.xProperty, self.yProperty): continue
+                if self.ref != 'all' and field in (self.xProperty, self.yProperty): continue
                 # store functions and variables locally for speed optimization
 
                 # if there is only 1 observation then avg is the only value and deviation is zero
@@ -345,45 +349,31 @@ class ConfDistPlot():
             writer.write('%sDev' % title)
 
         # Cycle through the binPoints
-        for key in self.plotBin.bins:
-            bin = self.plotBin.bins[key]
+        for key in self.bins:
+            bin = self.bins[key]
             writer.write('\n')
 
-            xLen = self.plotBin.xLen
-            yLen = self.plotBin.yLen
-
-            # x and y points
-            x = bin.xBin * xLen
-            y = bin.yBin * yLen
-
-            if x < self.xRange[0] or x > self.xRange[1]:
-                break
-            if y < self.yRange[0] or y > self.yRange[1]:
-                break
-
-            box = self.plotBin.GetBinCoords(x, y)
-
             # x axis range
-            writer.write(box[0].x)
+            writer.write(key[0])
             writer.write('\t')
-            writer.write(box[0].y)
+            writer.write(key[0]+self.xbin)
 
             # y-axis range
             writer.write('\t')
-            writer.write(box[1].x)
+            writer.write(key[1])
             writer.write('\t')
-            writer.write(box[1].y)
+            writer.write(key[1]+self.ybin)
 
             # observations
             writer.write('\t')
-            writer.write(bin.numObs)
+            writer.write(bin['count'])
 
             # Start averages and standard deviations
             for field in STATS_FIELDS:
                 writer.write('\t')
-                writer.write(round(bin.GetAvg('r%i_%s' % (residue, field)) , 1))
+                writer.write(round(bin['%s_avg'%self.resString%field], 1))
                 writer.write('\t')
-                writer.write(round(bin.GetDev('r%i_%s' % (residue, field)) , 3))
+                writer.write(round(bin['%s_std'%self.resString%field], 3))
 
 
 # ******************************************************
