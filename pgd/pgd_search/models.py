@@ -121,19 +121,54 @@ class Search(models.Model):
 
             # ...handle query strings...
             for field in filter(
-                    # use only the fields with a '_include' value. 
-                    lambda x: search_res.__dict__[x+'_include'] != None,
-                    (
-                        'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
-                        'L1',   'L2',   'L3',   'L4',   'L5',
-                        'phi',  'psi',  'ome',  'chi',
-                        'bm',   'bs',   'bg',
-                        'h_bond_energy',
-                        'zeta',
-                )):
+                # use only the fields with a '_include' value. 
+                lambda x: search_res.__dict__[x+'_include'] != None,
+                (
+                    'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
+                    'L1',   'L2',   'L3',   'L4',   'L5',
+                    'phi',  'psi',  'ome',  'chi',
+                    'bm',   'bs',   'bg',
+                    'h_bond_energy',
+                    'zeta',
+                )
+            ):
 
                 # seg_field is the name of the property of the given residue in the database
                 seg_field = seg_prefix+field
+                
+                constraints = []
+
+                for constraint in str(search_res.__dict__[field]).split(','):
+
+                    # The constraint may be a range...
+                    if range_re.search(constraint):
+
+                        min,max = [float(lim) for lim in range_re.split(constraint)]
+                        
+                        limits = (
+                            Q(**{seg_field+'__gte' : float(min)}),
+                            Q(**{seg_field+'__lte' : float(max)}),
+                        )
+                        
+                        constraints.append(
+                            # Apply 'or' logic for a wraparound range
+                            # or apply 'and' logic for a regular range
+                            (limits[0] & limits[1]) if (min <= max) else (limits[0] | limits[1])
+                        )
+                    # ...or the constraint may be a value comparison.
+                    else:
+
+                        constraints.append(Q(**{
+                            seg_field + {
+                                ''   : '',
+                                '>'  : '__gt',
+                                '>=' : '__gte',
+                                '<'  : '__lt',
+                                '<=' : '__lte',
+                            }[comp_re.search(constraint).group(0)] :
+                            # extract the numeric value
+                            constraint.strip('><=')
+                        }))
 
                 query = query.__getattribute__(
                     # call either 'filter' or 'exclude', depending on the value of '_include'
@@ -142,31 +177,9 @@ class Search(models.Model):
                     # OR each of the statements in the query string together
                     reduce(
                         lambda x,y: x|y,
-                        (
-                            Q(
-                                **(
-                                    {
-                                        # check if a value falls within a range
-                                        seg_field+'__gte' : float(range_re.split(constraint)[0]),
-                                        seg_field+'__lte' : float(range_re.split(constraint)[1]),
-                                    } if range_re.search(constraint) else {
-                                        # apply one (or none) of the following comparison operators
-                                        seg_field + {
-                                            ''   : '',
-                                            '>'  : '__gt',
-                                            '>=' : '__gte',
-                                            '<'  : '__lt',
-                                            '<=' : '__lte',
-                                        }[comp_re.search(constraint).group(0)] :
-                                        # extract the numeric value
-                                        constraint.strip('><=')
-
-                                    }
-                                )
-                            # take each statement of the query string in turn
-                            ) for constraint in str(search_res.__dict__[field]).split(',')
-                        )
-                    ))
+                        constraints
+                    )
+                )
         return query
 
 """ ================================
