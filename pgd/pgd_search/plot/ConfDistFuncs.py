@@ -28,14 +28,15 @@ def getCircularStats(values,size):
     lsin = math.sin
     lcos = math.cos
     lradians = math.radians
+    lpow = math.pow
     
 
     # Circular Average - use some fancy trig that takes circular values
     #   into account.  This requires all values to be converted to radians.
-    radAngles = [lradians(val[field]) for val in values]
+    radAngles = [lradians(val) for val in values]
     radAvg = math.atan2(
-        lsum([lsin(radAngle) for radAngle in radAngles])/size,
-        lsum([lcos(radAngle) for radAngle in radAngles])/size,
+        sum([lsin(radAngle) for radAngle in radAngles])/size,
+        sum([lcos(radAngle) for radAngle in radAngles])/size,
     )
     
     # Standard Deviation - shift the range of deviations +180 by applying
@@ -214,7 +215,7 @@ class ConfDistPlot():
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in ('Observations', 'all') and len(self.bins):
             if self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta',):
-                meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for val in self.bins.values()], self.len(bins))
+                meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
                 stdPropAvgX3 = 180 if stdPropAvg > 60 else 3*stdPropAvg
             else:
                 print self.refString,self.ref
