@@ -23,7 +23,6 @@ def shortCircle(first,second):
             )
 
 def getCircularStats(values,size):
-    print "circular"
 
     # Store locals for speed
     lsin = math.sin
@@ -56,7 +55,6 @@ def getCircularStats(values,size):
 
 
 def getLinearStats(values,size):
-    print "linear"
 
     # Average
     avg = sum(values)/size
@@ -219,7 +217,6 @@ class ConfDistPlot():
                 meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
                 stdPropAvgX3 = 180 if stdPropAvg > 60 else 3*stdPropAvg
             else:
-                print self.refString,self.ref
                 meanPropAvg,stdPropAvg = getLinearStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
                 minPropAvg = meanPropAvg - 3*stdPropAvg
                 maxPropAvg = meanPropAvg + 3*stdPropAvg
