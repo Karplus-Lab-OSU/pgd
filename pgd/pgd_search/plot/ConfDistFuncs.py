@@ -23,6 +23,7 @@ def shortCircle(first,second):
             )
 
 def getCircularStats(values,size):
+    print "circular"
 
     # Store locals for speed
     lsin = math.sin
@@ -55,6 +56,7 @@ def getCircularStats(values,size):
 
 
 def getLinearStats(values,size):
+    print "linear"
 
     # Average
     avg = sum(values)/size
@@ -105,7 +107,7 @@ class ConfDistPlot():
         # <firstloop>
 
         # pick fields to query
-        self.fields     = [self.resString%str(field) for field in (
+        self.fields     = [(field,self.resString%str(field)) for field in (
             [
                 xText, yText,
             ] if ref == "Observations" else [
@@ -116,7 +118,7 @@ class ConfDistPlot():
         )]
         self.querySet = querySet.exclude(reduce(
             lambda x,y: x|y,
-            [Q(**{"%s__in"%field:(999.90,0)}) for field in self.fields]
+            [Q(**{"%s__in"%fieldString:(999.90,0)}) for field,fieldString in self.fields]
         )).filter(
             Q(**{
                 '%s__gte'%self.xProperty: xMin,
@@ -144,7 +146,7 @@ class ConfDistPlot():
         xScale = (xMax - xMin) / float(xSize - 2 * xPadding)
         yScale = (yMax - yMin) / float(ySize - 2 * yPadding)
         yAllOffset = (ySize - 2 * yPadding) + yOffset
-        for entry in self.querySet.values(*self.fields):
+        for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
             
             xAdj,yAdj = math.floor(entry[self.xProperty] / xbin),math.floor(entry[self.yProperty] / ybin)
 
@@ -170,26 +172,25 @@ class ConfDistPlot():
             if self.maxObs < bin['count']:
                 self.maxObs = bin['count']
 
-            for field in self.fields:
+            for field,fieldString in self.fields:
                 if self.ref != 'all' and field in (self.xProperty, self.yProperty): continue
                 # store functions and variables locally for speed optimization
 
                 # if there is only 1 observation then avg is the only value and deviation is zero
                 if bin['count'] == 1:
-                    bin['%s_avg'%field] = obs[0][field]
-                    bin['%s_std'%field] = 0
+                    bin['%s_avg'%fieldString] = obs[0][fieldString]
+                    bin['%s_std'%fieldString] = 0
 
                 #if there is more than one observation then we must calculate the values
                 else:
-                    bin['%s_avg'%field], bin['%s_std'%field] = (
+                    bin['%s_avg'%fieldString], bin['%s_std'%fieldString] = (
                         getCircularStats if field in (
                             'ome', 'phi', 'psi', 'chi', 'zeta'
                         ) else getLinearStats
                     )(
-                        [ob[field] for ob in obs],
+                        [ob[fieldString] for ob in obs],
                         bin['count'],
                     )
-        
         # </secondloop>
         #</john>
 
