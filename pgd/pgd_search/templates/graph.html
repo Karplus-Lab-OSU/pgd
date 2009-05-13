@@ -6,8 +6,8 @@
         <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
         <style>
             #canvas {
-                width: 472;
-                height: 472;
+                width: 472px;
+                height: 472px;
                 margin: 5px;
             }
 
@@ -197,10 +197,10 @@
                 $('#advanced').hide()
                 $('#advanced_toggle').click(function(){
                     $('#advanced').toggle();
-                    if ($(this).html()=='Colors &gt;&gt;') {
-                        $(this).html('Colors <<');
+                    if ($(this).html()=='Colors/Dimensions &gt;&gt;') {
+                        $(this).html('Colors/Dimensions &lt;&lt;');
                     }else{
-                        $(this).html('Colors >>');
+                        $(this).html('Colors/Dimensions &lt;&lt;');
                     }
                 })
 
@@ -279,7 +279,7 @@
                 </tbody>
 
                 <tr class="spacer"/>
-                <tr><td id="advanced_toggle" class="header" colspan="100%">Colors >></td></tr>
+                <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>
                 <tbody id="advanced">
                         <tr>
                             <td class="label">Image Background</td>

@@ -12,16 +12,13 @@ from pgd_search.models import *
 from constants import *
 import math
 
-# Takes angles between -180 and 180 and returns the
-# angle of the shortest arc between the two
-def shortCircle(first,second):
-    straight = second - first
-    return  (
-                straight
-            ) if -180 < straight < 180 else (
-                (360 if straight < 0 else -360) + straight
-            )
+ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
 
+NON_FIELDS = ('Observations', 'all')
+
+# getCircularStats: returns (average, standard deviation) of a list of values
+#   values: a list of the values to be examined
+#   size:   the size of the list (in case it has been counted elsewhere)
 def getCircularStats(values,size):
 
     # Store locals for speed
@@ -53,7 +50,9 @@ def getCircularStats(values,size):
 
     return math.degrees(radAvg),math.degrees(math.sqrt(msum/(size-1)))
 
-
+# getLinearStats: returns (average, standard deviation) of a list of values
+#   values: a list of the values to be examined
+#   size:   the size of the list (in case it has been counted elsewhere)
 def getLinearStats(values,size):
 
     # Average
@@ -77,34 +76,60 @@ class ConfDistPlot():
 
     # ******************************************************
     # Constructor
-    # x, y:             size of plot
-    # x0, y0:         offset from top right corner of image for plot to being
-    # Min, Max:    min and max values of plot
-    # text:            x and y axis text
-    # query:            sql query to use to get data for the plot
-    # ref:                reference attribute for shading
+    # Size:     size of plot
+    # Padding:  space to either side of the plot
+    # 0ffset:   offset from top right corner of image for plot to being
+    # Min, Max: min and max field values of plot
+    # bin:      field value size of a bin
+    # Text:     axes of the plot
+    # ref:      the field of interest (if 'all', observation count is plotted)
+    # residue:  index of the residue of interest (-n...-1,0,1...n)
+    # querySet: Django queryset
     # ******************************************************
     def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet):
 
-        #<john>
-        xText,yText,ref = [str(field) for field in (xText,yText,ref)]
-        self.xText = xText
-        self.yText = yText
-        self.ybin = ybin
+        # Convert unicode to strings
+        xText,yText,ref = str(xText),str(yText),str(ref)
+
+        # Width/height in field units of graph bins
         self.xbin = xbin
-        self.yPixelSize = (yMax - yMin) / float(ySize - 2 * yPadding)
-        self.xPixelSize = (xMax - xMin) / float(ySize - 2 * yPadding)
+        self.ybin = ybin
+
+        # Difference between the possible min and max axes values
+        xLimit = xMax - xMin
+        yLimit = yMax - yMin
+        #   Adjustments for circular quantities
+        if xText in ANGLES and xMax < xMin:
+            xLimit = xLimit%360
+        if yText in ANGLES and yMax < yMin:
+            yLimit = yLimit%360
+
+        # Width/height of a graph bin in pixels
+        self.width  = round(self.xbin/((xLimit) / float(ySize - 2 * yPadding)))
+        self.height = round(self.ybin/((yLimit) / float(ySize - 2 * yPadding)))
+
+        # Index of the residue of interest in the segment
         self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue if residue else 0)
-        self.resString   = "r%i_%%s"%self.residue
-        self.refString = self.resString%ref
+
+        # Printf-style string for the given residue
+        self.resString = "r%i_%%s"%self.residue
+
+        # Graphed quantity and its field string representation, e.g. 'r4_ome'
         self.ref = ref
-        self.bins   = {}
-        self.xProperty,self.yProperty = self.resString%xText,self.resString%yText
+        self.refString = self.resString%ref
+
+        # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
+        #   i.e. (<x value>, <y value>)
+        self.bins = {}
+
+        # Labels for graph axes
+        self.xText,self.yText = xText,yText
+        self.xTextString,self.yTextString = self.resString%xText,self.resString%yText
+
+        # Variable to store number of values in the bin with the most values
         self.maxObs = 0
 
-        # <firstloop>
-
-        # pick fields to query
+        # Pick fields for retrieving values
         self.fields     = [(field,self.resString%str(field)) for field in (
             [
                 xText, yText,
@@ -114,83 +139,90 @@ class ConfDistPlot():
                 xText, yText, ref
             ]
         )]
+
+        # 
         self.querySet = querySet.exclude(reduce(
+            # exclude dummy values
             lambda x,y: x|y,
             [Q(**{"%s__in"%fieldString:(999.90,0)}) for field,fieldString in self.fields]
         )).filter(
+            # Exclude values outside the plotted values
             Q(**{
-                '%s__gte'%self.xProperty: xMin,
-                '%s__lte'%self.xProperty: xMax,
-                '%s__gte'%self.yProperty: yMin,
-                '%s__lte'%self.yProperty: yMax,
-            }) if (xMin <= xMax) else (
+                '%s__gte'%self.xTextString: xMin,
+                '%s__lte'%self.xTextString: xMax,
+                '%s__gte'%self.yTextString: yMin,
+                '%s__lte'%self.yTextString: yMax,
+            }) if (xMin <= xMax) else ( # Altered logic for circular values
                 (
-                    (
-                        (
-                            Q(**{'%s__gte'%self.xProperty: xMin}) |
-                            Q(**{'%s__lte'%self.xProperty: xMax})
-                        ) & (
-                            Q(**{'%s__gte'%self.yProperty: yMin}) |
-                            Q(**{'%s__lte'%self.yProperty: yMax})
-                        )
-                    )
+                    Q(**{'%s__gte'%self.xTextString: xMin}) |
+                    Q(**{'%s__lte'%self.xTextString: xMax})
+                ) & (
+                    Q(**{'%s__gte'%self.yTextString: yMin}) |
+                    Q(**{'%s__lte'%self.yTextString: yMax})
                 )
             )
         )
-
+        
+        # Total # of observations
         self.numObs = self.querySet.count()
         
+        ### Sort the values from observations into bins
         # save these beforehand to avoid recalculating per bin
-        xScale = (xMax - xMin) / float(xSize - 2 * xPadding)
-        yScale = (yMax - yMin) / float(ySize - 2 * yPadding)
+        xScale = xLimit / float(xSize - 2 * xPadding)
+        yScale = yLimit / float(ySize - 2 * yPadding)
         yAllOffset = (ySize - 2 * yPadding) + yOffset
         for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
             
-            xAdj,yAdj = math.floor(entry[self.xProperty] / xbin),math.floor(entry[self.yProperty] / ybin)
+            # Adjustments for the axes values
+            xAdj,yAdj = math.floor(entry[self.xTextString] / xbin),math.floor(entry[self.yTextString] / ybin)
 
             key = (xAdj,yAdj)
-
+            
             if self.bins.has_key(key):
+                # Append the observation to the bin entry...
                 self.bins[key]['obs'].append(entry)
             else:
+                # ...or add a new entry to the bins dict
                 self.bins[key] = {
                     'obs'         : [entry],
                     'pixCoords'   : {
-                        'x' :(xAdj*xbin - xMin) / xScale + xOffset,
-                        'y' :(yMin - yAdj*ybin) / yScale + yAllOffset,
+                        # The pixel coordinates of the x and y values
+                        'x' :((xAdj*xbin - xMin) % xLimit) / xScale + xOffset,
+                        'y' :-((yAdj*ybin - yMin) % yLimit) / yScale + yAllOffset,
                     }
                 }
 
-        # </firstloop>
-        # <secondloop>
+        # Calculate states for each bin
         for bin in self.bins.values():
+
             obs = bin['obs']
             bin['count'] = len(obs)
             
+            # Find the bin with the most observations
             if self.maxObs < bin['count']:
                 self.maxObs = bin['count']
 
+            # Calculate bin stats for each field
             for field,fieldString in self.fields:
-                if self.ref != 'all' and field in (self.xProperty, self.yProperty): continue
-                # store functions and variables locally for speed optimization
 
-                # if there is only 1 observation then avg is the only value and deviation is zero
+                # Skip axes fields, unless 'll' is the indicated field
+                #  (This reduces unnecessary stats calculations)
+                if self.ref != 'all' and field in (self.xTextString, self.yTextString): continue
+
+                # If only 1 observation, avg is the only value and stdev is zero
                 if bin['count'] == 1:
                     bin['%s_avg'%fieldString] = obs[0][fieldString]
                     bin['%s_std'%fieldString] = 0
 
-                #if there is more than one observation then we must calculate the values
+                # If >1 observation, calculate the avg and stdev
                 else:
                     bin['%s_avg'%fieldString], bin['%s_std'%fieldString] = (
-                        getCircularStats if field in (
-                            'ome', 'phi', 'psi', 'chi', 'zeta'
-                        ) else getLinearStats
+                        # Use the appropriate stats method
+                        getCircularStats if field in ANGLES else getLinearStats
                     )(
                         [ob[fieldString] for ob in obs],
                         bin['count'],
                     )
-        # </secondloop>
-        #</john>
 
     # ******************************************************
     # Plots observations
@@ -198,22 +230,25 @@ class ConfDistPlot():
     def Plot(self):
         
         binVals = []
-        width   = round(self.xbin / self.xPixelSize)
-        height  = round(self.ybin / self.yPixelSize)
-
-        if width > 2:
-            width -= 2
+        
+        # Space the bins, if possible
+        if self.width > 2:
+            addWidth = 1
+            self.width -= 2
         else:
-            width = 1
+            addWidth = 0
+            self.width = 1
 
-        if height > 2:
-            height -= 2
+        if self.height > 2:
+            addHeight = 1
+            self.height -= 2
         else:
-            height = 1
+            addHeight = 0
+            self.height = 1
 
         # Calculate stats regarding the distribution of averages in cells
-        if self.ref not in ('Observations', 'all') and len(self.bins):
-            if self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta',):
+        if self.ref not in NON_FIELDS and len(self.bins):
+            if self.ref in ANGLES:
                 meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
                 stdPropAvgX3 = 180 if stdPropAvg > 60 else 3*stdPropAvg
             else:
@@ -221,96 +256,101 @@ class ConfDistPlot():
                 minPropAvg = meanPropAvg - 3*stdPropAvg
                 maxPropAvg = meanPropAvg + 3*stdPropAvg
 
-        # Only bins need to be painted, so cycle through the bins
+        # Color the bins
         for key in self.bins:
-            bin = self.bins[key]
 
-            # The number of observations in the bin and the max number of observations
+            bin = self.bins[key]
             num = bin['count']
 
-            # As long as there is an observation, plot the rectangle for the bin
-            if num:
-
-                if self.ref in ('Observations', 'all'):
-                    scale = math.log(num+1, self.maxObs+1)
+            if self.ref in NON_FIELDS:
+                scale = math.log(num+1, self.maxObs+1)
+                color = map(
+                    lambda x: x*scale,
+                    (255.0,180.0,200.0)
+                )
+            elif self.ref in ANGLES:
+                avg = bin['%s_avg'%self.refString]
+                straight = avg - meanPropAvg
+                difference = (
+                    straight
+                ) if -180 < straight < 180 else (
+                    (360 if straight < 0 else -360) + straight
+                )
+                if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
+                    color = [255,-75,255]
+                else:
+                    scale = 0.5+((
+                            math.log(
+                                difference+1,
+                                stdPropAvgX3+1
+                            )
+                        ) if difference >= 0 else (
+                            -math.log(
+                                -difference+1,
+                                stdPropAvgX3+1
+                          )
+                       ))/2
                     color = map(
                         lambda x: x*scale,
                         (255.0,180.0,200.0)
                     )
-                elif self.ref in ('ome', 'phi', 'psi', 'chi', 'zeta',):
-                    avg = bin['%s_avg'%self.refString]
-                    difference = shortCircle(avg,meanPropAvg)
-                    if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
-                        color = [255,-75,255]
-                    else:
-                        scale = 0.5+((
-                                math.log(
-                                    difference+1,
-                                    stdPropAvgX3+1
-                                )
-                            ) if difference >= 0 else (
-                                -math.log(
-                                    -difference+1,
-                                    stdPropAvgX3+1
-                              )
-                           ))/2
-                        color = map(
-                            lambda x: x*scale,
-                            (255.0,180.0,200.0)
-                        )
+            else:
+                avg = bin['%s_avg'%self.refString]
+                if avg <= minPropAvg or avg >= maxPropAvg:
+                    color = [255,-75,255]
                 else:
-                    avg = bin['%s_avg'%self.refString]
-                    if avg <= minPropAvg or avg >= maxPropAvg:
-                        color = [255,-75,255]
-                    else:
-                        scale = 0.5+((
-                                math.log(
-                                    avg-meanPropAvg+1,
-                                    maxPropAvg-meanPropAvg+1
-                                )
-                            ) if avg > meanPropAvg else (
-                                -math.log(
-                                    meanPropAvg-avg+1,
-                                    meanPropAvg-minPropAvg+1
-                                )
-                            ))/2
-                        color = map(
-                            lambda x: x*scale,
-                            (255.0,180.0,200.0)
-                        )
-                color[1] += 75
+                    scale = 0.5+((
+                            math.log(
+                                avg-meanPropAvg+1,
+                                maxPropAvg-meanPropAvg+1
+                            )
+                        ) if avg > meanPropAvg else (
+                            -math.log(
+                                meanPropAvg-avg+1,
+                                meanPropAvg-minPropAvg+1
+                            )
+                        ))/2
+                    color = map(
+                        lambda x: x*scale,
+                        (255.0,180.0,200.0)
+                    )
+            color[1] += 75
 
-                #convert decimal RGB into HEX rgb
-                fill = ''.join('%02x'%round(x) for x in color)
-                # adjust dimensions to create 1 pixel border around bins
-                # do not adjust if creating the border will result in a height less than 1
+            #convert decimal RGB into HEX rgb
+            fill = ''.join('%02x'%round(x) for x in color)
 
-                # add rectangle to list
-                binVals.append(
-                    [
-                        math.floor(bin['pixCoords']['x']) + (width > 2),
-                        math.floor(bin['pixCoords']['y']) - round(self.ybin / self.yPixelSize) + (height > 2),
-                        width,
-                        height,
-                        fill,
-                        fill,
-                        bin,
-                        key,
-                    ] + ([0,0] if self.ref in ('Observations', 'all') else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
-                )
+            # add rectangle to list
+            binVals.append(
+                [
+                    math.floor(bin['pixCoords']['x']) + addWidth,
+                    math.floor(bin['pixCoords']['y']) - self.height - addHeight,
+                    self.width,
+                    self.height,
+                    fill,
+                    fill,
+                    bin,
+                    key,
+                ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
+            )
 
         return binVals
 
 
-    # *******************************************************************************
+    # *****************************************************************************
     # Prints out the query results in a dump file
-    # *******************************************************************************
+    # *****************************************************************************
     def PrintDump(self, writer):
 
         residue = self.residue
 
         #fields to include, order in this list is important
-        STATS_FIELDS = ['phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta','h_bond_energy']
+        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta','h_bond_energy')
+        avgString = '%s_avg'%self.resString
+        stdString = '%s_avg'%self.resString
+        STATS_FIELDS_STRINGS = reduce(
+            lambda x,y:x+y,
+            ((avgString%stat,stdString%stat) for stat in STATS_FIELDS)
+        )
         lower_case_fields = ['a1','a2','a3','a4','a5','a6','a7']
         field_replacements = {'h_bond_energy':'HBond'}
 
@@ -368,11 +408,9 @@ class ConfDistPlot():
             writer.write(bin['count'])
 
             # Start averages and standard deviations
-            for field in STATS_FIELDS:
+            for fieldStat in STATS_FIELDS_STRINGS:
                 writer.write('\t')
-                writer.write(round(bin['%s_avg'%self.resString%field], 1))
-                writer.write('\t')
-                writer.write(round(bin['%s_std'%self.resString%field], 3))
+                writer.write(round(bin[fieldStat], 1))
 
 
 # ******************************************************
