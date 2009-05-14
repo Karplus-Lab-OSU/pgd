@@ -23,7 +23,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     svg = SVG()
 
     #size ratio (470 = 1)
-    ratio = width/height
+    ratio = width/470
 
     x = round(width*.117);
     y = round(width*.117);
@@ -101,8 +101,8 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     svg.text(title_x,35*ratio, title, 12*ratio, text_color)
 
     cdp = ConfDistPlot(
-            graph_height,   #height
             graph_width,    #width
+            graph_height,   #height
             0,              #Xpadding
             0,              #Ypadding
             x,              #Xoffset
