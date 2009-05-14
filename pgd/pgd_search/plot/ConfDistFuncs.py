@@ -105,7 +105,7 @@ class ConfDistPlot():
             yLimit = yLimit%360
 
         # Width/height of a graph bin in pixels
-        self.width  = round(self.xbin/((xLimit) / float(ySize - 2 * yPadding)))
+        self.width  = round(self.xbin/((xLimit) / float(xSize - 2 * xPadding)))
         self.height = round(self.ybin/((yLimit) / float(ySize - 2 * yPadding)))
 
         # Index of the residue of interest in the segment
