@@ -54,7 +54,7 @@ def dumpSearch(search, writer):
     iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
 
     # Go Time. Print out the data.
-    chunks = Paginator(querySet.all(),500)
+    chunks = Paginator(querySet,500)
     for pageNo in chunks.page_range:
         for segment in chunks.page(pageNo).object_list:
             count += 1
