@@ -171,24 +171,33 @@ class ConfDistPlot():
         xScale = xLimit / float(xSize - 2 * xPadding)
         yScale = yLimit / float(ySize - 2 * yPadding)
         yAllOffset = (ySize - 2 * yPadding) + yOffset
+        #  Calculate the bin boundaries (to avoid recalculation)
+        xMarks = [math.floor((mark*xbin) / xScale + xOffset) for mark in range(0,int(math.floor(xLimit/xbin))+1)]
+        yMarks = [math.floor(-(mark*ybin) / yScale + yAllOffset) for mark in range(0,int(math.floor(yLimit/ybin))+1)]
+        #  Adjust to make + indices for the Marks lists
+        xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
         for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
             
             # Adjustments for the axes values
-            xAdj,yAdj = math.floor(entry[self.xTextString] / xbin),math.floor(entry[self.yTextString] / ybin)
+            xAdj,yAdj = int(math.floor(entry[self.xTextString] / xbin)),int(math.floor(entry[self.yTextString] / ybin))
 
             key = (xAdj,yAdj)
+            xDex,yDex = xAdj - xMarkOff,yAdj - yMarkOff
             
             if self.bins.has_key(key):
                 # Append the observation to the bin entry...
                 self.bins[key]['obs'].append(entry)
             else:
                 # ...or add a new entry to the bins dict
+
                 self.bins[key] = {
                     'obs'         : [entry],
                     'pixCoords'   : {
                         # The pixel coordinates of the x and y values
-                        'x' :((xAdj*xbin - xMin) % xLimit) / xScale + xOffset,
-                        'y' :-((yAdj*ybin - yMin) % yLimit) / yScale + yAllOffset,
+                        'x' : xMarks[xDex]+1,
+                        'y' : yMarks[yDex]-1,
+                        'width'  : xMarks[xDex+1] - xMarks[xDex] - 2,
+                        'height' : yMarks[yDex] - yMarks[yDex+1] - 2,
                     }
                 }
 
@@ -231,21 +240,6 @@ class ConfDistPlot():
         
         binVals = []
         
-        # Space the bins, if possible
-        if self.width > 2:
-            addWidth = 1
-            self.width -= 2
-        else:
-            addWidth = 0
-            self.width = 1
-
-        if self.height > 2:
-            addHeight = 1
-            self.height -= 2
-        else:
-            addHeight = 0
-            self.height = 1
-
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
             if self.ref in ANGLES:
@@ -322,10 +316,10 @@ class ConfDistPlot():
             # add rectangle to list
             binVals.append(
                 [
-                    math.floor(bin['pixCoords']['x']) + addWidth,
-                    math.floor(bin['pixCoords']['y']) - self.height - addHeight,
-                    self.width,
-                    self.height,
+                    bin['pixCoords']['x'],
+                    bin['pixCoords']['y'] - bin['pixCoords']['height'],
+                    bin['pixCoords']['width'],
+                    bin['pixCoords']['height'],
                     fill,
                     fill,
                     bin,

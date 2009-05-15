@@ -23,7 +23,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     svg = SVG()
 
     #size ratio (470 = 1)
-    ratio = width/470
+    ratio = width/470.0
 
     x = round(width*.117);
     y = round(width*.117);
