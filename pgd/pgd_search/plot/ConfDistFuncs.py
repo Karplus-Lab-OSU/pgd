@@ -99,10 +99,14 @@ class ConfDistPlot():
         xLimit = xMax - xMin
         yLimit = yMax - yMin
         #   Adjustments for circular quantities
-        if xText in ANGLES and xMax < xMin:
-            xLimit = xLimit%360
-        if yText in ANGLES and yMax < yMin:
-            yLimit = yLimit%360
+        if xText in ANGLES:
+            xModder = int(360/xbin)
+            if xMax < xMin:
+                xLimit = xLimit%360
+        if yText in ANGLES:
+            yModder = int(360/ybin)
+            if yMax < yMin:
+                yLimit = yLimit%360
 
         # Width/height of a graph bin in pixels
         self.width  = round(self.xbin/((xLimit) / float(xSize - 2 * xPadding)))
@@ -147,20 +151,20 @@ class ConfDistPlot():
             [Q(**{"%s__in"%fieldString:(999.90,0)}) for field,fieldString in self.fields]
         )).filter(
             # Exclude values outside the plotted values
-            Q(**{
+            (Q(**{
                 '%s__gte'%self.xTextString: xMin,
-                '%s__lte'%self.xTextString: xMax,
-                '%s__gte'%self.yTextString: yMin,
-                '%s__lte'%self.yTextString: yMax,
+                '%s__lt'%self.xTextString: xMax,
             }) if (xMin <= xMax) else ( # Altered logic for circular values
-                (
-                    Q(**{'%s__gte'%self.xTextString: xMin}) |
-                    Q(**{'%s__lte'%self.xTextString: xMax})
-                ) & (
-                    Q(**{'%s__gte'%self.yTextString: yMin}) |
-                    Q(**{'%s__lte'%self.yTextString: yMax})
-                )
-            )
+                Q(**{'%s__gte'%self.xTextString: xMin}) |
+                Q(**{'%s__lt'%self.xTextString: xMax})
+            )) & (Q(**{
+                '%s__gte'%self.yTextString: yMin,
+                '%s__lt'%self.yTextString: yMax,
+            }) if (yMin <= yMax) else ( # altered logic for circular values
+                Q(**{'%s__gte'%self.yTextString: yMin}) |
+                Q(**{'%s__lt'%self.yTextString: yMax})
+            ))
+                
         )
         
         # Total # of observations
@@ -172,10 +176,13 @@ class ConfDistPlot():
         yScale = yLimit / float(ySize - 2 * yPadding)
         yAllOffset = (ySize - 2 * yPadding) + yOffset
         #  Calculate the bin boundaries (to avoid recalculation)
-        xMarks = [math.floor((mark*xbin) / xScale + xOffset) for mark in range(0,int(math.floor(xLimit/xbin))+1)]
-        yMarks = [math.floor(-(mark*ybin) / yScale + yAllOffset) for mark in range(0,int(math.floor(yLimit/ybin))+1)]
+        xMarks = [math.floor((mark*xbin) / xScale + xOffset)+1 for mark in range(0,int(math.floor(xLimit/xbin))+1)]
+        widths = [xMarks[i+1] - xMarks[i] - 2 for i in range(0,len(xMarks)-1)]
+        yMarks = [math.floor(-(mark*ybin) / yScale + yAllOffset)-1 for mark in range(0,int(math.floor(yLimit/ybin))+1)]
+        heights = [yMarks[i] - yMarks[i+1] - 2 for i in range(0,len(yMarks)-1)]
         #  Adjust to make + indices for the Marks lists
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
+
         for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
             
             # Adjustments for the axes values
@@ -183,7 +190,9 @@ class ConfDistPlot():
 
             key = (xAdj,yAdj)
             xDex,yDex = xAdj - xMarkOff,yAdj - yMarkOff
-            
+            if xText in ANGLES: xDex = xDex%xModder
+            if yText in ANGLES: yDex = yDex%yModder
+
             if self.bins.has_key(key):
                 # Append the observation to the bin entry...
                 self.bins[key]['obs'].append(entry)
@@ -194,14 +203,14 @@ class ConfDistPlot():
                     'obs'         : [entry],
                     'pixCoords'   : {
                         # The pixel coordinates of the x and y values
-                        'x' : xMarks[xDex]+1,
-                        'y' : yMarks[yDex]-1,
-                        'width'  : xMarks[xDex+1] - xMarks[xDex] - 2,
-                        'height' : yMarks[yDex] - yMarks[yDex+1] - 2,
+                        'x' : xMarks[xDex],
+                        'y' : yMarks[yDex],
+                        'width'  : widths[xDex],
+                        'height' : heights[yDex],
                     }
                 }
 
-        # Calculate states for each bin
+        # Calculate stats for each bin
         for bin in self.bins.values():
 
             obs = bin['obs']

@@ -62,13 +62,13 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     ctx.set_font_size (12*ratio);
 
     #labels
-    xstep = (xEnd - xStart) / 4
-    ystep = (yEnd - yStart) / 4
+    xstep = ((xEnd - xStart)%360 if xProperty in ANGLES else (xEnd - xStart))/ 4
+    ystep = ((yEnd - yStart)%360 if yProperty in ANGLES else (yEnd - yStart)) / 4
     #get Y coordinate for xaxis hashes, this is the same for all x-labels
     xlabel_y = y+graph_height+hashsize*2+(3*ratio)
     for i in range(5):
         #text value
-        xtext = xStart + xstep*i
+        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i + 180)
         #drop decimal if value is an integer
         xtext = '%i' % local_int(xtext) if not xtext%1 else '%.1f' %  xtext
         #get X coordinate of hash, offsetting for length of text
@@ -78,7 +78,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
 
         #text value
-        ytext = yEnd - ystep*i
+        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i + 180)
         #drop decimal if value is an integer
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
