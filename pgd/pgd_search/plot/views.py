@@ -63,7 +63,10 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
 
     #labels
     xstep = ((xEnd - xStart)%360 if xProperty in ANGLES else (xEnd - xStart))/ 4
-    ystep = ((yEnd - yStart)%360 if yProperty in ANGLES else (yEnd - yStart)) / 4
+    if not xstep: xstep = 90
+    ystep = ((yEnd - yStart)%360 if yProperty in ANGLES else (yEnd - yStart))/ 4
+    if not ystep: ystep = 90
+
     #get Y coordinate for xaxis hashes, this is the same for all x-labels
     xlabel_y = y+graph_height+hashsize*2+(3*ratio)
     for i in range(5):

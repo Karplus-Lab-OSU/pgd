@@ -35,16 +35,17 @@ class Residue(models.Model):
     chain           = models.ForeignKey(Chain, related_name='residues')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1)
+    # Is oldID necessary? The correct type?
     oldID           = models.CharField(max_length=5, null=True)
     chainIndex      = models.PositiveIntegerField()
-    a1              = models.FloatField()
+    a1              = models.FloatField(null=True)
     a2              = models.FloatField()
     a3              = models.FloatField()
     a4              = models.FloatField()
     a5              = models.FloatField()
-    a6              = models.FloatField()
-    a7              = models.FloatField()
-    L1              = models.FloatField()
+    a6              = models.FloatField(null=True)
+    a7              = models.FloatField(null=True)
+    L1              = models.FloatField(null=True)
     L2              = models.FloatField()
     L3              = models.FloatField()
     L4              = models.FloatField()
@@ -56,14 +57,14 @@ class Residue(models.Model):
     chi             = models.FloatField()
     bm              = models.FloatField()
     bs              = models.FloatField()
-    bg              = models.FloatField()
+    bg              = models.FloatField(null=True)
     h_bond_energy   = models.FloatField()
     zeta            = models.FloatField()
     terminal_flag   = models.BooleanField() 
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
-    def __str__(self):
-        return '%d' % self.chainIndex
+    #def __str__(self):
+    #    return '%d' % self.chainIndex
 
     def __getattribute__(self,name):
         if name == 'aa_full':
