@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<link href="pgd.css" rel="stylesheet" type="text/css" />
+<title>
+  Protein Geometry Database
+</title>
+
+<style>
+p {
+    margin-left: auto;
+    margin-right: auto;
+    width: 35em
+}
+
+ul {
+    margin-left: auto;
+    margin-right: auto;
+    width: 35em
+}
+
+h1 {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 26em
+}
+
+h2 {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 26em
+}
+
+h3 {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    width: 26em
+}
+
+img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto }
+</style>
+
+
+</head>
+
+<body>
+
+<h1 >
+  Protein Geometry Database
+</h1>
+<h2 >
+
+  A flexible engine to explore backbone conformation and covalent geometry
+</h2>
+
+<img src="{{MEDIA_ROOT}}/images/linear-groups-ramach.png" alt="Ramachandran plot" width="480" />
+
+<h1><a href="{{SITE_ROOT}}search/">Click here to enter the PGD</a></h1>
+
+<p>
+  <strong>Using the Protein Geometry Database, you can mine protein
+  conformational space with a user-friendly but surprisingly flexible
+  graphical interface.</strong> You can search for structural motifs from 1-10
+  residues with either broad secondary-structure types (Kabsch and Sander,
+  1983) or fine-grained ranges of the Φ and Ψ dihedral angles. You can
+  additionally restrict your query by amino acid and by backbone covalent
+  geometry. Cutoff thresholds allow you to search only well-defined residues
+  within a nonredundant set of proteins (Hobohm et al., 1992).
+</p>
+
+<p>
+
+  Your search results appear on an interactive and attractive Ramachandran
+  plot. Any of the residues in your motif query can be plotted, and the color
+  indicates observation density. In addition to the observations, you can plot
+  many other properties (primarily geometric) using the color or on the X or Y
+  axes. Additionally, you can look at statistics for each residue type, browse
+  individual results, or download a plain-text dump of the results. This dump
+  allows you to pass the output of the PGD into the analysis tool of your
+  choice, preventing you from being limited by the capabilities of our
+  database in analyzing your results.
+</p>
+
+<p>
+  <strong>A unique aspect of the PGD is your ability to use as much or as
+  little of its flexibility as you need.</strong> Many flexible databases are
+  nearly unusable, and many simplistic databases make it impossible to ask
+  your scientific question. The PGD has the advantages of both and
+  disadvantages of neither because of its professionally designed interface.
+</p>
+
+<h2>Backbone geometry</h2>
+
+<img src="{{MEDIA_ROOT}}/images/monopeptide-inkscape.png" alt="Peptide backbone" width="480" />
+
+<p>
+
+  The protein backbone is defined primarily by three dihedral angles: Φ, Ψ,
+  and ω. The first two are highly rotatable and the concept of protein
+  conformation is based on them. The third, ω, defines the planarity of the
+  peptide bond and generally stays close to 180° or 0° (for cis peptides). All
+  three dihedrals are searchable in the PGD.
+</p>
+
+<p>
+  Additionally, bond angles and lengths determine the details of peptide
+  geometry, and their averages vary in a conformation-dependent manner
+  (Karplus, 1996). They are labeled above as a1-a7 (angles) and L1-L5
+  (lengths), and you can search the PGD based on these parameters in addition
+  to or instead of conformation.
+</p>
+
+</body>
+</html>
