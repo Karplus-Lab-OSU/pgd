@@ -5,6 +5,7 @@ from django.db import transaction
 from django.core.cache import cache
 
 from dbsettings.models import Setting
+from _mysql_exceptions import ProgrammingError
 
 __all__ = ['get_all_settings', 'get_setting', 'get_setting_storage',
     'register_setting', 'set_setting_value']
@@ -72,6 +73,15 @@ def register_setting(setting):
             )
         except Setting.DoesNotExist:
             set_setting_initial(setting.module_name, setting.class_name, setting.attribute_name, setting.default)
+
+        except ProgrammingError, err:
+            # check to see if this is just the table not existing yet.  This check is
+            # needed to allow syncdb to pass when settings are in the model file or 
+            # used within the model file
+            code, text = err
+            if not (code == 1146 and text[-34:] == ".dbsettings_setting' doesn't exist"):
+                print code, text[-34:]
+                raise err
 
     else:
         _settings[setting.key] = setting

@@ -4,6 +4,7 @@ from django import forms
 
 from dbsettings.loading import get_setting_storage
 from dbsettings.loading import set_setting_value
+from _mysql_exceptions import ProgrammingError
 
 try:
     from decimal import Decimal
@@ -53,7 +54,23 @@ class Value(object):
         try:
             storage = get_setting_storage(*self.key)
             return self.to_python(storage.value)
+
+        except ProgrammingError, err:
+            # check to see if this is just the table not existing yet.  This check is
+            # needed to allow syncdb to pass
+            code, text = err
+            if code == 1146 and text[-34:] == ".dbsettings_setting' doesn't exist":
+                print "*****************************************************************"
+                print " WARNING: dbsettings.settings does not exist. default values   "
+                print "          are being used.  Values CANNOT be updated via the    "
+                print "          user interface.  This error is not necessarily fatal."
+                print "*****************************************************************"
+                return self.default
+            else:
+                raise err
+
         except:
+
             return None
 
     def __set__(self, instance, value):
