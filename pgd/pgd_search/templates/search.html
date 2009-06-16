@@ -107,7 +107,6 @@
                 color:red;
             }
 
-
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
@@ -351,7 +350,7 @@
                 <th class="field col_{{i.0}}">{{i.1}}</th>
             {% endfor %}
 
-            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide</td><td><label title="Help Box For Peptides."><a href="/search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="peptide_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
@@ -362,7 +361,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure</td><td><label title="Help Box For Secondary Structure."><a href="/search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="ss_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
@@ -373,7 +372,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties</td><td><label title="Help Box For Residue Properties."><a href="/search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="residue_row">
                 <td class="label">Phi</td>
                 {% for r in residueFields %}
@@ -424,7 +423,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles</td><td><label title="Help Box For Angles."><a href="/search/help/#sea" style="color:#000">?</a></label></td></tr>
                 <tr class="angles_row">
                     <td class="label">Tau 1</td>
                     {% for r in residueFields %}
@@ -483,7 +482,7 @@
                 </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths</td><td><label title="Help Box For Lengths."><a href="/search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="lengths_row">
                 <td class="label">Length 1</td>
                 {% for r in residueFields %}
