@@ -11,6 +11,7 @@ import math
 from pgd_search.models import *
 from constants import AA_CHOICES
 from pgd_search.models import searchSettings
+from django.core.paginator import Paginator
 
 def dumpSearch(search, writer):
 
@@ -39,58 +40,59 @@ def dumpSearch(search, writer):
     writer.write('\n')
 
     #calculate list of iValues
-    iValues = []
-    start = 0 - (length-1) / 2
-    stop  = int(math.ceil((length-1) / 2.0))+1
-    for i in range(start, stop):
-        if i < 0:
-            iValues.append((i,'(i - %i)' % math.fabs(i)))
-        elif i == 0:
-            iValues.append((i,'(i)'))
-        else:
-            iValues.append((i,'(i+%i)'% i))
+    iValues = [
+        (
+            i, #index int
+            ('(i%+i)' % i) if i else '(i)', # string representation
+        ) for i in range(
+            0 - (length-1)/2, #start
+            int(math.ceil((length-1) / 2.0))+1, #stop
+        )
+    ] 
 
     #calculate iIndex
     iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
 
     # Go Time. Print out the data.
-    for segment in querySet:
-        count += 1
-        first = True
-        for offset, string in iValues:
+    chunks = Paginator(querySet,500)
+    for pageNo in chunks.page_range:
+        for segment in chunks.page(pageNo).object_list:
+            count += 1
+            first = True
+            for offset, string in iValues:
 
-            #segment count
-            if first:
-                writer.write(count)
-                first=False
-            else:
-                writer.write(' ')
-            writer.write('\t')
-
-            #protein code
-            writer.write(segment.protein_id)
-            writer.write('\t')
-
-            #index string repr
-            writer.write(string)
-            writer.write('\t')
-
-            #residue index
-            writer.write(segment.__dict__['r%i_chainIndex' % (iIndex+offset) ])
-
-            #field values
-            for field in FIELDS:
-                writer.write('\t')
-                # replace field with display value if needed
-                if field in FIELD_VALUE_REPLACEMENTS:
-                    code = segment.__dict__['r%i_%s' % (iIndex+offset, field)]
-                    if code:
-                        for k,v in FIELD_VALUE_REPLACEMENTS[field]:
-                            if k == code:
-                                writer.write(v)
-                # just write value
+                #segment count
+                if first:
+                    writer.write(count)
+                    first=False
                 else:
-                    writer.write(segment.__dict__['r%i_%s' % (iIndex+offset, field)])
+                    writer.write(' ')
+                writer.write('\t')
 
-            #end residue with a newline
-            writer.write('\n')
+                #protein code
+                writer.write(segment.protein_id)
+                writer.write('\t')
+
+                #index string repr
+                writer.write(string)
+                writer.write('\t')
+
+                #residue index
+                writer.write(segment.__dict__['r%i_chainIndex' % (iIndex+offset) ])
+
+                #field values
+                for field in FIELDS:
+                    writer.write('\t')
+                    # replace field with display value if needed
+                    if field in FIELD_VALUE_REPLACEMENTS:
+                        code = segment.__dict__['r%i_%s' % (iIndex+offset, field)]
+                        if code:
+                            for k,v in FIELD_VALUE_REPLACEMENTS[field]:
+                                if k == code:
+                                    writer.write(v)
+                    # just write value
+                    else:
+                        writer.write(segment.__dict__['r%i_%s' % (iIndex+offset, field)])
+
+                #end residue with a newline
+                writer.write('\n')

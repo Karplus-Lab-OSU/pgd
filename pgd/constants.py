@@ -57,6 +57,8 @@ SS_CHOICES = (
 #)
 
 PLOT_PROPERTY_CHOICES = [
+    ("phi","phi"),
+    ("psi","psi"),    
     ("L1","L1"),
     ("L2","L2"),
     ("L3","L3"),
@@ -71,8 +73,8 @@ PLOT_PROPERTY_CHOICES = [
     ("a7","a7"),
     ("ome","ome"),
     ("chi","chi"),
-    ("phi","phi"),
-    ("psi","psi"),
+    ("zeta","zeta"),
+    ("h_bond_energy","H Bond"),
     ]
 
 # This class makes a property subscriptable

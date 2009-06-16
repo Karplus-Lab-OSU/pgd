@@ -11,7 +11,7 @@ from dbsettings.loading import set_setting_value
 
 from django.db.models import Q
 
-range_re = re.compile("(?<=[^-])-")
+range_re = re.compile("(?<=[^-<>=])-")
 comp_re  = re.compile("^([<>]=?)?")
 
 """ ================================
@@ -29,11 +29,14 @@ if not searchSettings.requestedSegmentSize:
     set_setting_value('pgd_search.models', '', 'requestedSegmentSize', 10)
 
 
+""" ================================
 # Search
-# A search query submitted by a user
+#
+# A query submitted by a user
+================================ """
 class Search(models.Model):
     user             = models.ForeignKey(User, null=True)
-    codes_include    = models.BooleanField(null=True)
+    codes_include    = models.NullBooleanField(null=True)
     threshold        = models.IntegerField(null=True)
     resolution_min   = models.FloatField(null=True)
     resolution_max   = models.FloatField(null=True)
@@ -52,90 +55,160 @@ class Search(models.Model):
         # for now parse query every time.  otherwise the query results will be stored in the session
         return self.parse_search()
 
+    # Return the segments matched by the search.
     def parse_search(self):
+
+        # Start with all segments...
         query = Segment.objects.all()
+
+        # ...filter by segmentLength...
         if self.segmentLength > 1:
             query = query.filter(length__gte=self.segmentLength)
+
+        # ...filter by code lists...
         if self.codes_include:
             query = query.__getattribute__('filter' if self.codes_include else 'exclude')(protein__in=(x.code for x in self.codes.all()))
+
+        # ...filter by code lists...
         if self.resolution_min != None:
             query = query.filter(protein__resolution__gte=self.resolution_min)
+
+        # ...filter by resolution...
         if self.resolution_max != None:
             query = query.filter(protein__resolution__lte=self.resolution_max)
+
+        # ...filter by threshold...
         if self.threshold != None:
             query = query.filter(protein__threshold__lte=self.threshold)
 
-        for search_res in self.residues.all():
-            seg_prefix = "r%i_"%(search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1))
+        # ...filter by query strings (for values and value ranges)...
+        for search_res in self.residues.all(): # iterate through all search residues in self
+            seg_prefix = "r%i_"%(
+                # convert from the search residue index to indexes 0...n
+                search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)
+            )
 
-            # handle boolean values
+            # ...handle boolean values...
+            #   (Filter on each binary field that is not set to NULL/None.)
             query = query.filter(**dict((
                     (seg_prefix+field, search_res.__dict__[field])
                     for field in (
                         'xpr',
                     ) if search_res.__dict__[field] != None
                 )))
-            # TODO: implement the new _int system
+
+            # ...handle the '_int' values...
+            #   ('_int' values are a series of booleans stored grouped in an integer.)
             for field,choices in filter(
+                   # use only those (_int,_CHOICES) pairs with a '_include' value.
                    lambda x: search_res.__dict__[x[0]+'_include'] != None,
                    (
                        ('aa_int', AA_CHOICES),
                        ('ss_int', SS_CHOICES),
                    )
-               ):
-               query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(**{seg_prefix+field[0:-4]+"__in": [choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index]})
+                ):
+                query = query.__getattribute__(
+                    # call either 'filter' or 'exclude', depending on the value of '_include'
+                    'filter' if search_res.__dict__[field+'_include'] else 'exclude'
+                )(
+                    # check to see that the value of the segment residue is in the set of
+                    # residues described in the '_int' of the search residue.
+                    **{seg_prefix+field[0:-4]+"__in": [
+                        # get the designated choice names as stored in the database.
+                        choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index
+                    ]}
+                )
 
-            # handle query strings
+            # ...handle query strings...
             for field in filter(
-                    lambda x: search_res.__dict__[x+'_include'] != None,
-                    (
-                        'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
-                        'L1',   'L2',   'L3',   'L4',   'L5',
-                        'phi',  'psi',  'ome',  'chi',
-                        'bm',   'bs',   'bg',
-                        'h_bond_energy',
-                        'zeta',
-                )):
-                seg_field = seg_prefix+field
+                # use only the fields with a '_include' value. 
+                lambda x: search_res.__dict__[x+'_include'] != None,
+                (
+                    'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
+                    'L1',   'L2',   'L3',   'L4',   'L5',
+                    'phi',  'psi',  'ome',  'chi',
+                    'bm',   'bs',   'bg',
+                    'h_bond_energy',
+                    'zeta',
+                )
+            ):
 
-                query = query.__getattribute__('filter' if search_res.__dict__[field+'_include'] else 'exclude')(
+                # seg_field is the name of the property of the given residue in the database
+                seg_field = seg_prefix+field
+                
+                constraints = []
+
+                for constraint in str(search_res.__dict__[field]).split(','):
+
+                    # The constraint may be a range...
+                    if range_re.search(constraint):
+
+                        min,max = [float(lim) for lim in range_re.split(constraint)]
+                        
+                        limits = (
+                            Q(**{seg_field+'__gte' : float(min)}),
+                            Q(**{seg_field+'__lte' : float(max)}),
+                        )
+                        
+                        constraints.append(
+                            # Apply 'or' logic for a wraparound range
+                            # or apply 'and' logic for a regular range
+                            (limits[0] & limits[1]) if (min <= max) else (limits[0] | limits[1])
+                        )
+                    # ...or the constraint may be a value comparison.
+                    else:
+
+                        constraints.append(Q(**{
+                            seg_field + {
+                                ''   : '',
+                                '>'  : '__gt',
+                                '>=' : '__gte',
+                                '<'  : '__lt',
+                                '<=' : '__lte',
+                            }[comp_re.search(constraint).group(0)] :
+                            # extract the numeric value
+                            constraint.strip('><=')
+                        }))
+
+                query = query.__getattribute__(
+                    # call either 'filter' or 'exclude', depending on the value of '_include'
+                    'filter' if search_res.__dict__[field+'_include'] else 'exclude'
+                )(
+                    # OR each of the statements in the query string together
                     reduce(
                         lambda x,y: x|y,
-                        (
-                            Q(
-                                **(
-                                    {
-                                        seg_field+'__gte' : float(range_re.split(constraint)[0]),
-                                        seg_field+'__lte' : float(range_re.split(constraint)[1]),
-                                    } if range_re.search(constraint) else {
-                                        seg_field + {
-                                            ''   : '',
-                                            '>'  : '__gt',
-                                            '>=' : '__gte',
-                                            '<'  : '__lt',
-                                            '<=' : '__lte',
-                                        }[comp_re.search(constraint).group(0)] :
-                                        constraint.strip('><=')
-
-                                    }
-                                )
-                            ) for constraint in str(search_res.__dict__[field]).split(',')
-                        )
-                    ))
+                        constraints
+                    )
+                )
         return query
 
+""" ================================
 # Search_code
-# Codes for the proteins searched on
+#
+# Codes indicating to which proteins
+# a Search is applied.
+================================ """
 class Search_code(models.Model):
     search  = models.ForeignKey(Search, related_name='codes')
     code    = models.CharField(max_length=4)
 
+""" ================================
+# Search_code
+#
+# The per-residue properties of a
+# Search
+================================ """
 # Search_residue
 # The search fields per residue
 class Search_residue(models.Model):
     search          = models.ForeignKey(Search, related_name='residues')
     index           = models.IntegerField()
     chainID         = models.CharField(max_length=1, null=True)
+    
+    # Performing bitwise operations on aa_int gives the set of amino acids to check against.
+    # aa_int&1<<i   AA_CHOICE[i]
+    # 0 : Not in set
+    # 1 : In set
     aa_int          = models.IntegerField(null=True)
 
     a1              = models.CharField(max_length=30, null=True)
@@ -150,7 +223,13 @@ class Search_residue(models.Model):
     L3              = models.CharField(max_length=30, null=True)
     L4              = models.CharField(max_length=30, null=True)
     L5              = models.CharField(max_length=30, null=True)
+
+    # Performing bitwise operations on ss_int gives the set of secondary structures to check against.
+    # ss_int&1<<i   AA_CHOICE[i]
+    # 0 : Not in set
+    # 1 : In set
     ss_int          = models.IntegerField(null=True)
+
     phi             = models.CharField(max_length=30, null=True)
     psi             = models.CharField(max_length=30, null=True)
     ome             = models.CharField(max_length=30, null=True)
@@ -160,35 +239,35 @@ class Search_residue(models.Model):
     bg              = models.CharField(max_length=30, null=True)
     h_bond_energy   = models.CharField(max_length=30, null=True)
     zeta            = models.CharField(max_length=30, null=True)
-    xpr             = models.BooleanField(null=True) # this field may not be necessary; it has never been implemented
+    xpr             = models.NullBooleanField(null=True) # this field may not be necessary; it has never been implemented
 
     # '<field>_include' boolean determines how its query field should be handled
     # Null  : field not included
     # True  : field included as a positive assertion
     # False : field included as a negative assertion
-    aa_int_include          = models.BooleanField(null=True)
-    a1_include              = models.BooleanField(null=True)
-    a2_include              = models.BooleanField(null=True)
-    a3_include              = models.BooleanField(null=True)
-    a4_include              = models.BooleanField(null=True)
-    a5_include              = models.BooleanField(null=True)
-    a6_include              = models.BooleanField(null=True)
-    a7_include              = models.BooleanField(null=True)
-    L1_include              = models.BooleanField(null=True)
-    L2_include              = models.BooleanField(null=True)
-    L3_include              = models.BooleanField(null=True)
-    L4_include              = models.BooleanField(null=True)
-    L5_include              = models.BooleanField(null=True)
-    ss_int_include          = models.BooleanField(null=True)
-    phi_include             = models.BooleanField(null=True)
-    psi_include             = models.BooleanField(null=True)
-    ome_include             = models.BooleanField(null=True)
-    chi_include             = models.BooleanField(null=True)
-    bm_include              = models.BooleanField(null=True)
-    bs_include              = models.BooleanField(null=True)
-    bg_include              = models.BooleanField(null=True)
-    h_bond_energy_include   = models.BooleanField(null=True)
-    zeta_include            = models.BooleanField(null=True)
+    aa_int_include          = models.NullBooleanField(null=True)
+    a1_include              = models.NullBooleanField(null=True)
+    a2_include              = models.NullBooleanField(null=True)
+    a3_include              = models.NullBooleanField(null=True)
+    a4_include              = models.NullBooleanField(null=True)
+    a5_include              = models.NullBooleanField(null=True)
+    a6_include              = models.NullBooleanField(null=True)
+    a7_include              = models.NullBooleanField(null=True)
+    L1_include              = models.NullBooleanField(null=True)
+    L2_include              = models.NullBooleanField(null=True)
+    L3_include              = models.NullBooleanField(null=True)
+    L4_include              = models.NullBooleanField(null=True)
+    L5_include              = models.NullBooleanField(null=True)
+    ss_int_include          = models.NullBooleanField(null=True)
+    phi_include             = models.NullBooleanField(null=True)
+    psi_include             = models.NullBooleanField(null=True)
+    ome_include             = models.NullBooleanField(null=True)
+    chi_include             = models.NullBooleanField(null=True)
+    bm_include              = models.NullBooleanField(null=True)
+    bs_include              = models.NullBooleanField(null=True)
+    bg_include              = models.NullBooleanField(null=True)
+    h_bond_energy_include   = models.NullBooleanField(null=True)
+    zeta_include            = models.NullBooleanField(null=True)
 
 
     def __init__(self, *args, **kwargs):
@@ -373,7 +452,7 @@ for i in range(searchSettings.segmentSize):
     seq_dict["r%i_chainIndex" % i]      = models.PositiveIntegerField(null=True)
     seq_dict["r%i_ss" % i]              = models.CharField(max_length=1, choices=SS_CHOICES, null=True)
     seq_dict["r%i_aa" % i]              = models.CharField(max_length=1, choices=AA_CHOICES, null=True)
-    seq_dict["r%i_xpr" % i]             = models.BooleanField(null=True) # probably should be replaced
+    seq_dict["r%i_xpr" % i]             = models.NullBooleanField(null=True) # probably should be replaced
 
     # the loops here are just to save on space/typing
     for j in range(1,8):

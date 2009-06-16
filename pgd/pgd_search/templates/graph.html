@@ -6,8 +6,8 @@
         <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
         <style>
             #canvas {
-                width: 472;
-                height: 472;
+                width: 472px;
+                height: 472px;
                 margin: 5px;
             }
 
@@ -122,7 +122,7 @@
                 $('div#binDetails').hide();
                 $('#canvas').svg()
 
-                fix = .5;
+                fix = 0.5;
                 x = 100;
                 y = 100;
                 height = 400;
@@ -141,9 +141,9 @@
 
                 {% for line in svg.lines %}
                     svg.line(
-                        {{line.x}}+fix,
+                        {{line.x}},
                         {{line.y}}+fix,
-                        {{line.x1}}+fix,
+                        {{line.x1}},
                         {{line.y1}}+fix,
                         {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
                     );
@@ -161,20 +161,20 @@
                 {% for rect in boxes %}
                     svg.rect(
                         {{rect.0}}+fix,
-                        {{rect.1}}+fix,
+                        {{rect.1}},
                         {{rect.2}},
                         {{rect.3}},
-                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.6.xBin}}-{{rect.6.yBin}}");', onmouseout:'bin_mouseout();'}
+                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 0, onmouseover:'bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");', onmouseout:'bin_mouseout();'}
                     );
 
                     //add static fields
-                    field_stats = {'observations':{{rect.6.numObs}} };
-                    field_stats['bin'] = [{{rect.6.xBin}},{{rect.6.yBin}}];
-                    field_stats['avg'] = '{{rect.6.avg|floatformat:3}}';
-                    field_stats['dev'] = '({{rect.6.dev|floatformat:3}})';
+                    field_stats = {'observations':{{rect.6.count}} };
+                    field_stats['bin'] = [{{rect.7.0}},{{rect.7.1}}];
+                    field_stats['avg'] = '{{rect.8|floatformat:3}}';
+                    field_stats['dev'] = '({{rect.9|floatformat:3}})';
 
                     // add to main dict
-                    stats['{{rect.6.xBin}}-{{rect.6.yBin}}'] = field_stats
+                    stats['{{rect.7.0}}-{{rect.7.1}}'] = field_stats
 
                 {% endfor %}
 
@@ -197,10 +197,10 @@
                 $('#advanced').hide()
                 $('#advanced_toggle').click(function(){
                     $('#advanced').toggle();
-                    if ($(this).html()=='Colors &gt;&gt;') {
-                        $(this).html('Colors <<');
+                    if ($(this).html()=='Colors/Dimensions &gt;&gt;') {
+                        $(this).html('Colors/Dimensions &lt;&lt;');
                     }else{
-                        $(this).html('Colors >>');
+                        $(this).html('Colors/Dimensions &gt;&gt;');
                     }
                 })
 
@@ -279,7 +279,7 @@
                 </tbody>
 
                 <tr class="spacer"/>
-                <tr><td id="advanced_toggle" class="header" colspan="100%">Colors >></td></tr>
+                <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>
                 <tbody id="advanced">
                         <tr>
                             <td class="label">Image Background</td>

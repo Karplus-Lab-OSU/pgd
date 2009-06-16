@@ -18,7 +18,11 @@ ATTRIBUTE_CHOICES = [
                     ("a6","a6"),
                     ("a7","a7"),
                     ("ome","ome"),
-                    ("chi","chi"),
+                    #("chi","chi"),
+                    #("phi","phi"),
+                    #("psi","psi"),
+                    #('zeta','zeta'),
+                    #('h_bond_energy','H Bond'),
                     ]
 
 # choices for properties mapped to axis
@@ -39,6 +43,8 @@ PROPERTY_CHOICES = [
                     ("chi","chi"),
                     ("phi","phi"),
                     ("psi","psi"),
+                    ('zeta','zeta'),
+                    ('h_bond_energy','H Bond'),                        
                     ]
 
 BACKGROUND_CHOICES = [

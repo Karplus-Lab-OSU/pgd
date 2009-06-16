@@ -23,7 +23,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     svg = SVG()
 
     #size ratio (470 = 1)
-    ratio = width/470
+    ratio = width/470.0
 
     x = round(width*.117);
     y = round(width*.117);
@@ -62,13 +62,16 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     ctx.set_font_size (12*ratio);
 
     #labels
-    xstep = (xEnd - xStart) / 4
-    ystep = (yEnd - yStart) / 4
+    xstep = ((xEnd - xStart)%360 if xProperty in ANGLES else (xEnd - xStart))/ 4
+    if not xstep: xstep = 90
+    ystep = ((yEnd - yStart)%360 if yProperty in ANGLES else (yEnd - yStart))/ 4
+    if not ystep: ystep = 90
+
     #get Y coordinate for xaxis hashes, this is the same for all x-labels
     xlabel_y = y+graph_height+hashsize*2+(3*ratio)
     for i in range(5):
         #text value
-        xtext = xStart + xstep*i
+        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i + 180)
         #drop decimal if value is an integer
         xtext = '%i' % local_int(xtext) if not xtext%1 else '%.1f' %  xtext
         #get X coordinate of hash, offsetting for length of text
@@ -78,7 +81,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
 
         #text value
-        ytext = yEnd - ystep*i
+        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i + 180)
         #drop decimal if value is an integer
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
@@ -101,8 +104,8 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     svg.text(title_x,35*ratio, title, 12*ratio, text_color)
 
     cdp = ConfDistPlot(
-            graph_height,            #height
-            graph_width,            #width
+            graph_width,    #width
+            graph_height,   #height
             0,              #Xpadding
             0,              #Ypadding
             x,              #Xoffset
@@ -116,8 +119,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
             xProperty,      #X property
             yProperty,      #Y property
             attribute,      #property
-            residue,         #residue Index
-            #reference
+            residue,        #residue Index
             request.session['search'].querySet()
     )
 
@@ -226,7 +228,6 @@ def renderToSVG(request):
 
     response_dict = {
         'referenceValues' : RefDefaults(),
-        'stats_fields':STATS_FIELDS
         }
 
     if request.method == 'POST': # If the form has been submitted
@@ -235,8 +236,8 @@ def renderToSVG(request):
             data = form.cleaned_data
             svg, boxes = drawGraph(
                         request,
-                        470,
-                        470,
+                        int(data['height']),
+                        int(data['width']),
                         data['x'],
                         data['y'],
                         data['x1'],
@@ -272,9 +273,9 @@ def renderToSVG(request):
         response_dict['yBin'] = form.fields['yBin'].initial
         response_dict['attribute'] = form.fields['attribute'].initial
 
-    response_dict['form']   = form
-    response_dict['svg']    = svg
-    response_dict['boxes']  = boxes
+    response_dict['form']         = form
+    response_dict['svg']          = svg
+    response_dict['boxes']        = boxes
 
     return render_to_response('graph.html', response_dict, context_instance=RequestContext(request))
 
@@ -304,7 +305,8 @@ def plotDump(request):
                 data['yBin'],           #Ybin
                 data['xProperty'],      #X property
                 data['yProperty'],      #Y property
-                data['attribute'],#property
+                #data['attribute'],#property
+                'all',#property
                 #data['reference'],
                 int(data['residue']),
                 request.session['search'].querySet()
