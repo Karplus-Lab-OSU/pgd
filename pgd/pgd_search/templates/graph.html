@@ -135,15 +135,15 @@
                         {{rect.y}}+fix,
                         {{rect.height}},
                         {{rect.width}},
-                        {fill: '{{rect.fill}}', stroke:  "{{rect.stroke}}", 'stroke-width':0}
+                        {fill: '{{rect.fill}}', stroke:  "{{rect.stroke}}", 'stroke-width':{{rect.stroke}}}
                     );
                 {% endfor %}
 
                 {% for line in svg.lines %}
                     svg.line(
-                        {{line.x}},
+                        {{line.x}}+fix,
                         {{line.y}}+fix,
-                        {{line.x1}},
+                        {{line.x1}}+fix,
                         {{line.y1}}+fix,
                         {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
                     );
@@ -161,10 +161,10 @@
                 {% for rect in boxes %}
                     svg.rect(
                         {{rect.0}}+fix,
-                        {{rect.1}},
+                        {{rect.1}}+fix,
                         {{rect.2}},
                         {{rect.3}},
-                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 0, onmouseover:'bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");', onmouseout:'bin_mouseout();'}
+                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");', onmouseout:'bin_mouseout();'}
                     );
 
                     //add static fields

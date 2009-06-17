@@ -32,7 +32,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     hashsize = 10*ratio
 
     #image background
-    svg.rect(0, 0, width, height, 1, background_color, background_color);
+    svg.rect(0, 0, width, height, 0, background_color, background_color);
 
     #graph background
     svg.rect(x, y, graph_width, graph_height, 1, hash_color, graph_color);

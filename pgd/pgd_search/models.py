@@ -7,7 +7,6 @@ import re
 from math import ceil
 
 import dbsettings
-from dbsettings.loading import set_setting_value
 
 from django.db.models import Q
 
@@ -18,15 +17,9 @@ comp_re  = re.compile("^([<>]=?)?")
 Search Settings
 ================================ """
 class SearchSettings(dbsettings.Group):
-    segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches')
-    requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available')
+    segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches', default=10)
+    requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available', default=10)
 searchSettings = SearchSettings('Search')
-
-# set defaults for settings
-if not searchSettings.segmentSize:
-    set_setting_value('pgd_search.models', '', 'segmentSize', 10)
-if not searchSettings.requestedSegmentSize:
-    set_setting_value('pgd_search.models', '', 'requestedSegmentSize', 10)
 
 
 """ ================================
