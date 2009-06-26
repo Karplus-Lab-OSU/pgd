@@ -5,6 +5,7 @@ import math
 
 from constants import AA_CHOICES
 from pgd_search.models import Search, Segment, iIndex
+from pgd_search.plot.ConfDistFuncs import getCircularStats
 
 """
 display statistics about the search
@@ -17,6 +18,9 @@ def searchStatistics(request):
     local_pow = pow
     local_min = min
     local_max = max
+
+    ANGLES_BASE = ('ome', 'phi', 'psi', 'chi', 'zeta')
+    angles = ['r%i_%s' %(iIndex, angle) for angle in ANGLES_BASE]
 
     stat_attributes_base = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','ome']
     TOTAL_INDEX = {'na':0,'e':1,'E':2,'S':3,'h':4,'H':5,'t':6,'T':7,'g':8,'G':9,'B':10,'i':11,'I':12}
@@ -70,21 +74,27 @@ def searchStatistics(request):
         #calculate statistics
         for attribute in stat_attributes:
             list = peptide['stats'][STAT_INDEX[attribute]][1]
+
             list_len = local_len(list)
             if list_len > 1:
-                #Average/mean
-                mean = local_sum(list)/list_len
+                if attribute in angles:
+                    mean, std_dev = getCircularStats(list, local_len(list))
+                    range_min = 0
+                    range_max = 0
+                else:
+                    #Average/mean
+                    mean = local_sum(list)/list_len
 
-                #now that we have mean calculate standard deviation
-                stdev = math.sqrt(
-                    local_sum([
-                        local_pow(value - mean, 2)
-                        for value in list
-                    ])/(list_len - 1)
-                )
+                    #now that we have mean calculate standard deviation
+                    stdev = math.sqrt(
+                        local_sum([
+                            local_pow(value - mean, 2)
+                            for value in list
+                        ])/(list_len - 1)
+                    )
 
-                range_min = '%+.3f' % (local_min(list) - mean)
-                range_max = '%+.3f' % (local_max(list) - mean)
+                    range_min = '%+.3f' % (local_min(list) - mean)
+                    range_max = '%+.3f' % (local_max(list) - mean)
 
             # if theres only 1 item then the stats are simpler to calculate
             elif list_len == 1:
