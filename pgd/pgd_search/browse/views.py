@@ -39,9 +39,8 @@ def browse(request):
         paginatedSegments = paginator.page(page)
 
     #generate a list of pages to display in the pagination bar
-    pages = ([i for i in range(1, 11 if page < 8 else 3)],
-            [i for i in range(page-5,page+5)] if page > 7 and page < paginator.num_pages-6 else None,
-            [i for i in range(paginator.num_pages-(1 if page < paginator.num_pages-6 else 9), paginator.num_pages+1)])
+    pages = get_page_list(paginator, page)
+
 
     # use ranges for RGB to introduce colorful steps
     colors = [] 
@@ -69,3 +68,33 @@ def browse(request):
         'segmentLength':search.segmentLength
 
     }, context_instance=RequestContext(request))
+
+
+def get_page_list(paginator, page=1):
+    """
+    Generate a list of pages used choose from to jump quickly to a page
+
+    This generates a list that shows:
+        * if near the start/end, up to 10 pages from the start/end
+        * if in the middle first two and last two pages in addition to the
+          +/- 5 from the current page
+       * if num_pages<10 - only one list of pages is shown
+       * if num_pages==11 then the list is statically generated because this
+         list size results in wierd results for the standard logic that generates
+         the lists.
+    """
+
+    if paginator.num_pages < 11:
+        # special case: only one list of values
+        pages = (range(1,paginator.num_pages+1),)
+    elif paginator.num_pages == 11:
+        # special case: lists are static
+        pages = ([1,2,3,4,5,6,7,8,9,10], None, [11])
+    else:
+        # normal case
+        start = [i for i in range(1, 11 if page < 8 and page < paginator.num_pages-6 else 3)]
+        middle = [i for i in range(page-5,page+5)] if page > 7 and page < paginator.num_pages-6 else None
+        end = [i for i in range(paginator.num_pages-(1 if page < paginator.num_pages-6 else 9), paginator.num_pages+1)]
+        pages = (start, middle, end)
+
+    return pages
