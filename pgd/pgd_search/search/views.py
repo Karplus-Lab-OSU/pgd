@@ -68,7 +68,6 @@ def editSearch(request, search_id=None):
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
-        print search.__dict__
         form = processSearchObject(search)
     #else use the search in the session if it exists
     else:
@@ -217,7 +216,6 @@ def processSearchForm(form):
 Process a search object copying its values into a searchForm
 """
 def processSearchObject(search):
-    print 'hrm'
     data = {
         #get protein properties
         'residues'      :search.segmentLength,
