@@ -9,6 +9,27 @@ from ConfDistFuncs import *
 from svg import *
 
 
+LABEL_REPLACEMENTS = {
+            "L1":u'C\u207B\u00B9N',
+            "L2":u'NC\u1D45',
+            "L3":u'C\u1D45C\u1D5D',
+            "L4":u'C\u1D45C',
+            "L5":u'CO',
+            "a1":u'C\u207B\u00B9NC\u1D5D',
+            "a2":u'NC\u1D45C\u1D5D',
+            "a3":u'NC\u1D45C',
+            "a4":u'C\u1D5DC\u1D45C',
+            "a5":u'C\u1D45CO',
+            "a6":u'C\u1D45CN\u207A\u00B9',
+            "a7":u'OCN\u207A\u00B9',
+            "ome":u'\u03C9',
+            "chi":u'\u03C7',
+            "phi":u'\u03D5',
+            "psi":u'\u03A8',
+            'zeta':u'\u03B6',
+            'h_bond_energy':'H Bond'
+            }
+
 
 """
 Renders a conformational distribution graph
@@ -93,12 +114,15 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         svg.text(ylabel_x, ylabel_y, ytext,12*ratio, text_color)
 
     #title text
-    title = 'Plot of %s vs. %s' % (xProperty,yProperty)
+    xTitle = LABEL_REPLACEMENTS[xProperty] if xProperty in LABEL_REPLACEMENTS else xProperty
+    yTitle = LABEL_REPLACEMENTS[yProperty] if yProperty in LABEL_REPLACEMENTS else yProperty
+    title = 'Plot of %s vs. %s' % (xTitle,yTitle)
     xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
     title_x = (width/2) - xbearing - twidth/2
     svg.text(title_x,15*ratio, title, 12*ratio, text_color)
 
-    title = 'Shading Based Off of %s' % attribute
+    attribute_title = LABEL_REPLACEMENTS[attribute] if attribute in LABEL_REPLACEMENTS else attribute
+    title = 'Shading Based Off of %s' % attribute_title
     xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
     title_x = (width/2) - xbearing - twidth/2
     svg.text(title_x,35*ratio, title, 12*ratio, text_color)
