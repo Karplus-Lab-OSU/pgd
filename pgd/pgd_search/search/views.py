@@ -65,7 +65,6 @@ def search(request):
 Handler for editing an existing search
 """
 def editSearch(request, search_id=None):
-
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
@@ -218,6 +217,7 @@ def processSearchForm(form):
 Process a search object copying its values into a searchForm
 """
 def processSearchObject(search):
+    print 'hrm'
     data = {
         #get protein properties
         'residues'      :search.segmentLength,
@@ -237,7 +237,7 @@ def processSearchObject(search):
     #setup defaults - initial values are not set when passing a dict to the form constructor
     # so any value with a default value must be initialized prior to values are pulled out
     # of the Search object
-    for i in range(searchSettings.segmentSize):
+    for i in RESIDUE_INDEXES:
         data['bm_%i' % i ]  = SearchForm.base_fields['bm_%i' % i].initial
         data['bg_%i' % i ]  = SearchForm.base_fields['bg_%i' % i].initial
         data['bs_%i' % i ]  = SearchForm.base_fields['bs_%i' % i].initial
