@@ -112,7 +112,7 @@
                 border-color:black;
             }
             a.pagination:active            { color:#3a76f1; text-decoration:none;}
-            
+
             #page_jump {
                 width:2.9em;
                 margin-left:3px;
@@ -158,9 +158,6 @@
     </head>
     <body>
         {% include 'header.html' %}
-
-        
-
             <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
             <div class="pagination">
                 <span class="step-links">
@@ -191,7 +188,7 @@
 
             <table id="results" >
                 <thead>
-                
+
                 </thead>
                 <tbody>
                 {% for segment in segments.object_list %}
@@ -205,35 +202,34 @@
                             <th>ID</th>
                             <th class='aa'>AA</th>
                             <th class='borderLeft'/>
-                            <th class='a1'>a1</th>
-                            <th class='a2'>a2</th>
-                            <th class='a3'>a3</th>
-                            <th class='a4'>a4</th>
-                            <th class='a5'>a5</th>
-                            <th class='a6'>a6</th>
-                            <th class='a7'>a7</th>
-                            <th class='l1'>L1</th>
-                            <th class='l2'>L2</th>
-                            <th class='l3'>L3</th>
-                            <th class='l4'>L4</th>
-                            <th class='l5'>L5</th>
+                            <th class='a1'>C&#x207B;&#x00B9;NC&#x1D5D;</th>
+                            <th class='a2'>NC&#x1D45;C&#x1D5D;</th>
+                            <th class='a3'>NC&#x1D45;C</th>
+                            <th class='a4'>C&#x1D5D;C&#x1D45;C</th>
+                            <th class='a5'>C&#x1D45;CO</th>
+                            <th class='a6'>C&#x1D45;CN&#x207A;&#x00B9;</th>
+                            <th class='a7'>OCN&#x207A;&#x00B9;</th>
+                            <th class='l1'>C&#x207B;&#x00B9;N</th>
+                            <th class='l2'>NC&#x1D45;</th>
+                            <th class='l3'>C&#x1D45;C&#x1D5D;</th>
+                            <th class='l4'>C&#x1D45;C</th>
+                            <th class='l5'>CO</th>
                             <th class='borderRight'/>
                             <th class='ss'>ss</th>
-                            <th class='phi'>phi</th>
-                            <th class='psi'>psi</th>
-                            <th class='ome'>ome</th>
-                            <th class='chi'>chi</th>
+                            <th class='phi'>&#x03D5;</th>
+                            <th class='psi'>&#x03A8;</th>
+                            <th class='ome'>&#x03C9;</th>
+                            <th class='chi'>&#x03C7;</th>
                             <th class='bm'>bm</th>
                             <th class='bs'>bs</th>
                             <th class='bg'>bg</th>
                             <th class='hbond'>H Bond</th>
-                            <th class='zeta'>Zeta</th>
+                            <th class='zeta'>&#x03B6;</th>
                         </tr>
                     {% else %}
-                        <tr class="spacer-top"/>                       
-                    {% endif %} 
+                        <tr class="spacer-top"/>
+                    {% endif %}
                     {% for r in segment.residueProxies|slice:segmentSlice %}
-                        
                         <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                             <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>

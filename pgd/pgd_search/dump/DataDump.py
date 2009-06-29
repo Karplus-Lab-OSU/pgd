@@ -22,7 +22,22 @@ def dumpSearch(search, writer):
 
     # A list of values that should not be printed out
     FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
-    FIELD_LABEL_REPLACEMENTS = {'h_bond_energy':'H Bond', 'aa':'AA'}
+    FIELD_LABEL_REPLACEMENTS = {
+        'h_bond_energy':'H Bond', 
+        'aa':'AA',
+        'L1':u'C(-1)N',
+        'L2':u'N-CA',
+        'L3':u'CA-CB',
+        'L4':u'CA-C',
+        'L5':'C-O',
+        'a1':u'C(-1)-N-CA',
+        'a2':u'N-CA-CB',
+        'a3':u'N-CA-C',
+        'a4':u'CB-CA-C',
+        'a5':u'CA-C-O',
+        'a6':u'CA-C-N(+1)',
+        'a7':u'O-C-N(+1)'
+        }
     FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
 
     total = querySet.count()

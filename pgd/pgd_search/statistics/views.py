@@ -22,15 +22,28 @@ def searchStatistics(request):
     ANGLES_BASE = ('ome', 'phi', 'psi', 'chi', 'zeta')
     angles = ['r%i_%s' %(iIndex, angle) for angle in ANGLES_BASE]
 
-    stat_attributes_base = ['L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','ome']
+    stat_attributes_base = [('L1',u'C\u207B\u00B9N'),
+                        ('L2',u'NC\u1D45'),
+                        ('L3',u'C\u1D45C\u1D5D'),
+                        ('L4',u'C\u1D45C'),
+                        ('L5','CO'),
+                        ('a1',u'C\u207B\u00B9NC\u1D45'),
+                        ('a2',u'NC\u1D45C\u1D5D'),
+                        ('a3',u'NC\u1D45C'),
+                        ('a4',u'C\u1D5DC\u1D45C'),
+                        ('a5',u'C\u1D45CO'),
+                        ('a6',u'C\u1D45CN\u207A\u00B9'),
+                        ('a7',u'OCN\u207A\u00B9'),
+                        ('ome',u'\u03C9')]
+
     TOTAL_INDEX = {'na':0,'e':1,'E':2,'S':3,'h':4,'H':5,'t':6,'T':7,'g':8,'G':9,'B':10,'i':11,'I':12}
     STAT_INDEX = {}
 
     ss_field = 'r%i_ss' % iIndex
     aa_field = 'r%i_aa' % iIndex
 
-    stat_attributes = ['r%i_%s'%(iIndex, f) for f in stat_attributes_base]
-    fieldNames      = ['r%i_%s'%(iIndex, f) for f in stat_attributes_base]
+    stat_attributes = ['r%i_%s'%(iIndex, f[0]) for f in stat_attributes_base]
+    fieldNames      = ['r%i_%s'%(iIndex, f[0]) for f in stat_attributes_base]
     fieldNames.append(ss_field)
 
     for i in range(local_len(stat_attributes)):
@@ -78,7 +91,7 @@ def searchStatistics(request):
             list_len = local_len(list)
             if list_len > 1:
                 if attribute in angles:
-                    mean, std_dev = getCircularStats(list, local_len(list))
+                    mean, stdev = getCircularStats(list, local_len(list))
                     range_min = 0
                     range_max = 0
                 else:

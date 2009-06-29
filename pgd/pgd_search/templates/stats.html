@@ -41,7 +41,7 @@
             }
 
             tr.row-a {
-                background-color:#cbecff;
+                background-color:#f0f7ff;
             }
 
             tr.selected, td.col_selected {
@@ -193,9 +193,11 @@
                     <th class="sum_i {%cycle colClass%}">i</th>
                     <th class="sum_I {%cycle colClass%}">I</th>
                     <th class="borderright"/>
+                    {% autoescape off %}
                     {% for attribute in attributes %}
-                        <th class="avg_{{attribute}} {%cycle colClass%}">{{attribute}}</th>
+                        <th class="avg_{{attribute.0}} {%cycle colClass%}">{{attribute.1}}</th>
                     {% endfor %}
+                    {% endautoescape %}
                     <td class="end" />
                 </tr>
                 </thead>

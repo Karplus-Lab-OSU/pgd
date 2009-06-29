@@ -26,7 +26,6 @@ def getCircularStats(values,size):
     lcos = math.cos
     lradians = math.radians
     lpow = math.pow
-    
 
     # Circular Average - use some fancy trig that takes circular values
     #   into account.  This requires all values to be converted to radians.
@@ -35,7 +34,7 @@ def getCircularStats(values,size):
         sum([lsin(radAngle) for radAngle in radAngles])/size,
         sum([lcos(radAngle) for radAngle in radAngles])/size,
     )
-    
+
     # Standard Deviation - shift the range of deviations +180 by applying
     #   %(2*pi) to all angles.  This creates a range of deviations -180-540.
     #   Values greater than 180 are then shifted back by substracting from
@@ -355,7 +354,21 @@ class ConfDistPlot():
             ((avgString%stat,stdString%stat) for stat in STATS_FIELDS)
         )
         lower_case_fields = ['a1','a2','a3','a4','a5','a6','a7']
-        field_replacements = {'h_bond_energy':'HBond'}
+        field_replacements = {
+            'L1':u'C(-1)N',
+            'L2':u'N-CA',
+            'L3':u'CA-CB',
+            'L4':u'CA-C',
+            'L5':'C-O',
+            'a1':u'C(-1)-N-CA',
+            'a2':u'N-CA-CB',
+            'a3':u'N-CA-C',
+            'a4':u'CB-CA-C',
+            'a5':u'CA-C-O',
+            'a6':u'CA-C-N(+1)',
+            'a7':u'O-C-N(+1)',
+            'h_bond_energy':'HBond'
+        }
 
         #capitalize parameters where needed
         if self.xText in lower_case_fields:

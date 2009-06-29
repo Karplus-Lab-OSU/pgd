@@ -253,7 +253,9 @@
                     <tr><td class="header" colspan="100%">General</td></tr>
                     <tr>
                         <td class="label">Plotted Attribute</td>
+                        {% autoescape off %}
                         <td>{{form.attribute}}</td>
+                        {% endautoescape %}
                         <td class="label col2">Reference</td>
                         <td>{{form.reference}}</td>
                     </tr>
