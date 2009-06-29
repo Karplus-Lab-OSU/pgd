@@ -18,11 +18,11 @@ ATTRIBUTE_CHOICES = [
                     ("a6",u'C\u1D45CN\u207A\u00B9'),
                     ("a7",u'OCN\u207A\u00B9'),
                     ("ome",u'\u03C9'),
-                    #("chi","chi"),
-                    #("phi","phi"),
-                    #("psi","psi"),
-                    #('zeta','zeta'),
-                    #('h_bond_energy','H Bond'),
+                    ("chi",u'\u03C7'),
+                    ("phi",u'\u03D5'),
+                    ("psi",u'\u03A8'),
+                    ('zeta',u'\u03B6'),
+                    ('h_bond_energy','H Bond'),
                     ]
 
 # choices for properties mapped to axis
