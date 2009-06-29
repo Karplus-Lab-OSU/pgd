@@ -85,6 +85,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     #labels
     xstep = ((xEnd - xStart)%360 if xProperty in ANGLES else (xEnd - xStart))/ 4
     if not xstep: xstep = 90
+    #ystep = (yEnd - yStart) / 4
     ystep = ((yEnd - yStart)%360 if yProperty in ANGLES else (yEnd - yStart))/ 4
     if not ystep: ystep = 90
 
@@ -102,12 +103,13 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
 
         #text value
+        #ytext = yEnd - ystep*i
         ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i + 180)
         #drop decimal if value is an integer
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
-        ylabel_y = y+(graph_height/4)*i+(4*ratio)
+        ylabel_y = y+(graph_height/4)*(4-i)+(4*ratio)
         #Get X coordinate offsetting for length of hash and length of text
         ylabel_x = (x-(ratio*15))-xbearing-twidth
         #create label
