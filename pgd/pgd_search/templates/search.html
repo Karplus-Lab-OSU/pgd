@@ -279,18 +279,55 @@
 
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
+		    var header = document.getElementById('peptide_header');
+		    if (header.innerHTML == 'Peptide ▸'){
+			header.innerHTML = 'Peptide ▾';
+		    }
+		    else{
+			header.innerHTML = 'Peptide ▸';
+		    }
                 });
                 $('#ss_header').click(function(evt){
                     $('tr.ss_row').toggle();
+		    var header = document.getElementById('ss_header');
+		    if (header.innerHTML == 'Secondary Structure ▸'){
+			header.innerHTML = 'Secondary Structure ▾';
+		    }
+		    else{
+			header.innerHTML = 'Secondary Structure ▸';
+		    }
                 });
                 $('#residue_header').click(function(evt){
                     $('tr.residue_row').toggle();
+		    var header = document.getElementById('residue_header');
+		    if (header.innerHTML == 'Residue Properties ▸'){
+			header.innerHTML = 'Residue Properties ▾';
+		    }
+		    else{
+			header.innerHTML = 'Residue Properties ▸';
+		    }
                 });
+		$('tr.angles_row').toggle();
                 $('#angles_header').click(function(evt){
                     $('tr.angles_row').toggle();
+		    var header = document.getElementById('angles_header');
+		    if (header.innerHTML == 'Angles ▸'){
+			header.innerHTML = 'Angles ▾';
+		    }
+		    else{
+			header.innerHTML = 'Angles ▸';
+		    }
                 });
+		$('tr.lengths_row').toggle();
                 $('#lengths_header').click(function(evt){
                     $('tr.lengths_row').toggle();
+		    var header = document.getElementById('lengths_header');
+		    if (header.innerHTML == 'Lengths ▸'){
+			header.innerHTML = 'Lengths ▾';
+		    }
+		    else{
+			header.innerHTML = 'Lengths ▸';
+		    }
                 });
             });
 
@@ -349,7 +386,7 @@
                 <th class="field col_{{i.0}}">{{i.1}}</th>
             {% endfor %}
 
-            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide</td><td><label title="Help Box For Peptides."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide ▾</td><td><label title="Help Box For Peptides."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="peptide_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
@@ -360,7 +397,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure</td><td><label title="Help Box For Secondary Structure."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure ▾</td><td><label title="Help Box For Secondary Structure."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="ss_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
@@ -371,7 +408,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties</td><td><label title="Help Box For Residue Properties."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties ▾</td><td><label title="Help Box For Residue Properties."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="residue_row">
                 <td class="label">&#x03D5;</td>
                 {% for r in residueFields %}
@@ -422,7 +459,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles</td><td><label title="Help Box For Angles."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles ▸</td><td><label title="Help Box For Angles."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
                 <tr class="angles_row">
                     <td class="label">C&#x207B;&#x00B9;NC&#x1D5D;</td>
                     {% for r in residueFields %}
@@ -481,7 +518,7 @@
                 </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths</td><td><label title="Help Box For Lengths."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths ▸</td><td><label title="Help Box For Lengths."><a href="{{SITE_ROOT}}search/help/#sea" style="color:#000">?</a></label></td></tr>
             <tr class="lengths_row">
                 <td class="label">C&#x207B;&#x00B9;N</td>
                 {% for r in residueFields %}
