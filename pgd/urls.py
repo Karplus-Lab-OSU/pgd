@@ -17,7 +17,7 @@ urlpatterns = patterns('',
     (r'^admin/(.*)', admin.site.root),
     (r'^tasks/', include('tasks.urls')),
     (r'^settings/', include('dbsettings.urls')),
-    (r'^search/*', include('pgd_search.urls')),
+    (r'^search/', include('pgd_search.urls')),
 
     #default url
     (r'^$','django.views.generic.simple.direct_to_template',
