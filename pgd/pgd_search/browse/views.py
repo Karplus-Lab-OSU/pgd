@@ -62,7 +62,7 @@ def browse(request):
         'segments': paginatedSegments,
         'segmentSlice':'%i:%i'%(iIndex+start,iIndex+stop),
         'iIndex':iIndex,
-        'pageStart':(page-1)*5,
+        'pageStart':(page-1)*25,
         'indexColors':colors,
         'pages':pages,
         'segmentLength':search.segmentLength
