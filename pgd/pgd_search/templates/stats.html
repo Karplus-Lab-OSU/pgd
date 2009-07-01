@@ -12,26 +12,23 @@
             }
 
             td {
+                border-right:1px dotted #888888;
+                border-top:1px dotted #888888;
                 color:black;
                 padding-right: 7px;
                 padding-left:7px;
                 text-align:center;
             }
 
-            .first {
-                border-left: 1px solid black;
-            }
-            .first {
-                border-right: 1px solid black;
-            }
 
             th {
-                color:white;
+                color:black;
                 margin: 0px;
                 padding:5px;
                 border-bottom: 1px solid black;
+                border-right:1px dotted black;
                 border-top: 1px solid black;
-                background-color:#1854d0;
+                background-color:#ffe680;
                 text-align:center;
             }
 
@@ -40,7 +37,7 @@
                 padding: 0px;
             }
 
-            tr.row-a {
+            tr.row-b {
                 background-color:#f0f7ff;
             }
 
@@ -50,7 +47,7 @@
             }
 
             th.col_selected {
-                background-color:#3a76f1;
+                background-color:#fff1ba;
             }
 
             td.selected {
@@ -94,20 +91,19 @@
                 text-align:left;
             }
 
-            .borderRight {
+            .avg_L5, .avg_ome  {
+                border-right:1px solid black;
+            } 
+            .avg_L1, .avg_ome, .sum_na, .peptide{
                 border-left:1px solid black;
             }
-            .borderLeft {
-                border-right:1px solid black;
+
+            .Tyr {
+                border-bottom:1px solid black;
             }
 
-            td.rowend {
-                width:0px;
-                background-color:white;
-                border-left: 1px solid black;
-            }
-            td.colend {
-                border-top:1px solid black;
+            td.sum, td.total {
+                text-align:right;
             }
 
             #stats {
@@ -176,60 +172,53 @@
             <table id="stats" >
                 <thead>
                 <tr>
-                    <th class="first {% cycle 'col-a' 'col-b' as colClass %}">Type</th>
-                    <th class="{%cycle colClass%}">Total</th>
-                    <th class="borderleft"/>
-                    <th class="sum_na {%cycle colClass%}">N/A</th>
-                    <th class="sum_e {%cycle colClass%}">e</th>
-                    <th class="sum_E {%cycle colClass%}">E</th>
-                    <th class="sum_S {%cycle colClass%}">S</th>
-                    <th class="sum_h {%cycle colClass%}">h</th>
-                    <th class="sum_H {%cycle colClass%}">H</th>
-                    <th class="sum_t {%cycle colClass%}">t</th>
-                    <th class="sum_T {%cycle colClass%}">T</th>
-                    <th class="sum_g {%cycle colClass%}">g</th>
-                    <th class="sum_G {%cycle colClass%}">G</th>
-                    <th class="sum_B {%cycle colClass%}">B</th>
-                    <th class="sum_i {%cycle colClass%}">i</th>
-                    <th class="sum_I {%cycle colClass%}">I</th>
-                    <th class="borderright"/>
+                    <th class="peptide">Type</th>
+                    <th class="total">Total</th>
+                    <th class="sum_na sum borderleft">N/A</th>
+                    <th class="sum_e sum">e</th>
+                    <th class="sum_E sum">E</th>
+                    <th class="sum_S sum">S</th>
+                    <th class="sum_h sum">h</th>
+                    <th class="sum_H sum">H</th>
+                    <th class="sum_t sum">t</th>
+                    <th class="sum_T sum">T</th>
+                    <th class="sum_g sum">g</th>
+                    <th class="sum_G sum">G</th>
+                    <th class="sum_B sum">B</th>
+                    <th class="sum_i sum">i</th>
+                    <th class="sum_I sum">I</th>
                     {% autoescape off %}
                     {% for attribute in attributes %}
-                        <th class="avg_{{attribute.0}} {%cycle colClass%}">{{attribute.1}}</th>
+                        <th class="avg_{{attribute.0}}">{{attribute.1}}</th>
                     {% endfor %}
                     {% endautoescape %}
-                    <td class="end" />
                 </tr>
                 </thead>
                 <tbody>
                 {% for code, peptide in peptides.items %}
                     <tr class="data {% cycle 'row-a' 'row-b' %}">
-                        <td class="first {% cycle 'col-a' 'col-b' as colClass %}">{{peptide.longCode|upper}}</td>
-                        <td class="{%cycle colClass%}">{{peptide.total}}</td>
-                        <td class="borderleft"/>
+                        <td class="peptide {{peptide.longCode}}">{{peptide.longCode|upper}}</td>
+                        <td class="borderright {{peptide.longCode}}">{{peptide.total}}</td>
                         {% for list in peptide.counts %}
-                            <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {%cycle colClass%}">{{list.1}}</td>
+                            <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
                         {% endfor %}
-                        <td class="borderright"/>
                         {% for list in peptide.stats %}
-				{% ifequal list.0 "L1" %}
-					<td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-				{% else %}{% ifequal list.0 "L2" %}
-					<td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-				{% else %}{% ifequal list.0 "L3" %}
-					<td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-				{% else %}{% ifequal list.0 "L4" %}
-					<td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-				{% else %}{% ifequal list.0 "L5" %}
-					<td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>			
-				{% else %}
-					<td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {%cycle colClass%}" onmouseover="showStats({{list.1.std|floatformat:1}},'{{list.1.min|floatformat:1}}','{{list.1.max|floatformat:1}}')">{{list.1.mean|floatformat:1}}</td>
-       				{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
+                {% ifequal list.0 "L1" %}
+                    <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L2" %}
+                    <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L3" %}
+                    <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L4" %}
+                    <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L5" %}
+                    <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}
+                    <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:1}},'{{list.1.min|floatformat:1}}','{{list.1.max|floatformat:1}}')">{{list.1.mean|floatformat:1}}</td>
+                       {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
                         {% endfor %}
-                        <td class="rowend" />
                     </tr>
                 {% endfor %}
-                <tr><td class="colend" colspan="30"></tr>
               </tbody>
             </table>
 
@@ -237,7 +226,5 @@
                     <span class="label">Standard Deviation:</span><div id="stdev"></div>
                     <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
             </div>
-
-        
     </body>
 </html>

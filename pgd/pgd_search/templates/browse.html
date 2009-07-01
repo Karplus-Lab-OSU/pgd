@@ -24,13 +24,14 @@
             }
 
             .borderRight {
-                border-left:1px solid black;
+                border-right:1px solid black;
             }
             .borderLeft {
-                border-right:1px solid black;
+                border-left:1px solid black;
             }
 
             td {
+                border-right:1px dotted #888888;
                 padding:.3em;
                 text-align:center;
             }
@@ -65,8 +66,9 @@
             th {
                 padding-left:4px;
                 padding-right:4px;
-                background-color:#1854d0;
-                color:white;
+                background-color:#fff6d5;
+                border-right:1px dotted black;
+                color:black;
                 white-space: nowrap;
                 text-align:center;
             }
@@ -201,20 +203,18 @@
                             <th>Residue</th>
                             <th>ID</th>
                             <th class='aa'>AA</th>
-                            <th class='borderLeft'/>
-                            <th class='a1'>C&#x207B;&#x00B9;NC&#x1D5D;</th>
+                            <th class='a1 borderLeft'>C&#x207B;&#x00B9;NC&#x1D5D;</th>
                             <th class='a2'>NC&#x1D45;C&#x1D5D;</th>
                             <th class='a3'>NC&#x1D45;C</th>
                             <th class='a4'>C&#x1D5D;C&#x1D45;C</th>
                             <th class='a5'>C&#x1D45;CO</th>
                             <th class='a6'>C&#x1D45;CN&#x207A;&#x00B9;</th>
-                            <th class='a7'>OCN&#x207A;&#x00B9;</th>
+                            <th class='a7 borderRight'>OCN&#x207A;&#x00B9;</th>
                             <th class='l1'>C&#x207B;&#x00B9;N</th>
                             <th class='l2'>NC&#x1D45;</th>
                             <th class='l3'>C&#x1D45;C&#x1D5D;</th>
                             <th class='l4'>C&#x1D45;C</th>
-                            <th class='l5'>CO</th>
-                            <th class='borderRight'/>
+                            <th class='l5 borderRight'>CO</th>
                             <th class='ss'>ss</th>
                             <th class='phi'>&#x03D5;</th>
                             <th class='psi'>&#x03A8;</th>
@@ -236,20 +236,18 @@
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                             <td>{{r.chainIndex}}</td>
                             <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
-                            <td class='borderLeft'/>
-                            <td id="data_a1_{{forloop.counter}}" class="data a1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:1}}</td>
+                            <td id="data_a1_{{forloop.counter}}" class="data a1 borderLeft" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:1}}</td>
                             <td id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:1}}</td>
                             <td id="data_a3_{{forloop.counter}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|floatformat:1}}</td>
                             <td id="data_a4_{{forloop.counter}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|floatformat:1}}</td>
                             <td id="data_a5_{{forloop.counter}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|floatformat:1}}</td>
                             <td id="data_a6_{{forloop.counter}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|floatformat:1}}</td>
-                            <td id="data_a7_{{forloop.counter}}" class="data a7" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|floatformat:1}}</td>
+                            <td id="data_a7_{{forloop.counter}}" class="data a7 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|floatformat:1}}</td>
                             <td id="data_l1_{{forloop.counter}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|floatformat:3}}</td>
                             <td id="data_l2_{{forloop.counter}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|floatformat:3}}</td>
                             <td id="data_l3_{{forloop.counter}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|floatformat:3}}</td>
                             <td id="data_l4_{{forloop.counter}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|floatformat:3}}</td>
-                            <td id="data_l5_{{forloop.counter}}" class="data l5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|floatformat:3}}</td>
-                            <td class='borderRight'/>
+                            <td id="data_l5_{{forloop.counter}}" class="data l5 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|floatformat:3}}</td>
                             <td id="data_ss_{{forloop.counter}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
                             <td id="data_phi_{{forloop.counter}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|floatformat:2}}</td>
                             <td id="data_psi_{{forloop.counter}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|floatformat:2}}</td>
