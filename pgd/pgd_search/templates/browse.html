@@ -202,6 +202,7 @@
                             <th>Code</th>
                             <th>Residue</th>
                             <th>ID</th>
+                            <th>Chain ID</th>
                             <th class='aa'>AA</th>
                             <th class='a1 borderLeft'>C&#x207B;&#x00B9;NC&#x1D5D;</th>
                             <th class='a2'>NC&#x1D45;C&#x1D5D;</th>
@@ -234,7 +235,8 @@
                             <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                             <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
                             <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
-                            <td>{{r.chainIndex}}</td>
+                            <td>{{r.oldID}}</td>
+                            <td>{{segment.chainID}}</td>
                             <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
                             <td id="data_a1_{{forloop.counter}}" class="data a1 borderLeft" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:1}}</td>
                             <td id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:1}}</td>

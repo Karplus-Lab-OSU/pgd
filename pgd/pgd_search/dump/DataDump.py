@@ -43,7 +43,7 @@ def dumpSearch(search, writer):
     total = querySet.count()
 
     # General query result information
-    writer.write("Match\tCode\tResidue\tID")
+    writer.write("Match\tCode\tResidue\tID\tChain ID")
 
     # Field names
     for field in FIELDS:
@@ -93,7 +93,11 @@ def dumpSearch(search, writer):
                 writer.write('\t')
 
                 #residue index
-                writer.write(segment.__dict__['r%i_chainIndex' % (iIndex+offset) ])
+                writer.write(segment.__dict__['r%i_oldID' % (iIndex+offset) ])
+                writer.write('\t')
+
+                #chain Index
+                writer.write(segment.chainID)
 
                 #field values
                 for field in FIELDS:
