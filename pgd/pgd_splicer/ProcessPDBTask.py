@@ -6,14 +6,27 @@ if __name__ == '__main__':
     #python magic to add the current directory to the pythonpath
     sys.path.append(os.getcwd())
 
+    # ==========================================================
+    # Setup django environment 
+    # ==========================================================
+    if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    # ==========================================================
+    # Done setting up django environment
+    # ==========================================================
+
 from tasks.tasks import *
+
 from pgd_splicer.models import *
-from pgd_core.models import *
+from pgd_core.models import Protein as ProteinModel
+from pgd_core.models import Chain as ChainModel
+from pgd_core.models import Residue as ResidueModel
 
 from django.db import transaction
 
 import math, sys, mmLib.Structure, mmLib.FileIO, mmLib.AtomMath
 import Bio.PDB
+from Bio.PDB import *
 import shutil
 import os
 
@@ -38,6 +51,29 @@ import os
 
 NO_VALUE = 999.9
 
+AA3to1 =  {
+    'ALA' : 'a',
+    'ARG' : 'r',
+    'ASN' : 'n',
+    'ASP' : 'd',
+    'CYS' : 'c',
+    'GLU' : 'e',
+    'GLN' : 'q',
+    'GLY' : 'g',
+    'HIS' : 'h',
+    'ILE' : 'i',
+    'LEU' : 'l',
+    'LYS' : 'k',
+    'MET' : 'm',
+    'PHE' : 'f',
+    'PRO' : 'p',
+    'SER' : 's',
+    'THR' : 't',
+    'TRP' : 'w',
+    'TYR' : 'y',
+    'VAL' : 'v',
+}
+
 """
 Task that takes a list of pdbs and processes the files extracting
 geometry data from the files
@@ -47,66 +83,81 @@ class ProcessPDBTask(Task):
     """
         Work function - expects a list of pdb file prefixes.
     """
-    @transaction.commit_manually
     def _work(self, args):
 
-        for pdb in args:
-            filename = 'pdb%s.ent.Z' % pdb
+        pdbs = args['pdbs']
 
-            #create datastructure
-            props = {
-                'chains':[],
-                'residues':{}
-            }
+        for data in pdbs:
+            self.process_pdb(data)
+
+
+    @transaction.commit_manually
+    def process_pdb(self, data):
+        try:
+
+            code = data['code']
+            filename = 'pdb%s.ent.Z' % code
+
+            # update datastructure
+            data['chains'] = []
+            data['residues'] = {}
 
             # 1) parse with bioPython
-            props = parseWithBioPython(filename, props)
-            print 'props: %s' % props
+            data = parseWithBioPython(filename, data)
+            #print 'props: %s' % data
 
             # 2) parse with MMLib merging the dictionaries
-            props = parseWithMMLib('%s/%s' % ('pdb', filename), props)
+            data = parseWithMMLib('%s/%s' % ('pdb', filename), data)
 
             # 3) Create/Get Protein and save values
             try:
-                protein = Protein.objects.get(id=code)
-            except:
-                protein = Protein()
-            protein.code       = props['code']
-            #protein.threshold  = props['threshold']
-            #protein.resolution = props['resolution']
-            #protein.rfactor    = props['rfactor']
-            #protein.save()
+                protein = ProteinModel.objects.get(code=code)
+                print '  Existing protein: ', code
+            except ProteinModel.DoesNotExist:
+                print '  Creating protein: ', code
+                protein = ProteinModel()
+            protein.code       = code
+            protein.threshold  = data['threshold']
+            protein.resolution = data['resolution']
+            protein.rfactor    = data['rfactor']
+            protein.save()
 
             # 4) Get/Create Chains and save values
             chains = {}
-            for chaincode in props['chains']:
+            for chaincode in data['chains']:
                 chainId = '%s%s' % (protein.code, chaincode)
                 try:
                     chain = protein.chains.get(id=chainId)
                     print '   Existing Chain: %s' % chaincode
-                except:
+                except ChainModel.DoesNotExist:
                     print '   Creating Chain: %s' % chaincode
-                    chain = Chain()
+                    chain = ChainModel()
                     chain.id      = chainId
                     chain.protein = protein
                     chain.code    = chaincode
-                    #chain.save()
-                    #protein.chains.add(chain)
+                    chain.save()
+
+                    protein.chains.add(chain)
                 #create dictionary of chains for quick access
                 chains[chaincode] = chain
 
+
             # 5) iterate through residue data creating residues
-            for id, residue_props in props['residues'].items():
+            for id, residue_props in data['residues'].items():
                 chain = chains[residue_props['chain_id']]
 
                 # 5a) find the residue object so it can be updated or create a new one
                 try:
-                    residue = chain.residues.objects.get(chainIndex=code)
-                except:
+                    residue = chain.residues.get(chainIndex=id)
+                except ResidueModel.DoesNotExist:
                     #not found, create new residue
-                    residue = Residue()
-                    #residue.protein = protein
-                    #residue.chain   = chain
+                    #print 'New Residue'
+                    residue = ResidueModel()
+                    residue.protein = protein
+                    residue.chain   = chain
+                    residue.chainID = chain.id[4]
+                    residue.chainIndex = id
+                    residue.oldID = id
 
                 # 5b) copy properties into a residue object
                 #     property keys should match property name in object
@@ -114,11 +165,19 @@ class ProcessPDBTask(Task):
                     residue.__dict__[key] = value
 
                 # 5c) save
-                #residue.save()
-                #chain.add(residue)
+                residue.save()
+                chain.residues.add(residue)
+        except Exception, e:
+            import traceback
+            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+            print "*** print_tb:"
+            traceback.print_tb(exceptionTraceback, limit=1, file=sys.stdout)
 
-            # 6) entire protein has been processed, commit transaction
-            #transaction.commit()
+            print 'exception residue',e
+
+
+        # 6) entire protein has been processed, commit transaction
+        transaction.commit()
 
 
 """
@@ -183,18 +242,74 @@ def parseWithBioPython(file, props):
             dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressedFile, dssp='dsspcmbi')
 
             #iterate residues
+            res_old_id = None
+            oldN        = None
+            oldCA       = None
+            oldC        = None
+
             for res in structure[0].get_residues():
-                hetflag, resseq, icode = res.get_id()
+                hetflag, res_id, icode = res.get_id()
                 chain = res.get_parent().get_id()
                 if hetflag != ' ':
+                    oldN       = None
+                    oldCA      = None
+                    oldC       = None
                     continue
 
                 # get properties using dssp
-                residue, secondary_structure, accessibility, relative_accessibility = dssp[(chain, resseq)]
+                residue, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
 
                 # save in dictionary
-                # this assumes the structure hasn't been created yet, speed optimization 
-                residues[resseq] = {'ss':secondary_structure}
+                try:
+                    residues[res_id]['ss'] = secondary_structure
+                except:
+                    # residue didn't exist yet
+                    residues[res_id] = {'ss':secondary_structure}
+
+                newN    = res['N'].get_vector()
+                newCA   = res['CA'].get_vector()
+                newC    = res['C'].get_vector()
+                newCB   = res['CB'].get_vector() if res.has_id('CB') else None
+                newO    = res['O'].get_vector()
+
+                residues[res_id]['a1'] = NO_VALUE
+                residues[res_id]['a2'] = NO_VALUE
+                residues[res_id]['a3'] = NO_VALUE
+                residues[res_id]['a4'] = NO_VALUE
+                residues[res_id]['a5'] = NO_VALUE
+                residues[res_id]['a6'] = NO_VALUE
+                residues[res_id]['a7'] = NO_VALUE
+                #residues[res_id]['L1'] = NO_VALUE
+                residues[res_id]['psi'] = NO_VALUE
+                residues[res_id]['ome'] = NO_VALUE
+                residues[res_id]['phi'] = NO_VALUE
+
+                if residues.has_key(res_old_id) and res_old_id+1 == res_id:
+                    residues[res_id]['a6'] = math.degrees(calc_angle(oldCA,oldC,newN))
+                    residues[res_id]['a7'] = math.degrees(calc_angle(oldO,oldC,newN))
+                    residues[res_old_id]['psi']= math.degrees(calc_dihedral(oldN,oldCA,oldC,newN))
+                    residues[res_old_id]['ome']    = math.degrees(calc_dihedral(oldCA,oldC,newN,newCA)) # or should it be on the newResObj?
+                    residues[res_id]['a1']     = math.degrees(calc_angle(oldC,newN,newCA))
+                    #residues[res_id]['L1']     = calc_angle(oldC,newN)
+                    residues[res_id]['phi']    = math.degrees(calc_dihedral(oldC,newN,newCA,newC))
+
+                #residues[res_id]['L2'] = calc_angle(newN,newCA)
+                #residues[res_id]['L4'] = calc_angle(newCA,newC)
+                #residues[res_id]['L5'] = calc_angle(newC,newO)
+                residues[res_id]['a3'] = math.degrees(calc_angle(newN,newCA,newC))
+                residues[res_id]['a5'] = math.degrees(calc_angle(newCA,newC,newO))
+
+                if newCB:
+                    residues[res_id]['a2'] = math.degrees(calc_angle(newN,newCA,newCB))
+                    residues[res_id]['a4'] = math.degrees(calc_angle(newCB,newCA,newC))
+                    #residues[res_id]['L3'] = calc_angle(newCA,newCB)
+
+                res_old_id = res_id
+                oldN       = newN
+                oldCA      = newCA
+                oldC       = newC
+                oldO       = newO
+
     finally:
         #clean up any files in tmp directory no matter what
         if decompressedFile and os.path.exists(decompressedFile):
@@ -215,9 +330,9 @@ def parseWithMMLib(file, props):
 
     struct = mmLib.FileIO.LoadStructure(file=file)
     lowerCaseIndicators = ['H','G','E','T']
-    
+
     props['code']       = struct.structure_id
-    #props['threshold']  = struct. 
+    #props['threshold']  = struct.
     #props['resolution'] = struct.
     #props['rfactor']    = struct.
 
@@ -229,7 +344,9 @@ def parseWithMMLib(file, props):
 
         # get offsets for residues left and right of this one
         next_res = r.get_offset_residue(1)
+        if not next_res or int(next_res.fragment_id) != (int(r.fragment_id)+1): next_res = None
         prev_res = r.get_offset_residue(-1)
+        if not prev_res or int(prev_res.fragment_id) != (int(r.fragment_id)-1): prev_res = None
 
         #Main Bond Angle
         r.a3, r.a2, r.a4, r.a5, a6, a1 = \
@@ -290,8 +407,9 @@ def parseWithMMLib(file, props):
             r.ome = math.radians(NO_VALUE)
 
 
-        #determine if SS should be lowercase
+        # determine if SS should be lowercase
         ss = residues[int(r.fragment_id)]['ss']
+
         if prev_res:
             prev_ss = residues[int(r.fragment_id)-1]['ss']
         else:
@@ -302,9 +420,8 @@ def parseWithMMLib(file, props):
         else:
             prev_ss = None
 
-        if (prev_ss == '-' or next_ss == '-') and ss in lowerCaseIndicators:
+        if (prev_ss and next_ss and prev_ss.upper() != ss or ss != next_ss.upper()) and ss in lowerCaseIndicators:
             ss = ss.lower()
-        
 
         # This accounts for the possibility of missing atoms by initializing
         # all of the values to NO_VALUE
@@ -377,45 +494,40 @@ def parseWithMMLib(file, props):
         if not r.chain_id in props['chains']:
             props['chains'].append(r.chain_id)
 
-        #add all properties to residue dict       
-        residueProps['name']    = r.res_name
+        #add all properties to residue dict
+        residueProps['aa']      = AA3to1[r.res_name]
         residueProps['id']      = r.fragment_id
-        residueProps['phi']     = math.degrees(r.phi)
-        residueProps['psi']     = math.degrees(r.psi)
-        residueProps['ome']     = math.degrees(r.ome)
-        residueProps['l1']      = r.l1
-        residueProps['l2']      = r.l2
-        residueProps['l3']      = r.l3
-        residueProps['l4']      = r.l4
-        residueProps['l5']      = r.l5
-        residueProps['l6']      = r.l6
-        residueProps['l7']      = r.l7
-        residueProps['a1']      = math.degrees(r.a1)
-        residueProps['a2']      = math.degrees(r.a2)
-        residueProps['a3']      = math.degrees(r.a3)
-        residueProps['a4']      = math.degrees(r.a4)
-        residueProps['a5']      = math.degrees(r.a5)
-        residueProps['a6']      = math.degrees(r.a6)
-        residueProps['a7']      = math.degrees(r.a7)
+        #residueProps['phi']     = math.degrees(r.phi)
+        #residueProps['psi']     = math.degrees(r.psi)
+        #residueProps['ome']     = math.degrees(r.ome)
+        residueProps['L1']      = r.l1
+        residueProps['L2']      = r.l2
+        residueProps['L3']      = r.l3
+        residueProps['L4']      = r.l4
+        residueProps['L5']      = r.l5
+        residueProps['L6']      = r.l6
+        residueProps['L7']      = r.l7
+        #residueProps['a1']      = math.degrees(r.a1)
+        #residueProps['a2']      = math.degrees(r.a2)
+        #residueProps['a3']      = math.degrees(r.a3)
+        #residueProps['a4']      = math.degrees(r.a4)
+        #residueProps['a5']      = math.degrees(r.a5)
+        #residueProps['a6']      = math.degrees(r.a6)
+        #residueProps['a7']      = math.degrees(r.a7)
         residueProps['ss']      = ss
         residueProps['chain_id']= r.chain_id
-        residueProps['hb']      = 0.00
+        residueProps['h_bond_energy'] = 0.00
         residueProps['zeta']    = math.degrees(r.zeta)
         residueProps['bg']      = r.b_gamma
         residueProps['bm']      = r.b_main
         residueProps['bs']      = r.b_side
         residueProps['zero']    = 0.00
-        residueProps['x1']      = math.degrees(r.x1)
-        residueProps['x2']      = math.degrees(r.x2)
-        residueProps['x3']      = math.degrees(r.x3)
-        residueProps['x4']      = math.degrees(r.x4)
-            
-#        print '%(name)s%(id)6s%(phi)7.1f%(psi)6.1f%(ome)6.1f' % r.props,
-        #print '%(name)s%(id)6s%(a6)7.1f%(a7)6.1f%(a1)6.1f' % r.props,
-        #print '%(l1)5.3f%(l2)6.3f%(l4)6.3f%(l5)6.3f%(a3)6.1f%(a5)6.1f%(a2)6.1f%(a4)6.1f%(l3)6.3f' % r.props,
-        #print
-        #print r.props
-        
+        residueProps['chi']      = math.degrees(r.x1)
+
+        #residueProps['chi2']      = math.degrees(r.x2)
+        #residueProps['chi3']      = math.degrees(r.x3)
+        #residueProps['chi4']      = math.degrees(r.x4)
+
     return props
 
 """
@@ -440,6 +552,7 @@ if __name__ == '__main__':
     task = ProcessPDBTask('Command Line Processor')
 
     args = ['1qe5']
+    args = {'pdbs':[{'code':'153l','threshold':1, 'resolution':2,'rfactor':3}]}
 
     task._work(args)
 
