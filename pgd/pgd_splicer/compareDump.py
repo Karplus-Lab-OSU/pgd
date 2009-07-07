@@ -29,14 +29,14 @@ def parseFile(file, codeIndex, residueIndex, php=False):
                 #look for the first row in the second residue9
                 if len(firstSegment) > 0 and split[0] <> ' ':
                     #we have all the residues in the first segment
-                    #calculate length, iIndex and add the first residue    
+                    #calculate length, iIndex and add the first residue
                     segmentLength = len(firstSegment)
                     iIndex = int(math.ceil(segmentLength/2.0)-1)
-                    iResidue = firstSegment[iIndex]   
+                    iResidue = firstSegment[iIndex]
                     if php:
                         offset = 0-(segmentLength-1)/2
                     else:
-                        offset = 0                 
+                        offset = 0
                     residues.append( '%s-%s' % (iResidue[codeIndex],int(iResidue[residueIndex])+offset) ) 
 
                     counting = 0;
@@ -47,20 +47,20 @@ def parseFile(file, codeIndex, residueIndex, php=False):
                         count = 0
                     else:
                         count = 1
-                    
+
 
                 else:
                     # still on first residue keep adding data
                     #print 'append: %s' % split
                     #print len(split)
                     firstSegment.append(split)
-            
+
             #all other residues we skip all rows except the row containing data for i
             else:
                 if count == iIndex:
                     split = line.split('\t') 
-                    residues.append( '%s-%s' % (split[codeIndex],int(split[residueIndex])+offset) )   
-                                
+                    residues.append( '%s-%s' % (split[codeIndex],int(split[residueIndex])+offset) )
+
                 count += 1
 
                 #check for end of segment
@@ -68,7 +68,7 @@ def parseFile(file, codeIndex, residueIndex, php=False):
                     count = 0
 
     return segmentLength, residues
-        
+
 def compareDumps(php, python):
     php_length, php_residues = parseFile(php,1,3,True)
     print 'PHP : Segment Length: %s' % php_length
@@ -87,7 +87,7 @@ def compareDumps(php, python):
         else:
             not_in_py.append(code)
 
-    print 'Residues missing from python results: %s' % len(not_in_py)    
+    print 'Residues missing from python results: %s' % len(not_in_py)
     print 'Residues that should not be in python results: %s' % len(py_residues)
 
 
@@ -96,17 +96,17 @@ def compareDumps(php, python):
         print 'Results missing from python'
         print '============================================='
         print not_in_py
-    
-    if len(py_residues):    
-        print    
+
+    if len(py_residues):
+        print
         print '============================================='
         print 'Results that should not be in python results'
         print '============================================='
         print py_residues
 
 if __name__ == '__main__':
-    
+
     if len(sys.argv) < 3:
         print 'Usage: compareDump.py <php_dump> <python_dump>'
-   
+
     compareDumps(sys.argv[1], sys.argv[2])

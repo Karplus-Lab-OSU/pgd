@@ -147,13 +147,13 @@ class DunbrackPDBSelectorTask(Task):
                         # structure from parsed properties.
                         resolution = float(groups[4])
                         if resolution > 0 and resolution <= max_resolution:
-                            proteins[groups[0]] = (
-                                groups[0],
-                                [groups[1]],
-                                groups[4],
-                                groups[5],
-                                groups[6]
-                            )
+                            proteins[groups[0]] = {
+                                'id':groups[0],
+                                'chains':[groups[1]],
+                                'resolution':groups[4],
+                                'rfactor':groups[5],
+                                'rfreevalue':groups[6]
+                            }
 
                         print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
 

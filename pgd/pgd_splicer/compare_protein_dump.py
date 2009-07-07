@@ -74,8 +74,12 @@ def compare_dump(file_new, file_old):
             #'h_bond_energy':3,
             'zeta':2}
 
-    for i, rn in new['residues'].items():
-        ro = old['residues'][i]
+    keys = sorted([int(i) for i in new['residues']])
+
+    for i in keys:
+        key = str(i)
+        rn = new['residues'][key]
+        ro = old['residues'][key]
         for field, precision in FIELDS.items():
             if precision == -1:
                 if rn[field] != ro[field]:
@@ -108,10 +112,10 @@ if __name__ == '__main__':
     try:
         new = sys.argv[1]
         old = sys.argv[2]
+        compare_dump(new, old)
+
     except IndexError:
         print 'Usage: compare_protein_dump.py new_file old_file'
         print ''
         print '    new_file - file from new splicer'
         print '    old_file - file from old splicer'
-
-    compare_dump(new, old)

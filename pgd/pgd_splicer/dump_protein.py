@@ -86,7 +86,7 @@ if __name__ == '__main__':
 
     try:
         code = sys.argv[1]
+        for code in sys.argv[1:]:
+            print dump_protein(code, True)
     except IndexError:
-        print 'Usage: dump_protein.py code'
-
-    print dump_protein(code, True)
+        print 'Usage: dump_protein.py code [code2 [code3 [...]]] '

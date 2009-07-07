@@ -21,12 +21,15 @@ from pgd_splicer.models import *
 from pgd_core.models import Protein as ProteinModel
 from pgd_core.models import Chain as ChainModel
 from pgd_core.models import Residue as ResidueModel
+from chi import CHI_MAP
 
 from django.db import transaction
 
 import math, sys, mmLib.Structure, mmLib.FileIO, mmLib.AtomMath
+from math import sqrt
 import Bio.PDB
-from Bio.PDB import *
+from Bio.PDB import calc_angle as pdb_calc_angle
+from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 import shutil
 import os
 
@@ -249,6 +252,7 @@ def parseWithBioPython(file, props):
 
             for res in structure[0].get_residues():
                 hetflag, res_id, icode = res.get_id()
+
                 chain = res.get_parent().get_id()
                 if hetflag != ' ':
                     oldN       = None
@@ -256,15 +260,28 @@ def parseWithBioPython(file, props):
                     oldC       = None
                     continue
 
-                # get properties using dssp
-                residue, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
-
-                # save in dictionary
+                # get or create structure
                 try:
-                    residues[res_id]['ss'] = secondary_structure
-                except:
+                    res_dict = residues[res_id]
+                except KeyError:
                     # residue didn't exist yet
-                    residues[res_id] = {'ss':secondary_structure}
+                    res_dict = {}
+                    residues[res_id] = res_dict
+
+                # This accounts for the possibility of missing atoms by initializing
+                # all of the values to NO_VALUE
+                length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7']
+                angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
+                dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
+                initialize_geometry(res_dict, length_list, 'length')
+                initialize_geometry(res_dict, angles_list, 'angle')
+                initialize_geometry(res_dict, dihedral_list, 'angle')
+
+                res_dict['aa'] = AA3to1[res.resname]
+
+                # get properties using dssp
+                residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
+                res_dict['ss'] = secondary_structure
 
                 newN    = res['N'].get_vector()
                 newCA   = res['CA'].get_vector()
@@ -272,37 +289,31 @@ def parseWithBioPython(file, props):
                 newCB   = res['CB'].get_vector() if res.has_id('CB') else None
                 newO    = res['O'].get_vector()
 
-                residues[res_id]['a1'] = NO_VALUE
-                residues[res_id]['a2'] = NO_VALUE
-                residues[res_id]['a3'] = NO_VALUE
-                residues[res_id]['a4'] = NO_VALUE
-                residues[res_id]['a5'] = NO_VALUE
-                residues[res_id]['a6'] = NO_VALUE
-                residues[res_id]['a7'] = NO_VALUE
-                #residues[res_id]['L1'] = NO_VALUE
-                residues[res_id]['psi'] = NO_VALUE
-                residues[res_id]['ome'] = NO_VALUE
-                residues[res_id]['phi'] = NO_VALUE
-
                 if residues.has_key(res_old_id) and res_old_id+1 == res_id:
-                    residues[res_id]['a6'] = math.degrees(calc_angle(oldCA,oldC,newN))
-                    residues[res_id]['a7'] = math.degrees(calc_angle(oldO,oldC,newN))
-                    residues[res_old_id]['psi']= math.degrees(calc_dihedral(oldN,oldCA,oldC,newN))
-                    residues[res_old_id]['ome']    = math.degrees(calc_dihedral(oldCA,oldC,newN,newCA)) # or should it be on the newResObj?
-                    residues[res_id]['a1']     = math.degrees(calc_angle(oldC,newN,newCA))
-                    #residues[res_id]['L1']     = calc_angle(oldC,newN)
-                    residues[res_id]['phi']    = math.degrees(calc_dihedral(oldC,newN,newCA,newC))
+                    res_dict['a6'] = calc_angle(oldCA,oldC,newN)
+                    res_dict['a7'] = calc_angle(oldO,oldC,newN)
+                    residues[res_old_id]['psi'] = calc_dihedral(oldN,oldCA,oldC,newN)
+                    residues[res_old_id]['ome'] = calc_dihedral(oldCA,oldC,newN,newCA)
+                    res_dict['a1']     = calc_angle(oldC,newN,newCA)
+                    res_dict['L1']     = calc_distance(oldC,newN)
+                    res_dict['phi']    = calc_dihedral(oldC,newN,newCA,newC)
 
-                #residues[res_id]['L2'] = calc_angle(newN,newCA)
-                #residues[res_id]['L4'] = calc_angle(newCA,newC)
-                #residues[res_id]['L5'] = calc_angle(newC,newO)
-                residues[res_id]['a3'] = math.degrees(calc_angle(newN,newCA,newC))
-                residues[res_id]['a5'] = math.degrees(calc_angle(newCA,newC,newO))
+                res_dict['L2'] = calc_distance(newN,newCA)
+                res_dict['L4'] = calc_distance(newCA,newC)
+                res_dict['L5'] = calc_distance(newC,newO)
+                res_dict['a3'] = calc_angle(newN,newCA,newC)
+                res_dict['a5'] = calc_angle(newCA,newC,newO)
 
                 if newCB:
-                    residues[res_id]['a2'] = math.degrees(calc_angle(newN,newCA,newCB))
-                    residues[res_id]['a4'] = math.degrees(calc_angle(newCB,newCA,newC))
-                    #residues[res_id]['L3'] = calc_angle(newCA,newCB)
+                    res_dict['a2'] = calc_angle(newN,newCA,newCB)
+                    res_dict['a4'] = calc_angle(newCB,newCA,newC)
+                    res_dict['L3'] = calc_distance(newCA,newCB)
+                    res_dict['zeta'] = calc_dihedral(newCA, newN, newC, newCB)
+
+                calc_chi(res, res_dict)
+                # Copy chi1 to chi, this property needs to be renamed to fit CHIn name convention
+                if res_dict['chi1']:
+                    res_dict['chi'] = res_dict['chi1']
 
                 res_old_id = res_id
                 oldN       = newN
@@ -332,9 +343,6 @@ def parseWithMMLib(file, props):
     lowerCaseIndicators = ['H','G','E','T']
 
     props['code']       = struct.structure_id
-    #props['threshold']  = struct.
-    #props['resolution'] = struct.
-    #props['rfactor']    = struct.
 
     for r in struct.iter_amino_acids():
 
@@ -348,114 +356,13 @@ def parseWithMMLib(file, props):
         prev_res = r.get_offset_residue(-1)
         if not prev_res or int(prev_res.fragment_id) != (int(r.fragment_id)-1): prev_res = None
 
-        #Main Bond Angle
-        r.a3, r.a2, r.a4, r.a5, a6, a1 = \
-              r.calc_mainchain_bond_angle()
-
-        #Main Bond Length
-        r.l2, r.l4, r.l5, r.l3, r.l6 = \
-              r.calc_mainchain_bond_length()
-        r.l7 = NO_VALUE
-
-
-        # if there is a residue before this one, get the angles
-        if prev_res:
-            r.l1 = prev_res.l6
-        else:
-            # n-terminus
-            r.l1 = NO_VALUE
-            r.a1 = math.radians(NO_VALUE)
-            r.a6 = math.radians(NO_VALUE)
-            r.a7 = math.radians(NO_VALUE)
-
-
         #if there is a residue after this one, get properties for that relationship
         if next_res:
-            next_res.a1 = a1
-            next_res.a6 = a6
             aN = r.get_atom('N')
             aCA = r.get_atom('CA')
             aO = r.get_atom('O')
             aC = r.get_atom('C')
             naN = next_res.get_atom('N')
-
-            next_res.l2 = mmLib.AtomMath.calc_distance(aN, aCA)
-            r.l7 = next_res.l2
-            next_res.a7 = mmLib.AtomMath.calc_angle(aO, aC, naN)
-        else:
-            # c-terminus
-            r.l7 = NO_VALUE
-
-        r.x1, r.x2, r.x3, r.x4 = r.calc_torsion_chi()
-        r.phi = r.calc_torsion_phi()
-        r.psi = r.calc_torsion_psi()
-        r.ome = r.calc_torsion_omega()
-
-        if not r.l3:
-            # glycine
-            r.l3 = NO_VALUE
-            r.a2 = math.radians(NO_VALUE)
-            r.a4 = math.radians(NO_VALUE)
-        if not r.l6:
-            # c-terminus
-            r.l6 = NO_VALUE
-        if not r.phi:
-            r.phi = math.radians(NO_VALUE)
-        if not r.psi:
-            r.psi = math.radians(NO_VALUE)
-        if not r.ome:
-            r.ome = math.radians(NO_VALUE)
-
-
-        # determine if SS should be lowercase
-        ss = residues[int(r.fragment_id)]['ss']
-
-        if prev_res:
-            prev_ss = residues[int(r.fragment_id)-1]['ss']
-        else:
-            prev_ss = None
-
-        if next_res:
-            next_ss = residues[int(r.fragment_id)+1]['ss']
-        else:
-            prev_ss = None
-
-        if (prev_ss and next_ss and prev_ss.upper() != ss or ss != next_ss.upper()) and ss in lowerCaseIndicators:
-            ss = ss.lower()
-
-        # This accounts for the possibility of missing atoms by initializing
-        # all of the values to NO_VALUE
-        dihedral_list = ['phi', 'psi', 'ome']
-        angle_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
-        length_list = ['l1', 'l2', 'l3', 'l4', 'l5', 'l6', 'l7']
-        r = initialize_geometry(r, dihedral_list, 'angle')
-        r = initialize_geometry(r, angle_list, 'angle')
-        r = initialize_geometry(r, length_list, 'length')
-
-        if not r.x1:
-            r.x1 = math.radians(NO_VALUE)
-        if not r.x2:
-            r.x2 = math.radians(NO_VALUE)
-        if not r.x3:
-            r.x3 = math.radians(NO_VALUE)
-        if not r.x4:
-            r.x4 = math.radians(NO_VALUE)
-
-        if not r.phi:
-            r.phi = math.radians(NO_VALUE)
-        if not r.psi:
-            r.psi = math.radians(NO_VALUE)
-        if not r.ome:
-            r.ome = math.radians(NO_VALUE)
-
-        r.zeta = mmLib.AtomMath.calc_torsion_angle(
-                   r.get_atom('CA'), 
-                   r.get_atom('N'), 
-                   r.get_atom('C'), 
-                   r.get_atom('CB')
-                   )
-        if r.zeta is None:
-            r.zeta = math.radians(NO_VALUE)
 
         all_atoms = mmLib.Structure.AtomList()
         mainchain_atoms = mmLib.Structure.AtomList()
@@ -495,63 +402,89 @@ def parseWithMMLib(file, props):
             props['chains'].append(r.chain_id)
 
         #add all properties to residue dict
-        residueProps['aa']      = AA3to1[r.res_name]
         residueProps['id']      = r.fragment_id
-        #residueProps['phi']     = math.degrees(r.phi)
-        #residueProps['psi']     = math.degrees(r.psi)
-        #residueProps['ome']     = math.degrees(r.ome)
-        residueProps['L1']      = r.l1
-        residueProps['L2']      = r.l2
-        residueProps['L3']      = r.l3
-        residueProps['L4']      = r.l4
-        residueProps['L5']      = r.l5
-        residueProps['L6']      = r.l6
-        residueProps['L7']      = r.l7
-        #residueProps['a1']      = math.degrees(r.a1)
-        #residueProps['a2']      = math.degrees(r.a2)
-        #residueProps['a3']      = math.degrees(r.a3)
-        #residueProps['a4']      = math.degrees(r.a4)
-        #residueProps['a5']      = math.degrees(r.a5)
-        #residueProps['a6']      = math.degrees(r.a6)
-        #residueProps['a7']      = math.degrees(r.a7)
-        residueProps['ss']      = ss
         residueProps['chain_id']= r.chain_id
         residueProps['h_bond_energy'] = 0.00
-        residueProps['zeta']    = math.degrees(r.zeta)
         residueProps['bg']      = r.b_gamma
         residueProps['bm']      = r.b_main
         residueProps['bs']      = r.b_side
         residueProps['zero']    = 0.00
-        residueProps['chi']      = math.degrees(r.x1)
-
-        #residueProps['chi2']      = math.degrees(r.x2)
-        #residueProps['chi3']      = math.degrees(r.x3)
-        #residueProps['chi4']      = math.degrees(r.x4)
 
     return props
 
-"""
-Initialize the dictionary for geometry data
-"""
+
 def initialize_geometry(residue, geometry_list, type):
+    """
+    Initialize the dictionary for geometry data
+    """
     for item in geometry_list:
-        if (getattr(residue, item)) is None:
+        if not residue.has_key(item) or residue[item] is None:
             if type == 'angle':
-                setattr(residue, item, math.radians(NO_VALUE))
+                residue[item] = math.degrees(math.radians(NO_VALUE))
             elif type == 'length':
-                setattr(residue, item, NO_VALUE)
+                residue[item] = NO_VALUE
             else:
                 print "Don't know how to deal with type", type
-    return residue
 
 
-"""
-Run if file is executed from the command line
-"""
+def calc_distance(atom1, atom2):
+    """
+    Calculates distance between atoms because this is not built into BIOPython
+
+    scribed from http://www.scribd.com/doc/9816032/BioPython-for-Bioinfo
+    """
+    dx = atom1[0] - atom2[0]
+    dy = atom1[1] - atom2[1]
+    dz = atom1[2] - atom2[2]
+    return sqrt(dx*dx + dy*dy + dz*dz)
+
+
+def calc_angle(atom1, atom2, atom3):
+    """
+    overridding pdb version of function to return values converted to degress
+    """
+    return math.degrees(pdb_calc_angle(atom1, atom2, atom3))
+
+
+def calc_dihedral(atom1, atom2, atom3, atom4):
+    """
+    overridding pdb version of function to return values converted to degress
+    """
+    return math.degrees(pdb_calc_dihedral(atom1, atom2, atom3, atom4))
+
+
+def calc_chi(residue, residue_dict):
+    """
+    Calculates Values for CHI using the predefined list of CHI angles in
+    the CHI_MAP.  CHI_MAP contains the list of all peptides and the atoms
+    that make up their different chi values.  This function will process
+    the values known to exist, it will also skip chi values if some of the
+    atoms are missing
+    """
+    try:
+        mapping = CHI_MAP[residue.resname]
+        for i in range(len(mapping)):
+            chi_atom_names= mapping[i]
+            try:
+                chi_atoms = [residue[n].get_vector() for n in chi_atom_names]
+                chi = calc_dihedral(*chi_atoms)
+                residue_dict['chi%i'%(i+1)] = chi
+                print residue.get_id(), chi, i
+            except KeyError:
+                #missing an atom
+                continue
+
+    except KeyError:
+        # this residue type does not have chi
+        pass
+
+
 if __name__ == '__main__':
+    """
+    Run if file is executed from the command line
+    """
     task = ProcessPDBTask('Command Line Processor')
 
-    args = ['1qe5']
     args = {'pdbs':[{'code':'153l','threshold':1, 'resolution':2,'rfactor':3}]}
 
     task._work(args)
