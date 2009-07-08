@@ -82,8 +82,11 @@ def compare_dump(file_new, file_old):
         ro = old['residues'][key]
         for field, precision in FIELDS.items():
             if precision == -1:
-                if rn[field] != ro[field]:
-                    print '    [%s %s] %s: %s != %s' % (i, rn['aa'], field, rn[field], ro[field])
+                if field == 'ss':
+                    if rn[field] != ro[field] and not(rn[field]=='-' and ro[field] == ' '):
+                        print '    [%s %s] %s: %s != %s' % (i, rn['aa'], field, rn[field], ro[field])
+                elif rn[field] != ro[field]:
+                    print '    [%s %s] %s: %s !=%s' % (i, rn['aa'], field, rn[field], ro[field])
 
             else:
                 precision_str = '%%.%if' % precision
