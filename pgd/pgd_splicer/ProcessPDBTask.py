@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from tasks.tasks import *
+from pydra_server.cluster.tasks import Task
 
 from pgd_splicer.models import *
 from pgd_core.models import Protein as ProteinModel
@@ -32,6 +32,12 @@ from Bio.PDB import calc_angle as pdb_calc_angle
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 import shutil
 import os
+
+import logging
+logger = logging.getLogger('root')
+
+class ICodeException(Exception):
+    pass
 
 NO_VALUE = 999.9
 
@@ -66,15 +72,24 @@ class ProcessPDBTask(Task):
     Residue models and commited to the database.
     """
 
-    def _work(self, args):
+    def _work(self, **kwargs):
         """
         Work function - expects a list of pdb file prefixes.
         """
-        pdbs = args['pdbs']
+
+        # process a single protein dict, or a list of proteins
+        pdbs = kwargs['data']
+        if not isinstance(pdbs, list):
+            pdbs = [pdbs]
+        print 'PDBS TO PROCESS:', pdbs
 
         for data in pdbs:
             self.process_pdb(data)
 
+        # return only the code of proteins inserted or updated
+        # we no longer need to pass any data as it is contained in the database
+        # for now assume everything was updated
+        return {'pdbs':[p['code'] for p in pdbs]}
 
     @transaction.commit_manually
     def process_pdb(self, data):
@@ -82,20 +97,25 @@ class ProcessPDBTask(Task):
         Process an individual pdb file
         """
         try:
-
             code = data['code']
-            filename = 'pdb%s.ent.Z' % code
+            print 'DATA', data
+            filename = 'pdb%s.ent.gz' % code.lower()
+            print '    Processing: ', code
 
             # update datastructure
             data['chains'] = []
             data['residues'] = {}
 
             # 1) parse with bioPython
-            data = parseWithBioPython(filename, data)
+            try:
+                data = parseWithBioPython(filename, data)
+            except ICodeException:
+                logger.warn('PDB File had insertion codes: %s' % code)
+                return
             #print 'props: %s' % data
 
             # 2) parse with MMLib merging the dictionaries
-            data = parseWithMMLib('%s/%s' % ('pdb', filename), data)
+            #data = parseWithMMLib('%s/%s' % ('pdb', filename), data)
 
             # 3) Create/Get Protein and save values
             try:
@@ -105,9 +125,9 @@ class ProcessPDBTask(Task):
                 print '  Creating protein: ', code
                 protein = ProteinModel()
             protein.code       = code
-            protein.threshold  = data['threshold']
-            protein.resolution = data['resolution']
-            protein.rfactor    = data['rfactor']
+            protein.threshold  = float(data['threshold'])
+            protein.resolution = float(data['resolution'])
+            protein.rfactor    = float(data['rfactor'])
             protein.save()
 
             # 4) Get/Create Chains and save values
@@ -159,10 +179,10 @@ class ProcessPDBTask(Task):
             import traceback
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print "*** print_tb:"
-            traceback.print_tb(exceptionTraceback, limit=1, file=sys.stdout)
+            traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
-            print 'exception residue',e
-
+            logger.error('EXCEPTION in Residue', code, e)
+            transaction.rollback()
 
         # 6) entire protein has been processed, commit transaction
         transaction.commit()
@@ -175,13 +195,12 @@ For now use the linux decompress
 """
 def uncompress(file, src_dir, dest_dir):
     tempfile = '%s/%s' % (dest_dir, file)
-    dest = '%s/%s' % (dest_dir, file[:-2])
-
+    dest = '%s/%s' % (dest_dir, file[:-3])
     try:
         # copy the file to the tmp directory
         shutil.copyfile('%s/%s' % (src_dir,file), tempfile)
 
-        # decompress using unix decompress.  
+        # decompress using unix decompress.
         os.system('uncompress %s' % tempfile)
 
     except:
@@ -234,15 +253,25 @@ def parseWithBioPython(file, props):
             oldN        = None
             oldCA       = None
             oldC        = None
+
+            for chain in structure[0]:
+                if not chain.get_id() in props['chains']:
+                    props['chains'].append(chain.get_id())
+                    print 'CHAIN [%s]' % chain
+
             for res in structure[0].get_residues():
                 hetflag, res_id, icode = res.get_id()
 
-                chain = res.get_parent().get_id()
+                if icode != ' ':
+                    raise ICodeException()
+
                 if hetflag != ' ':
                     oldN       = None
                     oldCA      = None
                     oldC       = None
                     continue
+
+                #print 'RES:', res_id, icode, res.parent
 
                 """
                 Create dictionary structure and initialize all values.  All
@@ -255,6 +284,7 @@ def parseWithBioPython(file, props):
                     # residue didn't exist yet
                     res_dict = {}
                     residues[res_id] = res_dict
+                    res_dict['id'] = res_id
 
                 length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
                 angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
@@ -267,9 +297,12 @@ def parseWithBioPython(file, props):
                 """
                 Get Properties from DSSP and other per residue properties
                 """
+                chain = res.get_parent().get_id()
                 residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
+                res_dict['chain_id'] = chain
                 res_dict['ss'] = secondary_structure
                 res_dict['aa'] = AA3to1[res.resname]
+                res_dict['h_bond_energy'] = 0.00
 
                 """
                 Get Vectors for mainchain atoms and calculate geometric angles,
@@ -373,27 +406,16 @@ def parseWithMMLib(file, props):
     Parse values from file that can be parsed using MMLib library
     @return a dict containing the properties that were processed
     """
-    residues = props['residues']
-
     struct = mmLib.FileIO.LoadStructure(file=file)
-
-    props['code']       = struct.structure_id
-
     for r in struct.iter_amino_acids():
 
         #get or create residue properties
         #this assumes residue property was already created in parseWithBioPython, Speed Optimization
-        residueProps = residues[int(r.fragment_id)]
-
-        #add chain id
-        if not r.chain_id in props['chains']:
-            props['chains'].append(r.chain_id)
-
-        #add all properties to residue dict
-        residueProps['id']      = r.fragment_id
-        residueProps['chain_id']= r.chain_id
-        residueProps['h_bond_energy'] = 0.00
-        residueProps['zero']    = 0.00
+        try:
+            residueProps = residues[int(r.fragment_id)]
+        except Exception,e:
+            print '>>>>>>>>>>>>>>>>', r.chain_id, file
+            raise e
 
     return props
 

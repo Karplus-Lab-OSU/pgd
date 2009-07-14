@@ -21,5 +21,5 @@ pdb_select_settings = PDBSelectSettings('Splicer')
 class FTPUpdateSettings(dbsettings.Group):
     PDB_FTP_HOST   = dbsettings.StringValue('PDB FTP Host','Hostname of ftp server with PDB files', default='ftp.ebi.ac.uk')
     PDB_REMOTE_DIR = dbsettings.StringValue('PDB FTP Remote Directory','Directory on the ftp server where PDBs are stored', default='/pub/databases/rcsb/pdb/data/structures/all/pdb/')
-    PDB_LOCAL_DIR  = dbsettings.StringValue('PDB Local Directory','Local Directory for storing PDB files', default='/var/www/pgd/splicer/pdb')
+    PDB_LOCAL_DIR  = dbsettings.StringValue('PDB Local Directory','Local Directory for storing PDB files', default='./pdb/')
 ftp_update_settings = FTPUpdateSettings('Splicer')

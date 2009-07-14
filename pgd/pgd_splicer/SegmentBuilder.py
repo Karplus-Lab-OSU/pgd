@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
 import math
 
-from tasks.tasks import *
+from pydra_server.cluster.tasks import Task
 from pgd_core.models import *
 from pgd_search.models import *
 
@@ -31,7 +31,8 @@ class SegmentBuilderTask(Task):
     proteinCount = None
     proteinTotal = None
 
-    def _work(self, args):
+    def _work(self, pdbs):
+
         length = searchSettings.segmentSize
         self.proteinCount = 0
         lastIndex = length - 1
@@ -44,12 +45,13 @@ class SegmentBuilderTask(Task):
 
         #determine if there are any segments in the table
         #   limit query with [0:0] instead of [0] this returns
-        #   an empty list instead of an exception if there are no segments    
-        existingSegments = len(Segment.objects.all()[0:1]) != 0      
-	if not existingSegments:
+        #   an empty list instead of an exception if there are no segments
+        existingSegments = len(Segment.objects.filter(protein__in=pdbs)[0:1]) != 0
+
+        if not existingSegments:
             print 'No Segments Found, skipping residue existence check for all residues'
 
-        proteins = Protein.objects.all()
+        proteins = Protein.objects.filter(code__in=pdbs)
         self.proteinTotal = len(proteins)
         for protein in proteins:
             self.proteinCount += 1
@@ -58,7 +60,7 @@ class SegmentBuilderTask(Task):
             chains = protein.chains.all()
             for chain in chains:
                 print '    chain: %s' % chain.code
- 
+
                 #setup initial list to have values where the first iteration of the list 
                 #will be what is needed for processing the first residue
                 segmentList = []
@@ -78,6 +80,7 @@ class SegmentBuilderTask(Task):
                     id = id + 1
 
                 #determine index of the last known residue in the chain
+                print '?????', chain
                 result = chain.residues.order_by('chainIndex').reverse()[0]
                 chainLength = result.chainIndex
                 print '        chainlength: %s' % chainLength
@@ -120,6 +123,7 @@ class SegmentBuilderTask(Task):
                         segment = Segment()
 
                     #set residues in segment
+                    #print segmentList
                     for i in range(length):
                         segment.residues[i] = segmentList[i]
 
@@ -130,10 +134,10 @@ class SegmentBuilderTask(Task):
                     #first, last, and any residue with terminal flag always have length 1
                     for i in range(1, length):
                         # have we reached the max size for segments or found a None
-                        if iIndex+i > lastIndex or segmentList[iIndex+i].terminal_flag or segmentList[iIndex+i].chainIndex==chainLength:
+                        if iIndex+i > lastIndex or (segmentList[iIndex+i] and (segmentList[iIndex+i].terminal_flag or segmentList[iIndex+i].chainIndex==chainLength)):
                                 segment.length = i*2-1
                                 break
-                        if iIndex-i < 0 or segmentList[iIndex-i].terminal_flag:
+                        if iIndex-i < 0 or (segmentList[iIndex-i] and segmentList[iIndex-i].terminal_flag):
                                 segment.length = i*2
                                 break
 
@@ -143,5 +147,6 @@ class SegmentBuilderTask(Task):
 
 
 if __name__ == '__main__':
+    import sys
     builder = SegmentBuilderTask('Command Line Builder')
-    builder._work(None)
+    builder._work(**{'pdbs':sys.argv[1:]})

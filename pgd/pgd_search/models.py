@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
-from constants import AA_CHOICES, SS_CHOICES, Subscripter
+from static import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
 import re
 from math import ceil
@@ -13,21 +13,20 @@ from django.db.models import Q
 range_re = re.compile("(?<=[^-<>=])-")
 comp_re  = re.compile("^([<>]=?)?")
 
-""" ================================
-Search Settings
-================================ """
+
 class SearchSettings(dbsettings.Group):
+    """
+    Search Settings
+    """
     segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches', default=10)
     requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available', default=10)
 searchSettings = SearchSettings('Search')
 
 
-""" ================================
-# Search
-#
-# A query submitted by a user
-================================ """
 class Search(models.Model):
+    """
+    A query submitted by a user
+    """
     user             = models.ForeignKey(User, null=True)
     codes_include    = models.NullBooleanField(null=True)
     threshold        = models.IntegerField(null=True)
@@ -36,8 +35,10 @@ class Search(models.Model):
     segmentLength    = models.IntegerField()
     _querySet = None
 
-    # returns the query set that represents this search
     def querySet(self):
+        """
+        returns the query set that represents this search 
+        """
 
         #create querySet if not needed
         #if not self._querySet:
@@ -128,7 +129,7 @@ class Search(models.Model):
 
                 # seg_field is the name of the property of the given residue in the database
                 seg_field = seg_prefix+field
-                
+
                 constraints = []
 
                 for constraint in str(search_res.__dict__[field]).split(','):
@@ -137,12 +138,12 @@ class Search(models.Model):
                     if range_re.search(constraint):
 
                         min,max = [float(lim) for lim in range_re.split(constraint)]
-                        
+
                         limits = (
                             Q(**{seg_field+'__gte' : float(min)}),
                             Q(**{seg_field+'__lte' : float(max)}),
                         )
-                        
+
                         constraints.append(
                             # Apply 'or' logic for a wraparound range
                             # or apply 'and' logic for a regular range
@@ -175,29 +176,23 @@ class Search(models.Model):
                 )
         return query
 
-""" ================================
-# Search_code
-#
-# Codes indicating to which proteins
-# a Search is applied.
-================================ """
+
 class Search_code(models.Model):
+    """
+    Codes indicating to which proteins a Search is applied.
+    """
     search  = models.ForeignKey(Search, related_name='codes')
     code    = models.CharField(max_length=4)
 
-""" ================================
-# Search_code
-#
-# The per-residue properties of a
-# Search
-================================ """
-# Search_residue
-# The search fields per residue
+
 class Search_residue(models.Model):
+    """
+    The per-residue properties of a Search
+    """
     search          = models.ForeignKey(Search, related_name='residues')
     index           = models.IntegerField()
     chainID         = models.CharField(max_length=1, null=True)
-    
+
     # Performing bitwise operations on aa_int gives the set of amino acids to check against.
     # aa_int&1<<i   AA_CHOICE[i]
     # 0 : Not in set
@@ -272,17 +267,16 @@ class Search_residue(models.Model):
         self.ss = dict([(ss_choice[1],1 if self.ss_int == None else 1&self.ss_int>>ss_index) for ss_index,ss_choice in enumerate(SS_CHOICES)])
 
 
-""" ================================================================
-# ResidueProxy
-#
-# This is a proxy to properties stored in the segment.  It is used
-# to emulate having a Residue but really just returns properties
-# that are stored in the segment object.  This is used because
-# it is faster than fetching the Residue from the database
-#
-# This class is used in conjunction with ResidueProxy_subscripter
-================================================================ """
+
 class ResidueProxy():
+    """
+    This is a proxy to properties stored in the segment.  It is used
+    to emulate having a Residue but really just returns properties
+    that are stored in the segment object.  This is used because
+    it is faster than fetching the Residue from the database
+
+    This class is used in conjunction with ResidueProxy_subscripter
+    """
     def __init__(self, index, parent):
         self.parent = parent
         self.string = 'r%i_%%s' % index
@@ -290,13 +284,15 @@ class ResidueProxy():
     def __getitem__(self, i):
         return self.parent.__dict__[self.string % i]
 
-""" ================================================================
-# ResidueProxy_subscripter
-#
-# This class emulates a list of residues.  It returns ResidueProxy 
-# objects that emulate a real residue object.
-================================================================ """
+
 class ResidueProxy_subscripter():
+    """
+    ResidueProxy_subscripter
+
+    This class emulates a list of residues.  It returns ResidueProxy
+    objects that emulate a real residue object.
+    """
+
     def __init__(self, key, parent):
         self.parent = parent
         #add this instance to the parent. doing this here
@@ -320,17 +316,16 @@ class ResidueProxy_subscripter():
             return self.proxies[i.start:i.stop:i.step if i.step else 1]
 
 
-""" ================================================================
-# Residue_subscripter
-#
-# This is a lazy loading list of residues that a segment contains
-# When residues are requested the id's are fetched from the parent
-# segment and used to lookup the residue.  Residues are cached so
-# repeat lookups do not require database interaction
-#
-# additionally this class also allows iteration of residues
-================================================================ """
 class Residue_subscripter():
+    """
+    This is a lazy loading list of residues that a segment contains
+    When residues are requested the id's are fetched from the parent
+    segment and used to lookup the residue.  Residues are cached so
+    repeat lookups do not require database interaction
+
+    additionally this class also allows iteration of residues
+    """
+
     def __init__(self, key, parent):
         self.parent = parent
         #add this instance to the parent. doing this here
@@ -338,30 +333,38 @@ class Residue_subscripter():
         #you only need to specify the key once
         parent.__dict__[key] = self
 
-    # called when an index is requested (ie. residues[1])
+
     def __getitem__(self, i):
+        """
+        called when an index is requested (ie. residues[1])
+        """
         try: # Get the object, if it's been instantiated...
-            return self.foos[i]
+            return self.parent.__dict__['r%i' % i]
+            #return self.foo[i]
 
         except KeyError: # ...otherwise, instantiate it.
             pass
             # If the object can be instantiated, return it
-            '''if self.parent.__dict__['r%i_id' % i]:
+            if self.parent.__dict__['r%i_id' % i]:
                 self.parent.__dict__['r%i' % i] = Residue.objects.filter(id=self.parent.__dict__['r%i_id' % i])[0]
                 return self.parent.__dict__['r%i' % i]
 
             # otherwise return None.  These objects are proxies to underlying properties 
             # so they must always return a values or None
             else:
-                return None'''
+                return None
 
         except TypeError: # it wasn't an int, it must be a slice
             #return the range of segments specified.  retrieve items through __getitem__() 
             #so items are initialized if needed.
             return self.foo[i.start:i.stop:i.step if i.step else 1]
 
-    # called when an index is set (ie. residues[1]=foo)
+
     def __setitem__(self, i, v):
+        """
+        called when an index is set (ie. residues[1]=foo)
+        """
+
         #populate dict and set the FK
         if v:
             self.parent.__dict__['r%i' % i] = v

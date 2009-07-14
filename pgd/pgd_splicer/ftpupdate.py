@@ -6,7 +6,16 @@ if __name__ == '__main__':
     #python magic to add the current directory to the pythonpath
     sys.path.append(os.getcwd())
 
-from tasks.tasks import *
+    # ==========================================================
+    # Setup django environment 
+    # ==========================================================
+    if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    # ==========================================================
+    # Done setting up django environment
+    # ==========================================================
+
+from pydra_server.cluster.tasks.tasks import *
 from pgd_splicer.models import *
 
 import os
@@ -66,7 +75,7 @@ class FTPUpdateTask(Task):
     pdbCount = 0
     processing_dates = None
 
-    def _work(self, args):
+    def _work(self, **kwargs):
         pdb_local_files = {}
         pdb_remote_files = {}
 
@@ -76,9 +85,15 @@ class FTPUpdateTask(Task):
 
         # build list of pdbs from keys
         requested_pdbs = []
-        for key in args.keys():
-            #strip chain indicator
-            requested_pdbs.append(key[:4].lower())
+
+
+        # accept data as either a list of proteins, or a single protein
+        data = kwargs['data']
+        if isinstance(data, list):
+            requested_pdbs = [d['code'][:4].lower() for d in data]
+        else:
+            requested_pdbs = [data['code'][:4].lower()]
+
 
         #create local directory if needed
         if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
@@ -86,7 +101,7 @@ class FTPUpdateTask(Task):
 
         #get all the local timestamps
         for pdb in requested_pdbs:
-            path = '%s/pdb%s.ent.Z' % (ftp_update_settings.PDB_LOCAL_DIR, pdb)
+            path = '%s/pdb%s.ent.gz' % (ftp_update_settings.PDB_LOCAL_DIR, pdb)
             if os.path.exists(path):
                 date = time.gmtime(os.path.getmtime(path))
             else:
@@ -104,15 +119,20 @@ class FTPUpdateTask(Task):
 
         print "------------------------------------------"
 
+
+
         # ===============================================
         #2 iterate through list and purge pdbs that are not new or newer
+        print '  FTP: ', ftp_update_settings.PDB_FTP_HOST
+        print '  REMOTE_DIR: ', ftp_update_settings.PDB_REMOTE_DIR
         ftp = FTP(ftp_update_settings.PDB_FTP_HOST)
         #ftp.set_debuglevel(2) #set ftp debug level so all messages are shown
         ftp.login()
         ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
 
         for pdb in pdb_local_files:
-            filename = 'pdb%s.ent.Z' % pdb
+            filename = 'pdb%s.ent.gz' % (pdb)
+            print '    FILE:', filename
 
             localdate = pdb_local_files[pdb]
             try:
@@ -128,6 +148,7 @@ class FTPUpdateTask(Task):
 
             except error_perm:
                 #550 error (permission error) results when a file does not exist, remove pdb from list
+                print 'File Not Found:', pdb, error_perm
                 requested_pdbs.remove(pdb)
 
 
@@ -135,11 +156,11 @@ class FTPUpdateTask(Task):
         #3 download files that are in the list
         self.pdbTotal = len(requested_pdbs)
         self.processing_dates = False
-        print 'Downloading %d PDB files' % self.pdbTotal
+        print 'Downloading %d PDB files to %s' % (self.pdbTotal, ftp_update_settings.PDB_LOCAL_DIR)
 
         for pdb in requested_pdbs:
-            print "  [%d%%] - %s : %s" % (self.progress(), pdb, time.asctime(pdb_local_files[pdb])  )
-            filename = 'pdb%s.ent.Z' % pdb
+            print "  [%d%%] - %s" % (self.progress(), pdb )
+            filename = 'pdb%s.ent.gz' % pdb
             local_filename = '%s/%s' % (ftp_update_settings.PDB_LOCAL_DIR,filename)
 
             #remove file if it exists already
@@ -154,6 +175,7 @@ class FTPUpdateTask(Task):
 
         ftp.quit()
         print 'progress: %d%%' % self.progress()
+        return kwargs
 
     """
     Callback for ftp transfers.  This function will be called as chunks of data are received from the ftp server
@@ -194,11 +216,11 @@ class FTPUpdateTask(Task):
 
 # code run if file executed from command line
 if __name__ == '__main__':
+    import sys
+
+
     task = FTPUpdateTask('Command Line Update')
-
-    args = {'3CK2A':1, '1FXKB':2, '1QE5A':3}
-
-    task._work(args)
+    task._work(**{'data':[{'code':code} for code in sys.argv[1:]]})
 
 
 

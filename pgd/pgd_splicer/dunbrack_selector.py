@@ -15,7 +15,7 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from tasks.tasks import *
+from pydra_server.cluster.tasks import Task
 from pgd_splicer.models import *
 
 import urllib
@@ -39,9 +39,13 @@ class DunbrackPDBSelectorTask(Task):
         Main work function.
         """
         print "DunbrackPDBSelectorTask: Starting"
-
         try:
             thresholds = kwargs['thresholds']
+            if isinstance(thresholds, (str,unicode)):
+                thresholds = [int(s) for s in thresholds.split(',')]
+            elif isinstance(thresholds, int):
+                thresholds = [thresholds]
+
         except KeyError:
             thresholds = [25,90]
 
@@ -59,13 +63,16 @@ class DunbrackPDBSelectorTask(Task):
         print '  max resolution: ', resolution
         print '  r_factor:       ', r_factor
 
-
+        print 'Saving pdbs in ', pdb_select_settings.PDB_TMP_DIR
         if not os.path.exists(pdb_select_settings.PDB_TMP_DIR):
             os.mkdir(pdb_select_settings.PDB_TMP_DIR)
+            print '     making dir ', pdb_select_settings.PDB_TMP_DIR
 
         # Download the files
         dunbrack_url = 'http://dunbrack.fccc.edu/Guoli/culledpdb/'
         files = get_files(dunbrack_url, thresholds, resolution, r_factor)
+
+        print 'files: ', dunbrack_url, thresholds, resolution, r_factor
 
         self.progressValue = 20
 
@@ -80,7 +87,7 @@ class DunbrackPDBSelectorTask(Task):
 
         self.progressValue = 100
 
-        return proteins
+        return {'data':[v for k,v in proteins.items()]}
 
 
     def progress(self):
@@ -148,11 +155,12 @@ class DunbrackPDBSelectorTask(Task):
                         resolution = float(groups[4])
                         if resolution > 0 and resolution <= max_resolution:
                             proteins[groups[0]] = {
-                                'id':groups[0],
+                                'code':groups[0],
                                 'chains':[groups[1]],
                                 'resolution':groups[4],
                                 'rfactor':groups[5],
-                                'rfreevalue':groups[6]
+                                'rfreevalue':groups[6],
+                                'threshold':threshold
                             }
 
                         print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
@@ -197,4 +205,4 @@ def get_files(url, thresholds, resolution, r_factor):
 if __name__ == '__main__':
     task =  DunbrackPDBSelectorTask('CommandLine PDBSelector')
     pdbs = task._work()
-    print 'PDBS', pdbs
+    #print 'PDBS', pdbs

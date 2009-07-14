@@ -1,4 +1,20 @@
 #!/usr/bin/python2.5
+if __name__ == '__main__':
+    import sys
+    import os
+
+    #python magic to add the current directory to the pythonpath
+    sys.path.append(os.getcwd())
+
+    # ==========================================================
+    # Setup django environment 
+    # ==========================================================
+    if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+    # ==========================================================
+    # Done setting up django environment
+    # ==========================================================
+
 from Bio.PDB import *
 from pgd_core.models import *
 
@@ -50,7 +66,7 @@ AAchis =  {
             ),
 }
 
-filename = '/home/davidsjo/fa/pdb1fat.ent'
+filename = 'pdb/pdb1fxk.ent'
 prot = PDBParser().get_structure('X',filename)
 dssp = DSP(model=model, pdb_file=filename, dssp='dsspcmbi')
 
@@ -64,7 +80,7 @@ protObj.save()
 
 model = prot[0]
 for chain in model:
-    
+
     chainObj = Chain(
         id      = protObj.id+chain.id,
         protein = protObj,
@@ -90,11 +106,11 @@ for chain in model:
                 aa          = AA3to1[resName],
                 chainID     = chainObj.id,
                 chainIndex  = newResID,
-                ss          = dssp[(chain.id, newResId)]
+                ss          = dssp[(chain.id, newResId)],
                 bm          = sum()/4.0
                 # now add the b* stuff!
             )
-            
+
             newN    = newRes['N'].get_vector()
             newCA   = newRes['CA'].get_vector()
             newC    = newRes['C'].get_vector()
