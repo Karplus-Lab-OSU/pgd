@@ -75,7 +75,10 @@ class FTPUpdateTask(Task):
     pdbCount = 0
     processing_dates = None
 
-    def _work(self, **kwargs):
+    def work(self, **kwargs):
+
+        print 'FTPUpdateTask - Starting', kwargs
+
         pdb_local_files = {}
         pdb_remote_files = {}
 
@@ -220,7 +223,7 @@ if __name__ == '__main__':
 
 
     task = FTPUpdateTask('Command Line Update')
-    task._work(**{'data':[{'code':code} for code in sys.argv[1:]]})
+    task.work(**{'data':[{'code':code} for code in sys.argv[1:]]})
 
 
 

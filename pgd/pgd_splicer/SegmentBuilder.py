@@ -31,7 +31,11 @@ class SegmentBuilderTask(Task):
     proteinCount = None
     proteinTotal = None
 
-    def _work(self, pdbs):
+    def work(self, pdbs):
+        worker = self.get_worker()
+
+        print 'SegmentBuilder - starting: >>>>>>>>>>>>>>>', pdbs, worker
+
 
         length = searchSettings.segmentSize
         self.proteinCount = 0
@@ -80,10 +84,14 @@ class SegmentBuilderTask(Task):
                     id = id + 1
 
                 #determine index of the last known residue in the chain
-                print '?????', chain
-                result = chain.residues.order_by('chainIndex').reverse()[0]
-                chainLength = result.chainIndex
-                print '        chainlength: %s' % chainLength
+                try:
+                    result = chain.residues.order_by('chainIndex').reverse()[0]
+                    chainLength = result.chainIndex
+                    print '        chainlength: %s' % chainLength
+
+                except IndexError:
+                    print 'WARNING - Chain %s had no residues' % chain.code
+                    continue;
 
                 #iterate through all possible residue indexes for this chain
                 for ri in range(1, chainLength+1):
@@ -148,5 +156,8 @@ class SegmentBuilderTask(Task):
 
 if __name__ == '__main__':
     import sys
+    from pydra_server.cluster.worker_proxy import WorkerProxy
+
     builder = SegmentBuilderTask('Command Line Builder')
-    builder._work(**{'pdbs':sys.argv[1:]})
+    builder.parent = WorkerProxy()
+    builder.work(**{'pdbs':sys.argv[1:]})

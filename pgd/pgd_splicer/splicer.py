@@ -45,4 +45,4 @@ class SplicerTask(TaskContainer):
         TaskContainer.__init__(self, msg)
 
         self.add_task(DunbrackPDBSelectorTask('Select PDBs for download'))
-        self.add_task(ParallelProteinImportTask('ProcessSelectedProteins'))
+        self.add_task(ParallelProteinImportTask())

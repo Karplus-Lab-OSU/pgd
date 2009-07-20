@@ -34,7 +34,7 @@ class DunbrackPDBSelectorTask(Task):
 
     progressValue = 0
 
-    def _work(self, **kwargs):
+    def work(self, **kwargs):
         """
         Main work function.
         """
@@ -204,5 +204,5 @@ def get_files(url, thresholds, resolution, r_factor):
 
 if __name__ == '__main__':
     task =  DunbrackPDBSelectorTask('CommandLine PDBSelector')
-    pdbs = task._work()
+    pdbs = task.work()
     #print 'PDBS', pdbs

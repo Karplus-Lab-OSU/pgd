@@ -17,27 +17,23 @@ if __name__ == '__main__':
 
 from pydra_server.cluster.tasks import Task
 
-from pgd_splicer.models import *
+
 from pgd_core.models import Protein as ProteinModel
 from pgd_core.models import Chain as ChainModel
 from pgd_core.models import Residue as ResidueModel
-from chi import CHI_MAP
+from pgd_splicer.models import *
+from pgd_splicer.chi import CHI_MAP
 
 from django.db import transaction
 
-import math, sys, mmLib.Structure, mmLib.FileIO, mmLib.AtomMath
+import math, sys, os, shutil
 from math import sqrt
 import Bio.PDB
 from Bio.PDB import calc_angle as pdb_calc_angle
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
-import shutil
-import os
 
-import logging
-logger = logging.getLogger('root')
-
-class ICodeException(Exception):
-    pass
+#import logging
+#logger = logging.getLogger('root')
 
 NO_VALUE = 999.9
 
@@ -72,7 +68,7 @@ class ProcessPDBTask(Task):
     Residue models and commited to the database.
     """
 
-    def _work(self, **kwargs):
+    def work(self, **kwargs):
         """
         Work function - expects a list of pdb file prefixes.
         """
@@ -86,10 +82,14 @@ class ProcessPDBTask(Task):
         for data in pdbs:
             self.process_pdb(data)
 
+        print 'ProcessPDBTask - Processing Complete'
+
         # return only the code of proteins inserted or updated
         # we no longer need to pass any data as it is contained in the database
         # for now assume everything was updated
-        return {'pdbs':[p['code'] for p in pdbs]}
+        codes = {'pdbs':[p['code'] for p in pdbs]}
+        print codes
+        return codes
 
     @transaction.commit_manually
     def process_pdb(self, data):
@@ -103,21 +103,13 @@ class ProcessPDBTask(Task):
             print '    Processing: ', code
 
             # update datastructure
-            data['chains'] = []
-            data['residues'] = {}
+            data['chains'] = {}
 
             # 1) parse with bioPython
-            try:
-                data = parseWithBioPython(filename, data)
-            except ICodeException:
-                logger.warn('PDB File had insertion codes: %s' % code)
-                return
+            data = parseWithBioPython(filename, data)
             #print 'props: %s' % data
 
-            # 2) parse with MMLib merging the dictionaries
-            #data = parseWithMMLib('%s/%s' % ('pdb', filename), data)
-
-            # 3) Create/Get Protein and save values
+            # 2) Create/Get Protein and save values
             try:
                 protein = ProteinModel.objects.get(code=code)
                 print '  Existing protein: ', code
@@ -130,9 +122,9 @@ class ProcessPDBTask(Task):
             protein.rfactor    = float(data['rfactor'])
             protein.save()
 
-            # 4) Get/Create Chains and save values
+            # 3) Get/Create Chains and save values
             chains = {}
-            for chaincode in data['chains']:
+            for chaincode, residues in data['chains'].items():
                 chainId = '%s%s' % (protein.code, chaincode)
                 try:
                     chain = protein.chains.get(id=chainId)
@@ -150,41 +142,44 @@ class ProcessPDBTask(Task):
                 chains[chaincode] = chain
 
 
-            # 5) iterate through residue data creating residues
-            for id, residue_props in data['residues'].items():
-                chain = chains[residue_props['chain_id']]
+                # 4) iterate through residue data creating residues
+                for id, residue_props in residues.items():
+                    #chain = chains[residue_props['chain_id']]
 
-                # 5a) find the residue object so it can be updated or create a new one
-                try:
-                    residue = chain.residues.get(chainIndex=id)
-                except ResidueModel.DoesNotExist:
-                    #not found, create new residue
-                    #print 'New Residue'
-                    residue = ResidueModel()
-                    residue.protein = protein
-                    residue.chain   = chain
-                    residue.chainID = chain.id[4]
-                    residue.chainIndex = id
-                    residue.oldID = id
+                    # 4a) find the residue object so it can be updated or create a new one
+                    try:
+                        residue = chain.residues.get(oldID=id)
+                    except ResidueModel.DoesNotExist:
+                        #not found, create new residue
+                        #print 'New Residue'
+                        residue = ResidueModel()
+                        residue.protein = protein
+                        residue.chain   = chain
+                        residue.chainID = chain.id[4]
+                        residue.chainIndex = id
+                        residue.oldID = id
 
-                # 5b) copy properties into a residue object
-                #     property keys should match property name in object
-                for key, value in residue_props.items():
-                    residue.__dict__[key] = value
+                    # 4b) copy properties into a residue object
+                    #     property keys should match property name in object
+                    for key, value in residue_props.items():
+                        residue.__dict__[key] = value
 
-                # 5c) save
-                residue.save()
-                chain.residues.add(residue)
+                    # 4c) save
+                    residue.save()
+                    chain.residues.add(residue)
+                print '    %s proteins' % len(residues)
+
         except Exception, e:
             import traceback
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print "*** print_tb:"
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
-            logger.error('EXCEPTION in Residue', code, e)
+            print 'EXCEPTION in Residue', code, e
             transaction.rollback()
+            return
 
-        # 6) entire protein has been processed, commit transaction
+        # 5) entire protein has been processed, commit transaction
         transaction.commit()
 
 
@@ -223,7 +218,7 @@ def parseWithBioPython(file, props):
     Parse values from file that can be parsed using BioPython library
     @return a dict containing the properties that were processed
     """
-    residues = props['residues']
+    chains = props['chains']
 
     decompressedFile = None
     tmp = './tmp'
@@ -250,145 +245,180 @@ def parseWithBioPython(file, props):
 
             #iterate residues
             res_old_id = None
-            oldN        = None
-            oldCA       = None
-            oldC        = None
+            oldN       = None
+            oldCA      = None
+            oldC       = None
 
             for chain in structure[0]:
                 if not chain.get_id() in props['chains']:
-                    props['chains'].append(chain.get_id())
-                    print 'CHAIN [%s]' % chain
+                    residues = {}
+                    props['chains'][chain.get_id()] = residues
+                    print 'PROCESSING CHAIN [%s]' % chain, len(chain)
 
-            for res in structure[0].get_residues():
-                hetflag, res_id, icode = res.get_id()
+                newID = 0
+                #for res in structure[0].get_residues():
+                for res in chain:
+                    newID += 1
+                    terminal = False
+                    hetflag, res_id, icode = res.get_id()
 
-                if icode != ' ':
-                    raise ICodeException()
-
-                if hetflag != ' ':
-                    oldN       = None
-                    oldCA      = None
-                    oldC       = None
-                    continue
-
-                #print 'RES:', res_id, icode, res.parent
-
-                """
-                Create dictionary structure and initialize all values.  All
-                Values are required.  Values that are not filled in will retain
-                the NO_VALUE value.
-                """
-                try:
-                    res_dict = residues[res_id]
-                except KeyError:
-                    # residue didn't exist yet
-                    res_dict = {}
-                    residues[res_id] = res_dict
-                    res_dict['id'] = res_id
-
-                length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
-                angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
-                dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
-                initialize_geometry(res_dict, length_list, 'length')
-                initialize_geometry(res_dict, angles_list, 'angle')
-                initialize_geometry(res_dict, dihedral_list, 'angle')
-
-
-                """
-                Get Properties from DSSP and other per residue properties
-                """
-                chain = res.get_parent().get_id()
-                residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
-                res_dict['chain_id'] = chain
-                res_dict['ss'] = secondary_structure
-                res_dict['aa'] = AA3to1[res.resname]
-                res_dict['h_bond_energy'] = 0.00
-
-                """
-                Get Vectors for mainchain atoms and calculate geometric angles,
-                dihedral angles, and lengths between them.
-                """
-                N    = res['N'].get_vector()
-                CA   = res['CA'].get_vector()
-                C    = res['C'].get_vector()
-                CB   = res['CB'].get_vector() if res.has_id('CB') else None
-                O    = res['O'].get_vector()
-
-                if residues.has_key(res_old_id) and res_old_id+1 == res_id:
-                    # properties that span residues
-                    res_dict['a6'] = calc_angle(oldCA,oldC,N)
-                    res_dict['a7'] = calc_angle(oldO,oldC,N)
-                    residues[res_old_id]['psi'] = calc_dihedral(oldN,oldCA,oldC,N)
-                    residues[res_old_id]['ome'] = calc_dihedral(oldCA,oldC,N,CA)
-                    res_dict['a1']     = calc_angle(oldC,N,CA)
-                    res_dict['L1']     = calc_distance(oldC,N)
-                    res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
-
-                res_dict['L2'] = calc_distance(N,CA)
-                res_dict['L4'] = calc_distance(CA,C)
-                res_dict['L5'] = calc_distance(C,O)
-                res_dict['a3'] = calc_angle(N,CA,C)
-                res_dict['a5'] = calc_angle(CA,C,O)
-
-                if CB:
-                    res_dict['a2'] = calc_angle(N,CA,CB)
-                    res_dict['a4'] = calc_angle(CB,CA,C)
-                    res_dict['L3'] = calc_distance(CA,CB)
-                    res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
-
-
-                """
-                Calculate Bg - bfactor of the 4th atom in Chi1.
-                """
-                try:
-                    atom_name = CHI_MAP[res.resname][0][3]
-                    res_dict['bg'] = res[atom_name].get_bfactor()
-                except KeyError:
-                    # not all residues have chi
-                    pass
-
-
-                """
-                Other B Averages
-                    Bm - Average of bfactors in main chain.
-                    Bm - Average of bfactors in side chain.
-                """
-                main_chain = []
-                side_chain = []
-                for a in res.child_list:
-                    if a.name in ('N', 'CA', 'C', 'O','OXT'):
-                        main_chain.append(a.get_bfactor())
-                    elif a.name in ('H'):
+                    """
+                    Exclude water residues
+                    """
+                    if hetflag != ' ':
+                        #print 'discard'
+                        if oldC:
+                            residues[res_old_id]['terminal_flag'] = True
+                            newID += 1
+                        oldN       = None
+                        oldCA      = None
+                        oldC       = None
                         continue
-                    else:
-                        side_chain.append(a.get_bfactor())
 
-                if main_chain != []:
-                    res_dict['bm'] = sum(main_chain)/len(main_chain)
+                    """
+                    Create dictionary structure and initialize all values.  All
+                    Values are required.  Values that are not filled in will retain
+                    the NO_VALUE value.
 
-                if side_chain != []:
-                    res_dict['bs'] = sum(side_chain)/len(side_chain)
+                    Store residue properties using OLD_ID as the key to ensure it is
+                    unique.  We're including residues from all chains in the same
+                    dictionary and chainindex may have duplicates.
+                    """
+                    try:
+                        res_dict = residues[res_id]
+                    except KeyError:
+                        # residue didn't exist yet
+                        res_dict = {}
+                        residues[res_id] = res_dict
+                        res_dict['oldID'] = res_id if not icode else '%s%s' % (res_id, icode)
+
+                    length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
+                    angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
+                    dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
+                    initialize_geometry(res_dict, length_list, 'length')
+                    initialize_geometry(res_dict, angles_list, 'angle')
+                    initialize_geometry(res_dict, dihedral_list, 'angle')
 
 
-                """
-                Calculate CHI values.  The mappings for per peptide chi's are stored
-                in a separate file and a function is used to calculate the chi based
-                based on the peptide of this residue and the lists of atoms in the
-                chi mappings.
-                """
-                calc_chi(res, res_dict)
-                if res_dict['chi1']:
-                    res_dict['chi'] = res_dict['chi1']
+                    """
+                    Get Properties from DSSP and other per residue properties
+                    """
+                    chain = res.get_parent().get_id()
+                    residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
+                    res_dict['chain_id'] = chain
+                    res_dict['ss'] = secondary_structure
+                    res_dict['aa'] = AA3to1[res.resname]
+                    res_dict['h_bond_energy'] = 0.00
+
+                    """
+                    Get Vectors for mainchain atoms and calculate geometric angles,
+                    dihedral angles, and lengths between them.
+                    """
+                    N    = res['N'].get_vector()
+                    CA   = res['CA'].get_vector()
+                    C    = res['C'].get_vector()
+                    CB   = res['CB'].get_vector() if res.has_id('CB') else None
+                    O    = res['O'].get_vector()
+
+                    if oldC:
+                        # determine if there are missing residues by calculating
+                        # the distance between the current residue and previous
+                        # residue.  If the L1 distance is greater than 2.5 it 
+                        # cannot possibly be the correct order of residues.
+                        L1 = calc_distance(oldC,N)
+
+                        if L1 < 2.5:
+                            # properties that span residues
+                            res_dict['a6'] = calc_angle(oldCA,oldC,N)
+                            res_dict['a7'] = calc_angle(oldO,oldC,N)
+                            residues[res_old_id]['psi'] = calc_dihedral(oldN,oldCA,oldC,N)
+                            residues[res_old_id]['ome'] = calc_dihedral(oldCA,oldC,N,CA)
+                            res_dict['a1']     = calc_angle(oldC,N,CA)
+                            res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
+                            res_dict['L1'] = L1
+                            terminal = False
+
+                    if terminal:
+                        # break in the chain, 
+                        # 1) add terminal flags to both ends of the break so
+                        #    the break can quickly be found.
+                        # 2) skip a number in the new style index.  This allows
+                        #    the break to be visible without checking the 
+                        #    terminal flag
+                        newID += 1
+                        res_dict['terminal_flag'] = True
+                        residues[res_old_id]['terminal_flag'] = True
+
+                    # newID cannot be set until after we determine if it is terminal
+                    res_dict['chainIndex'] = newID
+
+                    res_dict['L2'] = calc_distance(N,CA)
+                    res_dict['L4'] = calc_distance(CA,C)
+                    res_dict['L5'] = calc_distance(C,O)
+                    res_dict['a3'] = calc_angle(N,CA,C)
+                    res_dict['a5'] = calc_angle(CA,C,O)
+
+                    if CB:
+                        res_dict['a2'] = calc_angle(N,CA,CB)
+                        res_dict['a4'] = calc_angle(CB,CA,C)
+                        res_dict['L3'] = calc_distance(CA,CB)
+                        res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
 
 
-                """
-                Reset for next pass.  We save some relationships which span two atoms.
-                """
-                res_old_id = res_id
-                oldN       = N
-                oldCA      = CA
-                oldC       = C
-                oldO       = O
+                    """
+                    Calculate Bg - bfactor of the 4th atom in Chi1.
+                    """
+                    try:
+                        atom_name = CHI_MAP[res.resname][0][3]
+                        res_dict['bg'] = res[atom_name].get_bfactor()
+                    except KeyError:
+                        # not all residues have chi
+                        pass
+
+
+                    """
+                    Other B Averages
+                        Bm - Average of bfactors in main chain.
+                        Bm - Average of bfactors in side chain.
+                    """
+                    main_chain = []
+                    side_chain = []
+                    for a in res.child_list:
+                        if a.name in ('N', 'CA', 'C', 'O','OXT'):
+                            main_chain.append(a.get_bfactor())
+                        elif a.name in ('H'):
+                            continue
+                        else:
+                            side_chain.append(a.get_bfactor())
+
+                    if main_chain != []:
+                        res_dict['bm'] = sum(main_chain)/len(main_chain)
+
+                    if side_chain != []:
+                        res_dict['bs'] = sum(side_chain)/len(side_chain)
+
+
+                    """
+                    Calculate CHI values.  The mappings for per peptide chi's are stored
+                    in a separate file and a function is used to calculate the chi based
+                    based on the peptide of this residue and the lists of atoms in the
+                    chi mappings.
+                    """
+                    calc_chi(res, res_dict)
+                    if res_dict['chi1']:
+                        res_dict['chi'] = res_dict['chi1']
+
+
+                    """
+                    Reset for next pass.  We save some relationships which span two atoms.
+                    """
+                    res_old_id = res_id
+                    oldN       = N
+                    oldCA      = CA
+                    oldC       = C
+                    oldO       = O
+
+                print 'Processed %s residues' % len(residues)
 
     finally:
         #clean up any files in tmp directory no matter what
@@ -397,25 +427,6 @@ def parseWithBioPython(file, props):
 
         if ownTempDir and os.path.exists(tmp):
             os.removedirs(tmp)
-
-    return props
-
-
-def parseWithMMLib(file, props):
-    """
-    Parse values from file that can be parsed using MMLib library
-    @return a dict containing the properties that were processed
-    """
-    struct = mmLib.FileIO.LoadStructure(file=file)
-    for r in struct.iter_amino_acids():
-
-        #get or create residue properties
-        #this assumes residue property was already created in parseWithBioPython, Speed Optimization
-        try:
-            residueProps = residues[int(r.fragment_id)]
-        except Exception,e:
-            print '>>>>>>>>>>>>>>>>', r.chain_id, file
-            raise e
 
     return props
 
@@ -489,9 +500,26 @@ if __name__ == '__main__':
     """
     Run if file is executed from the command line
     """
-    task = ProcessPDBTask('Command Line Processor')
+    from pydra_server.cluster.worker_proxy import WorkerProxy
+    import sys
 
-    args = {'pdbs':[{'code':'153l','threshold':1, 'resolution':2,'rfactor':3}]}
+    task = ProcessPDBTask()
+    task.parent = WorkerProxy()
 
-    task._work(args)
+    pdbs = {}
+    argv = sys.argv
+    pdbs = []
+    for i in range(1,len(argv),4):
+        try:
+            pdbs.append({'code':argv[i],
+                      'threshold':float(argv[i+1]),
+                      'resolution':float(argv[i+2]),
+                      'rfactor':float(argv[i+3])
+                      })
+        except IndexError:
+            print 'Usage: process_protein.py code threshold resolution rfactor ...'
+            sys.exit(0)
+
+    print pdbs
+    task.work(**{'data':pdbs})
 
