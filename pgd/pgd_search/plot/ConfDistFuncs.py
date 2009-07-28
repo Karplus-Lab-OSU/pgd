@@ -9,7 +9,7 @@
 
 from pgd_core.models import *
 from pgd_search.models import *
-from constants import *
+from pgd_constants import *
 import math
 
 ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')

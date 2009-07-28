@@ -2,7 +2,7 @@ import unittest
 from pgd_search.models import * 
 from pgd_core.models import * 
 from pgd_splicer.SegmentBuilder import SegmentBuilderTask
-from constants import AA_CHOICES, SS_CHOICES
+from pgd_constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 from search.SearchForm import SearchSyntaxField
 

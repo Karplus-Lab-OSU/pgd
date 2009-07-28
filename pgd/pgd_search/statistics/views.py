@@ -3,7 +3,7 @@ from django.template import RequestContext
 from django.conf import settings
 import math
 
-from constants import AA_CHOICES
+from pgd_constants import AA_CHOICES
 from pgd_search.models import Search, Segment, iIndex
 from pgd_search.plot.ConfDistFuncs import getCircularStats
 

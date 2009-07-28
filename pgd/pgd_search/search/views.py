@@ -10,7 +10,7 @@ import math
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from SearchForm import SearchSyntaxField, SearchForm
-from constants import AA_CHOICES, SS_CHOICES
+from pgd_constants import AA_CHOICES, SS_CHOICES
 
 import re
 

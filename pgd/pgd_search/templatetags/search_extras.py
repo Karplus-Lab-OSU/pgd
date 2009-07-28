@@ -2,7 +2,7 @@ from django.template.defaultfilters import stringfilter
 from django import template
 register = template.Library()
 
-from constants import AA_CHOICES_DICT
+from pgd_constants import AA_CHOICES_DICT
 
 """
 Filter that returns the full AA code from the 1 letter AA code

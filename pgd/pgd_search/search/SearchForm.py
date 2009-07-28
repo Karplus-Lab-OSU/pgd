@@ -5,7 +5,7 @@ from django import forms
 from pgd_core.models import Protein
 from pgd_search.models import searchSettings
 from pgd_search.views import RESIDUE_INDEXES
-from constants import AA_CHOICES, SS_CHOICES
+from pgd_constants import AA_CHOICES, SS_CHOICES
 
 """
 Custom Field for fields that support query syntax parsing

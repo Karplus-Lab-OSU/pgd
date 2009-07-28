@@ -9,7 +9,7 @@
 
 import math
 from pgd_search.models import *
-from constants import AA_CHOICES
+from pgd_constants import AA_CHOICES
 from pgd_search.models import searchSettings
 from django.core.paginator import Paginator
 
