@@ -175,7 +175,7 @@ class ProcessPDBTask(Task):
             print "*** print_tb:"
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
-            print 'EXCEPTION in Residue', code, e
+            print 'EXCEPTION in Residue', code, e.__class__, e
             transaction.rollback()
             return
 
@@ -264,8 +264,11 @@ def parseWithBioPython(file, props):
 
                     """
                     Exclude water residues
+                    Exclude any Residues that are missing _ANY_ of the
+                           mainchain atoms.  Any atom could be missing
                     """
-                    if hetflag != ' ':
+                    all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
+                    if hetflag != ' ' or not all_mainchain:
                         #print 'discard'
                         if oldC:
                             residues[res_old_id]['terminal_flag'] = True
