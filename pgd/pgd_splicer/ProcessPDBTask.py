@@ -107,7 +107,7 @@ class ProcessPDBTask(Task):
         """
         try:
             code = data['code']
-            chains = data['chains'] if data.has_key('chains') else None
+            chains_filter = data['chains'] if data.has_key('chains') else None
             print 'DATA', data
             filename = 'pdb%s.ent.gz' % code.lower()
             print '    Processing: ', code
@@ -116,7 +116,7 @@ class ProcessPDBTask(Task):
             data['chains'] = {}
 
             # 1) parse with bioPython
-            data = parseWithBioPython(filename, data, chains)
+            data = parseWithBioPython(filename, data, chains_filter)
             #print 'props: %s' % data
 
             # 2) Create/Get Protein and save values
@@ -130,6 +130,7 @@ class ProcessPDBTask(Task):
             protein.threshold  = float(data['threshold'])
             protein.resolution = float(data['resolution'])
             protein.rfactor    = float(data['rfactor'])
+            protein.rfree      = float(data['rfree'])
             protein.save()
 
             # 3) Get/Create Chains and save values
@@ -237,7 +238,7 @@ def uncompress(file, src_dir, dest_dir):
     return dest
 
 
-def parseWithBioPython(file, props, chains=None):
+def parseWithBioPython(file, props, chains_filter=None):
     """
     Parse values from file that can be parsed using BioPython library
     @return a dict containing the properties that were processed
@@ -279,7 +280,7 @@ def parseWithBioPython(file, props, chains=None):
                 chain_id = chain.get_id()
 
                 # only process selected chains
-                if chains and not chain_id in chains:
+                if chains_filter and not chain_id in chains_filter:
                     print 'Skipping Chain: %s' % chain_id
                     continue
 
@@ -558,17 +559,18 @@ if __name__ == '__main__':
     pdbs = {}
     argv = sys.argv
     pdbs = []
-    for i in range(1,len(argv),4):
+    for i in range(1,len(argv),5):
         try:
             pdbs.append({'code':argv[i],
                       'threshold':float(argv[i+1]),
                       'resolution':float(argv[i+2]),
-                      'rfactor':float(argv[i+3])
+                      'rfactor':float(argv[i+3]),
+                      'rfree':float(argv[i+4])
                       })
         except IndexError:
             print 'Usage: process_protein.py code threshold resolution rfactor ...'
             sys.exit(0)
 
     print pdbs
-    task.work(**{'data':pdbs})
+    task.work(**{'data':pdbs, 'chains':None})
 

@@ -353,8 +353,8 @@
             <table id="protein">
             <tbody>
             <tr>
-                <td class="label" rowspan="4">{{form.proteins.label}}</td>
-                <td  rowspan="4">
+                <td class="label" rowspan="6">{{form.proteins.label}}</td>
+                <td  rowspan="6">
                     <span class="toggle">&nbsp;</span>{{form.proteins}} {{form.proteins_i}}
                 </td>
             </tr>
@@ -368,6 +368,14 @@
             <tr>
                 <td class="label">Resolution</td>
                 <td>{{form.resolutionMin}} - {{form.resolutionMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">R-factor</td>
+                <td>{{form.rfactorMin}} - {{form.rfactorMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">R-free</td>
+                <td>{{form.rfreeMin}} - {{form.rfreeMax}}</td>
             </tr>
             <tr>
                 <td class="label">{{form.threshold.label}}</td>

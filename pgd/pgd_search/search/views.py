@@ -165,6 +165,10 @@ def processSearchForm(form):
     search.resolution_min = float(data['resolutionMin'])
     search.resolution_max = float(data['resolutionMax'])
     search.threshold      = int(data['threshold'])
+    search.rfactor_min    = float(data['rfactorMin'])
+    search.rfactor_max    = float(data['rfactorMax'])
+    search.rfree_min      = float(data['rfreeMin'])
+    search.rfree_max      = float(data['rfreeMax'])
 
     #save search object so its residue parameters can be added
     search.save()

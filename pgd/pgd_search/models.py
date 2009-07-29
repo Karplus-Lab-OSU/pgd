@@ -32,6 +32,11 @@ class Search(models.Model):
     threshold        = models.IntegerField(null=True)
     resolution_min   = models.FloatField(null=True)
     resolution_max   = models.FloatField(null=True)
+    rfactor_min      = models.FloatField(null=True)
+    rfactor_max      = models.FloatField(null=True)
+    rfree_min        = models.FloatField(null=True)
+    rfree_max        = models.FloatField(null=True)
+
     segmentLength    = models.IntegerField()
     _querySet = None
 
@@ -70,6 +75,23 @@ class Search(models.Model):
         # ...filter by resolution...
         if self.resolution_max != None:
             query = query.filter(protein__resolution__lte=self.resolution_max)
+
+        # ...filter by rfactor...
+        if self.rfactor_min != None:
+            query = query.filter(protein__rfactor__gte=self.rfactor_min)
+
+        # ...filter by rfactor...
+        if self.rfactor_max != None:
+            query = query.filter(protein__rfactor__lte=self.rfactor_max)
+
+        #...filter by rfree...
+        if self.rfree_min != None:
+            query = query.filter(protein__rfree__gte=self.rfree_min)
+
+        # ...filter by rfree...
+        if self.rfree_max != None:
+            query = query.filter(protein__rfree__lte=self.rfree_max)
+
 
         # ...filter by threshold...
         if self.threshold != None:

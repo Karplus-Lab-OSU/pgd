@@ -8,7 +8,8 @@ class Protein(models.Model):
     code        = models.CharField(max_length=4, primary_key=True, unique=True)
     threshold   = models.IntegerField() # new type; this should probably be a boolean type
     resolution  = models.FloatField(db_index=True)
-    rfactor     = models.FloatField()
+    rfactor     = models.FloatField(db_index=True)
+    rfree       = models.FloatField(db_index=True)
 
     def __unicode__(self):
         return self.code
