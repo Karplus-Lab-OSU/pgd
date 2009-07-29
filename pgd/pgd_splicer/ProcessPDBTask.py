@@ -183,12 +183,19 @@ class ProcessPDBTask(Task):
         transaction.commit()
 
 
-"""
-Uncompress using the UNIX uncompress command.  The PDB files are stored 
-used LZ algorithms i've tried will not decompress the files properly.
-For now use the linux decompress
-"""
+
 def uncompress(file, src_dir, dest_dir):
+    """
+    Uncompress using the UNIX uncompress command.  PDB files are stored with
+    GZIP.  Python supports GZIP but does not detect errors with incomplete
+    files.  Its faster to just use the GZIP executable as it does not require
+    loading the file into python and then dumping it back to a file.
+
+    @param file: filename to decompress, does not include path
+    @param src_dir: directory of file
+    @param dest_dir: directory to write uncompressed file into
+    """
+
     tempfile = '%s/%s' % (dest_dir, file)
     dest = '%s/%s' % (dest_dir, file[:-3])
     try:
@@ -198,17 +205,24 @@ def uncompress(file, src_dir, dest_dir):
         # decompress using unix decompress.
         os.system('uncompress %s' % tempfile)
 
+        # errors with uncompress won't be detected so we must
+        # check for existence of the file
+        if not os.path.exists(dest):
+            raise Exception('File was not uncompressed')
+
     except:
+        print 'Exception while uncompressing file: %s' % tempfile
         #clean up resulting file on errors
         if os.path.exists(dest):
-            os.path.remove(dest)
+            os.remove(dest)
 
         return False
 
     finally:
         # clean up temp file no matter what
         if os.path.exists(tempfile):
-            os.path.remove(tempfile)
+            print 'tempfile', tempfile
+            os.remove(tempfile)
 
     return dest
 
@@ -235,7 +249,9 @@ def parseWithBioPython(file, props):
         #prep and open file
         decompressedFile = uncompress(file, pdb, tmp)
 
-        if decompressedFile:
+        if not decompressedFile:
+            print 'ERROR: file not decompressed'
+        else:
 
             structure = Bio.PDB.PDBParser().get_structure('pdbname', decompressedFile)
 
@@ -269,7 +285,7 @@ def parseWithBioPython(file, props):
                     """
                     all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
                     if hetflag != ' ' or not all_mainchain:
-                        #print 'discard'
+                        #print 'discard', res_id
                         if oldC:
                             residues[res_old_id]['terminal_flag'] = True
                             newID += 1
