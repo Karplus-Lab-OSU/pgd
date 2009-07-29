@@ -98,6 +98,7 @@ class ProcessPDBTask(Task):
         """
         try:
             code = data['code']
+            chains = data['chains'] if data.has_key('chains') else None
             print 'DATA', data
             filename = 'pdb%s.ent.gz' % code.lower()
             print '    Processing: ', code
@@ -106,7 +107,7 @@ class ProcessPDBTask(Task):
             data['chains'] = {}
 
             # 1) parse with bioPython
-            data = parseWithBioPython(filename, data)
+            data = parseWithBioPython(filename, data, chains)
             #print 'props: %s' % data
 
             # 2) Create/Get Protein and save values
@@ -227,7 +228,7 @@ def uncompress(file, src_dir, dest_dir):
     return dest
 
 
-def parseWithBioPython(file, props):
+def parseWithBioPython(file, props, chains=None):
     """
     Parse values from file that can be parsed using BioPython library
     @return a dict containing the properties that were processed
@@ -266,9 +267,17 @@ def parseWithBioPython(file, props):
             oldC       = None
 
             for chain in structure[0]:
-                if not chain.get_id() in props['chains']:
+                chain_id = chain.get_id()
+
+                # only process selected chains
+                if chains and not chain_id in chains:
+                    print 'Skipping Chain: %s' % chain_id
+                    continue
+
+                # construct structure for saving chain
+                if not chain_id in props['chains']:
                     residues = {}
-                    props['chains'][chain.get_id()] = residues
+                    props['chains'][chain_id] = residues
                     print 'PROCESSING CHAIN [%s]' % chain, len(chain)
 
                 newID = 0
