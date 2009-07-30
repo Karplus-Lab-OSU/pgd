@@ -434,7 +434,7 @@ class ConfDistPlot():
 # ******************************************************
 def RefDefaults():
     return {
-                'phi': {'stepsize':1},
+                'phi': {'stepsize':10},
                 'L1': {
                         'stepsize':0.0025,
                         'min':1,
@@ -468,33 +468,33 @@ def RefDefaults():
                 'a1': {
                         'min':0,
                         'max':180,
-                        'stepsize':1},
+                        'stepsize':10},
                 'a2': {
                         'min':0,
                         'max':180,
-                        'stepsize':1},
+                        'stepsize':10},
                 'a3': {
                         'min':0,
                         'max':180,
-                        'stepsize':1},
+                        'stepsize':10},
                 'a4': {
                         'min':0,
                         'max':180,
-                        'stepsize':1},
+                        'stepsize':10},
                 'a5': {
                         'min':0,
                         'max':180,
-                        'stepsize':0.5},
+                        'stepsize':10},
                 'a6': {
                         'min':0,
                         'max':180,
-                        'stepsize':1},
+                        'stepsize':10},
                 'a7': {
                         'min':0,
                         'max':180,
-                        'stepsize':1},
+                        'stepsize':10},
                 'ome':{
-                        'stepsize':1}
+                        'stepsize':10}
                 }
 
 if __name__ == "__main__":
