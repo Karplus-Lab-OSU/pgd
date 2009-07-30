@@ -114,58 +114,49 @@
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael.js"></script>
 
         <script type="text/javascript">
             var stats = {};
 
             $(document).ready(function() {
                 $('div#binDetails').hide();
-                $('#canvas').svg()
+                var paper = Raphael("canvas", 700, 700);
 
                 fix = 0.5;
-                x = 100;
-                y = 100;
-                height = 400;
-                width = 400;
-                borderPadding = 40;
-                var svg = $('#canvas').svg('get');
+
                 {% for rect in svg.rects %}
-                    svg.rect(
-                        {{rect.x}}+fix,
-                        {{rect.y}}+fix,
-                        {{rect.height}},
-                        {{rect.width}},
-                        {fill: '{{rect.fill}}', stroke:  "{{rect.stroke}}", 'stroke-width':{{rect.stroke}}}
-                    );
+                    r = paper.rect({{rect.x}}+fix,
+                        {{rect.y}},
+                        {{rect.height}}+1,
+                        {{rect.width}}+1);
+                    r.attr({fill: '{{rect.fill}}', stroke:"{{rect.stroke}}"});
                 {% endfor %}
 
                 {% for line in svg.lines %}
-                    svg.line(
-                        {{line.x}}+fix,
-                        {{line.y}}+fix,
-                        {{line.x1}}+fix,
-                        {{line.y1}}+fix,
-                        {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
-                    );
+                    paper
+                        .path({stroke: "{{line.color}}"})
+                        .moveTo({{line.x}}+fix, {{line.y}}+fix)
+                        .lineTo({{line.x1}}+fix, {{line.y}}+fix);
                 {% endfor %}
 
                 {% for text in svg.texts %}
-                    svg.text(
-                        {{text.x}},
-                        {{text.y}},
-                        '{{text.text}}',
-                        {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.color}}"}
-                    );
+                    //paper.text(200,100,'Version 2',60);
+                    //paper.print({{text.x}}, {{text.y}}, "{{text.text}}",paper.getFont("{{text.fontfamily}}"), {{text.size}});
+                    //paper.text(10, 10, "Look mom, I’m graphics now!",60);
                 {% endfor %}
 
                 {% for rect in boxes %}
-                    svg.rect(
-                        {{rect.0}}+fix,
-                        {{rect.1}}+fix,
-                        {{rect.2}},
-                        {{rect.3}},
-                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");', onmouseout:'bin_mouseout();'}
-                    );
+                    r = paper.rect({{rect.0}}+fix,
+                        {{rect.1}},
+                        {{rect.2}}+1,
+                        {{rect.3}}+1);
+                    r.attr({fill: '#{{rect.4}}', stroke:'#{{rect.4}}'});
+                    r.attr('stroke-width',0);
+
+                    r[0].onmouseover = function(evt) {
+                        bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");
+                    }
 
                     //add static fields
                     field_stats = {'observations':{{rect.6.count}} };
