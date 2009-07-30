@@ -1,4 +1,4 @@
-import cairo
+import cairo, simplejson
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.conf import settings
@@ -30,6 +30,7 @@ LABEL_REPLACEMENTS = {
             'h_bond_energy':'H Bond'
             }
 
+#ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7')
 
 """
 Renders a conformational distribution graph
@@ -93,7 +94,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     xlabel_y = y+graph_height+hashsize*2+(3*ratio)
     for i in range(5):
         #text value
-        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i + 180)
+        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i)
         #drop decimal if value is an integer
         xtext = '%i' % local_int(xtext) if not xtext%1 else '%.1f' %  xtext
         #get X coordinate of hash, offsetting for length of text
@@ -104,7 +105,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
 
         #text value
         #ytext = yEnd - ystep*i
-        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i + 180)
+        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i)
         #drop decimal if value is an integer
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
@@ -253,8 +254,8 @@ render conf dist plot using jquery.svg
 def renderToSVG(request):
 
     response_dict = {
-        'referenceValues' : RefDefaults(),
-        }
+        'defaults' : simplejson.dumps(RefDefaults()),
+    }
 
     if request.method == 'POST': # If the form has been submitted
         form = PlotForm(request.POST) # A form bound to the POST data
@@ -302,7 +303,9 @@ def renderToSVG(request):
     response_dict['form']         = form
     response_dict['svg']          = svg
     response_dict['boxes']        = boxes
-
+    
+    print response_dict['defaults']
+    
     return render_to_response('graph.html', response_dict, context_instance=RequestContext(request))
 
 

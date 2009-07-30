@@ -178,6 +178,7 @@
 
                 {% endfor %}
 
+
                 $('#button-plot').click(function (evt) {
                     $("form").submit();
                 });
@@ -189,11 +190,24 @@
                     $("form").attr('action','{{SITE_ROOT}}search/plot/dump/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
                 });
 
-                $('#id_attribute').change(function (){
-                        $('#id_attribute option:selected').each(function () {
-                        $('#id_reference').val(REF[$(this).text()]['ref']);
+                $('#id_xProperty').change(function (){
+                        $('#id_xProperty option:selected').each(function () {
+                            _default = DEFAULTS[$(this).val()];
+                            $('#id_x').val(_default['min']);
+                            $('#id_x1').val(_default['max']);
+                            $('#id_xBin').val(_default['stepsize']);
                         });
-                })
+                });
+
+                $('#id_yProperty').change(function (){
+                        $('#id_yProperty option:selected').each(function () {
+                            _default = DEFAULTS[$(this).val()];
+                            $('#id_y').val(_default['min']);
+                            $('#id_y1').val(_default['max']);
+                            $('#id_yBin').val(_default['stepsize']);
+                        });
+                });
+
                 $('#advanced').hide()
                 $('#advanced_toggle').click(function(){
                     $('#advanced').toggle();
@@ -206,13 +220,7 @@
 
             });
 
-            var REF = {};
-            REF['Observations'] = {'ref':'','stepsize':''}
-            {% for k,v in referenceValues.items %}
-                {% ifnotequal k 'Observations' %}
-                    REF['{{k}}'] = {'ref':{{v.ref}},'stepsize':{{v.stepsize}}}
-                {% endifnotequal %}
-            {% endfor %}
+            var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
 
             function bin_mouseover(evt, val){
                 field_stats = stats[val]
@@ -247,7 +255,6 @@
                 <button id="button-data">Data</button>
             </div>
             <form id="plotform" name="plot" method="POST" action="{{SITE_ROOT}}search/plot/svg/">
-                
                 <table id="controls">
                     <tbody>
                     <tr><td class="header" colspan="100%">General</td></tr>
