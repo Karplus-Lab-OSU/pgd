@@ -7,17 +7,8 @@ from pgd_constants import AA_CHOICES
 from pgd_search.models import Search, Segment, iIndex
 from pgd_search.plot.ConfDistFuncs import getCircularStats
 
-ANGLES_BASE = ('ome', 'phi', 'psi', 'chi', 'zeta')
-angles = ['r%i_%s' %(iIndex, angle) for angle in ANGLES_BASE]
 
-"""
-display statistics about the search
-"""
-def searchStatistics(request):
-
-    #store globals locally for speed optimization
-
-    stat_attributes_base = [('L1',u'C\u207B\u00B9N'),
+stat_attributes_base = [('L1',u'C\u207B\u00B9N'),
                         ('L2',u'NC\u1D45'),
                         ('L3',u'C\u1D45C\u1D5D'),
                         ('L4',u'C\u1D45C'),
@@ -30,6 +21,30 @@ def searchStatistics(request):
                         ('a6',u'C\u1D45CN\u207A\u00B9'),
                         ('a7',u'OCN\u207A\u00B9'),
                         ('ome',u'\u03C9')]
+
+ANGLES_BASE = ('ome', 'phi', 'psi', 'chi', 'zeta')
+angles = ['r%i_%s' %(iIndex, angle) for angle in ANGLES_BASE]
+
+
+"""
+display statistics about the search
+"""
+def searchStatistics(request):
+
+    # get search from session
+    search = request.session['search']
+
+    peptides, total = calculate_statistics(search.querySet())
+
+    return render_to_response('stats.html', {
+        'attributes': stat_attributes_base,
+        'peptides':peptides,
+        'total':total
+    }, context_instance=RequestContext(request))
+
+
+
+def calculate_statistics(queryset):
 
     TOTAL_INDEX = {'na':0,'e':1,'E':2,'S':3,'h':4,'H':5,'t':6,'T':7,'g':8,'G':9,'B':10,'i':11,'I':12}
     STAT_INDEX = {}
@@ -44,9 +59,7 @@ def searchStatistics(request):
     for i in range(len(stat_attributes)):
         STAT_INDEX[stat_attributes[i]] = i
 
-    # get search from session
-    search = request.session['search']
-    local_query_filter = search.querySet().filter
+    local_query_filter = queryset.filter
 
     peptides = {}
 
@@ -106,11 +119,7 @@ def searchStatistics(request):
         list = total['stats'][STAT_INDEX[attribute]][1]
         total['stats'][STAT_INDEX[attribute]][1] = calculate_stats(list, attribute)
 
-    return render_to_response('stats.html', {
-        'attributes': stat_attributes_base,
-        'peptides':peptides,
-        'total':total
-    }, context_instance=RequestContext(request))
+    return peptides, total
 
 
 def calculate_stats(_list, attribute):
@@ -120,6 +129,7 @@ def calculate_stats(_list, attribute):
     for statistics.
     """
 
+    #store globals locally for speed optimization
     local_pow = pow
 
     list_len = len(_list)
