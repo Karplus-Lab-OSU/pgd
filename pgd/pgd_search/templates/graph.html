@@ -5,10 +5,45 @@
     <head>
         <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
         <style>
-            #canvas {
-                width: 472px;
+
+            #content {
+                margin-left:auto;
+                margin-right:auto;
+                width:530px;
+                min-width:530px;
+            }
+
+            #canvas_container {
+                width: 500px;
                 height: 472px;
-                margin: 5px;
+                min-height:472px;
+                margin: 15px;
+                text-align:center;
+            }
+
+            #canvas {
+                margin-left:auto;
+                margin-right:auto;
+                width: 471px;
+                height: 100%;
+            }
+
+            #ajax_progress {
+                padding-top:10%;
+                width: 100%;
+                height: 90%;
+            }
+
+            #ajax_progress div{
+                margin-left:auto;
+                margin-right:auto;
+                width: 350px;
+                height: 350px;
+                border:1px dotted black;
+            }
+
+            #ajax_progress img {
+                margin-top:40%;
             }
 
             #controls {
@@ -112,75 +147,19 @@
             }
         </style>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.3.2.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
 
         <script type="text/javascript">
             var stats = {};
+            var fix = 0.5;
+            var stat_field = false;
 
             $(document).ready(function() {
                 $('div#binDetails').hide();
-                $('#canvas').svg()
-
-                fix = 0.5;
-                x = 100;
-                y = 100;
-                height = 400;
-                width = 400;
-                borderPadding = 40;
-                var svg = $('#canvas').svg('get');
-                {% for rect in svg.rects %}
-                    svg.rect(
-                        {{rect.x}}+fix,
-                        {{rect.y}}+fix,
-                        {{rect.height}},
-                        {{rect.width}},
-                        {fill: '{{rect.fill}}', stroke:  "{{rect.stroke}}", 'stroke-width':{{rect.stroke}}}
-                    );
-                {% endfor %}
-
-                {% for line in svg.lines %}
-                    svg.line(
-                        {{line.x}}+fix,
-                        {{line.y}}+fix,
-                        {{line.x1}}+fix,
-                        {{line.y1}}+fix,
-                        {stroke: '{{line.color}}', 'stroke-width': {{line.stroke}}}
-                    );
-                {% endfor %}
-
-                {% for text in svg.texts %}
-                    svg.text(
-                        {{text.x}},
-                        {{text.y}},
-                        '{{text.text}}',
-                        {'font-family': "{{text.fontfamily}}", 'font-size': "{{text.size}}", fill: "{{text.color}}"}
-                    );
-                {% endfor %}
-
-                {% for rect in boxes %}
-                    svg.rect(
-                        {{rect.0}}+fix,
-                        {{rect.1}}+fix,
-                        {{rect.2}},
-                        {{rect.3}},
-                        {fill: '#{{rect.4}}', stroke: '#{{rect.4}}', 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "{{rect.7.0}}-{{rect.7.1}}");', onmouseout:'bin_mouseout();'}
-                    );
-
-                    //add static fields
-                    field_stats = {'observations':{{rect.6.count}} };
-                    field_stats['bin'] = [{{rect.7.0}},{{rect.7.1}}];
-                    field_stats['avg'] = '{{rect.8|floatformat:3}}';
-                    field_stats['dev'] = '({{rect.9|floatformat:3}})';
-
-                    // add to main dict
-                    stats['{{rect.7.0}}-{{rect.7.1}}'] = field_stats
-
-                {% endfor %}
-
 
                 $('#button-plot').click(function (evt) {
-                    $("form").submit();
+                    update_svg();
                 });
                 $('#button-save').click(function (evt) {
                     $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
@@ -218,9 +197,124 @@
                     }
                 })
 
+                update_svg();
             });
 
             var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
+
+            /*
+               process form data and submit via ajax
+            */
+            function update_svg() {
+                // gather data from form
+                $form = $('#plotform');
+                $inputs = $form.find(' input, select');
+                    args = {};
+                    for (i=0; i<$inputs.length; i++) {
+                        input = $inputs.get(i);
+                        args[input.id.slice(3)]= $(input).val();
+                    }
+
+                // update statfield so details renders correctly
+                stat_field = ($('#id_attribute').val() != 'Observations');
+
+                //clear errors and graph
+                $('#errors').empty();
+
+                //clear graph
+                $('#canvas')
+                    .hide()
+                    .empty()
+                    .removeClass('hasSVG');
+                $('#ajax_progress').show();
+
+                // submit
+                $.post('{{SITE_ROOT}}search/plot/svg/render/',args, process_svg_data, "json");
+            }
+
+            function process_svg_data(data) {
+                if (data['errors'] != undefined) {
+                    process_form_errors(data['errors']);
+                    return;
+                }
+
+                // deactivate spinner
+                $('#ajax_progress').hide();
+                $('#canvas').show();
+
+                // process graph
+                $('#canvas').svg()
+                svg = $('#canvas').svg('get');
+
+                rects = data['background']['rects']
+                for (i in rects) {
+                    rect = rects[i]
+                    svg.rect(
+                        rect['x']+fix,
+                        rect['y']+fix,
+                        rect['height'],
+                        rect['width'],
+                        {fill: rect['fill'], stroke:  rect['stroke'], 'stroke-width':rect['stroke']}
+                    );
+                }
+
+                lines = data['background']['lines']
+                for (i in lines) {
+                    line = lines[i];
+                    svg.line(
+                        line['x']+fix,
+                        line['y']+fix,
+                        line['x1']+fix,
+                        line['y1']+fix,
+                        {stroke: line['color'], 'stroke-width': line['stroke']}
+                    );
+                }
+
+                texts = data['background']['texts']
+                for (i in texts) {
+                    text = texts[i]
+                    svg.text(
+                        text['x'],
+                        text['y'],
+                        text['text'],
+                        {'font-family': text['fontfamily'], 'font-size': text['size'], fill: text['color']}
+                    );
+                }
+
+                stats = {};
+                boxes = data['boxes'];
+                for (i in boxes) {
+                    rect = boxes[i]
+                    svg.rect(
+                        rect[0]+fix,
+                        rect[1]+fix,
+                        rect[2],
+                        rect[3],
+                        {fill: '#' + rect[4], stroke: '#'+rect[4], 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "'+rect[7][0]+'-'+rect[7][1]+'");', onmouseout:'bin_mouseout();'}
+                    );
+
+                    //add static fields
+                    stats[rect[7][0]+'-'+rect[7][1]] = {
+                        'observations':rect[6],
+                        'bin': [rect[7][0],rect[7][1]],
+                        'avg': rect[8],
+                        'dev': rect[9]
+                    };
+                }
+            }
+
+            function process_form_errors(errors) {
+                $errors = $('#errors')
+
+                // clear existing errors
+                $errors.empty();
+
+                for (key in errors) {
+                    error = errors[key]
+                    html = "<li><strong>"+ error[0] + " - </strong>" + error[1] + "</li>";
+                    $errors.append(html);
+                }
+            }
 
             function bin_mouseover(evt, val){
                 field_stats = stats[val]
@@ -236,8 +330,13 @@
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
 
-                //show the div
-                $('div#binDetails').show()
+                //show the divs
+                if (stat_field){
+                    $('#stat_field').show();
+                } else {
+                    $('#stat_field').hide();
+                }
+                $('div#binDetails').show();
             }
 
             function bin_mouseout(){
@@ -248,13 +347,24 @@
     <body>
         {% include 'header.html' %}
         <div id="content">
-            <div id="canvas"></div>
+
+            <div id="canvas_container">
+                <div id="ajax_progress">
+                    <div>
+                    <img src="{{MEDIA_URL}}/images/ajax-loader.gif"/>
+                    <h1>Generating Plot</h1>
+                    </div>
+                </div>
+                <div id="canvas"></div>
+            </div>
+
+            <ul id="errors"></ul>
             <div id="buttons">
                 <button id="button-plot" class="field">Plot</button>
                 <button id="button-save">Save</button>
                 <button id="button-data">Data</button>
             </div>
-            <form id="plotform" name="plot" method="POST" action="{{SITE_ROOT}}search/plot/svg/">
+            <form id="plotform" name="plot">
                 <table id="controls">
                     <tbody>
                     <tr><td class="header" colspan="100%">General</td></tr>
@@ -311,7 +421,6 @@
                         </tbody>
                 </table>
             </form>
-            
         </div>
 
         <div id="binDetails">
@@ -319,9 +428,7 @@
                 <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
                 <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
                 <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
-                {% ifnotequal 'Observations' attribute %}
-                    <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
-                {% endifnotequal %}
+                <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
                 <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
             </table>
         </div>

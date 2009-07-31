@@ -21,6 +21,15 @@ class SVG():
     def text(self, x,y,text, size=16,fontfamily='Verdana', fill='black'):
         self.texts.append( Text(x,y,text,size,fontfamily, fill))
 
+    def to_dict(self):
+        """
+        Convert object to dictionary so that it may be json serialized
+        """
+        return {
+            'lines': [line.__dict__ for line in self.lines],
+            'rects': [rect.__dict__ for rect in self.rects],
+            'texts': [text.__dict__ for text in self.texts]
+        }
 
 class Line():
     def __init__(self, x,y,x1,y1,stroke=1,color='black'):
@@ -30,6 +39,7 @@ class Line():
         self.y1 = y1
         self.stroke = stroke
         self.color = color
+
 
 class Rect():
     def __init__(self, x,y,height, width, stroke=1,color='black', fill=None):
@@ -41,6 +51,7 @@ class Rect():
         self.color = color
         self.fill = fill
 
+
 class Text():
     def __init__(self, x,y,text, size,color='#000000', fontfamily='Verdana'):
         self.x = x
@@ -49,5 +60,3 @@ class Text():
         self.size = size
         self.fontfamily = fontfamily
         self.color = color
-
-
