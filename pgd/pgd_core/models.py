@@ -11,6 +11,10 @@ class Protein(models.Model):
     rfactor     = models.FloatField(db_index=True)
     rfree       = models.FloatField(db_index=True)
 
+    # date the source PDB file was created.  This property is used to check for
+    # updates allowing up-to-date proteins to be skipped.
+    pdb_date    = models.DateTimeField()
+
     def __unicode__(self):
         return self.code
 

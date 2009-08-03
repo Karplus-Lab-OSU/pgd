@@ -15,22 +15,25 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from pydra_server.cluster.tasks import Task
+from datetime import datetime
+import math
+from math import sqrt
+import os
+import shutil
+import sys
+import time
 
+import Bio.PDB
+from Bio.PDB import calc_angle as pdb_calc_angle
+from Bio.PDB import calc_dihedral as pdb_calc_dihedral
+from django.db import transaction
+from pydra_server.cluster.tasks import Task
 
 from pgd_core.models import Protein as ProteinModel
 from pgd_core.models import Chain as ChainModel
 from pgd_core.models import Residue as ResidueModel
 from pgd_splicer.models import *
 from pgd_splicer.chi import CHI_MAP
-
-from django.db import transaction
-
-import math, sys, os, shutil
-from math import sqrt
-import Bio.PDB
-from Bio.PDB import calc_angle as pdb_calc_angle
-from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 
 #import logging
 #logger = logging.getLogger('root')
@@ -89,7 +92,11 @@ class ProcessPDBTask(Task):
         print 'PDBS TO PROCESS:', pdbs
 
         for data in pdbs:
-            self.process_pdb(data)
+            # only update pdbs if they are newer
+            if self.pdb_file_is_newer(data):
+                self.process_pdb(data)
+            else:
+                print 'INFO: Skipping up-to-date PDB: %s' % data['code']
 
         print 'ProcessPDBTask - Processing Complete'
 
@@ -99,6 +106,34 @@ class ProcessPDBTask(Task):
         codes = {'pdbs':[p['code'] for p in pdbs]}
         print codes
         return codes
+
+
+    def pdb_file_is_newer(self, data):
+        """
+        Compares if the pdb file used as an input is newer than data already
+        in the database.  This is used to prevent processing proteins
+        if they do not need to be processed
+        """
+        code =  data['code']
+        path = './pdb/pdb%s.ent.gz' % code
+        print path
+        if os.path.exists(path):
+            pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
+        else:
+            print 'ERROR - File not found'
+            return False
+
+        try:
+            protein = ProteinModel.objects.get(code=code)
+        except ProteinModel.DoesNotExist:
+            # Protein not in database, pdb is new
+            data['pdb_date'] = pdb_date
+            return True
+
+        if protein.pdb_date < pdb_date:
+            data['pdb_date'] = pdb_date
+            return True
+
 
     @transaction.commit_manually
     def process_pdb(self, data):
@@ -131,6 +166,7 @@ class ProcessPDBTask(Task):
             protein.resolution = float(data['resolution'])
             protein.rfactor    = float(data['rfactor'])
             protein.rfree      = float(data['rfree'])
+            protein.pdb_date   = data['pdb_date']
             protein.save()
 
             # 3) Get/Create Chains and save values
