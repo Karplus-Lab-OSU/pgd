@@ -115,7 +115,7 @@ class ProcessPDBTask(Task):
         if they do not need to be processed
         """
         code =  data['code']
-        path = './pdb/pdb%s.ent.gz' % code
+        path = './pdb/pdb%s.ent.gz' % code.lower()
         print path
         if os.path.exists(path):
             pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
