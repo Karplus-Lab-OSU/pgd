@@ -1,12 +1,10 @@
-{% extends 'search_base.html' %}
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml">
 
-{% block head %}
+<html>
+    <head>
+        <!--<link rel="stylesheet" href="http://dev.jquery.com/view/tags/ui/latest/themes/flora/flora.all.css" type="text/css" media="screen" title="Flora (Default)"-->
         <style>
-            #content {
-                text-align:left;
-                width:100%;
-            }
-
             .label {
                 padding-left:20px;
                 padding-right:0px;
@@ -22,9 +20,7 @@
 
             TH {
                 padding-left:30px;
-                text-align:center;
             }
-
 
             TD.field {
                 padding-left:2em;
@@ -111,6 +107,8 @@
                 color:red;
             }
         </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
 
         <script type="text/javascript">
 
@@ -334,9 +332,11 @@
             });
 
         </script>
-{% endblock %}
+    </head>
+    <body>
 
-{% block content %}
+    {% include 'header.html' %}
+
     {% if form.errors %}
         <div id="errors">
         Please correct the following errors:
@@ -568,6 +568,6 @@
 
         </form>
     </div>
-{% endblock %}
-
+    </body>
+</html>
 
