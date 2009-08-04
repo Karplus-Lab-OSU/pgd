@@ -1,11 +1,13 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
+{% extends 'search_base.html' %}
 
-<html>
-    <head>
-        <!--<link rel="stylesheet" href="http://dev.jquery.com/view/tags/ui/latest/themes/flora/flora.all.css" type="text/css" media="screen" title="Flora (Default)"-->
+{% block head %}
         <style>
 		
+            #content {
+                width:100%;
+                text-align:left;
+            }
+
 			.qtip-image {
 				padding: 10px;
 			}
@@ -24,6 +26,7 @@
 
             TH {
                 padding-left:30px;
+                text-align:center;
             }
 
             TD.field {
@@ -112,7 +115,6 @@
             }
         </style>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.3.2.js"></script>
 		<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
 
         <script type="text/javascript">
@@ -425,11 +427,9 @@
 
 		
         </script>
-    </head>
-    <body>
+{% endblock %}
 
-    {% include 'header.html' %}
-
+{% block content %}
     {% if form.errors %}
         <div id="errors">
         Please correct the following errors:
@@ -554,7 +554,7 @@
             <tr class="spacer"/>
             <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles ▸</td></tr>
                 <tr class="angles_row">
-                    <td class="label">C&#x207B;&#x00B9;NC&#x1D5D;</td>
+                    <td class="label">C&#x207B;&#x00B9;NC&#x1D45;</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a1}}{{r.a1_i}}
@@ -663,6 +663,5 @@
 	<div id="helpPage">
 		{% include 'qtiphelp.html' %}
 	</div>				
-	</body>
-</html>
+{% endblock %}
 
