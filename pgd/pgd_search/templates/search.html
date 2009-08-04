@@ -130,7 +130,6 @@
 			function sizeChange(evt){
                 oldValue = parseInt($('#oldLength').val());
                 newValue = parseInt($('#id_residues').val());
-				console.log("Drop Down Box Value: "+newValue);
                 if (oldValue != newValue) {			
 					if(qtipTotal!=0){
 						qtipTotal = 0;
@@ -257,11 +256,9 @@
 					sign = currentID.substring(currentID.length-2,currentID.length-1);
 					if(col==Math.ceil(parseInt($('#id_residues').val()/2)) && col!= null && col!='' && sign!='-'){
 						qtipTotal=qtipTotal+1;
-						console.log("Number of 'tips: " + qtipTotal);
 						currentID = currentID.substring(0, currentID.length - 1 );
 						target = currentID.replace('-','');
 						target = ('#' + target + col);
-						console.log('Target: '+target);
 						helpName = currentID.substring(3, currentID.length - 1 );
 						helpName = helpName.replace('_','');
 						helpName = '#' + helpName.replace(' ','');
@@ -410,13 +407,10 @@
 					rowTarget = event.target.parentNode.id;
 				}
 				if(rowTarget!=''){
-				console.log("Event ID: " + rowTarget);
 				rowTarget = rowTarget.substring(0, rowTarget.length-1);
 				rowTarget = rowTarget.replace('-','');
 				rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
 				rowTarget = rowTarget.replace(' ','');
-				console.log("Fancy Target: " + rowTarget);
-				console.log("Is Defined!");
 				if(rowTarget!=qtipState){
 					$('div.qtip').qtip('hide');			
 					$(rowTarget).qtip('show');	
