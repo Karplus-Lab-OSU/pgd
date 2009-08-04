@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
-from static import AA_CHOICES, SS_CHOICES, Subscripter
+from pgd_constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
 import re
 from math import ceil
