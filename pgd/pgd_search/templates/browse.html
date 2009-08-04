@@ -1,302 +1,294 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
-
+{% extends 'search_base.html' %}
 {% load search_extras %}
 
-<html>
-    <head>
-        <style>
+{% block head %}  
+    <style>
 
-            table#results {
-                border-collapse:collapse;
-                border-spacing:0px;
-                margin-top:20px;
+        table#results {
+            border-collapse:collapse;
+            border-spacing:0px;
+            margin-top:20px;
 
-                /* Reset alignment to compensate for 'text-align:center': */
-                text-align: left;
-                /* Specify the width of the element. This should be the same
-                    as 'body min-width': */
-                width: 500px;
-                /* Set left and right margins to auto, thus centering the 
-                    element in the containing (body) tag: */
-                margin-left: auto;
-                margin-right: auto;
-            }
+            /* Reset alignment to compensate for 'text-align:center': */
+            text-align: left;
+            /* Specify the width of the element. This should be the same
+                as 'body min-width': */
+            width: 500px;
+            /* Set left and right margins to auto, thus centering the 
+                element in the containing (body) tag: */
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-            .borderRight {
-                border-right:1px solid black;
-            }
-            .borderLeft {
-                border-left:1px solid black;
-            }
+        .borderRight {
+            border-right:1px solid black;
+        }
+        .borderLeft {
+            border-left:1px solid black;
+        }
 
-            td {
-                border-right:1px dotted #888888;
-                padding:.3em;
-                text-align:center;
-            }
+        td {
+            border-right:1px dotted #888888;
+            padding:.3em;
+            text-align:center;
+        }
 
-            tr.header {
-                border: 1px solid black;
-            }
+        tr.header {
+            border: 1px solid black;
+        }
 
-            tr.spacer-top {
-                height:10px;
-                border-bottom:1px solid black;
-            }
+        tr.spacer-top {
+            height:10px;
+            border-bottom:1px solid black;
+        }
 
-            tr.spacer-bottom{
-                height:20px;
-                border-top: 1px solid black;
-            }
+        tr.spacer-bottom{
+            height:20px;
+            border-top: 1px solid black;
+        }
 
-            {% for color in indexColors %}
-                .index{{forloop.counter0}}, .index-{{forloop.counter0}}{
-                    background-color:#{{color.0}}{{color.1}}{{color.2}};
-                    border-left:1px solid black;
-                    border-right:1px solid black;
-                }
-            {% endfor %}
-
-            tr.selected, td.col_selected {
-                color:black;
-                background-color:#3a76f1;
-            }
-
-            th {
-                padding-left:4px;
-                padding-right:4px;
-                background-color:#fff6d5;
-                border-right:1px dotted black;
-                color:black;
-                white-space: nowrap;
-                text-align:center;
-            }
-
-            th.col_selected {
-                background-color:#3a76f1;
-            }
-
-            td.selected {
-                background-color:#3a76f1;
-                color:white;
-                border-bottom: 1px solid black;
-            }
-
-            tr.fields {
-                border-top:1px solid black;
+        {% for color in indexColors %}
+            .index{{forloop.counter0}}, .index-{{forloop.counter0}}{
+                background-color:#{{color.0}}{{color.1}}{{color.2}};
                 border-left:1px solid black;
                 border-right:1px solid black;
-                border-bottom:1px solid black;
             }
+        {% endfor %}
 
-            a.pagination { 
-                border: 1px solid #3a76f1;
-                padding: 2px 4px 2px 4px;
-            }
+        tr.selected, td.col_selected {
+            color:black;
+            background-color:#3a76f1;
+        }
 
-            .current_page {
-                color:white;
-                background-color:#3a76f1;
-                border: 1px solid blue;
-                padding: 2px 4px 2px 4px;
-                font-style:bold;
-            }
+        th {
+            padding-left:4px;
+            padding-right:4px;
+            background-color:#fff6d5;
+            border-right:1px dotted black;
+            color:black;
+            white-space: nowrap;
+            text-align:center;
+        }
 
-            a.pagination:link { 
-                color:#3a76f1; 
-                text-decoration:none;
-            }
-            a.pagination:visited           { color:#3a76f1; text-decoration:none; }
-            a.pagination:hover             { 
-                color:black; 
-                text-decoration:none; 
-                border-color:black;
-            }
-            a.pagination:active            { color:#3a76f1; text-decoration:none;}
+        th.col_selected {
+            background-color:#3a76f1;
+        }
 
-            #page_jump {
-                width:2.9em;
-                margin-left:3px;
-                margin-right:3px;
-            }
-        </style>
+        td.selected {
+            background-color:#3a76f1;
+            color:white;
+            border-bottom: 1px solid black;
+        }
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
+        tr.fields {
+            border-top:1px solid black;
+            border-left:1px solid black;
+            border-right:1px solid black;
+            border-bottom:1px solid black;
+        }
 
+        a.pagination { 
+            border: 1px solid #3a76f1;
+            padding: 2px 4px 2px 4px;
+        }
 
-        <script type="text/javascript">
-            var id = '';
-            var attribute = '';
-            var offset = '';
-            var result = '';
+        .current_page {
+            color:white;
+            background-color:#3a76f1;
+            border: 1px solid blue;
+            padding: 2px 4px 2px 4px;
+            font-style:bold;
+        }
 
-            function dOver(element){
-                id = element.id;
-                re = /^data_([\w]+)_([-\w]+)/;
-                matches = re.exec(id);
-                attribute = "td." +matches[1];
-                offset = parseInt(matches[2])+1;
-                result = element.parentNode.parentNode.parentNode.id
+        a.pagination:link { 
+            color:#3a76f1; 
+            text-decoration:none;
+        }
+        a.pagination:visited           { color:#3a76f1; text-decoration:none; }
+        a.pagination:hover             { 
+            color:black; 
+            text-decoration:none; 
+            border-color:black;
+        }
+        a.pagination:active            { color:#3a76f1; text-decoration:none;}
 
-                //highlight same result in other tables
-                $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).addClass('selected');
-                $('tr.header th.'+matches[1]).addClass('col_selected');
-            }
+        #page_jump {
+            width:2.9em;
+            margin-left:3px;
+            margin-right:3px;
+        }
+    </style>
 
-            function dOut(){
-                $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).removeClass('selected');
-                $('tr.header th.col_selected').removeClass('col_selected');
-            }
+    <script type="text/javascript">
+        var id = '';
+        var attribute = '';
+        var offset = '';
+        var result = '';
 
-            $(document).ready(function() {
-                // replace invalid values with something to make them stand out from valid data
-                $("td:contains('999.90')").html('--');
-                $("td:contains('0.000')").html('--');
-                $("td:contains('0.00')").html('--');
-            });
+        function dOver(element){
+            id = element.id;
+            re = /^data_([\w]+)_([-\w]+)/;
+            matches = re.exec(id);
+            attribute = "td." +matches[1];
+            offset = parseInt(matches[2])+1;
+            result = element.parentNode.parentNode.parentNode.id
 
-        </script>
-    </head>
-    <body>
-        {% include 'header.html' %}
-            <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
-            <div class="pagination">
-                <span class="step-links">
-                    {% if segments.has_previous %}
-                        <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
-                    {% endif %}
+            //highlight same result in other tables
+            $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).addClass('selected');
+            $('tr.header th.'+matches[1]).addClass('col_selected');
+        }
 
-                    <span class="current">
-                        {% for section in pages %}
-                            {% if section %}
-                                {% if not forloop.first %}...{% endif%}
-                                {% for page in section %}
-                                    {% ifequal page segments.number %}
-                                        <span class="current_page">{{page}}</span>
-                                    {% else %}
-                                        <a class="pagination " href="?page={{ page }}">{{page}}</a>
-                                    {%endifequal%}
-                                {% endfor %}
-                            {% endif %}
+        function dOut(){
+            $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).removeClass('selected');
+            $('tr.header th.col_selected').removeClass('col_selected');
+        }
+
+        $(document).ready(function() {
+            // replace invalid values with something to make them stand out from valid data
+            $("td:contains('999.90')").html('--');
+            $("td:contains('0.000')").html('--');
+            $("td:contains('0.00')").html('--');
+        });
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+    <div class="pagination">
+        <span class="step-links">
+            {% if segments.has_previous %}
+                <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
+            {% endif %}
+
+            <span class="current">
+                {% for section in pages %}
+                    {% if section %}
+                        {% if not forloop.first %}...{% endif%}
+                        {% for page in section %}
+                            {% ifequal page segments.number %}
+                                <span class="current_page">{{page}}</span>
+                            {% else %}
+                                <a class="pagination " href="?page={{ page }}">{{page}}</a>
+                            {%endifequal%}
                         {% endfor %}
-                    </span>
-
-                    {% if segments.has_next %}
-                        <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
                     {% endif %}
-                </span>
-            </div>
-
-            <table id="results" >
-                <thead>
-
-                </thead>
-                <tbody>
-                {% for segment in segments.object_list %}
-                    <!--tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'-->
-
-                    {% if forloop.counter0|divisibleby:5 %}
-                        <tr class="header">
-                            <th>Match  </th>
-                            <th>Code</th>
-                            <th>Residue</th>
-                            <th>ID</th>
-                            <th>Chain ID</th>
-                            <th class='aa'>AA</th>
-                            <th class='a1 borderLeft'>C&#x207B;&#x00B9;NC&#x1D5D;</th>
-                            <th class='a2'>NC&#x1D45;C&#x1D5D;</th>
-                            <th class='a3'>NC&#x1D45;C</th>
-                            <th class='a4'>C&#x1D5D;C&#x1D45;C</th>
-                            <th class='a5'>C&#x1D45;CO</th>
-                            <th class='a6'>C&#x1D45;CN&#x207A;&#x00B9;</th>
-                            <th class='a7 borderRight'>OCN&#x207A;&#x00B9;</th>
-                            <th class='l1'>C&#x207B;&#x00B9;N</th>
-                            <th class='l2'>NC&#x1D45;</th>
-                            <th class='l3'>C&#x1D45;C&#x1D5D;</th>
-                            <th class='l4'>C&#x1D45;C</th>
-                            <th class='l5 borderRight'>CO</th>
-                            <th class='ss'>ss</th>
-                            <th class='phi'>&#x03D5;</th>
-                            <th class='psi'>&#x03A8;</th>
-                            <th class='ome'>&#x03C9;</th>
-                            <th class='chi'>&#x03C7;</th>
-                            <th class='bm'>B&#x1d50;</th>
-                            <th class='bs'>B&#x02E2;&#x1D9C;</th>
-                            <th class='bg'>B&#x1D5E;</th>
-                            <th class='hbond'>H Bond</th>
-                            <th class='zeta'>&#x03B6;</th>
-                        </tr>
-                    {% else %}
-                        <tr class="spacer-top"/>
-                    {% endif %}
-                    {% for r in segment.residueProxies|slice:segmentSlice %}
-                        <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
-                            <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
-                            <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
-                            <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
-                            <td>{{r.oldID}}</td>
-                            <td>{{segment.chainID}}</td>
-                            <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
-                            <td id="data_a1_{{forloop.counter}}" class="data a1 borderLeft" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:1}}</td>
-                            <td id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:1}}</td>
-                            <td id="data_a3_{{forloop.counter}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|floatformat:1}}</td>
-                            <td id="data_a4_{{forloop.counter}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|floatformat:1}}</td>
-                            <td id="data_a5_{{forloop.counter}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|floatformat:1}}</td>
-                            <td id="data_a6_{{forloop.counter}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|floatformat:1}}</td>
-                            <td id="data_a7_{{forloop.counter}}" class="data a7 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|floatformat:1}}</td>
-                            <td id="data_l1_{{forloop.counter}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|floatformat:3}}</td>
-                            <td id="data_l2_{{forloop.counter}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|floatformat:3}}</td>
-                            <td id="data_l3_{{forloop.counter}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|floatformat:3}}</td>
-                            <td id="data_l4_{{forloop.counter}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|floatformat:3}}</td>
-                            <td id="data_l5_{{forloop.counter}}" class="data l5 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|floatformat:3}}</td>
-                            <td id="data_ss_{{forloop.counter}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
-                            <td id="data_phi_{{forloop.counter}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|floatformat:2}}</td>
-                            <td id="data_psi_{{forloop.counter}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|floatformat:2}}</td>
-                            <td id="data_ome_{{forloop.counter}}" class="data ome" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ome|floatformat:2}}</td>
-                            <td id="data_chi_{{forloop.counter}}" class="data chi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi|floatformat:2}}</td>
-                            <td id="data_bm_{{forloop.counter}}" class="data bm" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bm|floatformat:2}}</td>
-                            <td id="data_bs_{{forloop.counter}}" class="data bs" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bs|floatformat:2}}</td>
-                            <td id="data_bg_{{forloop.counter}}" class="data bg" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bg|floatformat:2}}</td>
-                            <td id="data_hbond_{{forloop.counter}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|floatformat:2}}</td>
-                            <td id="data_zeta_{{forloop.counter}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|floatformat:2}}</td>
-                        </tr>
-
-                    {% endfor %}
-                    <tr class="spacer-bottom"/>
-                <!--/tbody>
-                <tbody><tr class="spacer"/></tbody-->
                 {% endfor %}
-                </tbody>
-            </table>
+            </span>
 
-            <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
-            <div class="pagination">
-                <span class="step-links">
-                    {% if segments.has_previous %}
-                        <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
-                    {% endif %}
+            {% if segments.has_next %}
+                <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
+            {% endif %}
+        </span>
+    </div>
 
-                    <span class="current">
-                        {% for section in pages %}
-                            {% if section %}
-                                {% if not forloop.first %}...{% endif%}
-                                {% for page in section %}
-                                    {% ifequal page segments.number %}
-                                        <span class="current_page">{{page}}</span>
-                                    {% else %}
-                                        <a class="pagination " href="?page={{ page }}">{{page}}</a>
-                                    {%endifequal%}
-                                {% endfor %}
-                            {% endif %}
+    <table id="results" >
+        <thead>
+
+        </thead>
+        <tbody>
+        {% for segment in segments.object_list %}
+            <!--tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'-->
+
+            {% if forloop.counter0|divisibleby:5 %}
+                <tr class="header">
+                    <th>Match  </th>
+                    <th>Code</th>
+                    <th>Residue</th>
+                    <th>ID</th>
+                    <th>Chain ID</th>
+                    <th class='aa'>AA</th>
+                    <th class='a1 borderLeft'>C&#x207B;&#x00B9;NC&#x1D5D;</th>
+                    <th class='a2'>NC&#x1D45;C&#x1D5D;</th>
+                    <th class='a3'>NC&#x1D45;C</th>
+                    <th class='a4'>C&#x1D5D;C&#x1D45;C</th>
+                    <th class='a5'>C&#x1D45;CO</th>
+                    <th class='a6'>C&#x1D45;CN&#x207A;&#x00B9;</th>
+                    <th class='a7 borderRight'>OCN&#x207A;&#x00B9;</th>
+                    <th class='l1'>C&#x207B;&#x00B9;N</th>
+                    <th class='l2'>NC&#x1D45;</th>
+                    <th class='l3'>C&#x1D45;C&#x1D5D;</th>
+                    <th class='l4'>C&#x1D45;C</th>
+                    <th class='l5 borderRight'>CO</th>
+                    <th class='ss'>ss</th>
+                    <th class='phi'>&#x03D5;</th>
+                    <th class='psi'>&#x03A8;</th>
+                    <th class='ome'>&#x03C9;</th>
+                    <th class='chi'>&#x03C7;</th>
+                    <th class='bm'>B&#x1d50;</th>
+                    <th class='bs'>B&#x02E2;&#x1D9C;</th>
+                    <th class='bg'>B&#x1D5E;</th>
+                    <th class='hbond'>H Bond</th>
+                    <th class='zeta'>&#x03B6;</th>
+                </tr>
+            {% else %}
+                <tr class="spacer-top"/>
+            {% endif %}
+            {% for r in segment.residueProxies|slice:segmentSlice %}
+                <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
+                    <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
+                    <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
+                    <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
+                    <td>{{r.oldID}}</td>
+                    <td>{{segment.chainID}}</td>
+                    <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
+                    <td id="data_a1_{{forloop.counter}}" class="data a1 borderLeft" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|floatformat:1}}</td>
+                    <td id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|floatformat:1}}</td>
+                    <td id="data_a3_{{forloop.counter}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|floatformat:1}}</td>
+                    <td id="data_a4_{{forloop.counter}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|floatformat:1}}</td>
+                    <td id="data_a5_{{forloop.counter}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|floatformat:1}}</td>
+                    <td id="data_a6_{{forloop.counter}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|floatformat:1}}</td>
+                    <td id="data_a7_{{forloop.counter}}" class="data a7 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|floatformat:1}}</td>
+                    <td id="data_l1_{{forloop.counter}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|floatformat:3}}</td>
+                    <td id="data_l2_{{forloop.counter}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|floatformat:3}}</td>
+                    <td id="data_l3_{{forloop.counter}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|floatformat:3}}</td>
+                    <td id="data_l4_{{forloop.counter}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|floatformat:3}}</td>
+                    <td id="data_l5_{{forloop.counter}}" class="data l5 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|floatformat:3}}</td>
+                    <td id="data_ss_{{forloop.counter}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
+                    <td id="data_phi_{{forloop.counter}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|floatformat:2}}</td>
+                    <td id="data_psi_{{forloop.counter}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|floatformat:2}}</td>
+                    <td id="data_ome_{{forloop.counter}}" class="data ome" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ome|floatformat:2}}</td>
+                    <td id="data_chi_{{forloop.counter}}" class="data chi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi|floatformat:2}}</td>
+                    <td id="data_bm_{{forloop.counter}}" class="data bm" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bm|floatformat:2}}</td>
+                    <td id="data_bs_{{forloop.counter}}" class="data bs" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bs|floatformat:2}}</td>
+                    <td id="data_bg_{{forloop.counter}}" class="data bg" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bg|floatformat:2}}</td>
+                    <td id="data_hbond_{{forloop.counter}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|floatformat:2}}</td>
+                    <td id="data_zeta_{{forloop.counter}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|floatformat:2}}</td>
+                </tr>
+
+            {% endfor %}
+            <tr class="spacer-bottom"/>
+        <!--/tbody>
+        <tbody><tr class="spacer"/></tbody-->
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+    <div class="pagination">
+        <span class="step-links">
+            {% if segments.has_previous %}
+                <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
+            {% endif %}
+
+            <span class="current">
+                {% for section in pages %}
+                    {% if section %}
+                        {% if not forloop.first %}...{% endif%}
+                        {% for page in section %}
+                            {% ifequal page segments.number %}
+                                <span class="current_page">{{page}}</span>
+                            {% else %}
+                                <a class="pagination " href="?page={{ page }}">{{page}}</a>
+                            {%endifequal%}
                         {% endfor %}
-                    </span>
-
-                    {% if segments.has_next %}
-                        <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
                     {% endif %}
-                </span>
-            </div>
+                {% endfor %}
+            </span>
 
-    </body>
-</html>
+            {% if segments.has_next %}
+                <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
+            {% endif %}
+        </span>
+    </div>
+{% endblock %}

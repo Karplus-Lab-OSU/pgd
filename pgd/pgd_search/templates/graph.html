@@ -1,8 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
+{% extends 'search_base.html' %}
 
-<html>
-    <head>
+{% block head %}    
         <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
         <style>
 
@@ -147,9 +145,7 @@
             }
         </style>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.3.2.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
-
         <script type="text/javascript">
             var stats = {};
             var fix = 0.5;
@@ -343,95 +339,88 @@
                 $('div#binDetails').hide();
             }
         </script>
-    </head>
-    <body>
-        {% include 'header.html' %}
-        <div id="content">
-
-            <div id="canvas_container">
-                <div id="ajax_progress">
-                    <div>
-                    <img src="{{MEDIA_URL}}/images/ajax-loader.gif"/>
-                    <h1>Generating Plot</h1>
-                    </div>
-                </div>
-                <div id="canvas"></div>
+{% endblock %}
+{% block content %}
+    <div id="canvas_container">
+        <div id="ajax_progress">
+            <div>
+            <img src="{{MEDIA_URL}}/images/ajax-loader.gif"/>
+            <h1>Generating Plot</h1>
             </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
 
-            <ul id="errors"></ul>
-            <div id="buttons">
-                <button id="button-plot" class="field">Plot</button>
-                <button id="button-save">Save</button>
-                <button id="button-data">Data</button>
-            </div>
-            <form id="plotform" name="plot">
-                <table id="controls">
-                    <tbody>
-                    <tr><td class="header" colspan="100%">General</td></tr>
-                    <tr>
-                        <td class="label">Plotted Attribute</td>
-                        {% autoescape off %}
-                        <td>{{form.attribute}}</td>
-                        {% endautoescape %}
-                        <td class="label col2">Reference</td>
-                        <td>{{form.reference}}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">X Axis</td>
-                        <td>{{form.xProperty}}</td>
-                        <td class="label col2">X Min, Max</td>
-                        <td>{{form.x}}{{form.x1}}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Y Axis</td>
-                        <td>{{form.yProperty}}</td>
-                        <td class="label col2">Y Min, Max</td>
-                        <td>{{form.y}}{{form.y1}}</td>
-                    </tr>
-                    <tr>
-                        <td class="label">Residue</td>
-                        <td>{{form.residue}}</td>
-                        <td class="label col2">Bin X, Y</td>
-                        <td>{{form.xBin}}{{form.yBin}}</td>
-                    </tr>
+    <ul id="errors"></ul>
+    <div id="buttons">
+        <button id="button-plot" class="field">Plot</button>
+        <button id="button-save">Save</button>
+        <button id="button-data">Data</button>
+    </div>
+    <form id="plotform" name="plot">
+        <table id="controls">
+            <tbody>
+            <tr><td class="header" colspan="100%">General</td></tr>
+            <tr>
+                <td class="label">Plotted Attribute</td>
+                {% autoescape off %}
+                <td>{{form.attribute}}</td>
+                {% endautoescape %}
+                <td class="label col2">Reference</td>
+                <td>{{form.reference}}</td>
+            </tr>
+            <tr>
+                <td class="label">X Axis</td>
+                <td>{{form.xProperty}}</td>
+                <td class="label col2">X Min, Max</td>
+                <td>{{form.x}}{{form.x1}}</td>
+            </tr>
+            <tr>
+                <td class="label">Y Axis</td>
+                <td>{{form.yProperty}}</td>
+                <td class="label col2">Y Min, Max</td>
+                <td>{{form.y}}{{form.y1}}</td>
+            </tr>
+            <tr>
+                <td class="label">Residue</td>
+                <td>{{form.residue}}</td>
+                <td class="label col2">Bin X, Y</td>
+                <td>{{form.xBin}}{{form.yBin}}</td>
+            </tr>
 
+        </tbody>
+
+        <tr class="spacer"/>
+        <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>
+        <tbody id="advanced">
+                <tr>
+                    <td class="label">Image Background</td>
+                    <td>{{form.background_color}}</td>
+                    <td class="label">Graph Background</td>
+                    <td>{{form.graph_color}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Text Color</td>
+                    <td>{{form.text_color}}</td>
+                    <td class="label">Bin Shading</td>
+                    <td>{{form.plot_hue}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Height/Width</td>
+                    <td>{{form.height}}{{form.width}}</td>
+                    <td class="label">Hash Color</td>
+                    <td>{{form.hash_color}}</td>
+                </tr>
                 </tbody>
-
-                <tr class="spacer"/>
-                <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>
-                <tbody id="advanced">
-                        <tr>
-                            <td class="label">Image Background</td>
-                            <td>{{form.background_color}}</td>
-                            <td class="label">Graph Background</td>
-                            <td>{{form.graph_color}}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Text Color</td>
-                            <td>{{form.text_color}}</td>
-                            <td class="label">Bin Shading</td>
-                            <td>{{form.plot_hue}}</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Height/Width</td>
-                            <td>{{form.height}}{{form.width}}</td>
-                            <td class="label">Hash Color</td>
-                            <td>{{form.hash_color}}</td>
-                        </tr>
-                        </tbody>
-                </table>
-            </form>
-        </div>
-
-        <div id="binDetails">
-            <table>
-                <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
-                <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
-                <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
-                <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
-                <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
-            </table>
-        </div>
-
-    </body>
-</html>
+        </table>
+    </form>
+    <div id="binDetails">
+        <table>
+            <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+            <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+            <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
+            <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
+            <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
+        </table>
+    </div>
+{% endblock %}
