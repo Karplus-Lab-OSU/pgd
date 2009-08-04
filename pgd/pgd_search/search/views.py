@@ -286,4 +286,7 @@ def saved(request):
 
 def help(request):
     return render_to_response('help.html', context_instance=RequestContext(request))
+	
+def qtiphelp(request):
+    return render_to_response('qtiphelp.html', context_instance=RequestContext(request))
  
