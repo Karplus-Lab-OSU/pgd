@@ -222,7 +222,7 @@ class ConfDistPlot():
             # Calculate bin stats for each field
             for field,fieldString in self.fields:
 
-                # Skip axes fields, unless 'all' is the indicated field
+                # Skip axes fields, unless 'll' is the indicated field
                 #  (This reduces unnecessary stats calculations)
                 if self.ref != 'all' and field in (self.xTextString, self.yTextString): continue
 
