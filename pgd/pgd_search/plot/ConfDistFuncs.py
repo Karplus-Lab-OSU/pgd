@@ -9,7 +9,7 @@
 
 from pgd_core.models import *
 from pgd_search.models import *
-from constants import *
+from pgd_constants import *
 import math
 
 ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
@@ -330,7 +330,7 @@ class ConfDistPlot():
                     bin['pixCoords']['height'],
                     fill,
                     fill,
-                    bin,
+                    bin['count'],
                     key,
                 ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
             )
@@ -434,69 +434,67 @@ class ConfDistPlot():
 # ******************************************************
 def RefDefaults():
     return {
-                'phi': {'ref':180, 'stepsize':1, 'custom':False},
-                'Observations': [-10, -7, -4, -1, 2, 5, 8, 10, 10 ],
-                'L1': { 
-                        'ref':1.330, 
-                        'stepsize':0.0025, 
-                        'custom': 
-                        False},
-                'L2': { 
-                        'ref': 1.465, 
-                        'custom':False,
-                        'stepsize':0.005},
-                'L3': { 
-                        'ref': 1.530,
-                        'custom':False,
-                        'stepsize':0.005},
-                'L4': { 
-                        'ref':1.525,
-                        'custom':False,
-                        'stepsize':0.005},
-                'L5': { 
-                        'ref': 1.240,
-                        'custom':False,
-                        'stepsize':0.005},
-                'L6': { 
-                        'ref': 1.330,
-                        'custom':False,
-                        'stepsize':0.005},
-                'L7': { 
+                'phi': {'stepsize':10},
+                'L1': {
+                        'stepsize':0.0025,
+                        'min':1,
+                        'max':2,},
+                'L2': {
+                        'stepsize':0.005,
+                        'min':1,
+                        'max':2},
+                'L3': {
+                        'stepsize':0.005,
+                        'min':1,
+                        'max':2
+                        },
+                'L4': {
+                        'stepsize':0.005,
+                        'min':1,
+                        'max':2},
+                'L5': {
+                        'stepsize':0.005,
+                        'min':1,
+                        'max':2},
+                'L6': {
+                        'stepsize':0.005,
+                        'min':1,
+                        'max':2},
+                'L7': {
                         'ref': 1.465,
-                        'custom':False,
-                        'stepsize':0.005},
-                'a1': { 
-                        'ref': 121,
-                        'custom':False,
-                        'stepsize':1},
-                'a2': { 
-                        'ref': 110,
-                        'custom':False,
-                        'stepsize':1},
-                'a3': { 
-                        'ref': 110,
-                        'custom':False,
-                        'stepsize':1},
-                'a4': { 
-                        'ref': 110,
-                        'custom':False,
-                        'stepsize':1},
-                'a5': { 
-                        'ref': 120,
-                        'custom':False,
-                        'stepsize':0.5},
-                'a6': { 
-                        'ref': 117,
-                        'custom':False,
-                        'stepsize':1},
-                'a7': { 
-                        'ref': 123,
-                        'custom':False,
-                        'stepsize':1},
-                'ome': { 
-                        'ref': 180,
-                        'custom':False,
-                        'stepsize':1}
+                        'stepsize':0.005,
+                        'min':1,
+                        'max':2},
+                'a1': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'a2': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'a3': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'a4': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'a5': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'a6': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'a7': {
+                        'min':0,
+                        'max':180,
+                        'stepsize':10},
+                'ome':{
+                        'stepsize':10}
                 }
 
 if __name__ == "__main__":

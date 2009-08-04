@@ -1,5 +1,5 @@
 from django.db import models
-from constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
+from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 
 # Protein model
 # (was 'protein_info')

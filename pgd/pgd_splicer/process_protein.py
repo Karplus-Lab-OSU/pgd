@@ -40,9 +40,10 @@ class ParallelProteinImportTask(ParallelTask):
     """
     description = 'Wrapper around ProteinImportTask to make it run in Parallel'
 
-    def __init__(self, msg):
-        ParallelTask.__init__(self, msg)
+    def __init__(self):
+        ParallelTask.__init__(self)
         self.subtask = ProteinImportTask()
+        logger.debug( self.__dict__ )
 
 
 
@@ -76,4 +77,4 @@ if __name__ == '__main__':
             sys.exit(0)
 
     print pdbs
-    task._work(**{'data':pdbs})
+    task.work(**{'data':pdbs})

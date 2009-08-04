@@ -1,8 +1,9 @@
-import cairo
+import cairo, simplejson
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.conf import settings
 from django.shortcuts import render_to_response
+import simplejson
 
 from PlotForm import PlotForm
 from ConfDistFuncs import *
@@ -30,6 +31,7 @@ LABEL_REPLACEMENTS = {
             'h_bond_energy':'H Bond'
             }
 
+#ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7')
 
 """
 Renders a conformational distribution graph
@@ -93,7 +95,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     xlabel_y = y+graph_height+hashsize*2+(3*ratio)
     for i in range(5):
         #text value
-        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i + 180)
+        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i)
         #drop decimal if value is an integer
         xtext = '%i' % local_int(xtext) if not xtext%1 else '%.1f' %  xtext
         #get X coordinate of hash, offsetting for length of text
@@ -104,7 +106,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
 
         #text value
         #ytext = yEnd - ystep*i
-        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i + 180)
+        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i)
         #drop decimal if value is an integer
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
@@ -247,64 +249,70 @@ def renderToPNG(request):
     return response
 
 
-"""
-render conf dist plot using jquery.svg
-"""
-def renderToSVG(request):
+
+def plot(request):
+    """
+    Draws the plot page.  The plot page will rely on AJAX calls to 
+    render the graph
+    """
+    form = PlotForm() # An unbound form
 
     response_dict = {
-        'referenceValues' : RefDefaults(),
-        }
-
-    if request.method == 'POST': # If the form has been submitted
-        form = PlotForm(request.POST) # A form bound to the POST data
-        if form.is_valid(): # All validation rules pass
-            data = form.cleaned_data
-            svg, boxes = drawGraph(
-                        request,
-                        int(data['height']),
-                        int(data['width']),
-                        data['x'],
-                        data['y'],
-                        data['x1'],
-                        data['y1'],
-                        data['attribute'],
-                        data['xProperty'],
-                        data['yProperty'],
-                        data['reference'],
-                        int(data['residue']),
-                        data['xBin'],
-                        data['yBin'],
-                        data['background_color'],
-                        data['graph_color'],
-                        data['text_color'],
-                        data['plot_hue'],
-                        data['hash_color'])
-
-            # get values out of the form
-            response_dict['xProperty'] = form.cleaned_data['xProperty']
-            response_dict['yProperty'] =form.cleaned_data['yProperty']
-            response_dict['xBin'] = form.cleaned_data['xBin']
-            response_dict['yBin'] = form.cleaned_data['yBin']
-            response_dict['attribute'] = form.cleaned_data['attribute']
-
-    else:
-        form = PlotForm() # An unbound form
-        svg,boxes = drawGraph(request)
-
-        # get default values from the form
-        response_dict['xProperty'] = form.fields['xProperty'].initial
-        response_dict['yProperty'] = form.fields['yProperty'].initial
-        response_dict['xBin'] = form.fields['xBin'].initial
-        response_dict['yBin'] = form.fields['yBin'].initial
-        response_dict['attribute'] = form.fields['attribute'].initial
-
-    response_dict['form']         = form
-    response_dict['svg']          = svg
-    response_dict['boxes']        = boxes
+        'defaults' : simplejson.dumps(RefDefaults()),
+        'xProperty': form.fields['xProperty'].initial,
+        'yProperty': form.fields['yProperty'].initial,
+        'xBin': form.fields['xBin'].initial,
+        'yBin': form.fields['yBin'].initial,
+        'attribute': form.fields['attribute'].initial,
+        'form': form
+    }
 
     return render_to_response('graph.html', response_dict, context_instance=RequestContext(request))
 
+def renderToSVG(request):
+    """
+    render conf dist plot using jquery.svg
+    """
+
+    form = PlotForm(request.POST) # A form bound to the POST data
+    if form.is_valid(): # All validation rules pass
+        data = form.cleaned_data
+        svg, boxes = drawGraph(
+                    request,
+                    int(data['height']),
+                    int(data['width']),
+                    data['x'],
+                    data['y'],
+                    data['x1'],
+                    data['y1'],
+                    data['attribute'],
+                    data['xProperty'],
+                    data['yProperty'],
+                    data['reference'],
+                    int(data['residue']),
+                    data['xBin'],
+                    data['yBin'],
+                    data['background_color'],
+                    data['graph_color'],
+                    data['text_color'],
+                    data['plot_hue'],
+                    data['hash_color'])
+
+        json = simplejson.dumps({'background':svg.to_dict(), 'boxes':boxes})
+        return HttpResponse(json)
+
+    else:
+        """
+        Errors in the form - repackage the error list as a list of errors
+        This list can then be json serialized and processed by the javascript
+        on the plot page
+        """
+        errors = []
+        for k, v in form.errors.items():
+            for error in v:
+                errors.append([k, error._proxy____args[0]])
+
+        return HttpResponse(simplejson.dumps({'errors':errors}))
 
 """
 render the results of the search as a TSV (tab separated file)

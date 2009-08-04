@@ -61,6 +61,15 @@ AA3to1 =  {
 }
 
 
+class InvalidResidueException(Exception):
+    """
+    Exception identifying something wrong while processing
+    a protein residue.  this is used to jump to a common error
+    handling routine.
+    """
+    pass
+
+
 class ProcessPDBTask(Task):
     """
     Task that takes a list of pdbs and processes the files extracting
@@ -98,6 +107,7 @@ class ProcessPDBTask(Task):
         """
         try:
             code = data['code']
+            chains = data['chains'] if data.has_key('chains') else None
             print 'DATA', data
             filename = 'pdb%s.ent.gz' % code.lower()
             print '    Processing: ', code
@@ -106,7 +116,7 @@ class ProcessPDBTask(Task):
             data['chains'] = {}
 
             # 1) parse with bioPython
-            data = parseWithBioPython(filename, data)
+            data = parseWithBioPython(filename, data, chains)
             #print 'props: %s' % data
 
             # 2) Create/Get Protein and save values
@@ -175,7 +185,7 @@ class ProcessPDBTask(Task):
             print "*** print_tb:"
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
-            print 'EXCEPTION in Residue', code, e
+            print 'EXCEPTION in Residue', code, e.__class__, e
             transaction.rollback()
             return
 
@@ -183,12 +193,19 @@ class ProcessPDBTask(Task):
         transaction.commit()
 
 
-"""
-Uncompress using the UNIX uncompress command.  The PDB files are stored 
-used LZ algorithms i've tried will not decompress the files properly.
-For now use the linux decompress
-"""
+
 def uncompress(file, src_dir, dest_dir):
+    """
+    Uncompress using the UNIX uncompress command.  PDB files are stored with
+    GZIP.  Python supports GZIP but does not detect errors with incomplete
+    files.  Its faster to just use the GZIP executable as it does not require
+    loading the file into python and then dumping it back to a file.
+
+    @param file: filename to decompress, does not include path
+    @param src_dir: directory of file
+    @param dest_dir: directory to write uncompressed file into
+    """
+
     tempfile = '%s/%s' % (dest_dir, file)
     dest = '%s/%s' % (dest_dir, file[:-3])
     try:
@@ -198,22 +215,29 @@ def uncompress(file, src_dir, dest_dir):
         # decompress using unix decompress.
         os.system('uncompress %s' % tempfile)
 
+        # errors with uncompress won't be detected so we must
+        # check for existence of the file
+        if not os.path.exists(dest):
+            raise Exception('File was not uncompressed')
+
     except:
+        print 'Exception while uncompressing file: %s' % tempfile
         #clean up resulting file on errors
         if os.path.exists(dest):
-            os.path.remove(dest)
+            os.remove(dest)
 
         return False
 
     finally:
         # clean up temp file no matter what
         if os.path.exists(tempfile):
-            os.path.remove(tempfile)
+            print 'tempfile', tempfile
+            os.remove(tempfile)
 
     return dest
 
 
-def parseWithBioPython(file, props):
+def parseWithBioPython(file, props, chains=None):
     """
     Parse values from file that can be parsed using BioPython library
     @return a dict containing the properties that were processed
@@ -235,7 +259,9 @@ def parseWithBioPython(file, props):
         #prep and open file
         decompressedFile = uncompress(file, pdb, tmp)
 
-        if decompressedFile:
+        if not decompressedFile:
+            print 'ERROR: file not decompressed'
+        else:
 
             structure = Bio.PDB.PDBParser().get_structure('pdbname', decompressedFile)
 
@@ -250,173 +276,196 @@ def parseWithBioPython(file, props):
             oldC       = None
 
             for chain in structure[0]:
-                if not chain.get_id() in props['chains']:
+                chain_id = chain.get_id()
+
+                # only process selected chains
+                if chains and not chain_id in chains:
+                    print 'Skipping Chain: %s' % chain_id
+                    continue
+
+                # construct structure for saving chain
+                if not chain_id in props['chains']:
                     residues = {}
-                    props['chains'][chain.get_id()] = residues
+                    props['chains'][chain_id] = residues
                     print 'PROCESSING CHAIN [%s]' % chain, len(chain)
 
                 newID = 0
-                #for res in structure[0].get_residues():
-                for res in chain:
-                    newID += 1
-                    terminal = False
-                    hetflag, res_id, icode = res.get_id()
 
-                    """
-                    Exclude water residues
-                    """
-                    if hetflag != ' ':
-                        #print 'discard'
-                        if oldC:
-                            residues[res_old_id]['terminal_flag'] = True
-                            newID += 1
-                        oldN       = None
-                        oldCA      = None
-                        oldC       = None
-                        continue
-
-                    """
-                    Create dictionary structure and initialize all values.  All
-                    Values are required.  Values that are not filled in will retain
-                    the NO_VALUE value.
-
-                    Store residue properties using OLD_ID as the key to ensure it is
-                    unique.  We're including residues from all chains in the same
-                    dictionary and chainindex may have duplicates.
-                    """
-                    try:
-                        res_dict = residues[res_id]
-                    except KeyError:
-                        # residue didn't exist yet
-                        res_dict = {}
-                        residues[res_id] = res_dict
-                        res_dict['oldID'] = res_id if not icode else '%s%s' % (res_id, icode)
-
-                    length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
-                    angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
-                    dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
-                    initialize_geometry(res_dict, length_list, 'length')
-                    initialize_geometry(res_dict, angles_list, 'angle')
-                    initialize_geometry(res_dict, dihedral_list, 'angle')
-
-
-                    """
-                    Get Properties from DSSP and other per residue properties
-                    """
-                    chain = res.get_parent().get_id()
-                    residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, res_id)]
-                    res_dict['chain_id'] = chain
-                    res_dict['ss'] = secondary_structure
-                    res_dict['aa'] = AA3to1[res.resname]
-                    res_dict['h_bond_energy'] = 0.00
-
-                    """
-                    Get Vectors for mainchain atoms and calculate geometric angles,
-                    dihedral angles, and lengths between them.
-                    """
-                    N    = res['N'].get_vector()
-                    CA   = res['CA'].get_vector()
-                    C    = res['C'].get_vector()
-                    CB   = res['CB'].get_vector() if res.has_id('CB') else None
-                    O    = res['O'].get_vector()
-
-                    if oldC:
-                        # determine if there are missing residues by calculating
-                        # the distance between the current residue and previous
-                        # residue.  If the L1 distance is greater than 2.5 it 
-                        # cannot possibly be the correct order of residues.
-                        L1 = calc_distance(oldC,N)
-
-                        if L1 < 2.5:
-                            # properties that span residues
-                            res_dict['a6'] = calc_angle(oldCA,oldC,N)
-                            res_dict['a7'] = calc_angle(oldO,oldC,N)
-                            residues[res_old_id]['psi'] = calc_dihedral(oldN,oldCA,oldC,N)
-                            residues[res_old_id]['ome'] = calc_dihedral(oldCA,oldC,N,CA)
-                            res_dict['a1']     = calc_angle(oldC,N,CA)
-                            res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
-                            res_dict['L1'] = L1
-                            terminal = False
-
-                    if terminal:
-                        # break in the chain, 
-                        # 1) add terminal flags to both ends of the break so
-                        #    the break can quickly be found.
-                        # 2) skip a number in the new style index.  This allows
-                        #    the break to be visible without checking the 
-                        #    terminal flag
+                try:
+                    for res in chain:
                         newID += 1
-                        res_dict['terminal_flag'] = True
+                        terminal = False
+                        hetflag, res_id, icode = res.get_id()
+                        """
+                        Exclude water residues
+                        Exclude any Residues that are missing _ANY_ of the
+                            mainchain atoms.  Any atom could be missing
+                        """
+                        all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
+                        if hetflag != ' ' or not all_mainchain:
+                            #print 'discard', res_id
+                            raise InvalidResidueException('HetCode or Missing Atom')
+
+                        """
+                        Create dictionary structure and initialize all values.  All
+                        Values are required.  Values that are not filled in will retain
+                        the NO_VALUE value.
+
+                        Store residue properties using OLD_ID as the key to ensure it is
+                        unique.  We're including residues from all chains in the same
+                        dictionary and chainindex may have duplicates.
+                        """
+                        try:
+                            res_dict = residues[res_id]
+                        except KeyError:
+                            # residue didn't exist yet
+                            res_dict = {}
+                            residues[res_id] = res_dict
+                            res_dict['oldID'] = res_id if not icode else '%s%s' % (res_id, icode)
+
+                        length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
+                        angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
+                        dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
+                        initialize_geometry(res_dict, length_list, 'length')
+                        initialize_geometry(res_dict, angles_list, 'angle')
+                        initialize_geometry(res_dict, dihedral_list, 'angle')
+
+
+                        """
+                        Get Properties from DSSP and other per residue properties
+                        """
+                        chain = res.get_parent().get_id()
+                        try:
+                            residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, (hetflag, res_id, icode))]
+                        except KeyError, e:
+                            raise InvalidResidueException('KeyError in DSSP')
+
+                        res_dict['chain_id'] = chain
+                        res_dict['ss'] = secondary_structure
+                        res_dict['aa'] = AA3to1[res.resname]
+                        res_dict['h_bond_energy'] = 0.00
+
+                        """
+                        Get Vectors for mainchain atoms and calculate geometric angles,
+                        dihedral angles, and lengths between them.
+                        """
+                        N    = res['N'].get_vector()
+                        CA   = res['CA'].get_vector()
+                        C    = res['C'].get_vector()
+                        CB   = res['CB'].get_vector() if res.has_id('CB') else None
+                        O    = res['O'].get_vector()
+
+                        if oldC:
+                            # determine if there are missing residues by calculating
+                            # the distance between the current residue and previous
+                            # residue.  If the L1 distance is greater than 2.5 it 
+                            # cannot possibly be the correct order of residues.
+                            L1 = calc_distance(oldC,N)
+
+                            if L1 < 2.5:
+                                # properties that span residues
+                                res_dict['a6'] = calc_angle(oldCA,oldC,N)
+                                res_dict['a7'] = calc_angle(oldO,oldC,N)
+                                residues[res_old_id]['psi'] = calc_dihedral(oldN,oldCA,oldC,N)
+                                residues[res_old_id]['ome'] = calc_dihedral(oldCA,oldC,N,CA)
+                                res_dict['a1']     = calc_angle(oldC,N,CA)
+                                res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
+                                res_dict['L1'] = L1
+                                terminal = False
+
+                        if terminal:
+                            # break in the chain, 
+                            # 1) add terminal flags to both ends of the break so
+                            #    the break can quickly be found.
+                            # 2) skip a number in the new style index.  This allows
+                            #    the break to be visible without checking the 
+                            #    terminal flag
+                            newID += 1
+                            res_dict['terminal_flag'] = True
+                            residues[res_old_id]['terminal_flag'] = True
+
+                        # newID cannot be set until after we determine if it is terminal
+                        res_dict['chainIndex'] = newID
+
+                        res_dict['L2'] = calc_distance(N,CA)
+                        res_dict['L4'] = calc_distance(CA,C)
+                        res_dict['L5'] = calc_distance(C,O)
+                        res_dict['a3'] = calc_angle(N,CA,C)
+                        res_dict['a5'] = calc_angle(CA,C,O)
+
+                        if CB:
+                            res_dict['a2'] = calc_angle(N,CA,CB)
+                            res_dict['a4'] = calc_angle(CB,CA,C)
+                            res_dict['L3'] = calc_distance(CA,CB)
+                            res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
+
+
+                        """
+                        Calculate Bg - bfactor of the 4th atom in Chi1.
+                        """
+                        try:
+                            atom_name = CHI_MAP[res.resname][0][3]
+                            res_dict['bg'] = res[atom_name].get_bfactor()
+                        except KeyError:
+                            # not all residues have chi
+                            pass
+
+
+                        """
+                        Other B Averages
+                            Bm - Average of bfactors in main chain.
+                            Bm - Average of bfactors in side chain.
+                        """
+                        main_chain = []
+                        side_chain = []
+                        for a in res.child_list:
+                            if a.name in ('N', 'CA', 'C', 'O','OXT'):
+                                main_chain.append(a.get_bfactor())
+                            elif a.name in ('H'):
+                                continue
+                            else:
+                                side_chain.append(a.get_bfactor())
+
+                        if main_chain != []:
+                            res_dict['bm'] = sum(main_chain)/len(main_chain)
+
+                        if side_chain != []:
+                            res_dict['bs'] = sum(side_chain)/len(side_chain)
+
+
+                        """
+                        Calculate CHI values.  The mappings for per peptide chi's are stored
+                        in a separate file and a function is used to calculate the chi based
+                        based on the peptide of this residue and the lists of atoms in the
+                        chi mappings.
+                        """
+                        calc_chi(res, res_dict)
+                        if res_dict['chi1']:
+                            res_dict['chi'] = res_dict['chi1']
+
+
+                        """
+                        Reset for next pass.  We save some relationships which span two atoms.
+                        """
+                        res_old_id = res_id
+                        oldN       = N
+                        oldCA      = CA
+                        oldC       = C
+                        oldO       = O
+
+                except InvalidResidueException, e:
+                    # something has gone wrong in the current residue
+                    # indicating that it should be excluded from processing
+                    # log a warning
+                    print 'WARNING: Invalid residue - protein:%s  chain:%s   residue: %s  exception: %s' % (file, chain_id, res.get_id(), e)
+                    if oldC:
                         residues[res_old_id]['terminal_flag'] = True
-
-                    # newID cannot be set until after we determine if it is terminal
-                    res_dict['chainIndex'] = newID
-
-                    res_dict['L2'] = calc_distance(N,CA)
-                    res_dict['L4'] = calc_distance(CA,C)
-                    res_dict['L5'] = calc_distance(C,O)
-                    res_dict['a3'] = calc_angle(N,CA,C)
-                    res_dict['a5'] = calc_angle(CA,C,O)
-
-                    if CB:
-                        res_dict['a2'] = calc_angle(N,CA,CB)
-                        res_dict['a4'] = calc_angle(CB,CA,C)
-                        res_dict['L3'] = calc_distance(CA,CB)
-                        res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
-
-
-                    """
-                    Calculate Bg - bfactor of the 4th atom in Chi1.
-                    """
-                    try:
-                        atom_name = CHI_MAP[res.resname][0][3]
-                        res_dict['bg'] = res[atom_name].get_bfactor()
-                    except KeyError:
-                        # not all residues have chi
-                        pass
-
-
-                    """
-                    Other B Averages
-                        Bm - Average of bfactors in main chain.
-                        Bm - Average of bfactors in side chain.
-                    """
-                    main_chain = []
-                    side_chain = []
-                    for a in res.child_list:
-                        if a.name in ('N', 'CA', 'C', 'O','OXT'):
-                            main_chain.append(a.get_bfactor())
-                        elif a.name in ('H'):
-                            continue
-                        else:
-                            side_chain.append(a.get_bfactor())
-
-                    if main_chain != []:
-                        res_dict['bm'] = sum(main_chain)/len(main_chain)
-
-                    if side_chain != []:
-                        res_dict['bs'] = sum(side_chain)/len(side_chain)
-
-
-                    """
-                    Calculate CHI values.  The mappings for per peptide chi's are stored
-                    in a separate file and a function is used to calculate the chi based
-                    based on the peptide of this residue and the lists of atoms in the
-                    chi mappings.
-                    """
-                    calc_chi(res, res_dict)
-                    if res_dict['chi1']:
-                        res_dict['chi'] = res_dict['chi1']
-
-
-                    """
-                    Reset for next pass.  We save some relationships which span two atoms.
-                    """
-                    res_old_id = res_id
-                    oldN       = N
-                    oldCA      = CA
-                    oldC       = C
-                    oldO       = O
+                        newID += 1
+                    oldN       = None
+                    oldCA      = None
+                    oldC       = None
+                    if residues.has_key(res_id):
+                        del residues[res_id]
 
                 print 'Processed %s residues' % len(residues)
 
