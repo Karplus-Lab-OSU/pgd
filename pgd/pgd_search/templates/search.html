@@ -310,7 +310,7 @@
 							});
 						}	
 					});			
-					$('#protein td>select,#protein td>input').each(function(){	
+					$('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').each(function(){	
 						currentID = $(this).attr('id');
 						currentID = currentID.replace(' ','');
 						if(currentID!='' && currentID!=null && currentID!=undefined){
@@ -382,7 +382,7 @@
 				}
 				
 			}
-			
+					
             $(document).ready(function() {
                 //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});	
 				$('#helpPage').hide();	
@@ -498,7 +498,7 @@
                     }
                 });    
 				
-			$('#protein td>select,#protein td>input').mousedown(function(event){
+			$('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').mousedown(function(event){
 				$clickedOn  = $(event.target);
 				if($clickedOn.is('input')){
 					rowTarget =event.target.id;
