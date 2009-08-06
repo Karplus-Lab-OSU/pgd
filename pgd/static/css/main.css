@@ -6,6 +6,10 @@
     margin: 0px; 
 }
 
+sup {
+    font-size:80%;
+}
+
 input {
     background-color: #ffffff;
     border: 1px solid #d4d4d4;

@@ -113,6 +113,10 @@
                 font-weight:normal;
                 color:red;
             }
+
+            #help {
+                display:none;
+            }
         </style>
 
 		<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
@@ -269,11 +273,11 @@
 						$(this).qtip({
 						position:{
 							adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-									resize: true, 
+									resize: true
 									},
 							corner: {
 									target: 'rightMiddle',
-									tooltip: 'leftMiddle',
+									tooltip: 'leftMiddle'
 									},
 							target: $(target),
 								 },
@@ -290,7 +294,7 @@
 								   corner: 'leftMiddle', 
 								   color: '#a2ddff',
 								   size: { x: 20, y : 15 }
-								   },
+								   }
 							   },
 						show: false,
 						hide: false,
@@ -301,7 +305,7 @@
 										text: titleText,
 										button: 'Close' //Enables a button that closes the qtip
 										}
-								},
+								}
 							});
 						}	
 					});			
@@ -519,7 +523,7 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-                <td class="label">B&#x1d50;</td>
+                <td class="label">B<sup>m</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.bm}}{{r.bm_i}}
@@ -527,7 +531,7 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-                <td class="label">B&#x1D5E;</td>
+                <td class="label">B<sup>g</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.bg}}{{r.bg_i}}
@@ -535,7 +539,7 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-                <td class="label">B&#x02E2;&#x1D9C;</td>
+                <td class="label">B<sup>sc</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.bs}}{{r.bs_i}}
@@ -554,7 +558,7 @@
             <tr class="spacer"/>
             <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles ▸</td></tr>
                 <tr class="angles_row">
-                    <td class="label">C&#x207B;&#x00B9;NC&#x1D45;</td>
+                    <td class="label">C<sup>-1</sup>NC<sup>a</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a1}}{{r.a1_i}}
@@ -562,7 +566,7 @@
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
-                    <td class="label">NC&#x1D45;C&#x1D5D;</td>
+                    <td class="label">NC<sup>a</sup>C<sup>b</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a2}}{{r.a2_i}}
@@ -570,7 +574,7 @@
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
-                    <td class="label">NC&#x1D45;C</td>
+                    <td class="label">NC<sup>a</sup>C</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a3}}{{r.a3_i}}
@@ -578,7 +582,7 @@
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
-                    <td class="label">C&#x1D5D;C&#x1D45;C</td>
+                    <td class="label">C<sup>b</sup>C<sup>a</sup>C</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a4}}{{r.a4_i}}
@@ -586,7 +590,7 @@
                     {% endfor %}
                 </tr>
                 <tr class="angles_row">
-                    <td class="label">C&#x1D45;CO</td>
+                    <td class="label">C<sup>a</sup>CO</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a5}}{{r.a5_i}}
@@ -594,7 +598,7 @@
                     {% endfor %}
                 </tr>
                 <tr class="angles_row">
-                    <td class="label">C&#x1D45;CN&#x207A;&#x00B9;</td>
+                    <td class="label">C<sup>a</sup>CN<sup>+1</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a6}}{{r.a6_i}}
@@ -602,7 +606,7 @@
                     {% endfor %}
                 </tr>
                 <tr class="angles_row">
-                    <td class="label">OCN&#x207A;&#x00B9;</td>
+                    <td class="label">OCN<sup>+1</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a7}}{{r.a7_i}}
@@ -613,7 +617,7 @@
             <tr class="spacer"/>
             <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths ▸</td></tr>
             <tr class="lengths_row">
-                <td class="label">C&#x207B;&#x00B9;N</td>
+                <td class="label">C<sup>-1</sup>N</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L1}}{{r.L1_i}}
@@ -621,7 +625,7 @@
                 {% endfor %}
             </tr>
             <tr class="lengths_row">
-                <td class="label">NC&#x1D45;</td>
+                <td class="label">NC<sup>a</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
@@ -629,7 +633,7 @@
                 {% endfor %}
             </tr>
             <tr class="lengths_row">
-                <td class="label">C&#x1D45;C&#x1D5D;</td>
+                <td class="label">C<sup>a</sup>C<sup>b</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
@@ -637,7 +641,7 @@
                 {% endfor %}
             </tr>
             <tr class="lengths_row">
-                <td class="label">C&#x1D45;C</td>
+                <td class="label">C<sup>a</sup>C</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L4}}{{r.L4_i}}
