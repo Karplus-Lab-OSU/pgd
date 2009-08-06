@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block submenu %}
+    {% if session.search %}
+        <span class="results">Results: {{count}}</span>
+        <span class="menuitem"><a href="{{SITE_ROOT}}search/edit">Edit Search</a></span>
+        <span class="menuitem"><a href="{{SITE_ROOT}}search/plot/svg/">Plot</a></span>
+        <span class="menuitem"><a href="{{SITE_ROOT}}search/statistics/">Statistics</a></span>
+        <span class="menuitem"><a href="{{SITE_ROOT}}search/dump/">Data Dump</a></span>
+        <span class="menuitem lastmenuitem"><a href="{{SITE_ROOT}}search/browse/">Browse Results</a></span>
+    {% endif %}
+{% endblock %}
