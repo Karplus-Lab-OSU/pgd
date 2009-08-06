@@ -279,7 +279,7 @@
 									target: 'rightMiddle',
 									tooltip: 'leftMiddle'
 									},
-							target: $(target),
+							target: $(target)
 								 },
 						style:{ //Style the qtip to look like the page
 							  color: 'black',
@@ -352,79 +352,81 @@
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
 		    var header = document.getElementById('peptide_header');
-		    if (header.innerHTML == 'Peptide ▸'){
-			header.innerHTML = 'Peptide ▾';
+		    if (header.innerHTML == 'Peptide →'){
+			header.innerHTML = 'Peptide ↓';
 		    }
 		    else{
-			header.innerHTML = 'Peptide ▸';
+			header.innerHTML = 'Peptide →';
 		    }
                 });
                 $('#ss_header').click(function(evt){
                     $('tr.ss_row').toggle();
 		    var header = document.getElementById('ss_header');
-		    if (header.innerHTML == 'Secondary Structure ▸'){
-			header.innerHTML = 'Secondary Structure ▾';
+		    if (header.innerHTML == 'Secondary Structure →'){
+			header.innerHTML = 'Secondary Structure ↓';
 		    }
 		    else{
-			header.innerHTML = 'Secondary Structure ▸';
+			header.innerHTML = 'Secondary Structure →';
 		    }
                 });
                 $('#residue_header').click(function(evt){
                     $('tr.residue_row').toggle();
 		    var header = document.getElementById('residue_header');
-		    if (header.innerHTML == 'Residue Properties ▸'){
-			header.innerHTML = 'Residue Properties ▾';
+		    if (header.innerHTML == 'Residue Properties →'){
+			header.innerHTML = 'Residue Properties ↓';
 		    }
 		    else{
-			header.innerHTML = 'Residue Properties ▸';
+			header.innerHTML = 'Residue Properties →';
 		    }
                 });
 		$('tr.angles_row').toggle();
                 $('#angles_header').click(function(evt){
                     $('tr.angles_row').toggle();
 		    var header = document.getElementById('angles_header');
-		    if (header.innerHTML == 'Angles ▸'){
-			header.innerHTML = 'Angles ▾';
+		    if (header.innerHTML == 'Angles →'){
+			header.innerHTML = 'Angles ↓';
 		    }
 		    else{
-			header.innerHTML = 'Angles ▸';
+			header.innerHTML = 'Angles →';
 		    }
                 });
 		$('tr.lengths_row').toggle();
                 $('#lengths_header').click(function(evt){
                     $('tr.lengths_row').toggle();
 		    var header = document.getElementById('lengths_header');
-		    if (header.innerHTML == 'Lengths ▸'){
-			header.innerHTML = 'Lengths ▾';
+		    if (header.innerHTML == 'Lengths →'){
+			header.innerHTML = 'Lengths ↓';
 		    }
 		    else{
-			header.innerHTML = 'Lengths ▸';
+			header.innerHTML = 'Lengths →';
 		    }
                 });		
 				
 			createQtips();
-			
-			$('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/).click(function(event){
-				$clickedOn  = $(event.target);
-				if($clickedOn.is('input')){
-					rowTarget = event.target.id;
-				}
-				else if($clickedOn.is('option')){
-					rowTarget = event.target.parentNode.id;
-				}
-				if(rowTarget!=''){
-				rowTarget = rowTarget.substring(0, rowTarget.length-1);
-				rowTarget = rowTarget.replace('-','');
-				rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
-				rowTarget = rowTarget.replace(' ','');
-				if(rowTarget!=qtipState){
-					$('div.qtip').qtip('hide');			
-					$(rowTarget).qtip('show');	
-				}
-				qtipState=rowTarget;
-				rowTarget='';
-				}
-			});	
+                        
+            $('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/)
+                .click(function(event){
+                    $clickedOn  = $(event.target);
+                    if($clickedOn.is('input')){
+                           rowTarget = event.target.id;
+                    }
+                    else if($clickedOn.is('option')){
+                           rowTarget = event.target.parentNode.id;
+                    }
+                    if(rowTarget!=''){
+                    rowTarget = rowTarget.substring(0, rowTarget.length-1);
+                    rowTarget = rowTarget.replace('-','');
+                    rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
+                    rowTarget = rowTarget.replace(' ','');
+                    if(rowTarget!=qtipState){
+                           $('div.qtip').qtip('hide');                     
+                           $(rowTarget).qtip('show');      
+                    }
+                    qtipState=rowTarget;
+                    rowTarget='';
+                    }
+                });     
+
         });
 		
 
@@ -483,7 +485,7 @@
                 <th class="field col_{{i.0}}">{{i.1}}</th>
             {% endfor %}
 
-            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide ▾</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide ↓</td></tr>
             <tr class="peptide_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
@@ -494,7 +496,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure ▾</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure ↓</td></tr>
             <tr class="ss_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
@@ -505,9 +507,9 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties ▾</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties ↓</td></tr>
             <tr class="residue_row">
-                <td class="label">&#x03D5;</td>
+                <td class="label">&Phi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.phi}}{{r.phi_i}}
@@ -515,7 +517,7 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-                <td class="label">&#x03A8;</td>
+                <td class="label">&Psi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.psi}}{{r.psi_i}}
@@ -531,7 +533,7 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-                <td class="label">B<sup>g</sup></td>
+                <td class="label">B<sup>&gamma;</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.bg}}{{r.bg_i}}
@@ -547,7 +549,7 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-                <td class="label">&#x03C9;</td>
+                <td class="label">&omega;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
@@ -556,9 +558,9 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles ▸</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles →</td></tr>
                 <tr class="angles_row">
-                    <td class="label">C<sup>-1</sup>NC<sup>a</sup></td>
+                    <td class="label">C<sup>-1</sup>NC<sup>&alpha;</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a1}}{{r.a1_i}}
@@ -566,7 +568,7 @@
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
-                    <td class="label">NC<sup>a</sup>C<sup>b</sup></td>
+                    <td class="label">NC<sup>&alpha;</sup>C<sup>&beta;</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a2}}{{r.a2_i}}
@@ -574,7 +576,7 @@
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
-                    <td class="label">NC<sup>a</sup>C</td>
+                    <td class="label">NC<sup>&alpha;</sup>C</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a3}}{{r.a3_i}}
@@ -582,7 +584,7 @@
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
-                    <td class="label">C<sup>b</sup>C<sup>a</sup>C</td>
+                    <td class="label">C<sup>&beta;</sup>C<sup>&alpha;</sup>C</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a4}}{{r.a4_i}}
@@ -590,7 +592,7 @@
                     {% endfor %}
                 </tr>
                 <tr class="angles_row">
-                    <td class="label">C<sup>a</sup>CO</td>
+                    <td class="label">C<sup>&alpha;</sup>CO</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a5}}{{r.a5_i}}
@@ -598,7 +600,7 @@
                     {% endfor %}
                 </tr>
                 <tr class="angles_row">
-                    <td class="label">C<sup>a</sup>CN<sup>+1</sup></td>
+                    <td class="label">C<sup>&alpha;</sup>CN<sup>+1</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a6}}{{r.a6_i}}
@@ -615,7 +617,7 @@
                 </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths ▸</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths →</td></tr>
             <tr class="lengths_row">
                 <td class="label">C<sup>-1</sup>N</td>
                 {% for r in residueFields %}
@@ -625,7 +627,7 @@
                 {% endfor %}
             </tr>
             <tr class="lengths_row">
-                <td class="label">NC<sup>a</sup></td>
+                <td class="label">NC<sup>&alpha;</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
@@ -633,7 +635,7 @@
                 {% endfor %}
             </tr>
             <tr class="lengths_row">
-                <td class="label">C<sup>a</sup>C<sup>b</sup></td>
+                <td class="label">C<sup>&alpha;</sup>C<sup>&beta;</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
