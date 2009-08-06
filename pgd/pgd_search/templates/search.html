@@ -116,6 +116,7 @@
 		<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
 
         <script type="text/javascript">
+			qtipsOn=true;
 			qtipState = '';
 			qtipTotal = 0;
             n = Math.ceil({{maxLength}} / 2);
@@ -250,7 +251,7 @@
             };
 			
 			function createQtips(){
-				$('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/).each(function(){
+				$('#residuesContainer input.field,#residuesContainer td.field>select').each(function(){
 					currentID = $(this).attr('id');
 					col = currentID.substring(currentID.length-1,currentID.length);
 					sign = currentID.substring(currentID.length-2,currentID.length-1);
@@ -265,45 +266,116 @@
 						contentText = $(helpName).html();	
 						titleText = $(helpName).attr('name');
 						$(this).qtip({
-						position:{
-							adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-									resize: true, 
-									},
-							corner: {
-									target: 'rightMiddle',
-									tooltip: 'leftMiddle',
-									},
-							target: $(target),
-								 },
-						style:{ //Style the qtip to look like the page
-							  color: 'black',
-							  textAlign: 'center',
-							  title: { color: 'white', background: '#707070'},
-							  width: { max: 340 },
-							  border:{ 
-									 width: 6, 
-									 color: '#a2ddff'
+							position:{
+								adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+										resize: true, 
+										},
+								corner: {
+										target: 'rightMiddle',
+										tooltip: 'leftMiddle',
+										},
+								target: $(target),
 									 },
-							  tip: { //Options for the tail
-								   corner: 'leftMiddle', 
-								   color: '#a2ddff',
-								   size: { x: 20, y : 15 }
+							style:{ //Style the qtip to look like the page
+								  color: 'black',
+								  textAlign: 'center',
+								  title: { color: 'white', background: '#707070'},
+								  width: { min: 350, max: 430 },
+								  border:{ 
+										 width: 6, 
+										 color: '#a2ddff'
+										 },
+								  tip: { //Options for the tail
+									   corner: 'leftMiddle', 
+									   color: '#a2ddff',
+									   size: { x: 20, y : 15 }
+									   },
 								   },
-							   },
-						show: false,
-						hide: false,
-						content:{
-								prerender: false,//This kills pageload times if enabled
-								text: contentText,
-								title:  {
-										text: titleText,
-										button: 'Close' //Enables a button that closes the qtip
-										}
-								},
+							show: false,
+							hide: false,
+							content:{
+									prerender: false,//This kills pageload times if enabled
+									text: contentText,
+									title:  {
+											text: titleText,
+											button: 'Close' //Enables a button that closes the qtip
+											}
+									},
 							});
 						}	
 					});			
+					$('#protein td>select,#protein td>input').each(function(){	
+						currentID = $(this).attr('id');
+						currentID = currentID.replace(' ','');
+						if(currentID!='' && currentID!=null && currentID!=undefined){
+							target = '#id_resolutionMax';
+							helpName = '#'+currentID.replace('_','');
+							contentText = $(helpName).html();	
+							titleText = $(helpName).attr('name');
+						}
+						qtipTotal=qtipTotal+1;
+						$(this).qtip({
+							position:{
+								adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+										resize: true, 
+										},
+								corner: {
+										target: 'rightMiddle',
+										tooltip: 'leftMiddle',
+										},
+								target: $(target),
+									 },
+							style:{ //Style the qtip to look like the page
+								  color: 'black',
+								  textAlign: 'center',
+								  title: { color: 'white', background: '#707070'},
+								  width: { min: 350, max: 430 },
+								  border:{ 
+										 width: 6, 
+										 color: '#a2ddff'
+										 },
+								  tip: { //Options for the tail
+									   corner: 'leftMiddle', 
+									   color: '#a2ddff',
+									   size: { x: 20, y : 15 }
+									   },
+								   },
+								   show:false,
+					/*		show:{
+								when:{
+									event: 'click',
+								} ,
+								solo: true,
+							},*/
+							hide: false,
+							content:{
+									prerender: false,//This kills pageload times if enabled
+									text: contentText,
+									title:  {
+											text: titleText,
+											button: 'Close' //Enables a button that closes the qtip
+											}
+									},
+							});
+					});
 			};
+			
+			function toggleQtips(){
+				if(qtipsOn){
+					$('div.qtip').qtip('hide');
+					$('div.qtip').qtip("disable");
+					qtipsOn=false;
+					qtipState='';
+					$('.qtipToggle').attr('value','Turn Help On');
+				}
+				else{
+					$('div.qtip').qtip("enable");
+					qtipsOn=true;
+					qtipState='';
+					$('.qtipToggle').attr('value','Turn Help Off');
+				}
+				
+			}
 			
             $(document).ready(function() {
                 //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});	
@@ -398,7 +470,7 @@
 				
 			createQtips();
 			
-			$('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/).click(function(event){
+			$('#residuesContainer input.field,#residuesContainer td.field>select').mousedown(function(event){
 				$clickedOn  = $(event.target);
 				if($clickedOn.is('input')){
 					rowTarget = event.target.id;
@@ -406,19 +478,35 @@
 				else if($clickedOn.is('option')){
 					rowTarget = event.target.parentNode.id;
 				}
-				if(rowTarget!=''){
-				rowTarget = rowTarget.substring(0, rowTarget.length-1);
-				rowTarget = rowTarget.replace('-','');
-				rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
-				rowTarget = rowTarget.replace(' ','');
-				if(rowTarget!=qtipState){
-					$('div.qtip').qtip('hide');			
-					$(rowTarget).qtip('show');	
-				}
-				qtipState=rowTarget;
-				rowTarget='';
+				if(rowTarget!=''&&rowTarget!=undefined){
+					rowTarget = rowTarget.substring(0, rowTarget.length-1);
+					rowTarget = rowTarget.replace('-','');
+					rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
+					rowTarget = rowTarget.replace(' ','');
+					if(rowTarget!=qtipState&&qtipsOn){
+						$('div.qtip').qtip('hide');			
+						$(rowTarget).qtip('show');	
+					}
+					qtipState=rowTarget;
+					rowTarget='';
 				}
 			});	
+			
+			$('#protein td>select,#protein td>input').mousedown(function(event){
+				$clickedOn  = $(event.target);
+				if($clickedOn.is('input')){
+					rowTarget =event.target.id;
+				}
+				else if($clickedOn.is('select')){
+					rowTarget =event.target.id;
+				}
+				if(rowTarget!=''&&rowTarget!=undefined&&qtipsOn&&rowTarget!=qtipState){
+					$('div.qtip').qtip('hide');			
+					$('#'+rowTarget).qtip('show');
+					qtipState=rowTarget;
+					rowTarget='';
+				}
+			});
         });
 		
 
@@ -447,31 +535,28 @@
             <tbody>
             <tr>
                 <td class="label" rowspan="4">{{form.proteins.label}}</td>
-                <td  rowspan="4" class="field">
+                <td  rowspan="4">
                     <span class="toggle">&nbsp;</span>{{form.proteins}} {{form.proteins_i}}
                 </td>
             </tr>
             <tr>
-                <td class="label"> {{form.residues.label}}</td>
-                <td class="field">
-                    {{form.residues}}
-                    <input type="hidden" id="oldLength" value="5">
-                </td>
+				<td class="label">{{form.residues.label}}</td>
+				<td>
+					{{form.residues}}
+					<input type="hidden" id="oldLength" value="5">
+				</td>
+			</tr>
+			<tr>
+				<td class="label">Resolution</td>
+				<td>{{form.resolutionMin}} - {{form.resolutionMax}}</td>
+			</tr>
+			<tr>
+				<td class="label">{{form.threshold.label}}</td>
+				<td>{{form.threshold}}</td>
             </tr>
-            <tr>
-                <td class="label">Resolution</td>
-                <td class="field">{{form.resolutionMin}} - {{form.resolutionMax}}</td>
-            </tr>
-            <tr>
-                <td class="label">{{form.threshold.label}}</td>
-                <td class="field">{{form.threshold}}</td>
-            </tr>
-
             </tbody>
             </table>
-
             <div id="residuesContainer">
-
             <table id="residues" >
             <tbody>
             <tr><td/>
@@ -654,7 +739,7 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit">
+            <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit"></td></tr>
             </tbody>
             </table>
             </div>
