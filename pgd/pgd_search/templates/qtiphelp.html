@@ -1,10 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<html>
-<!--The following p elements are the help topics for the qtips. 
-They are in the same order and have the same id as the row 
-element's name. Just replace the example text -->
-	<body id="help" type = "hidden" style="text-align:left;">
+    <!--The following p elements are the help topics for the qtips. 
+    They are in the same order and have the same id as the row 
+    element's name. Just replace the example text -->
+	<div id="help">
 		<div id="textHelp">
 		<h2>Protein Help</h2>
 		<p id="idresidues" name="Number Of Residues">Filler text for residue help</p>
@@ -12,31 +9,30 @@ element's name. Just replace the example text -->
 		<p id="idresolutionMax" name="Maximum Resolution">Filler text for max resolution help</p>
 		<p id="idthreshold" name="Threshold">Filler text for threshold help</p>
 		<p id="idproteins" name="Pick a Protein, or maybe a few thousand!">Over 10,000 proteins, and more to come in the next import. That's a LOT of data.</p>
-		<p id="idproteins_i" name="Unknown">What IS this thing, anyways?</p>
+		<p id="idproteins_i" name="+/-">This is the +/- sign apparently</p>
 		<h2>Peptide Help</h2>
 		<p id="aa" name = "This is help for peptides!">This is generic peptide help</p>
 		<h2>Secondary Structure Help</h2>
 		<p id="ss" name = "This is help for secondary structures!">This is generic secondary structure help</p>
 		<h2>This is Residue Properties Help</h2>
-		<p id="phi" name="Residue &#x03D5;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/psi.png"><br>This is example help for phi</p>
-		<p id="psi" name="Residue &#x03A8;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/phi.png"><br>This is example help for psi</p>
-		<p id="bm" 	name="Residue B&#x1d50;">This is example help for bm</p>
-		<p id="bg" 	name="Residue B&#x1D5E;">This is example help for bg</p>
-		<p id="bs"	name="Residue B&#x02E2;&#x1D9C;">This is example help for bs</p>
-		<p id="ome"	name="Residue &#x03C9;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/ome.png"><br>This is example help for ome</p>
+		<p id="phi" name="Residue &Phi;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/psi.png"><br>This is example help for phi</p>
+		<p id="psi" name="Residue &Psi;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/phi.png"><br>This is example help for psi</p>
+		<p id="bm" 	name="Residue B<sup>m</sup>">This is example help for bm</p>
+		<p id="bg" 	name="Residue B<sup>&gamma;</sup>">This is example help for bg</p>
+		<p id="bs"	name="Residue B<sup>sc</sup>">This is example help for bs</p>
+		<p id="ome"	name="Residue &omega;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/ome.png"><br>This is example help for ome</p>
 		<h2>Angles Help</h2>
-		<p id="a1"	name="Bond Angle C&#x207B;&#x00B9;NC&#x1D45;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_C-1_N_Ca.png"><br>This is a placeholder for a1's help text.</p>
-		<p id="a2"	name="Bond Angle NC&#x1D45;C&#x1D5D;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_N_Ca_Cb.png"><br>This is a placeholder for a2's help text.</p>
-		<p id="a3"	name="Bond Angle NC&#x1D45;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_N_Ca_C.png"><br>This is example help for a3</p>
-		<p id="a4"	name="Bond Angle C&#x1D5D;C&#x1D45;C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Cb_Ca_C.png"><br>This is example help for a4</p>
-		<p id="a5"	name="Bond Angle C&#x1D45;CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_O.png"><br>This is example help for a5</p>
-		<p id="a6"	name="Bond Angle C&#x1D45;CN&#x207A;&#x00B9;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_N+1.png"><br>This is example help for a6</p>
-		<p id="a7"	name="Bond Angle OCN&#x207A;&#x00B9;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_O_C_N+1.png"><br>This is example help for a7</p>
+		<p id="a1"	name="Bond Angle C<sup>-1</sup>NC<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_C-1_N_Ca.png"><br>This is a placeholder for a1's help text.</p>
+		<p id="a2"	name="Bond Angle NC<sup>&alpha;</sup>C<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/pgd-property2.png"><br>This is a placeholder for a2's help text.</p>
+		<p id="a3"	name="Bond Angle NC<sup>&alpha;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_N_Ca_C.png"><br>This is example help for a3</p>
+		<p id="a4"	name="Bond Angle C<sup>&beta;</sup>C<sup>&alpha;</sup>C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Cb_Ca_C.png">This is example help for a4</p>
+		<p id="a5"	name="Bond Angle C<sup>&alpha;</sup>CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_O.png"><br>This is example help for a5</p>
+		<p id="a6"	name="Bond Angle C<sup>&alpha;</sup>CN<sup>+1</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_N+1.png"><br>This is example help for a6</p>
+		<p id="a7"	name="Bond Angle OCN<sup>+1</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_O_C_N+1.png"><br>This is example help for a7</p>
 		<h2>Lengths Help</h2>	
-		<p id="L1"	name="Length C&#x207B;&#x00B9;N"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C-1_N.png"><br>This is example help for L1</p>
-		<p id="L2"	name="Length NC&#x1D45;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_N-Ca.png"><br>This is example help for L2</p>
-		<p id="L3"	name="Length C&#x1D45;C&#x1D5D;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_Cb.png"><br>This is example help for L3</p>
-		<p id="L4"	name="Length C&#x1D45;C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_C.png"><br>This is example help for L4</p>
+		<p id="L1"	name="Length C<sup>-1</sup>N"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C-1_N.png"><br>This is example help for L1</p>
+		<p id="L2"	name="Length NC<sup>&alpha;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_N-Ca.png"><br>This is example help for L2</p>
+		<p id="L3"	name="Length C<sup>&alpha;</sup>C<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_Cb.png"><br>This is example help for L3</p>
+		<p id="L4"	name="Length C<sup>&alpha;</sup>C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_C.png"><br>This is example help for L4</p>
 		<p id="L5"	name="Length CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C_O.png"><br>This is example help for L5</p>
-	</body>
-</html>
+	</div>
