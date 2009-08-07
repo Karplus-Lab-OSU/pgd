@@ -328,11 +328,12 @@ def parseWithBioPython(file, props, chains_filter=None):
 
                 newID = 0
 
-                try:
-                    for res in chain:
+                for res in chain:
+                    try:
                         newID += 1
                         terminal = False
                         hetflag, res_id, icode = res.get_id()
+                        #print hetflag, res_id, icode
                         """
                         Exclude water residues
                         Exclude any Residues that are missing _ANY_ of the
@@ -490,19 +491,19 @@ def parseWithBioPython(file, props, chains_filter=None):
                         oldC       = C
                         oldO       = O
 
-                except InvalidResidueException, e:
-                    # something has gone wrong in the current residue
-                    # indicating that it should be excluded from processing
-                    # log a warning
-                    print 'WARNING: Invalid residue - protein:%s  chain:%s   residue: %s  exception: %s' % (file, chain_id, res.get_id(), e)
-                    if oldC:
-                        residues[res_old_id]['terminal_flag'] = True
-                        newID += 1
-                    oldN       = None
-                    oldCA      = None
-                    oldC       = None
-                    if residues.has_key(res_id):
-                        del residues[res_id]
+                    except InvalidResidueException, e:
+                        # something has gone wrong in the current residue
+                        # indicating that it should be excluded from processing
+                        # log a warning
+                        print 'WARNING: Invalid residue - protein:%s  chain:%s   residue: %s  exception: %s' % (file, chain_id, res.get_id(), e)
+                        if oldC:
+                            residues[res_old_id]['terminal_flag'] = True
+                            newID += 1
+                        oldN       = None
+                        oldCA      = None
+                        oldC       = None
+                        if residues.has_key(res_id):
+                            del residues[res_id]
 
                 print 'Processed %s residues' % len(residues)
 
