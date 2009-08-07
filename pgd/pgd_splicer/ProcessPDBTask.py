@@ -306,12 +306,6 @@ def parseWithBioPython(file, props, chains_filter=None):
             # iterate through them
             dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressedFile, dssp='dsspcmbi')
 
-            #iterate residues
-            res_old_id = None
-            oldN       = None
-            oldCA      = None
-            oldC       = None
-
             for chain in structure[0]:
                 chain_id = chain.get_id()
 
@@ -327,6 +321,12 @@ def parseWithBioPython(file, props, chains_filter=None):
                     print 'PROCESSING CHAIN [%s]' % chain, len(chain)
 
                 newID = 0
+
+                #iterate residues
+                res_old_id = None
+                oldN       = None
+                oldCA      = None
+                oldC       = None
 
                 for res in chain:
                     try:
