@@ -10,6 +10,7 @@
             .qtip-image {
                 padding: 10px;
             }
+
             .label {
                 padding-left:20px;
                 padding-right:0px;
@@ -119,7 +120,6 @@
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
-
         <script type="text/javascript">
             qtipState = '';
             qtipTotal = 0;
@@ -290,7 +290,7 @@
                                      color: '#a2ddff'
                                      },
                               tip: { //Options for the tail
-                                   corner: 'leftMiddle',
+                                   corner: 'leftMiddle', 
                                    color: '#a2ddff',
                                    size: { x: 20, y : 15 }
                                    }
@@ -350,6 +350,7 @@
 
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
+
             var header = document.getElementById('peptide_header');
             if (header.innerHTML == 'Peptide →'){
             header.innerHTML = 'Peptide ↓';
@@ -377,29 +378,31 @@
             else{
             header.innerHTML = 'Residue Properties →';
             }
+
                 });
-        $('tr.angles_row').toggle();
-                $('#angles_header').click(function(evt){
-                    $('tr.angles_row').toggle();
-            var header = document.getElementById('angles_header');
-            if (header.innerHTML == 'Angles →'){
-            header.innerHTML = 'Angles ↓';
-            }
-            else{
-            header.innerHTML = 'Angles →';
-            }
-                });
-        $('tr.lengths_row').toggle();
-                $('#lengths_header').click(function(evt){
-                    $('tr.lengths_row').toggle();
-            var header = document.getElementById('lengths_header');
-            if (header.innerHTML == 'Lengths →'){
-            header.innerHTML = 'Lengths ↓';
-            }
-            else{
-            header.innerHTML = 'Lengths →';
-            }
-                });
+            $('tr.angles_row').toggle();
+                    $('#angles_header').click(function(evt){
+                        $('tr.angles_row').toggle();
+                var header = document.getElementById('angles_header');
+                if (header.innerHTML == 'Angles →'){
+                header.innerHTML = 'Angles ↓';
+                }
+                else{
+                header.innerHTML = 'Angles →';
+                }
+
+                    });
+            $('tr.lengths_row').toggle();
+                    $('#lengths_header').click(function(evt){
+                        $('tr.lengths_row').toggle();
+                var header = document.getElementById('lengths_header');
+                if (header.innerHTML == 'Lengths →'){
+                header.innerHTML = 'Lengths ↓';
+                }
+                else{
+                header.innerHTML = 'Lengths →';
+                }
+                    });
 
             createQtips();
 
@@ -425,10 +428,8 @@
                     rowTarget='';
                     }
                 });
-
         });
-
-        </script>
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -545,7 +546,6 @@
                 {% endfor %}
             </tr>
             <tr class="residue_row">
-
                 <td class="label">B<sup>&gamma;</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -555,7 +555,6 @@
             </tr>
             <tr class="residue_row">
                 <td class="label">B<sup>sc</sup></td>
-
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.bs}}{{r.bs_i}}
@@ -610,7 +609,6 @@
                     {% endfor %}
                 </tr>
                 <tr class="angles_row">
-
                     <td class="label">C<sup>&alpha;</sup>CO</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -620,7 +618,6 @@
                 </tr>
                 <tr class="angles_row">
                     <td class="label">C<sup>&alpha;</sup>CN<sup>+1</sup></td>
-
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a6}}{{r.a6_i}}
@@ -641,7 +638,6 @@
             <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths →</td></tr>
             <tr class="lengths_row">
                 <td class="label">C<sup>-1</sup>N</td>
-
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L1}}{{r.L1_i}}
@@ -695,6 +691,5 @@
     <div id="helpPage">
         {% include 'qtiphelp.html' %}
     </div>
-
 {% endblock %}
 
