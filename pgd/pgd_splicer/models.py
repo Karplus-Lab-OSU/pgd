@@ -7,10 +7,8 @@ import dbsettings
 class PDBSelectSettings(dbsettings.Group):
     RESOLUTION         = dbsettings.FloatValue('Resolution Limit', 'Import proteins with a resolution up to this limit', default=1.75)
     pdb_dir            = dbsettings.StringValue('PDB directory','Store pdbs in this directory', default='pdb')
-    PDB_SELECT_URL     = dbsettings.StringValue('PDB Select URL', 'URL of directory where pdb select files are stored',default='http://bioinfo.tg.fh-giessen.de/pdbselect/')
     PDB_TMP_DIR        = dbsettings.StringValue('PDB temp directory', 'Temporary directory for PDB files','tmp')
-    PDB_SELECT_FILE_90 = dbsettings.StringValue('Threshold 90 Filename','Filename of PDB Select file containing proteins with a threshold of 90',default='recent.pdb_select90')
-    PDB_SELECT_FILE_25 = dbsettings.StringValue('Threshold 25 Filename','Filename of PDB Select file containing proteins with a threshold of 25',default='recent.pdb_select25')
+    DATA_VERSION       = dbsettings.StringValue('Version of imported data', 'This is something to identify the version of file that splicer imported data from.  This may be an actual version number, or the date the select file was generated', default='--')
 pdb_select_settings = PDBSelectSettings('Splicer')
 
 

@@ -8,7 +8,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 import math
 
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
-from pgd_search.views import RESIDUE_INDEXES
+from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 
@@ -58,7 +58,7 @@ def search(request):
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
 """
@@ -98,7 +98,7 @@ def editSearch(request, search_id=None):
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
 """
