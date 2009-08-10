@@ -8,7 +8,7 @@ import simplejson
 from PlotForm import PlotForm
 from ConfDistFuncs import *
 from svg import *
-
+from pgd_search.views import settings_processor
 
 LABEL_REPLACEMENTS = {
             "L1":u'C\u207B\u00B9N',
@@ -267,7 +267,7 @@ def plot(request):
         'form': form
     }
 
-    return render_to_response('graph.html', response_dict, context_instance=RequestContext(request))
+    return render_to_response('graph.html', response_dict, context_instance=RequestContext(request, processors=[settings_processor]))
 
 def renderToSVG(request):
     """
@@ -354,7 +354,7 @@ def plotDump(request):
 
             return response
 
-    return None
+    return HttpResponse('Error')
 
 
 

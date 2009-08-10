@@ -54,6 +54,13 @@ div#mainmenu {
     color:white;
 }
 
+span#version {
+    position:absolute;
+    right:0px;
+    top:2.15em;
+    margin-right:20px;
+}
+
 div#submenu { 
     background-color:#707070;
     min-height:25px;
