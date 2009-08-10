@@ -1,36 +1,32 @@
     <!--The following p elements are the help topics for the qtips. 
     They are in the same order and have the same id as the row 
     element's name. Just replace the example text -->
-	<div id="help">
-		<div id="textHelp">
-		<h2>Protein Help</h2>
-		<p id="idresidues" name="Number Of Residues">Filler text for residue help</p>
-		<p id="idresolutionMin" name="Minimum Resolution">Filler text for min resolution help</p>
-		<p id="idresolutionMax" name="Maximum Resolution">Filler text for max resolution help</p>
-		<p id="idthreshold" name="Threshold">Filler text for threshold help</p>
-		<h2>Peptide Help</h2>
-		<p id="aa" name = "This is help for peptides!">This is generic peptide help</p>
-		<h2>Secondary Structure Help</h2>
-		<p id="ss" name = "This is help for secondary structures!">This is generic secondary structure help</p>
-		<h2>This is Residue Properties Help</h2>
-		<p id="phi" name="Residue &Phi;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/psi.png"><br>This is example help for phi</p>
-		<p id="psi" name="Residue &Psi;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/phi.png"><br>This is example help for psi</p>
-		<p id="bm" 	name="Residue B<sup>m</sup>">This is example help for bm</p>
-		<p id="bg" 	name="Residue B<sup>&gamma;</sup>">This is example help for bg</p>
-		<p id="bs"	name="Residue B<sup>sc</sup>">This is example help for bs</p>
-		<p id="ome"	name="Residue &omega;"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/ome.png"><br>This is example help for ome</p>
-		<h2>Angles Help</h2>
-		<p id="a1"	name="Bond Angle C<sup>-1</sup>NC<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_C-1_N_Ca.png"><br>This is a placeholder for a1's help text.</p>
-		<p id="a2"	name="Bond Angle NC<sup>&alpha;</sup>C<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/pgd-property2.png"><br>This is a placeholder for a2's help text.</p>
-		<p id="a3"	name="Bond Angle NC<sup>&alpha;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_N_Ca_C.png"><br>This is example help for a3</p>
-		<p id="a4"	name="Bond Angle C<sup>&beta;</sup>C<sup>&alpha;</sup>C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Cb_Ca_C.png">This is example help for a4</p>
-		<p id="a5"	name="Bond Angle C<sup>&alpha;</sup>CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_O.png"><br>This is example help for a5</p>
-		<p id="a6"	name="Bond Angle C<sup>&alpha;</sup>CN<sup>+1</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_N+1.png"><br>This is example help for a6</p>
-		<p id="a7"	name="Bond Angle OCN<sup>+1</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_O_C_N+1.png"><br>This is example help for a7</p>
-		<h2>Lengths Help</h2>	
-		<p id="L1"	name="Length C<sup>-1</sup>N"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C-1_N.png"><br>This is example help for L1</p>
-		<p id="L2"	name="Length NC<sup>&alpha;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_N-Ca.png"><br>This is example help for L2</p>
-		<p id="L3"	name="Length C<sup>&alpha;</sup>C<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_Cb.png"><br>This is example help for L3</p>
-		<p id="L4"	name="Length C<sup>&alpha;</sup>C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_C.png"><br>This is example help for L4</p>
-		<p id="L5"	name="Length CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C_O.png"><br>This is example help for L5</p>
-	</div>
+<div id="help">
+         <div id="textHelp">
+         <h2>Peptide Help</h2>
+        <p id="aa"  name = "Residue Types">Which amino acids are searched? The default is all of them. If you click the plus sign next to the field after highlighting residues, this will exclude them instead of include them.</p>
+         <h2>Secondary Structure Help</h2>
+        <p id="ss"  name = "Secondary Structure Types">Which secondary-structure types are searched? The default is all of them. These types are defined by DSSP and are: G: 3<sub>10</sub>-helix; H: &alpha;-helix; I: &pi;-helix; T: hydrogen-bonded turn; E: &beta;-sheet; B: isolated &beta;-bridge; S: non-hydrogen-bonded turn. Lowercase letters indicate the initial or terminal residues of the secondary-structure types.</p>
+         <h2>This is Residue Properties Help</h2>
+        <p id="phi" name="&Phi; Torsion Angle"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/phi.png"><br>This is example help for phi</p>
+        <p id="psi" name="&Psi; Torsion Angle"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/psi.png"><br>This is example help for psi</p>
+        <p id="bm"  name="B<sup>m</sup>">The average main-chain B-factor</p>
+        <p id="bg"  name="B<sup>&gamma;</sup>">The B-factor of the &gamma;-carbon (which determines whether the &chi;1 sidechain dihedral angle is well-defined)</p>
+        <p id="bs"  name="B<sup>sc</sup>">The average side-chain B-factor</p>
+        <p id="ome" name="&omega; Torsion Angle"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/ome.png"><br>&omega; defines the planarity of the peptide bond and generally stays close to 180° (for trans peptides) or 0° (for cis peptides)</p>
+         <h2>Angles Help</h2>
+        <p id="a1"  name="C<sup>-1</sup>NC<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_C-1_N_Ca.png"><br></p>
+        <p id="a2"  name="NC<sup>&alpha;</sup>C<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_N_Ca_Cb.png"><br></p>
+        <p id="a3"  name="NC<sup>&alpha;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_N_Ca_C.png"><br></p>
+        <p id="a4"  name="C<sup>&beta;</sup>C<sup>&alpha;</sup>C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Cb_Ca_C.png"><br></p>
+        <p id="a5"  name="C<sup>&alpha;</sup>CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_O.png"><br></p>
+        <p id="a6"  name="C<sup>&alpha;</sup>CN<sup>+1</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_Ca_C_N+1.png"><br></p>
+        <p id="a7"  name="OCN<sup>+1</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/angle_O_C_N+1.png"><br></p>
+         <h2>Lengths Help</h2>    
+        <p id="L1"  name="C<sup>-1</sup>N"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C-1_N.png"><br></p>
+        <p id="L2"  name="NC<sup>&alpha;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_N-Ca.png"><br></p>
+        <p id="L3"  name="C<sup>&alpha;</sup>C<sup>&beta;</sup>"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_Cb.png"><br></p>
+        <p id="L4"  name="C<sup>&alpha;</sup>C"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_Ca_C.png"><br></p>
+        <p id="L5"  name="CO"><img class="qtip-image" src="{{MEDIA_URL}}/images/help/length_C_O.png"><br></p>
+     </div>
+

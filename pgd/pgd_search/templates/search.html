@@ -2,15 +2,15 @@
 
 {% block head %}
         <style>
-		
             #content {
                 width:100%;
                 text-align:left;
             }
 
-			.qtip-image {
-				padding: 10px;
-			}
+            .qtip-image {
+                padding: 10px;
+            }
+
             .label {
                 padding-left:20px;
                 padding-right:0px;
@@ -119,12 +119,11 @@
             }
         </style>
 
-		<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
-
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
         <script type="text/javascript">
-			qtipsOn=true;
-			qtipState = '';
-			qtipTotal = 0;
+            qtipsOn=true;
+            qtipState = '';
+            qtipTotal = 0;
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
             for (i=0; i<n; i++) {
@@ -133,16 +132,16 @@
                     iArray[i*2+1] = 0-i-1;
                 }
             }
-			
-			function sizeChange(evt){
+
+            function sizeChange(evt){
                 oldValue = parseInt($('#oldLength').val());
                 newValue = parseInt($('#id_residues').val());
-                if (oldValue != newValue) {			
-					if(qtipTotal!=0){
-						qtipTotal = 0;
-						$('div.qtip').qtip("destroy");
-						createQtips();
-					}
+                if (oldValue != newValue) {
+                    if(qtipTotal!=0){
+                        qtipTotal = 0;
+                        $('div.qtip').qtip("destroy");
+                        createQtips();
+                    }
                     //removing values
                     if (oldValue > newValue) {
                         for(i={{maxLength}}-1; i>=newValue; i--){
@@ -255,137 +254,137 @@
                 // select boxes just check for null
                 return val == '' || val == null;
             };
-			
-			function createQtips(){
-				$('#residuesContainer input.field,#residuesContainer td.field>select').each(function(){
-					currentID = $(this).attr('id');
-					col = currentID.substring(currentID.length-1,currentID.length);
-					sign = currentID.substring(currentID.length-2,currentID.length-1);
-					if(col==Math.ceil(parseInt($('#id_residues').val()/2)) && col!= null && col!='' && sign!='-'){
-						qtipTotal=qtipTotal+1;
-						currentID = currentID.substring(0, currentID.length - 1 );
-						target = currentID.replace('-','');
-						target = ('#' + target + col);
-						helpName = currentID.substring(3, currentID.length - 1 );
-						helpName = helpName.replace('_','');
-						helpName = '#' + helpName.replace(' ','');
-						contentText = $(helpName).html();	
-						titleText = $(helpName).attr('name');
-						$(this).qtip({
-						position:{
-							adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-									resize: true
-									},
-							corner: {
-									target: 'rightMiddle',
-									tooltip: 'leftMiddle'
-									},
-							target: $(target)
-								 },
-						style:{ //Style the qtip to look like the page
-							  color: 'black',
-							  textAlign: 'center',
-							  title: { color: 'white', background: '#707070'},
-							  width: { min: 350, max: 430 },
-							  border:{ 
-									 width: 6, 
-									 color: '#a2ddff'
-									 },
-							  tip: { //Options for the tail
-								   corner: 'leftMiddle', 
-								   color: '#a2ddff',
-								   size: { x: 20, y : 15 }
-								   }
-							   },
-						show: false,
-						hide: false,
-						content:{
-								prerender: false,//This kills pageload times if enabled
-								text: contentText,
-								title:  {
-										text: titleText,
-										button: 'Close' //Enables a button that closes the qtip
-										}
-								}
-							});
-						}	
-					});			
-					$('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').each(function(){	
-						currentID = $(this).attr('id');
-						currentID = currentID.replace(' ','');
-						if(currentID!='' && currentID!=null && currentID!=undefined){
-							target = '#id_resolutionMax';
-							helpName = '#'+currentID.replace('_','');
-							contentText = $(helpName).html();	
-							titleText = $(helpName).attr('name');
-						}
-						qtipTotal=qtipTotal+1;
-						$(this).qtip({
-							position:{
-								adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-										resize: true, 
-										},
-								corner: {
-										target: 'rightMiddle',
-										tooltip: 'leftMiddle',
-										},
-								target: $(target),
-									 },
-							style:{ //Style the qtip to look like the page
-								  color: 'black',
-								  textAlign: 'center',
-								  title: { color: 'white', background: '#707070'},
-								  width: { min: 350, max: 430 },
-								  border:{ 
-										 width: 6, 
-										 color: '#a2ddff'
-										 },
-								  tip: { //Options for the tail
-									   corner: 'leftMiddle', 
-									   color: '#a2ddff',
-									   size: { x: 20, y : 15 }
-									   },
-								   },
-								   show:false,
-					/*		show:{
-								when:{
-									event: 'click',
-								} ,
-								solo: true,
-							},*/
-							hide: false,
-							content:{
-									prerender: false,//This kills pageload times if enabled
-									text: contentText,
-									title:  {
-											text: titleText,
-											button: 'Close' //Enables a button that closes the qtip
-											}
-									},
-							});
-					});
-			};
-			
-			function toggleQtips(){
-				if(qtipsOn){
-					$('div.qtip').qtip('hide');
-					$('div.qtip').qtip("disable");
-					qtipsOn=false;
-					qtipState='';
-					$('.qtipToggle').attr('value','Turn Help On');
-				}
-				else{
-					$('div.qtip').qtip("enable");
-					qtipsOn=true;
-					qtipState='';
-					$('.qtipToggle').attr('value','Turn Help Off');
-				}
-				
-			}
-					
+            
+            function createQtips(){
+                $('#residuesContainer input.field,#residuesContainer td.field>select').each(function(){
+                    currentID = $(this).attr('id');
+                    col = currentID.substring(currentID.length-1,currentID.length);
+                    sign = currentID.substring(currentID.length-2,currentID.length-1);
+                    if(col==Math.ceil(parseInt($('#id_residues').val()/2)) && col!= null && col!='' && sign!='-'){
+                        qtipTotal=qtipTotal+1;
+                        currentID = currentID.substring(0, currentID.length - 1 );
+                        target = currentID.replace('-','');
+                        target = ('#' + target + col);
+                        helpName = currentID.substring(3, currentID.length - 1 );
+                        helpName = helpName.replace('_','');
+                        helpName = '#' + helpName.replace(' ','');
+                        contentText = $(helpName).html();    
+                        titleText = $(helpName).attr('name');
+                        $(this).qtip({
+                        position:{
+                            adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                    resize: true
+                                    },
+                            corner: {
+                                    target: 'rightMiddle',
+                                    tooltip: 'leftMiddle'
+                                    },
+                            target: $(target)
+                                 },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#707070'},
+                              width: { min: 350, max: 430 },
+                              border:{ 
+                                     width: 6, 
+                                     color: '#a2ddff'
+                                     },
+                              tip: { //Options for the tail
+                                   corner: 'leftMiddle', 
+                                   color: '#a2ddff',
+                                   size: { x: 20, y : 15 }
+                                   }
+                               },
+                        show: false,
+                        hide: false,
+                        content:{
+                                prerender: false,//This kills pageload times if enabled
+                                text: contentText,
+                                title:  {
+                                        text: titleText,
+                                        button: 'Close' //Enables a button that closes the qtip
+                                        }
+                                }
+                            });
+                        }    
+                    });            
+                    $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').each(function(){    
+                        currentID = $(this).attr('id');
+                        currentID = currentID.replace(' ','');
+                        if(currentID!='' && currentID!=null && currentID!=undefined){
+                            target = '#id_resolutionMax';
+                            helpName = '#'+currentID.replace('_','');
+                            contentText = $(helpName).html();    
+                            titleText = $(helpName).attr('name');
+                        }
+                        qtipTotal=qtipTotal+1;
+                        $(this).qtip({
+                            position:{
+                                adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                        resize: true, 
+                                        },
+                                corner: {
+                                        target: 'rightMiddle',
+                                        tooltip: 'leftMiddle',
+                                        },
+                                target: $(target),
+                                     },
+                            style:{ //Style the qtip to look like the page
+                                  color: 'black',
+                                  textAlign: 'center',
+                                  title: { color: 'white', background: '#707070'},
+                                  width: { min: 350, max: 430 },
+                                  border:{ 
+                                         width: 6, 
+                                         color: '#a2ddff'
+                                         },
+                                  tip: { //Options for the tail
+                                       corner: 'leftMiddle', 
+                                       color: '#a2ddff',
+                                       size: { x: 20, y : 15 }
+                                       },
+                                   },
+                                   show:false,
+                    /*        show:{
+                                when:{
+                                    event: 'click',
+                                } ,
+                                solo: true,
+                            },*/
+                            hide: false,
+                            content:{
+                                    prerender: false,//This kills pageload times if enabled
+                                    text: contentText,
+                                    title:  {
+                                            text: titleText,
+                                            button: 'Close' //Enables a button that closes the qtip
+                                            }
+                                    },
+                            });
+                    });
+            };
+            
+            function toggleQtips(){
+                if(qtipsOn){
+                    $('div.qtip').qtip('hide');
+                    $('div.qtip').qtip("disable");
+                    qtipsOn=false;
+                    qtipState='';
+                    $('.qtipToggle').attr('value','Turn Help On');
+                }
+                else{
+                    $('div.qtip').qtip("enable");
+                    qtipsOn=true;
+                    qtipState='';
+                    $('.qtipToggle').attr('value','Turn Help Off');
+                }
+                
+            }
+            
             $(document).ready(function() {
-                //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});	
-				$('#helpPage').hide();	
+                //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1}); 
+                $('#helpPage').hide();  
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
                     if ( tar.hasClass('toggle_Include')) {
@@ -423,58 +422,50 @@
 
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
-		    var header = document.getElementById('peptide_header');
-		    if (header.innerHTML == 'Peptide →'){
-			header.innerHTML = 'Peptide ↓';
-		    }
-		    else{
-			header.innerHTML = 'Peptide →';
-		    }
+
+            var header = document.getElementById('peptide_header');
+            if (header.innerHTML == 'Peptide →'){
+            header.innerHTML = 'Peptide ↓';
+            }
+            else{
+            header.innerHTML = 'Peptide →';
+            }
                 });
                 $('#ss_header').click(function(evt){
                     $('tr.ss_row').toggle();
-		    var header = document.getElementById('ss_header');
-		    if (header.innerHTML == 'Secondary Structure →'){
-			header.innerHTML = 'Secondary Structure ↓';
-		    }
-		    else{
-			header.innerHTML = 'Secondary Structure →';
-		    }
+            var header = document.getElementById('ss_header');
+            if (header.innerHTML == 'Secondary Structure →'){
+            header.innerHTML = 'Secondary Structure ↓';
+            }
+            else{
+            header.innerHTML = 'Secondary Structure →';
+            }
                 });
                 $('#residue_header').click(function(evt){
                     $('tr.residue_row').toggle();
-		    var header = document.getElementById('residue_header');
-		    if (header.innerHTML == 'Residue Properties →'){
-			header.innerHTML = 'Residue Properties ↓';
-		    }
-		    else{
-			header.innerHTML = 'Residue Properties →';
-		    }
+            var header = document.getElementById('residue_header');
+            if (header.innerHTML == 'Residue Properties →'){
+            header.innerHTML = 'Residue Properties ↓';
+            }
+            else{
+            header.innerHTML = 'Residue Properties →';
+            }
+
                 });
-		$('tr.angles_row').toggle();
-                $('#angles_header').click(function(evt){
-                    $('tr.angles_row').toggle();
-		    var header = document.getElementById('angles_header');
-		    if (header.innerHTML == 'Angles →'){
-			header.innerHTML = 'Angles ↓';
-		    }
-		    else{
-			header.innerHTML = 'Angles →';
-		    }
-                });
-		$('tr.lengths_row').toggle();
+<<<<<<< HEAD:pgd/pgd_search/templates/search.html
+        $('tr.lengths_row').toggle();
                 $('#lengths_header').click(function(evt){
                     $('tr.lengths_row').toggle();
-		    var header = document.getElementById('lengths_header');
-		    if (header.innerHTML == 'Lengths →'){
-			header.innerHTML = 'Lengths ↓';
-		    }
-		    else{
-			header.innerHTML = 'Lengths →';
-		    }
-                });		
-				
-			createQtips();
+            var header = document.getElementById('lengths_header');
+            if (header.innerHTML == 'Lengths →'){
+            header.innerHTML = 'Lengths ↓';
+            }
+            else{
+            header.innerHTML = 'Lengths →';
+            }
+                });        
+                
+            createQtips();
                         
             $('#residuesContainer input.field,#residuesContainer td.field>select').mousedown(function(event){
                     $clickedOn  = $(event.target);
@@ -497,28 +488,24 @@
                     rowTarget='';
                     }
                 });    
-				
-			$('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').mousedown(function(event){
-				$clickedOn  = $(event.target);
-				if($clickedOn.is('input')){
-					rowTarget =event.target.id;
-				}
-				else if($clickedOn.is('select')){
-					rowTarget =event.target.id;
-				}
-				if(rowTarget!=''&&rowTarget!=undefined&&qtipsOn&&rowTarget!=qtipState){
-					$('div.qtip').qtip('hide');			
-					$('#'+rowTarget).qtip('show');
-					qtipState=rowTarget;
-					rowTarget='';
-				}
-			}); 
+                
+            $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').mousedown(function(event){
+                $clickedOn  = $(event.target);
+                if($clickedOn.is('input')){
+                    rowTarget =event.target.id;
+                }
+                else if($clickedOn.is('select')){
+                    rowTarget =event.target.id;
+                }
+                if(rowTarget!=''&&rowTarget!=undefined&&qtipsOn&&rowTarget!=qtipState){
+                    $('div.qtip').qtip('hide');            
+                    $('#'+rowTarget).qtip('show');
+                    qtipState=rowTarget;
+                    rowTarget='';
+                }
+            }); 
         });
-		
-
-
-		
-        </script>
+    </script>
 {% endblock %}
 
 {% block content %}
@@ -528,6 +515,7 @@
             <ul class="errors">
             {% for field, msg in form.errors.items %}
                 <li class="error"><strong>{{ field|escape }}</strong>{{msg|escape}}</li>
+
             {% endfor %}
             </ul>
         </div>
@@ -538,31 +526,42 @@
             <table id="protein">
             <tbody>
             <tr>
-                <td class="label" rowspan="4">{{form.proteins.label}}</td>
-                <td  rowspan="4">
+                <td class="label" rowspan="6">{{form.proteins.label}}</td>
+                <td  rowspan="6">
                     <span class="toggle">&nbsp;</span>{{form.proteins}} {{form.proteins_i}}
                 </td>
             </tr>
             <tr>
-				<td class="label">{{form.residues.label}}</td>
-				<td>
-					{{form.residues}}
-					<input type="hidden" id="oldLength" value="5">
-				</td>
-			</tr>
-			<tr>
-				<td class="label">Resolution</td>
-				<td>{{form.resolutionMin}} - {{form.resolutionMax}}</td>
-			</tr>
-			<tr>
-				<td class="label">{{form.threshold.label}}</td>
-				<td>{{form.threshold}}</td>
+                <td class="label"> {{form.residues.label}}</td>
+                <td class="field">
+                    {{form.residues}}
+                    <input type="hidden" id="oldLength" value="5">
+
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Resolution</td>
+                <td class="field">{{form.resolutionMin}} - {{form.resolutionMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">R-factor</td>
+                <td>{{form.rfactorMin}} - {{form.rfactorMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">R-free</td>
+                <td>{{form.rfreeMin}} - {{form.rfreeMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">{{form.threshold.label}}</td>
+
+                <td class="field">{{form.threshold}}</td>
             </tr>
             </tbody>
             </table>
             <div id="residuesContainer">
             <table id="residues" >
             <tbody>
+
             <tr><td/>
             {% for i in iValues %}
                 <th class="field col_{{i.0}}">{{i.1}}</th>
@@ -573,6 +572,7 @@
                 <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
+
                         <span class="toggle">&nbsp;</span>{{r.aa}}{{r.aa_i}}
                     </td>
                 {% endfor %}
@@ -584,6 +584,7 @@
                 <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
+
                         <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
                     </td>
                 {% endfor %}
@@ -595,6 +596,7 @@
                 <td class="label">&Phi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
+
                         <span class="toggle">&nbsp;</span>{{r.phi}}{{r.phi_i}}
                     </td>
                 {% endfor %}
@@ -607,6 +609,7 @@
                     </td>
                 {% endfor %}
             </tr>
+
             <tr class="residue_row">
                 <td class="label">B<sup>m</sup></td>
                 {% for r in residueFields %}
@@ -637,6 +640,7 @@
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
                     </td>
+
                 {% endfor %}
             </tr>
 
@@ -646,6 +650,7 @@
                     <td class="label">C<sup>-1</sup>NC<sup>&alpha;</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
+
                         <span class="toggle">&nbsp;</span>{{r.a1}}{{r.a1_i}}
                     </td>
                     {% endfor %}
@@ -656,6 +661,7 @@
                         <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.a2}}{{r.a2_i}}
                     </td>
+
                     {% endfor %}
                     </tr>
                 <tr class="angles_row">
@@ -666,6 +672,7 @@
                     </td>
                     {% endfor %}
                     </tr>
+
                 <tr class="angles_row">
                     <td class="label">C<sup>&beta;</sup>C<sup>&alpha;</sup>C</td>
                     {% for r in residueFields %}
@@ -694,6 +701,7 @@
                     <td class="label">OCN<sup>+1</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
+
                         <span class="toggle">&nbsp;</span>{{r.a7}}{{r.a7_i}}
                     </td>
                     {% endfor %}
@@ -713,6 +721,7 @@
                 <td class="label">NC<sup>&alpha;</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
+
                     <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
                 </td>
                 {% endfor %}
@@ -723,6 +732,7 @@
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
                 </td>
+
                 {% endfor %}
             </tr>
             <tr class="lengths_row">
@@ -733,6 +743,7 @@
                 </td>
                 {% endfor %}
             </tr>
+
             <tr class="lengths_row">
                 <td class="label">CO</td>
                 {% for r in residueFields %}
@@ -743,14 +754,14 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit"></td></tr>
+            <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit">
             </tbody>
             </table>
             </div>
         </form>
     </div>
-	<div id="helpPage">
-		{% include 'qtiphelp.html' %}
-	</div>				
+    <div id="helpPage">
+        {% include 'qtiphelp.html' %}
+    </div>
 {% endblock %}
 
