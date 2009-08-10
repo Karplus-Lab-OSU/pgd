@@ -23,6 +23,8 @@ def dumpSearch(search, writer):
     # A list of values that should not be printed out
     FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
     FIELD_LABEL_REPLACEMENTS = {
+        'rfactor':'R-factor',
+        'rfree':'R-free',
         'h_bond_energy':'H Bond', 
         'aa':'AA',
         'L1':u'C(-1)N',

@@ -8,7 +8,12 @@ class Protein(models.Model):
     code        = models.CharField(max_length=4, primary_key=True, unique=True)
     threshold   = models.IntegerField() # new type; this should probably be a boolean type
     resolution  = models.FloatField(db_index=True)
-    rfactor     = models.FloatField()
+    rfactor     = models.FloatField(db_index=True)
+    rfree       = models.FloatField(db_index=True)
+
+    # date the source PDB file was created.  This property is used to check for
+    # updates allowing up-to-date proteins to be skipped.
+    pdb_date    = models.DateTimeField()
 
     def __unicode__(self):
         return self.code
