@@ -191,7 +191,6 @@ class ProcessPDBTask(Task):
 
                 # 4) iterate through residue data creating residues
                 for id, residue_props in residues.items():
-                    #chain = chains[residue_props['chain_id']]
 
                     # 4a) find the residue object so it can be updated or create a new one
                     try:
@@ -341,7 +340,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                         """
                         all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
                         if hetflag != ' ' or not all_mainchain:
-                            #print 'discard', res_id
                             raise InvalidResidueException('HetCode or Missing Atom')
 
                         """
@@ -353,13 +351,14 @@ def parseWithBioPython(file, props, chains_filter=None):
                         unique.  We're including residues from all chains in the same
                         dictionary and chainindex may have duplicates.
                         """
+                        old_id = res_id if icode == ' ' else '%s%s' % (res_id, icode)
                         try:
-                            res_dict = residues[res_id]
+                            res_dict = residues[old_id]
                         except KeyError:
                             # residue didn't exist yet
                             res_dict = {}
-                            residues[res_id] = res_dict
-                            res_dict['oldID'] = res_id if not icode else '%s%s' % (res_id, icode)
+                            residues[old_id] = res_dict
+                            res_dict['oldID'] = old_id
 
                         length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
                         angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
@@ -436,7 +435,8 @@ def parseWithBioPython(file, props, chains_filter=None):
                             res_dict['a4'] = calc_angle(CB,CA,C)
                             res_dict['L3'] = calc_distance(CA,CB)
                             res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
-
+                            if res_id == 247:
+                                print res_id, icode, res['CB'].get_coord(), res_dict['a2']
 
                         """
                         Calculate Bg - bfactor of the 4th atom in Chi1.
@@ -485,7 +485,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         """
                         Reset for next pass.  We save some relationships which span two atoms.
                         """
-                        res_old_id = res_id
+                        res_old_id = old_id
                         oldN       = N
                         oldCA      = CA
                         oldC       = C
