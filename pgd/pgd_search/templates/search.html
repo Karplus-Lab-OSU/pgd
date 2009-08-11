@@ -1,16 +1,17 @@
 {% extends 'search_base.html' %}
+{% load search_extras %}
 
 {% block head %}
         <style>
-		
+
             #content {
                 width:100%;
                 text-align:left;
             }
 
-			.qtip-image {
-				padding: 10px;
-			}
+            .qtip-image {
+                padding: 10px;
+            }
             .label {
                 padding-left:20px;
                 padding-right:0px;
@@ -54,8 +55,37 @@
                 margin-top:20px;
             }
 
-            input.field {
+            input.field, ul.multiselect {
                 margin:.2em;
+            }
+
+            ul.multiselect {
+                float:left;
+                list-style:none;
+                border: 1px solid #d4d4d4;
+                width:5.3em;
+            }
+            ul.multiselect li {
+                color:#b4b4b4;
+                cursor:default;
+                line-height:16px;
+                text-align:center;
+            }
+            
+            ul.multiselect li input {display:none;}
+
+            ul.multiselect.field_include, ul.multiselect.field_exclude {
+                border: 1px solid black;
+            }
+
+            ul.multiselect.field_include li.selected {
+                color:black;
+                background-color:#c2e192;
+            }
+
+            ul.multiselect.field_exclude li.selected {
+                color:black;
+                background-color:#ee9c98;
             }
 
             select#id_proteins {
@@ -82,11 +112,11 @@
                 background-image:url('http://doors.osuosl.org/media/minus2.png');
             }
 
-            .field_include {
+            input.field_include {
                 background-color:#c2e192;
                 border-color:black;
             }
-            .field_exclude {
+            input.field_exclude {
                 border-color:black;
                 background-color:#ee9c98;
             }
@@ -119,11 +149,11 @@
             }
         </style>
 
-		<script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
 
         <script type="text/javascript">
-			qtipState = '';
-			qtipTotal = 0;
+            qtipState = '';
+            qtipTotal = 0;
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
             for (i=0; i<n; i++) {
@@ -132,16 +162,16 @@
                     iArray[i*2+1] = 0-i-1;
                 }
             }
-			
-			function sizeChange(evt){
+
+            function sizeChange(evt){
                 oldValue = parseInt($('#oldLength').val());
                 newValue = parseInt($('#id_residues').val());
-                if (oldValue != newValue) {			
-					if(qtipTotal!=0){
-						qtipTotal = 0;
-						$('div.qtip').qtip("destroy");
-						createQtips();
-					}
+                if (oldValue != newValue) {
+                    if(qtipTotal!=0){
+                        qtipTotal = 0;
+                        $('div.qtip').qtip("destroy");
+                        createQtips();
+                    }
                     //removing values
                     if (oldValue > newValue) {
                         for(i={{maxLength}}-1; i>=newValue; i--){
@@ -228,6 +258,42 @@
                 }
             };
 
+            function updateInclusionSelect(node){
+                // is anything checked?
+                $node = $(node);
+
+                is_checked = false;
+                $node.find('input').each(function(){
+                    if (this.checked) {
+                        is_checked = true;
+                    }
+                });
+
+                if (is_checked) {
+                    val = $(node.parentNode).children(".include").val()
+                    if (val == '') {
+                        val = 1
+                    }
+                    if (val == 1 &&  !$node.hasClass('field_include') ){
+                        $(node.parentNode).children(".toggle").addClass('toggle_Include');
+                        $(node.parentNode).children(".include").val(1).attr('disabled',false);
+                        $node.addClass('field_include').removeClass('field_exclude');
+                    }else if (val == 0 && !$node.hasClass('field_exclude') ) {
+                        $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
+                        $(node.parentNode).children(".include").val(0).attr('disabled',false);
+                        $node.addClass('field_exclude').removeClass('toggle_Include');
+                    }
+                } else {
+                    $node
+                        .removeClass('field_exclude')
+                        .removeClass('field_include');
+                    $(node.parentNode).children(".toggle")
+                        .removeClass('toggle_Include')
+                        .removeClass('toggle_Exclude');
+                    $(node.parentNode).children(".include").val('');
+                }
+            };
+
             // extend function to jquery
             $.fn.updateInclusionField = function(){
                 this.each(function(){
@@ -236,7 +302,7 @@
             };
             $.fn.updateInclusionSelect = function(){
                 this.each(function(){
-                    updateInclusionField(this, false);
+                    updateInclusionSelect(this);
                 });
             };
 
@@ -254,66 +320,66 @@
                 // select boxes just check for null
                 return val == '' || val == null;
             };
-			
-			function createQtips(){
-				$('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/).each(function(){
-					currentID = $(this).attr('id');
-					col = currentID.substring(currentID.length-1,currentID.length);
-					sign = currentID.substring(currentID.length-2,currentID.length-1);
-					if(col==Math.ceil(parseInt($('#id_residues').val()/2)) && col!= null && col!='' && sign!='-'){
-						qtipTotal=qtipTotal+1;
-						currentID = currentID.substring(0, currentID.length - 1 );
-						target = currentID.replace('-','');
-						target = ('#' + target + col);
-						helpName = currentID.substring(3, currentID.length - 1 );
-						helpName = helpName.replace('_','');
-						helpName = '#' + helpName.replace(' ','');
-						contentText = $(helpName).html();	
-						titleText = $(helpName).attr('name');
-						$(this).qtip({
-						position:{
-							adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-									resize: true
-									},
-							corner: {
-									target: 'rightMiddle',
-									tooltip: 'leftMiddle'
-									},
-							target: $(target)
-								 },
-						style:{ //Style the qtip to look like the page
-							  color: 'black',
-							  textAlign: 'center',
-							  title: { color: 'white', background: '#707070'},
-							  width: { max: 340 },
-							  border:{ 
-									 width: 6, 
-									 color: '#a2ddff'
-									 },
-							  tip: { //Options for the tail
-								   corner: 'leftMiddle', 
-								   color: '#a2ddff',
-								   size: { x: 20, y : 15 }
-								   }
-							   },
-						show: false,
-						hide: false,
-						content:{
-								prerender: false,//This kills pageload times if enabled
-								text: contentText,
-								title:  {
-										text: titleText,
-										button: 'Close' //Enables a button that closes the qtip
-										}
-								}
-							});
-						}	
-					});			
-			};
-			
+
+            function createQtips(){
+                $('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/).each(function(){
+                    currentID = $(this).attr('id');
+                    col = currentID.substring(currentID.length-1,currentID.length);
+                    sign = currentID.substring(currentID.length-2,currentID.length-1);
+                    if(col==Math.ceil(parseInt($('#id_residues').val()/2)) && col!= null && col!='' && sign!='-'){
+                        qtipTotal=qtipTotal+1;
+                        currentID = currentID.substring(0, currentID.length - 1 );
+                        target = currentID.replace('-','');
+                        target = ('#' + target + col);
+                        helpName = currentID.substring(3, currentID.length - 1 );
+                        helpName = helpName.replace('_','');
+                        helpName = '#' + helpName.replace(' ','');
+                        contentText = $(helpName).html();    
+                        titleText = $(helpName).attr('name');
+                        $(this).qtip({
+                        position:{
+                            adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                    resize: true
+                                    },
+                            corner: {
+                                    target: 'rightMiddle',
+                                    tooltip: 'leftMiddle'
+                                    },
+                            target: $(target)
+                                 },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#707070'},
+                              width: { max: 340 },
+                              border:{ 
+                                     width: 6, 
+                                     color: '#a2ddff'
+                                     },
+                              tip: { //Options for the tail
+                                   corner: 'leftMiddle', 
+                                   color: '#a2ddff',
+                                   size: { x: 20, y : 15 }
+                                   }
+                               },
+                        show: false,
+                        hide: false,
+                        content:{
+                                prerender: false,//This kills pageload times if enabled
+                                text: contentText,
+                                title:  {
+                                        text: titleText,
+                                        button: 'Close' //Enables a button that closes the qtip
+                                        }
+                                }
+                            });
+                        }
+                    });
+            };
+
             $(document).ready(function() {
-                //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});	
-				$('#helpPage').hide();	
+                //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});
+                $('#helpPage').hide();
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
                     if ( tar.hasClass('toggle_Include')) {
@@ -341,7 +407,6 @@
                 $('select.field').change(function(evt){
                         updateInclusionField(evt.target, false);
                     });
-                $('select.field').updateInclusionSelect();
 
                 $('#id_residues').change(sizeChange);
 
@@ -349,61 +414,83 @@
                 $('#oldLength').val({{maxLength}});
                 sizeChange(1);
 
+                // setup multiselects
+                $('.multiselect li')
+                    .click(function(){
+                        $this = $(this);
+                        if ($this.hasClass('selected')){
+                            $this.removeClass('selected');
+                            $this.children('input').attr('checked',false);
+                        }else{
+                            $this.addClass('selected');
+                            $this.children('input').attr('checked',true);
+                        }
+                        $this.parent().updateInclusionSelect()
+                    })
+                    // update styles based on if its already checked
+                    .each(function(){
+                        $this = $(this);
+                        if ( $this.children('input').attr('checked')){
+                             $this.addClass('selected');
+                        }
+                    })
+                $('.multiselect').updateInclusionSelect();
+
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
-		    var header = document.getElementById('peptide_header');
-		    if (header.innerHTML == 'Peptide →'){
-			header.innerHTML = 'Peptide ↓';
-		    }
-		    else{
-			header.innerHTML = 'Peptide →';
-		    }
+            var header = document.getElementById('peptide_header');
+            if (header.innerHTML == 'Peptide →'){
+            header.innerHTML = 'Peptide ↓';
+            }
+            else{
+            header.innerHTML = 'Peptide →';
+            }
                 });
                 $('#ss_header').click(function(evt){
                     $('tr.ss_row').toggle();
-		    var header = document.getElementById('ss_header');
-		    if (header.innerHTML == 'Secondary Structure →'){
-			header.innerHTML = 'Secondary Structure ↓';
-		    }
-		    else{
-			header.innerHTML = 'Secondary Structure →';
-		    }
+            var header = document.getElementById('ss_header');
+            if (header.innerHTML == 'Secondary Structure →'){
+            header.innerHTML = 'Secondary Structure ↓';
+            }
+            else{
+            header.innerHTML = 'Secondary Structure →';
+            }
                 });
                 $('#residue_header').click(function(evt){
                     $('tr.residue_row').toggle();
-		    var header = document.getElementById('residue_header');
-		    if (header.innerHTML == 'Residue Properties →'){
-			header.innerHTML = 'Residue Properties ↓';
-		    }
-		    else{
-			header.innerHTML = 'Residue Properties →';
-		    }
+            var header = document.getElementById('residue_header');
+            if (header.innerHTML == 'Residue Properties →'){
+            header.innerHTML = 'Residue Properties ↓';
+            }
+            else{
+            header.innerHTML = 'Residue Properties →';
+            }
                 });
-		$('tr.angles_row').toggle();
+        $('tr.angles_row').toggle();
                 $('#angles_header').click(function(evt){
                     $('tr.angles_row').toggle();
-		    var header = document.getElementById('angles_header');
-		    if (header.innerHTML == 'Angles →'){
-			header.innerHTML = 'Angles ↓';
-		    }
-		    else{
-			header.innerHTML = 'Angles →';
-		    }
+            var header = document.getElementById('angles_header');
+            if (header.innerHTML == 'Angles →'){
+            header.innerHTML = 'Angles ↓';
+            }
+            else{
+            header.innerHTML = 'Angles →';
+            }
                 });
-		$('tr.lengths_row').toggle();
+        $('tr.lengths_row').toggle();
                 $('#lengths_header').click(function(evt){
                     $('tr.lengths_row').toggle();
-		    var header = document.getElementById('lengths_header');
-		    if (header.innerHTML == 'Lengths →'){
-			header.innerHTML = 'Lengths ↓';
-		    }
-		    else{
-			header.innerHTML = 'Lengths →';
-		    }
-                });		
-				
-			createQtips();
-                        
+            var header = document.getElementById('lengths_header');
+            if (header.innerHTML == 'Lengths →'){
+            header.innerHTML = 'Lengths ↓';
+            }
+            else{
+            header.innerHTML = 'Lengths →';
+            }
+                });
+
+            createQtips();
+
             $('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/)
                 .click(function(event){
                     $clickedOn  = $(event.target);
@@ -419,19 +506,15 @@
                     rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
                     rowTarget = rowTarget.replace(' ','');
                     if(rowTarget!=qtipState){
-                           $('div.qtip').qtip('hide');                     
-                           $(rowTarget).qtip('show');      
+                           $('div.qtip').qtip('hide');
+                           $(rowTarget).qtip('show');
                     }
                     qtipState=rowTarget;
                     rowTarget='';
                     }
-                });     
+                });
 
         });
-		
-
-
-		
         </script>
 {% endblock %}
 
@@ -488,9 +571,16 @@
             <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide ↓</td></tr>
             <tr class="peptide_row">
                 <td class="label"></td>
+                
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.aa}}{{r.aa_i}}
+                        <span class="toggle">&nbsp;</span>
+                        <ul id="aa_choices_list" class="multiselect field">
+                            {% for choice in aa_choices|index_lookup:forloop.counter0 %}
+                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                            {% endfor %}
+                        </ul>
+                        {{r.aa_i}}
                     </td>
                 {% endfor %}
             </tr>
@@ -501,7 +591,12 @@
                 <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
+                        <span class="toggle">&nbsp;</span>
+                        <ul id="ss_choices_list" class="multiselect field">
+                            {% for choice in ss_choices|index_lookup:forloop.counter0 %}
+                                <li>{{choice.1}}<input type="checkbox" name="ss_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                            {% endfor %}
+                        </ul>
                     </td>
                 {% endfor %}
             </tr>
@@ -666,8 +761,8 @@
             </div>
         </form>
     </div>
-	<div id="helpPage">
-		{% include 'qtiphelp.html' %}
-	</div>				
+    <div id="helpPage">
+        {% include 'qtiphelp.html' %}
+    </div>                
 {% endblock %}
 
