@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
-from static import AA_CHOICES, SS_CHOICES, Subscripter
+from pgd_constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
 import re
 from math import ceil
@@ -32,6 +32,11 @@ class Search(models.Model):
     threshold        = models.IntegerField(null=True)
     resolution_min   = models.FloatField(null=True)
     resolution_max   = models.FloatField(null=True)
+    rfactor_min      = models.FloatField(null=True)
+    rfactor_max      = models.FloatField(null=True)
+    rfree_min        = models.FloatField(null=True)
+    rfree_max        = models.FloatField(null=True)
+
     segmentLength    = models.IntegerField()
     _querySet = None
 
@@ -70,6 +75,23 @@ class Search(models.Model):
         # ...filter by resolution...
         if self.resolution_max != None:
             query = query.filter(protein__resolution__lte=self.resolution_max)
+
+        # ...filter by rfactor...
+        if self.rfactor_min != None:
+            query = query.filter(protein__rfactor__gte=self.rfactor_min)
+
+        # ...filter by rfactor...
+        if self.rfactor_max != None:
+            query = query.filter(protein__rfactor__lte=self.rfactor_max)
+
+        #...filter by rfree...
+        if self.rfree_min != None:
+            query = query.filter(protein__rfree__gte=self.rfree_min)
+
+        # ...filter by rfree...
+        if self.rfree_max != None:
+            query = query.filter(protein__rfree__lte=self.rfree_max)
+
 
         # ...filter by threshold...
         if self.threshold != None:
@@ -386,8 +408,25 @@ class Residue_subscripter():
         return residue_generator(self)
 
 
-#this pattern matches any property that is proxied to a residue
-proxyPattern = re.compile('^r([\d]+)_(?!id$)([\w]+)')
+class SegmentedProtein(models.Model):
+    """
+    Parallel to the Protein model to add fields specific to the segmentation
+    of the protein chain into segment objects
+
+    This class is not an extension of the Protein model because it is intended
+    to have limited use.  Linking this to the Protein object creates issues
+    creating and querying (extra joins) Protein and SegmentedProtein objects
+    """
+    code = models.CharField(max_length=4, primary_key=True, unique=True)
+
+    # Date of the pdb the segments were generated from.  This is different from
+    # Protein.pdb_date.  It serves the same purpose of indicating if a Segment
+    # is up to date.  The difference is that this tracks updates for the
+    # Segment table.  The import process has separate transactions for the core
+    # protein and segments.  Its possible for the two to get out of sync if an
+    # import fails while proteins are being processed.
+    pdb_date = models.DateTimeField()
+
 
 """ ====================================================================
 Segment Model
@@ -404,6 +443,10 @@ This model consists of 2 parts:
 This allows the segment model to change size dynamically at runtime.
 
 ==================================================================== """
+#this pattern matches any property that is proxied to a residue
+proxyPattern = re.compile('^r([\d]+)_(?!id$)([\w]+)')
+
+
 iIndex = int(ceil(searchSettings.segmentSize/2.0)-1)
 class Segment_abstract(models.Model):
 

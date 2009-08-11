@@ -6,7 +6,7 @@ import math
 from pgd_constants import AA_CHOICES
 from pgd_search.models import Search, Segment, iIndex
 from pgd_search.plot.ConfDistFuncs import getCircularStats
-
+from pgd_search.views import settings_processor
 
 stat_attributes_base = [('L1',u'C<sup>-1,</sup>N'),
                         ('L2',u'NC<sup>&alpha;</sup>'),
@@ -40,7 +40,7 @@ def searchStatistics(request):
         'attributes': stat_attributes_base,
         'peptides':peptides,
         'total':total
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
 

@@ -4,6 +4,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 import math
 
 from pgd_search.models import searchSettings
+from pgd_search.views import settings_processor
 
 """
 display search results in tabular form
@@ -67,7 +68,7 @@ def browse(request):
         'pages':pages,
         'segmentLength':search.segmentLength
 
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
 def get_page_list(paginator, page=1):

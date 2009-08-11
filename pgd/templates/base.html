@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<?xml version="1.0" encoding="UTF-8"?>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+    <head>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.3.2.js"></script>
+        <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/main.css" />
+
+    {% block head %}{% endblock %}
+
+    </head>
+<body>
+        <div id="headerContainer">
+            <div id="mainmenu">
+                <span class="menuitem "><a class="mainmenuitem" href="{{SITE_ROOT}}search/">New Search</a></span>
+                <!--span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}search/saved/">Saved Searches</a></span-->
+                <!--span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}logout">logout</a></span-->
+                <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}search/help/">Help</a></span>
+            </div>
+            <div id="submenu">
+                <div id="submenu_items">
+                {% block submenu %}{% endblock %}
+                </div>
+                <span id="version">
+                    <strong>PGD </strong>{{PGD_VERSION}}
+                    &nbsp;&nbsp;&nbsp;
+                    <strong>Dunbracks </strong>{{DATA_VERSION}}
+                </span>
+            </div>
+        </div>
+
+        <div id="content">
+            {% block content %}{% endblock %}
+        </div>
+
+</body>
+</html>

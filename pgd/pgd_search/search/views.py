@@ -8,7 +8,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 import math
 
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
-from pgd_search.views import RESIDUE_INDEXES
+from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 
@@ -73,7 +73,7 @@ def search(request):
         'residueFields':residueFields,
         'aa_choices':aa_choices,
         'ss_choices':ss_choices
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
 """
@@ -120,7 +120,7 @@ def editSearch(request, search_id=None):
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
 """
@@ -184,9 +184,13 @@ def processSearchForm(form):
 
     #get protein properties
     search.segmentLength = int(data['residues'])
-    search.resolution_min = float(data['resolutionMin'])
-    search.resolution_max = float(data['resolutionMax'])
-    search.threshold      = int(data['threshold'])
+    search.resolution_min = float(data['resolutionMin']) if data['resolutionMin'] else None
+    search.resolution_max = float(data['resolutionMax']) if data['resolutionMax'] else None
+    search.threshold      = int(data['threshold']) if data['threshold'] else None
+    search.rfactor_min    = float(data['rfactorMin']) if data['rfactorMin'] else None
+    search.rfactor_max    = float(data['rfactorMax']) if data['rfactorMax'] else None
+    search.rfree_min      = float(data['rfreeMin']) if data['rfreeMin'] else None
+    search.rfree_max      = float(data['rfreeMax']) if data['rfreeMax'] else None
 
     #save search object so its residue parameters can be added
     search.save()

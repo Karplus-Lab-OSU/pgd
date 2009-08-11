@@ -45,7 +45,18 @@ class ParallelProteinImportTask(ParallelTask):
         self.subtask = ProteinImportTask()
         logger.debug( self.__dict__ )
 
+    def _work(self, **kwargs):
+        """
+        overridden to batch up workunits
+        """
+        if kwargs and kwargs.has_key('data'):
+            _data = kwargs['data']
+            batch_size = 25
 
+            logger.debug('ParallelProteinImportTask - repackaging work into batches of %s' % batch_size)
+            kwargs['data'] = [_data[i:i+batch_size] for i in range(0, len(_data), batch_size)]
+
+        ParallelTask._work(self, **kwargs)
 
 if __name__ == '__main__':
     """
