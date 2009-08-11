@@ -86,7 +86,6 @@ class ConfDistPlot():
     # querySet: Django queryset
     # ******************************************************
     def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet):
-
         # Convert unicode to strings
         xText,yText,ref = str(xText),str(yText),str(ref)
 
@@ -163,12 +162,11 @@ class ConfDistPlot():
                 Q(**{'%s__gte'%self.yTextString: yMin}) |
                 Q(**{'%s__lt'%self.yTextString: yMax})
             ))
-                
         )
-        
+
         # Total # of observations
         self.numObs = self.querySet.count()
-        
+
         ### Sort the values from observations into bins
         # save these beforehand to avoid recalculating per bin
         xScale = xLimit / float(xSize - 2 * xPadding)
@@ -183,7 +181,6 @@ class ConfDistPlot():
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
 
         for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
-            
             # Adjustments for the axes values
             xAdj,yAdj = int(math.floor(entry[self.xTextString] / xbin)),int(math.floor(entry[self.yTextString] / ybin))
 
@@ -260,7 +257,6 @@ class ConfDistPlot():
 
         # Color the bins
         for key in self.bins:
-
             bin = self.bins[key]
             num = bin['count']
 
@@ -346,7 +342,7 @@ class ConfDistPlot():
         residue = self.residue
 
         #fields to include, order in this list is important
-        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta','h_bond_energy')
+        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta')
         avgString = '%s_avg'%self.resString
         stdString = '%s_avg'%self.resString
         STATS_FIELDS_STRINGS = reduce(

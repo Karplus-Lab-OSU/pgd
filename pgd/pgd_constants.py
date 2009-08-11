@@ -74,7 +74,7 @@ PLOT_PROPERTY_CHOICES = [
     ("ome","ome"),
     ("chi","chi"),
     ("zeta","zeta"),
-    ("h_bond_energy","H Bond"),
+    #("h_bond_energy","H Bond"),
     ]
 
 # This class makes a property subscriptable
