@@ -432,7 +432,8 @@
                         if ( $this.children('input').attr('checked')){
                              $this.addClass('selected');
                         }
-                    })
+                    });
+
                 $('.multiselect').updateInclusionSelect();
 
                 $('#peptide_header').click(function(evt){
@@ -464,6 +465,7 @@
                         header.innerHTML = 'Residue Properties →';
                     }
                     $('tr.angles_row').toggle();
+                });
 
                 $('#angles_header').click(function(evt){
                     $('tr.angles_row').toggle();
@@ -491,25 +493,24 @@
                 $('#residuesContainer input.field,#residuesContainer td.field>select'/*,#protein .field'*/)
                     .click(function(event){
                         $clickedOn  = $(event.target);
-                        if($clickedOn.is('input')){
+                        if($clickedOn.is('input')) {
                             rowTarget = event.target.id;
-                        }
-                        else if($clickedOn.is('option')){
+                        } else if($clickedOn.is('option')){
                             rowTarget = event.target.parentNode.id;
                         }
                         if(rowTarget!=''){
-                        rowTarget = rowTarget.substring(0, rowTarget.length-1);
-                        rowTarget = rowTarget.replace('-','');
-                        rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
-                        rowTarget = rowTarget.replace(' ','');
-                        if(rowTarget!=qtipState){
-                            $('div.qtip').qtip('hide');
-                            $(rowTarget).qtip('show');
+                            rowTarget = rowTarget.substring(0, rowTarget.length-1);
+                            rowTarget = rowTarget.replace('-','');
+                            rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
+                            rowTarget = rowTarget.replace(' ','');
+                            if(rowTarget!=qtipState){
+                                $('div.qtip').qtip('hide');
+                                $(rowTarget).qtip('show');
+                            }
+                            qtipState=rowTarget;
+                            rowTarget='';
                         }
-                        qtipState=rowTarget;
-                        rowTarget='';
-                        }
-                    });
+                });
             });
     </script>
 {% endblock %}
