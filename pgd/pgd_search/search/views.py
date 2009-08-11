@@ -18,6 +18,8 @@ import re
 Handler for search form.
 """
 def search(request):
+
+
     if request.method == 'POST': # If the form has been submitted
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
@@ -34,7 +36,18 @@ def search(request):
                 request.session['search'] = search
 
                 return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
+
+        # package aa_choices and ss_choices
+        aa_choices = []
+        ss_choices = []
+        for i in RESIDUE_INDEXES:
+            aa_chosen = request.POST.getlist('aa_%i' % i)
+            aa_choices.append([(c[0],c[1],'checked' if c[0] in aa_chosen else '') for c in AA_CHOICES])
+            ss_chosen = request.POST.getlist('ss_%i' % i)
+            ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES])
     else:
+        aa_choices = [AA_CHOICES for i in range(searchSettings.segmentSize)]
+        ss_choices = [SS_CHOICES for i in range(searchSettings.segmentSize)]
         form = SearchForm() # An unbound form
 
     #construct a list of values for i
@@ -57,7 +70,9 @@ def search(request):
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
-        'residueFields':residueFields
+        'residueFields':residueFields,
+        'aa_choices':aa_choices,
+        'ss_choices':ss_choices
     }, context_instance=RequestContext(request))
 
 
@@ -69,6 +84,8 @@ def editSearch(request, search_id=None):
     if search_id:
         search = Search.objects.get(id=search_id)
         form = processSearchObject(search)
+
+
     #else use the search in the session if it exists
     else:
         try:
@@ -76,6 +93,10 @@ def editSearch(request, search_id=None):
             form = processSearchObject(search)
         except KeyError:
             form = SearchForm() # An unbound form
+
+    # parse aa_choices out
+    aa_chosen = search.aa_0
+    aa_choices = [(c[0],c[1],'checked' if c[0] in aa_chosen else '') for c in AA_CHOICES] 
 
     #construct a list of values for i
     iValues = [
@@ -97,7 +118,8 @@ def editSearch(request, search_id=None):
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
-        'residueFields':residueFields
+        'residueFields':residueFields,
+        'aa_choices':aa_choices
     }, context_instance=RequestContext(request))
 
 
@@ -286,4 +308,7 @@ def saved(request):
 
 def help(request):
     return render_to_response('help.html', context_instance=RequestContext(request))
+	
+def qtiphelp(request):
+    return render_to_response('qtiphelp.html', context_instance=RequestContext(request))
  
