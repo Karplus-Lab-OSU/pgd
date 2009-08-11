@@ -8,19 +8,19 @@ from pgd_search.models import Search, Segment, iIndex
 from pgd_search.plot.ConfDistFuncs import getCircularStats
 
 
-stat_attributes_base = [('L1',u'C\u207B\u00B9N'),
-                        ('L2',u'NC\u1D45'),
-                        ('L3',u'C\u1D45C\u1D5D'),
-                        ('L4',u'C\u1D45C'),
+stat_attributes_base = [('L1',u'C<sup>-1,</sup>N'),
+                        ('L2',u'NC<sup>&alpha;</sup>'),
+                        ('L3',u'C<sup>&alpha;</sup>C<sup>&beta;</sup>'),
+                        ('L4',u'C<sup>&alpha;</sup>C'),
                         ('L5','CO'),
-                        ('a1',u'C\u207B\u00B9NC\u1D45'),
-                        ('a2',u'NC\u1D45C\u1D5D'),
-                        ('a3',u'NC\u1D45C'),
-                        ('a4',u'C\u1D5DC\u1D45C'),
-                        ('a5',u'C\u1D45CO'),
-                        ('a6',u'C\u1D45CN\u207A\u00B9'),
-                        ('a7',u'OCN\u207A\u00B9'),
-                        ('ome',u'\u03C9')]
+                        ('a1',u'C<sup>-1</sup>NC<sup>&alpha;</sup>'),
+                        ('a2',u'NC<sup>&alpha;</sup>C<sup>&beta;</sup>'),
+                        ('a3',u'NC<sup>&alpha;</sup>C'),
+                        ('a4',u'C<sup>&beta</sup>C<sup>&alpha;</sup>C'),
+                        ('a5',u'C<sup>&alpha;</sup>CO'),
+                        ('a6',u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
+                        ('a7',u'OCN<sup>+1</sup>'),
+                        ('ome',u'&omega;')]
 
 ANGLES_BASE = ('ome', 'phi', 'psi', 'chi', 'zeta')
 angles = ['r%i_%s' %(iIndex, angle) for angle in ANGLES_BASE]

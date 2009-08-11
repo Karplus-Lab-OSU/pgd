@@ -1,258 +1,256 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
+{% extends 'search_base.html' %}
 
-<html>
-    <head>
-        <style>
+{% block head %}
+    <style>
+        #content {
+            width:1000px;
+            text-align:center;
+        }
 
-            table {
-                border-collapse:collapse;
-                border-spacing:0px;
-                margin:20px;
+        table {
+            border-collapse:collapse;
+            border-spacing:0px;
+            margin:20px;
+        }
+
+        td {
+            border-right:1px dotted #888888;
+            border-top:1px dotted #888888;
+            color:black;
+            padding-right: 7px;
+            padding-left:7px;
+            text-align:center;
+        }
+
+
+        th {
+            color:black;
+            margin: 0px;
+            padding:5px;
+            border-bottom: 1px solid black;
+            border-right:1px dotted black;
+            border-top: 1px solid black;
+            background-color:#ffe680;
+            line-height:3em;
+            text-align:center;
+        }
+
+        tr {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        tr.row-b {
+            background-color:#f0f7ff;
+        }
+
+        tr.selected, td.col_selected {
+            color:black;
+            background-color:#9adaff;
+        }
+
+        th.col_selected {
+            background-color:#fff1ba;
+        }
+
+        td.selected {
+            background-color:#3a76f1;
+            color:white;
+        }
+
+        .section {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            border-top: 1px solid black;
+            font-weight:bold;
+        }
+
+        #statsDetail {
+            position: absolute;
+            border: 1px solid black;
+            width:20em;
+            height:4em;
+            background-color:white;
+            padding:10px;
+        }
+
+        span.label {
+            font-weight:bold;
+            float:left;
+            width:10em;
+            text-align:right;
+            margin-right:1em;
+        }
+
+        #stdev {
+            text-align:left;
+        }
+
+        #min {
+            margin-right:1em;
+        }
+
+        #range {
+            text-align:left;
+        }
+
+        .avg_L5, .avg_ome  {
+            border-right:1px solid black;
+        } 
+        .avg_L1, .avg_ome, .sum_na, .peptide{
+            border-left:1px solid black;
+        }
+
+        .Tyr, tr.total{
+            border-bottom:1px solid black;
+        }
+
+        tr.total td {
+            font-weight:bold;
+        }
+
+        td.sum, td.total {
+            text-align:right;
+        }
+
+        #stats {
+            /* Reset alignment to compensate for 'text-align:center': */
+            text-align: left;
+            /* Specify the width of the element. This should be the same
+                as 'body min-width': */
+            width: 500px;
+            /* Set left and right margins to auto, thus centering the 
+                element in the containing (body) tag: */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+    </style>
+
+    <script type="text/javascript">
+        var col = '';
+
+        $(document).ready(function() {
+            $('#statsDetail').hide();
+
+            $('.stats').mouseout( function() {$('#statsDetail').hide();})
+
+            $('tr.data')
+                .mouseover(function() {
+                    $(this).addClass('selected');
+                })
+                .mouseout(function(){
+                    $(this).removeClass('selected');
+                })
+
+            $('td.data')
+                .mouseover(function() {
+                    id = this.id;
+                    col = id.replace(/^(data_)[\w]{3,5}_/, '.');
+                    $(col).addClass('col_selected');
+                    $(this).addClass('selected');
+                })
+                .mouseout(function(){
+                    $(col).removeClass('col_selected');
+                    $(this).removeClass('selected');
+                })
+
+            $('td.sum:contains(0)').html('-')
+            $('td.data:contains(0.0)').html('--')
+
+        });
+
+        function showStats(stdev, min, max) {
+            if (stdev != '' && min != '' && max != '') {
+                $('#stdev').html(stdev);
+                $('#min').html(min);
+                $('#max').html(max);
+                $('div#statsDetail').css({left:100, top:100}).show();
             }
+        }
+    </script>
+{% endblock %}
 
-            td {
-                border-right:1px dotted #888888;
-                border-top:1px dotted #888888;
-                color:black;
-                padding-right: 7px;
-                padding-left:7px;
-                text-align:center;
-            }
-
-
-            th {
-                color:black;
-                margin: 0px;
-                padding:5px;
-                border-bottom: 1px solid black;
-                border-right:1px dotted black;
-                border-top: 1px solid black;
-                background-color:#ffe680;
-                text-align:center;
-            }
-
-            tr {
-                margin: 0px;
-                padding: 0px;
-            }
-
-            tr.row-b {
-                background-color:#f0f7ff;
-            }
-
-            tr.selected, td.col_selected {
-                color:black;
-                background-color:#9adaff;
-            }
-
-            th.col_selected {
-                background-color:#fff1ba;
-            }
-
-            td.selected {
-                background-color:#3a76f1;
-                color:white;
-            }
-
-            .section {
-                border-left: 1px solid black;
-                border-right: 1px solid black;
-                border-top: 1px solid black;
-                font-weight:bold;
-            }
-
-            #statsDetail {
-                position: absolute;
-                border: 1px solid black;
-                width:20em;
-                height:4em;
-                background-color:white;
-                padding:10px;
-            }
-
-            span.label {
-                font-weight:bold;
-                float:left;
-                width:10em;
-                text-align:right;
-                margin-right:1em;
-            }
-
-            #stdev {
-                text-align:left;
-            }
-
-            #min {
-                margin-right:1em;
-            }
-
-            #range {
-                text-align:left;
-            }
-
-            .avg_L5, .avg_ome  {
-                border-right:1px solid black;
-            } 
-            .avg_L1, .avg_ome, .sum_na, .peptide{
-                border-left:1px solid black;
-            }
-
-            .Tyr, tr.total{
-                border-bottom:1px solid black;
-            }
-
-            tr.total td {
-                font-weight:bold;
-            }
-
-            td.sum, td.total {
-                text-align:right;
-            }
-
-            #stats {
-                /* Reset alignment to compensate for 'text-align:center': */
-                text-align: left;
-                /* Specify the width of the element. This should be the same
-                    as 'body min-width': */
-                width: 500px;
-                /* Set left and right margins to auto, thus centering the 
-                    element in the containing (body) tag: */
-                margin-left: auto;
-                margin-right: auto;
-            }
-
-        </style>
-
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery-1.2.6.js"></script>
-
-
-        <script type="text/javascript">
-            var col = '';
-
-            $(document).ready(function() {
-                $('#statsDetail').hide();
-
-                $('.stats').mouseout( function() {$('#statsDetail').hide();})
-
-                $('tr.data')
-                    .mouseover(function() {
-                        $(this).addClass('selected');
-                    })
-                    .mouseout(function(){
-                        $(this).removeClass('selected');
-                    })
-
-                $('td.data')
-                    .mouseover(function() {
-                        id = this.id;
-                        col = id.replace(/^(data_)[\w]{3,5}_/, '.');
-                        $(col).addClass('col_selected');
-                        $(this).addClass('selected');
-                    })
-                    .mouseout(function(){
-                        $(col).removeClass('col_selected');
-                        $(this).removeClass('selected');
-                    })
-
-                $('td.sum:contains(0)').html('-')
-                $('td.data:contains(0.0)').html('--')
-
-            });
-
-            function showStats(stdev, min, max) {
-                if (stdev != '' && min != '' && max != '') {
-                    $('#stdev').html(stdev);
-                    $('#min').html(min);
-                    $('#max').html(max);
-                    $('div#statsDetail').css({left:100, top:100}).show();
-                }
-            }
-        </script>
-    </head>
-    <body>
-        {% include 'header.html' %}
-
-            <table id="stats" >
-                <thead>
-                <tr>
-                    <th class="peptide">Type</th>
-                    <th class="total">Total</th>
-                    <th class="sum_na sum borderleft">N/A</th>
-                    <th class="sum_e sum">e</th>
-                    <th class="sum_E sum">E</th>
-                    <th class="sum_S sum">S</th>
-                    <th class="sum_h sum">h</th>
-                    <th class="sum_H sum">H</th>
-                    <th class="sum_t sum">t</th>
-                    <th class="sum_T sum">T</th>
-                    <th class="sum_g sum">g</th>
-                    <th class="sum_G sum">G</th>
-                    <th class="sum_B sum">B</th>
-                    <th class="sum_i sum">i</th>
-                    <th class="sum_I sum">I</th>
-                    {% autoescape off %}
-                    {% for attribute in attributes %}
-                        <th class="avg_{{attribute.0}}">{{attribute.1}}</th>
-                    {% endfor %}
-                    {% endautoescape %}
-                </tr>
-                </thead>
-                <tbody>
-                {% for code, peptide in peptides.items %}
-                    <tr class="data {% cycle 'row-a' 'row-b' %}">
-                        <td class="peptide {{peptide.longCode}}">{{peptide.longCode|upper}}</td>
-                        <td class="borderright {{peptide.longCode}}">{{peptide.total}}</td>
-                        {% for list in peptide.counts %}
-                            <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
-                        {% endfor %}
-                        {% for list in peptide.stats %}
-                            {% ifequal list.0 "L1" %}
-                                <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                            {% else %}{% ifequal list.0 "L2" %}
-                                <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                            {% else %}{% ifequal list.0 "L3" %}
-                                <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                            {% else %}{% ifequal list.0 "L4" %}
-                                <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                            {% else %}{% ifequal list.0 "L5" %}
-                                <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                            {% else %}
-                                <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:1}},'{{list.1.min|floatformat:1}}','{{list.1.max|floatformat:1}}')">{{list.1.mean|floatformat:1}}</td>
-                                {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
-                        {% endfor %}
-                    </tr>
+{% block content %}
+    <table id="stats" >
+        <thead>
+        <tr>
+            <th class="peptide">Type</th>
+            <th class="total">Total</th>
+            <th class="sum_na sum borderleft">N/A</th>
+            <th class="sum_e sum">e</th>
+            <th class="sum_E sum">E</th>
+            <th class="sum_S sum">S</th>
+            <th class="sum_h sum">h</th>
+            <th class="sum_H sum">H</th>
+            <th class="sum_t sum">t</th>
+            <th class="sum_T sum">T</th>
+            <th class="sum_g sum">g</th>
+            <th class="sum_G sum">G</th>
+            <th class="sum_B sum">B</th>
+            <th class="sum_i sum">i</th>
+            <th class="sum_I sum">I</th>
+            {% autoescape off %}
+            {% for attribute in attributes %}
+                <th class="avg_{{attribute.0}}">{{attribute.1}}</th>
+            {% endfor %}
+            {% endautoescape %}
+        </tr>
+        </thead>
+        <tbody>
+        {% for code, peptide in peptides.items %}
+            <tr class="data {% cycle 'row-a' 'row-b' %}">
+                <td class="peptide {{peptide.longCode}}">{{peptide.longCode|upper}}</td>
+                <td class="borderright {{peptide.longCode}}">{{peptide.total}}</td>
+                {% for list in peptide.counts %}
+                    <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
                 {% endfor %}
+                {% for list in peptide.stats %}
+                    {% ifequal list.0 "L1" %}
+                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                    {% else %}{% ifequal list.0 "L2" %}
+                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                    {% else %}{% ifequal list.0 "L3" %}
+                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                    {% else %}{% ifequal list.0 "L4" %}
+                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                    {% else %}{% ifequal list.0 "L5" %}
+                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                    {% else %}
+                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} {{peptide.longCode}}" onmouseover="showStats({{list.1.std|floatformat:1}},'{{list.1.min|floatformat:1}}','{{list.1.max|floatformat:1}}')">{{list.1.mean|floatformat:1}}</td>
+                        {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
 
-                <tr class="data total {% cycle 'row-a' 'row-b' %}">
-                    <td class="peptide total">Total</td>
-                    <td class="borderright total">{{total.total}}</td>
-                    {% for list in total.counts %}
-                        <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
-                    {% endfor %}
-                    {% for list in total.stats %}
-                        {% ifequal list.0 "L1" %}
-                            <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                        {% else %}{% ifequal list.0 "L2" %}
-                            <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                        {% else %}{% ifequal list.0 "L3" %}
-                            <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                        {% else %}{% ifequal list.0 "L4" %}
-                            <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                        {% else %}{% ifequal list.0 "L5" %}
-                            <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
-                        {% else %}
-                            <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} total" onmouseover="showStats({{list.1.std|floatformat:1}},'{{list.1.min|floatformat:1}}','{{list.1.max|floatformat:1}}')">{{list.1.mean|floatformat:1}}</td>
-                            {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
-                    {% endfor %}
-                </tr>
+        <tr class="data total {% cycle 'row-a' 'row-b' %}">
+            <td class="peptide total">Total</td>
+            <td class="borderright total">{{total.total}}</td>
+            {% for list in total.counts %}
+                <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
+            {% endfor %}
+            {% for list in total.stats %}
+                {% ifequal list.0 "L1" %}
+                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L2" %}
+                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L3" %}
+                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L4" %}
+                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}{% ifequal list.0 "L5" %}
+                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|floatformat:3}},'{{list.1.min|floatformat:3}}','{{list.1.max|floatformat:3}}')">{{list.1.mean|floatformat:3}}</td>
+                {% else %}
+                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} total" onmouseover="showStats({{list.1.std|floatformat:1}},'{{list.1.min|floatformat:1}}','{{list.1.max|floatformat:1}}')">{{list.1.mean|floatformat:1}}</td>
+                    {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
+            {% endfor %}
+        </tr>
 
-              </tbody>
-            </table>
+      </tbody>
+    </table>
 
-            <div id="statsDetail">
-                    <span class="label">Standard Deviation:</span><div id="stdev"></div>
-                    <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
-            </div>
-    </body>
-</html>
+    <div id="statsDetail">
+            <span class="label">Standard Deviation:</span><div id="stdev"></div>
+            <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
+    </div>
+{% endblock %}
