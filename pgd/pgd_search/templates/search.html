@@ -346,6 +346,8 @@
                         target = ('#' + target + col);
                         helpName = currentID.substring(3, currentID.length - 1 );
                         helpName = helpName.replace('_','');
+						helpName = helpName.replace('_','');
+						helpName = helpName.replace('_','');
                         helpName = '#' + helpName.replace(' ','');
                         contentText = $(helpName).html();    
                         titleText = $(helpName).attr('name');
@@ -705,7 +707,7 @@
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>
-                        <ul id="aa_choices_list" class="multiselect field">
+                        <ul id="id_aa_choices_list_col_{{r.index}}" class="multiselect field">
                             {% for choice in aa_choices|index_lookup:forloop.counter0 %}
                                 <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
                             {% endfor %}
@@ -722,7 +724,7 @@
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>
-                        <ul id="ss_choices_list" class="multiselect field">
+                        <ul id="id_ss_choices_list_col_{{r.index}}" class="multiselect field">
                             {% for choice in ss_choices|index_lookup:forloop.counter0 %}
                                 <li>{% autoescape off %}{{choice.1}}{% endautoescape  %}<input type="checkbox" name="ss_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
                             {% endfor %}
