@@ -335,7 +335,7 @@
             };
             
             function createQtips(){
-                $('#residuesContainer input.field,#residuesContainer td.field>select').each(function(){
+                $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').each(function(){
                     currentID = $(this).attr('id');
                     col = currentID.substring(currentID.length-1,currentID.length);
                     sign = currentID.substring(currentID.length-2,currentID.length-1);
@@ -388,11 +388,16 @@
                             });
                         }    
                     });            
-                    $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').each(function(){    
+                    $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').each(function(){    
                         currentID = $(this).attr('id');
                         currentID = currentID.replace(' ','');
                         if(currentID!='' && currentID!=null && currentID!=undefined){
-                            target = '#id_resolutionMax';
+                            if(currentID.substring(currentID.length-3,currentID.length)=='Min'){
+								target='#'+currentID.replace('Min','Max');
+							}
+							else{
+								target='#'+currentID;
+							}
                             helpName = '#'+currentID.replace('_','');
                             contentText = $(helpName).html();    
                             titleText = $(helpName).attr('name');
@@ -590,12 +595,12 @@
 
                 createQtips();
 
-                $('#residuesContainer input.field,#residuesContainer td.field>select').mousedown(function(event){
+                $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').mousedown(function(event){
                         $clickedOn  = $(event.target);
                         if($clickedOn.is('input')){
                             rowTarget = event.target.id;
                         }
-                        else if($clickedOn.is('option')){
+                        else if($clickedOn.is('li')){
                             rowTarget = event.target.parentNode.id;
                         }
                         if(rowTarget!=''&&rowTarget!=undefined){
@@ -612,7 +617,7 @@
                         }
                     });
 
-                $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').mousedown(function(event){
+                $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').mousedown(function(event){
                     $clickedOn  = $(event.target);
                     if($clickedOn.is('input')){
                         rowTarget =event.target.id;
