@@ -51,7 +51,7 @@ class SearchFormBase(forms.Form):
     rfactorMax      = forms.FloatField(required=False, min_value=0, widget=forms.TextInput(attrs={'size':3}))
     rfreeMin        = forms.FloatField(required=False, min_value=0, widget=forms.TextInput(attrs={'size':3}))
     rfreeMax        = forms.FloatField(required=False, min_value=0, widget=forms.TextInput(attrs={'size':3}))
-    proteins        = forms.ModelMultipleChoiceField(queryset=Protein.objects.all().order_by('code'), required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
+    proteins        = forms.CharField(required=False)
     proteins_i      = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
     residues        = forms.ChoiceField(choices=[(i,i) for i in range(1, searchSettings.segmentSize+1)], initial=5)
 
