@@ -163,12 +163,12 @@ class ConfDistPlot():
                 Q(**{'%s__gte'%self.yTextString: yMin}) |
                 Q(**{'%s__lt'%self.yTextString: yMax})
             ))
-                
+
         )
-        
+
         # Total # of observations
         self.numObs = self.querySet.count()
-        
+
         ### Sort the values from observations into bins
         # save these beforehand to avoid recalculating per bin
         xScale = xLimit / float(xSize - 2 * xPadding)
@@ -183,7 +183,6 @@ class ConfDistPlot():
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
 
         for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
-            
             # Adjustments for the axes values
             xAdj,yAdj = int(math.floor(entry[self.xTextString] / xbin)),int(math.floor(entry[self.yTextString] / ybin))
 
@@ -214,7 +213,7 @@ class ConfDistPlot():
 
             obs = bin['obs']
             bin['count'] = len(obs)
-            
+
             # Find the bin with the most observations
             if self.maxObs < bin['count']:
                 self.maxObs = bin['count']
@@ -245,9 +244,8 @@ class ConfDistPlot():
     # Plots observations
     # ******************************************************
     def Plot(self):
-        
         binVals = []
-        
+
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
             if self.ref in ANGLES:

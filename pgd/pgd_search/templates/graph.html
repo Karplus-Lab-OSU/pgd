@@ -1,9 +1,7 @@
 {% extends 'search_base.html' %}
 
-{% block head %}    
-        <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
+{% block head %}
         <style>
-
             #content {
                 margin-left:auto;
                 margin-right:auto;
@@ -149,9 +147,8 @@
             }
         </style>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
-        <!--script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.js"></script-->
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
             var stats = {};
             var aafix = 0.5;
@@ -174,7 +171,7 @@
 
             $(document).ready(function() {
                 $('div#binDetails').hide();
-                
+
                 $('#button-plot').click(function (evt) {
                     update_svg();
                 });
@@ -197,7 +194,7 @@
 
                 $('#id_yProperty').change(function (){
                         $('#id_yProperty option:selected').each(function () {
-                            _default = DEFAULTS[$(this).val()];
+                            //_default = DEFAULTS[$(this).val()];
                             $('#id_y').val(_default['min']);
                             $('#id_y1').val(_default['max']);
                             $('#id_yBin').val(_default['stepsize']);
@@ -275,7 +272,7 @@
 
                 lines = data['background']['lines']
                 for (i in lines) {
-                    line = lines[i];                   
+                    line = lines[i];
                     l = paper
                         .path({stroke: line['color']})
                         .moveTo(line['x']+line_x_aafix, line['y']+line_y_aafix)
@@ -283,21 +280,12 @@
                 }
 
                 texts = data['background']['texts'];
-                //font = paper.getFont("DejaVu");
+                font = paper.getFont("DejaVu");
+                //font = paper.getFont("DoulosSIL");
+
                 for (i in texts) {
                     text = texts[i]
-                    t = paper.text(
-                        text['x'],
-                        text['y'],
-                        text['text']
-                        )
-                        .attr('font-family', 'Helvetica')
-                        .attr('font-size', 23)
-                        .attr('fill', '#ff0000');
-                    //console.log(t);
-
-                    
-                    //paper.print(text['x'],text['y']+20,text['text'], font,12);
+                    paper.print(text['x'],text['y'],text['text'], font,12);
                 }
 
                 stats = {};
@@ -313,10 +301,6 @@
 
 
                     r[0].onmouseover = function(){
-                        //r = $(this).attr('style');
-                        //x = $(this).css('left', '246px');
-                        //y = $(this).css('top');
-                        //alert(this.id);
                         if (is_IE) {
                             bin_mouseover(this.id);
                         } else {
@@ -395,9 +379,9 @@
 
     <ul id="errors"></ul>
     <div id="buttons">
-        <button id="button-plot">Plot</button>
-        <button id="button-save">Save</button>
-        <button id="button-data">Data</button>
+        <button id="button-plot">Re-Plot</button>
+        <button id="button-save">Save Plot Image</button>
+        <button id="button-data">Save Plot Data</button>
     </div>
     <form id="plotform" name="plot">
         <table id="controls">
