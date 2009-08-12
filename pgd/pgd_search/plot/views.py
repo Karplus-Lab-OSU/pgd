@@ -92,7 +92,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     if not ystep: ystep = 90
 
     #get Y coordinate for xaxis hashes, this is the same for all x-labels
-    xlabel_y = y+graph_height+hashsize*2+(3*ratio)
+    xlabel_y = y+graph_height+hashsize*3+(5*ratio)
     for i in range(5):
         #text value
         xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i)
@@ -100,7 +100,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         xtext = '%i' % local_int(xtext) if not xtext%1 else '%.1f' %  xtext
         #get X coordinate of hash, offsetting for length of text
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xtext)
-        xlabel_x = x+(graph_width/4)*i-xbearing-twidth/2
+        xlabel_x = x+(graph_width/4)*i-xbearing-twidth/2+1
         #create label
         svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
 
@@ -111,7 +111,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
-        ylabel_y = y+(graph_height/4)*(4-i)+(4*ratio)
+        ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
         #Get X coordinate offsetting for length of hash and length of text
         ylabel_x = (x-(ratio*15))-xbearing-twidth
         #create label
@@ -269,6 +269,7 @@ def plot(request):
 
     return render_to_response('graph.html', response_dict, context_instance=RequestContext(request, processors=[settings_processor]))
 
+
 def renderToSVG(request):
     """
     render conf dist plot using jquery.svg
@@ -325,12 +326,12 @@ def plotDump(request):
             data = form.cleaned_data
 
             cdp = ConfDistPlot(
-                400,            #height
-                400,            #width
+                360.0,            #height
+                360.0,            #width
                 0,              #Xpadding
                 0,              #Ypadding
-                55,              #Xoffset
-                45,              #Yoffset
+                55.0,              #Xoffset
+                55.0,              #Yoffset
                 data['x'],      #Xstart
                 data['x1'],           #Xend
                 data['y'],         #Ystart
@@ -351,11 +352,10 @@ def plotDump(request):
 
             cdp.Plot()
             cdp.PrintDump(response)
-
+            print response
             return response
 
     return HttpResponse('Error')
-
 
 
 

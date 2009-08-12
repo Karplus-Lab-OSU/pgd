@@ -1,7 +1,7 @@
 {% extends 'search_base.html' %}
 {% load search_extras %}
 
-{% block head %}  
+{% block head %}
     <style>
 
         table#results {
@@ -32,10 +32,10 @@
             padding:.3em;
             text-align:center;
         }
-		
-		.iconLink {
-			padding: .5em;			
-		}
+
+        .iconLink {
+            padding: .5em;
+        }
 
         tr.header {
             border: 1px solid black;
@@ -198,7 +198,7 @@
                 <tr class="header">
                     <th>Match  </th>
                     <th>Code</th>
-					<th>External Databse</th>
+                    <th>External Databse</th>
                     <th>Residue</th>
                     <th>ID</th>
                     <th>Chain ID</th>
@@ -233,9 +233,9 @@
                 <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
                     <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                     <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
-					<td><a href="http://www.pdb.org/pdb/explore.do?structureId={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdb.ico"></a>
-					<a href="http://www.ebi.ac.uk/thornton-srv/databases/cgi-bin/pdbsum/GetPage.pl?pdbcode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdbsum.ico"></a>
-					<a href="http://eds.bmc.uu.se/cgi-bin/eds/uusfs?pdbCode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/eds.ico"></a></td>
+                    <td><a href="http://www.pdb.org/pdb/explore.do?structureId={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdb.ico"></a>
+                    <a href="http://www.ebi.ac.uk/thornton-srv/databases/cgi-bin/pdbsum/GetPage.pl?pdbcode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdbsum.ico"></a>
+                    <a href="http://eds.bmc.uu.se/cgi-bin/eds/uusfs?pdbCode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/eds.ico"></a></td>
                     <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
                     <td>{{r.oldID}}</td>
                     <td>{{segment.chainID}}</td>

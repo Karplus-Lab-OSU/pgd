@@ -18,6 +18,7 @@ class SearchSettings(dbsettings.Group):
     """
     Search Settings
     """
+    query_limit          = dbsettings.IntegerValue('Result Set Limit', 'Maximum size of results.  Due to the heavy cpu requirement for calculating statistics this option limits how many results can be returned by a search', default=50000000)
     segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches', default=10)
     requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available', default=10)
 searchSettings = SearchSettings('Search')

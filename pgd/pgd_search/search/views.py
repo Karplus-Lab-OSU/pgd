@@ -1,4 +1,4 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
@@ -7,6 +7,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
 import math
 
+from pgd_core.models import Protein
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
@@ -18,15 +19,18 @@ import re
 Handler for search form.
 """
 def search(request):
+
     if request.method == 'POST': # If the form has been submitted
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
-
             #process search form into search object
             search = processSearchForm(form)
 
             #at least for now limit the size of the result set
-            if search.querySet().count() > 20000:
+            if search.querySet().count() > searchSettings.query_limit:
+                form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
+
+            elif search.querySet().count() == 0:
                 form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
 
             else:
@@ -34,7 +38,19 @@ def search(request):
                 request.session['search'] = search
 
                 return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
+
+
+        # package aa_choices and ss_choices
+        aa_choices = []
+        ss_choices = []
+        for i in RESIDUE_INDEXES:
+            aa_chosen = request.POST.getlist('aa_%i' % i)
+            aa_choices.append([(c[0],c[1],'checked' if c[0] in aa_chosen else '') for c in AA_CHOICES])
+            ss_chosen = request.POST.getlist('ss_%i' % i)
+            ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES])
     else:
+        aa_choices = [AA_CHOICES for i in range(searchSettings.segmentSize)]
+        ss_choices = [SS_CHOICES for i in range(searchSettings.segmentSize)]
         form = SearchForm() # An unbound form
 
     #construct a list of values for i
@@ -57,7 +73,9 @@ def search(request):
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
-        'residueFields':residueFields
+        'residueFields':residueFields,
+        'aa_choices':aa_choices,
+        'ss_choices':ss_choices
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
@@ -69,6 +87,8 @@ def editSearch(request, search_id=None):
     if search_id:
         search = Search.objects.get(id=search_id)
         form = processSearchObject(search)
+
+
     #else use the search in the session if it exists
     else:
         try:
@@ -76,6 +96,7 @@ def editSearch(request, search_id=None):
             form = processSearchObject(search)
         except KeyError:
             form = SearchForm() # An unbound form
+
 
     #construct a list of values for i
     iValues = [
@@ -85,9 +106,17 @@ def editSearch(request, search_id=None):
 
     #order the residue properties in way that django template can handle it better
     residueFields = []
+    aa_choices = []
+    ss_choices = []
     for i in RESIDUE_INDEXES:
+        valid = form.is_valid()
+        aa_chosen = form.cleaned_data['aa_%i' % i]
+        aa_choices.append([(c[0],c[1],'checked' if c[0] in aa_chosen else '') for c in AA_CHOICES])
+        ss_chosen = form.cleaned_data['ss_%i' % i]
+        ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES]) 
+
         dict = {}
-        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in ("aa", "ss", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i
@@ -97,7 +126,9 @@ def editSearch(request, search_id=None):
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
-        'residueFields':residueFields
+        'residueFields':residueFields,
+        'aa_choices':aa_choices,
+        'ss_choices':ss_choices
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
@@ -150,10 +181,11 @@ def decodeSS(val):
     return list
 
 
-"""
-Process a search form copying its data into a search object
-"""
+
 def processSearchForm(form):
+    """
+    Process a search form copying its data into a search object
+    """
     data = form.cleaned_data
     length = searchSettings.segmentSize
 
@@ -176,9 +208,9 @@ def processSearchForm(form):
     #get list of proteins to filter
     if data['proteins_i']:
         search.codes_include = data['proteins_i']
-        for value in data['proteins']:
+        for value in filter(lambda x:x!='', data['proteins'].split(',')) :
             searchCode = Search_code()
-            searchCode.code = value
+            searchCode.code = value.strip().upper()
             search.codes.add(searchCode)
 
     #process per residue properties
@@ -191,7 +223,7 @@ def processSearchForm(form):
 
         #process ss
         if data['ss_%i' % i]:
-            residue.ss_int           = encodeSS(data['ss_%i' % i])
+            residue.ss_int          = encodeSS(data['ss_%i' % i])
             residue.ss_int_include  = data['ss_i_%i' % i]
             hasField = True
 
@@ -234,7 +266,7 @@ def processSearchObject(search):
         codes = []
         for code in search.codes.all():
             codes.append(code.code)
-        data['proteins'] = codes
+        data['proteins'] = ', '.join(codes)
 
     #setup defaults - initial values are not set when passing a dict to the form constructor
     # so any value with a default value must be initialized prior to values are pulled out
@@ -266,6 +298,32 @@ def processSearchObject(search):
 
     return SearchForm(data)
 
+
+def protein_search(request):
+    """
+    handler for ajax search box that looks up proteins.  Search box
+    expects a query that is a comma delimited list of proteins.
+    The last protein is autocompleted
+    """
+    limit = request.GET['limit']
+    query = request.GET['q']
+
+    # parse out just the last protein
+    code = query.split(',')[-1].strip()
+
+    results = Protein.objects.filter(code__istartswith=code).values_list('code')
+    if len(results):
+        # there were results, build a newline delimeted response as required
+        # per jquery autocomplete script
+        response = ''
+        for issue in results:
+            response = '%s\n%s' % (response, issue[0])
+
+        return HttpResponse(response)
+    else:
+        return HttpResponse('')
+
+
 def saved(request):
 
     searches = Search.objects.all()
@@ -290,7 +348,7 @@ def saved(request):
 
 def help(request):
     return render_to_response('help.html', context_instance=RequestContext(request))
-	
+
 def qtiphelp(request):
     return render_to_response('qtiphelp.html', context_instance=RequestContext(request))
- 
+

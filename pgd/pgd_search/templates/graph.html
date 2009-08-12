@@ -1,9 +1,7 @@
 {% extends 'search_base.html' %}
 
-{% block head %}    
-        <style type="text/css">@import "{{MEDIA_URL}}/css/jquery.svg.css";</style> 
+{% block head %}
         <style>
-
             #content {
                 margin-left:auto;
                 margin-right:auto;
@@ -12,11 +10,12 @@
             }
 
             #canvas_container {
-                width: 500px;
                 height: 472px;
-                min-height:472px;
                 margin: 15px;
-                text-align:center;
+                margin-left:auto;
+                margin-right:auto
+                min-height:472px;
+                width: 500px;
             }
 
             #canvas {
@@ -30,6 +29,7 @@
                 padding-top:10%;
                 width: 100%;
                 height: 90%;
+                text-align:center;
             }
 
             #ajax_progress div{
@@ -78,6 +78,7 @@
             }
 
             #binDetails td {
+                color:black;
                 line-height:1em;
                 padding:.5em;
                 margin:3px;
@@ -86,6 +87,7 @@
 
             #binDetails table {
                 margin: 0px;
+                background-color:grey;
                 border: 2px solid black;
                 width:20em;
             }
@@ -145,10 +147,26 @@
             }
         </style>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.svg.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
             var stats = {};
-            var fix = 0.5;
+            var aafix = 0.5;
+            var boxsizefix = 1;
+            var line_x_aafix = 1;
+            var line_y_aafix = 0.5;
+            var rects_y_aafix = 0;
+            var is_IE = false;
+
+            // IE checks - check different things not supported by IE to detect them
+            if(!(jQuery.support.objectAll && jQuery.support.leadingWhitespace && jQuery.support.noCloneEvent)){
+                is_IE = true;
+                boxsizefix = 0;
+                line_x_aafix = 2
+                line_y_aafix = 2
+                rects_y_aafix = 0.5;
+            }
+
             var stat_field = false;
 
             $(document).ready(function() {
@@ -176,7 +194,7 @@
 
                 $('#id_yProperty').change(function (){
                         $('#id_yProperty option:selected').each(function () {
-                            _default = DEFAULTS[$(this).val()];
+                            //_default = DEFAULTS[$(this).val()];
                             $('#id_y').val(_default['min']);
                             $('#id_y1').val(_default['max']);
                             $('#id_yBin').val(_default['stepsize']);
@@ -239,58 +257,66 @@
                 $('#canvas').show();
 
                 // process graph
-                $('#canvas').svg()
-                svg = $('#canvas').svg('get');
+                var paper = Raphael("canvas", 700, 700);
 
                 rects = data['background']['rects']
                 for (i in rects) {
                     rect = rects[i]
-                    svg.rect(
-                        rect['x']+fix,
-                        rect['y']+fix,
+                    r = paper.rect(rect['x']+aafix,
+                        rect['y']+aafix,
                         rect['height'],
-                        rect['width'],
-                        {fill: rect['fill'], stroke:  rect['stroke'], 'stroke-width':rect['stroke']}
-                    );
+                        rect['width']);
+                    r.attr({fill: rect['fill'], stroke:rect['color']});
+                    r.attr('stroke-width',rect['stroke']);
                 }
 
                 lines = data['background']['lines']
                 for (i in lines) {
                     line = lines[i];
-                    svg.line(
-                        line['x']+fix,
-                        line['y']+fix,
-                        line['x1']+fix,
-                        line['y1']+fix,
-                        {stroke: line['color'], 'stroke-width': line['stroke']}
-                    );
+                    l = paper
+                        .path({stroke: line['color']})
+                        .moveTo(line['x']+line_x_aafix, line['y']+line_y_aafix)
+                        .lineTo(line['x1']+line_x_aafix, line['y1']+line_y_aafix);
                 }
 
-                texts = data['background']['texts']
+                texts = data['background']['texts'];
+                font = paper.getFont("DejaVu");
+                //font = paper.getFont("DoulosSIL");
+
                 for (i in texts) {
                     text = texts[i]
-                    svg.text(
-                        text['x'],
-                        text['y'],
-                        text['text'],
-                        {'font-family': text['fontfamily'], 'font-size': text['size'], fill: text['color']}
-                    );
+                    paper.print(text['x'],text['y'],text['text'], font,12);
                 }
 
                 stats = {};
                 boxes = data['boxes'];
                 for (i in boxes) {
-                    rect = boxes[i]
-                    svg.rect(
-                        rect[0]+fix,
-                        rect[1]+fix,
-                        rect[2],
-                        rect[3],
-                        {fill: '#' + rect[4], stroke: '#'+rect[4], 'stroke-width': 1, onmouseover:'bin_mouseover(evt, "'+rect[7][0]+'-'+rect[7][1]+'");', onmouseout:'bin_mouseout();'}
-                    );
+                    rect = boxes[i];
+                    r = paper.rect(rect[0]+aafix,
+                        rect[1]+rects_y_aafix,
+                        rect[2]+boxsizefix,
+                        rect[3]+boxsizefix);
+                    r.attr({fill: "#" +rect[4], stroke:"#" +rect[4]});
+                    r.attr('stroke-width',0);
+
+
+                    r[0].onmouseover = function(){
+                        if (is_IE) {
+                            bin_mouseover(this.id);
+                        } else {
+                            bin_mouseover(this.getAttribute('x')+'-'+this.getAttribute('y'));
+                        }
+                    };
 
                     //add static fields
-                    stats[rect[7][0]+'-'+rect[7][1]] = {
+                    if (is_IE){
+                        key = rect[0]+'-'+rect[1];
+                        r[0].id = key;
+                    } else {
+                        key = r[0].getAttribute('x')+'-'+r[0].getAttribute('y');
+                    }
+
+                    stats[key] = {
                         'observations':rect[6],
                         'bin': [rect[7][0],rect[7][1]],
                         'avg': rect[8],
@@ -312,8 +338,8 @@
                 }
             }
 
-            function bin_mouseover(evt, val){
-                field_stats = stats[val]
+            function bin_mouseover(val){
+                field_stats = stats[val];
 
                 // set static properties
                 $('#stat_xattribute td.x').html(""+(field_stats['bin'][0]*{{xBin}}))
@@ -353,9 +379,9 @@
 
     <ul id="errors"></ul>
     <div id="buttons">
-        <button id="button-plot" class="field">Plot</button>
-        <button id="button-save">Save</button>
-        <button id="button-data">Data</button>
+        <button id="button-plot">Re-Plot</button>
+        <button id="button-save">Save Plot Image</button>
+        <button id="button-data">Save Plot Data</button>
     </div>
     <form id="plotform" name="plot" method="post">
         <table id="controls">

@@ -211,7 +211,7 @@ class ConfDistPlot():
 
             obs = bin['obs']
             bin['count'] = len(obs)
-            
+
             # Find the bin with the most observations
             if self.maxObs < bin['count']:
                 self.maxObs = bin['count']
@@ -219,7 +219,7 @@ class ConfDistPlot():
             # Calculate bin stats for each field
             for field,fieldString in self.fields:
 
-                # Skip axes fields, unless 'all' is the indicated field
+                # Skip axes fields, unless 'll' is the indicated field
                 #  (This reduces unnecessary stats calculations)
                 if self.ref != 'all' and field in (self.xTextString, self.yTextString): continue
 
@@ -242,9 +242,8 @@ class ConfDistPlot():
     # Plots observations
     # ******************************************************
     def Plot(self):
-        
         binVals = []
-        
+
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
             if self.ref in ANGLES:
@@ -326,7 +325,7 @@ class ConfDistPlot():
                     bin['pixCoords']['height'],
                     fill,
                     fill,
-                    bin['count'],
+                    bin,
                     key,
                 ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
             )

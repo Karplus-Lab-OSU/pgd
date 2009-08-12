@@ -1,6 +1,8 @@
 {% extends 'search_base.html' %}
+{% load search_extras %}
 
 {% block head %}
+        <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/jquery.autocomplete.css" />
         <style>
             #content {
                 width:100%;
@@ -31,9 +33,17 @@
 
             TD.field {
                 padding-left:2em;
-                width:10em;
                 text-align:left;
                 white-space: nowrap;
+            }
+
+            input.field {
+                width:8.2em;
+            }
+
+            input#id_proteins {
+                margin-left:3px;
+                width:40em;
             }
 
             TD.sectionheader {
@@ -54,8 +64,44 @@
                 margin-top:20px;
             }
 
-            input.field {
+            input.field, ul.multiselect {
                 margin:.2em;
+            }
+
+            ul.multiselect {
+                float:left;
+                list-style:none;
+                border: 1px solid #d4d4d4;
+                width:8.3em;
+            }
+            ul.multiselect li {
+                color:#b4b4b4;
+                cursor:default;
+                line-height:16px;
+            }
+
+            #aa_choices_list li {
+                text-align:center;
+            }
+
+            #ss_choices_list li {
+                padding-left:5px;
+            }
+
+            ul.multiselect li input {display:none;}
+
+            ul.multiselect.field_include, ul.multiselect.field_exclude {
+                border: 1px solid black;
+            }
+
+            ul.multiselect.field_include li.selected {
+                color:black;
+                background-color:#c2e192;
+            }
+
+            ul.multiselect.field_exclude li.selected {
+                color:black;
+                background-color:#ee9c98;
             }
 
             select#id_proteins {
@@ -82,11 +128,11 @@
                 background-image:url('http://doors.osuosl.org/media/minus2.png');
             }
 
-            .field_include {
+            input.field_include {
                 background-color:#c2e192;
                 border-color:black;
             }
-            .field_exclude {
+            input.field_exclude {
                 border-color:black;
                 background-color:#ee9c98;
             }
@@ -119,7 +165,8 @@
             }
         </style>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script> 
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
         <script type="text/javascript">
             qtipsOn=true;
             qtipState = '';
@@ -162,9 +209,9 @@
 
                     //update size of table
                     if (newValue < 5){
-                        val = 45;
+                        val = 54;
                     } else {
-                        val = 9*newValue+6
+                        val = 12.4*newValue+6
                     }
 
                     $('table#residues').css({'width':val+'em'});
@@ -228,6 +275,42 @@
                 }
             };
 
+            function updateInclusionSelect(node){
+                // is anything checked?
+                $node = $(node);
+
+                is_checked = false;
+                $node.find('input').each(function(){
+                    if (this.checked) {
+                        is_checked = true;
+                    }
+                });
+
+                if (is_checked) {
+                    val = $(node.parentNode).children(".include").val()
+                    if (val == '') {
+                        val = 1
+                    }
+                    if (val == 1 &&  !$node.hasClass('field_include') ){
+                        $(node.parentNode).children(".toggle").addClass('toggle_Include');
+                        $(node.parentNode).children(".include").val(1).attr('disabled',false);
+                        $node.addClass('field_include').removeClass('field_exclude');
+                    }else if (val == 0 && !$node.hasClass('field_exclude') ) {
+                        $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
+                        $(node.parentNode).children(".include").val(0).attr('disabled',false);
+                        $node.addClass('field_exclude').removeClass('toggle_Include');
+                    }
+                } else {
+                    $node
+                        .removeClass('field_exclude')
+                        .removeClass('field_include');
+                    $(node.parentNode).children(".toggle")
+                        .removeClass('toggle_Include')
+                        .removeClass('toggle_Exclude');
+                    $(node.parentNode).children(".include").val('');
+                }
+            };
+
             // extend function to jquery
             $.fn.updateInclusionField = function(){
                 this.each(function(){
@@ -236,7 +319,7 @@
             };
             $.fn.updateInclusionSelect = function(){
                 this.each(function(){
-                    updateInclusionField(this, false);
+                    updateInclusionSelect(this);
                 });
             };
 
@@ -400,6 +483,10 @@
                     }
                 });
 
+                //setup the search box to be ajax'ified
+                $('input#id_proteins')
+                    .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
+
                 $('input.field').keyup(function(evt){
                         updateInclusionField(evt.target, true);
                     });
@@ -409,10 +496,18 @@
                 $('input.field').updateInclusionField();
 
 
+                $('#id_proteins').keyup(function(evt){
+                        updateInclusionField(evt.target, false);
+                    });
+                $('#id_proteins').change(function(evt){
+                        updateInclusionField(evt.target, false);
+                    });
+                $('#id_proteins').each(function(){updateInclusionField(this, false);});
+
+
                 $('select.field').change(function(evt){
                         updateInclusionField(evt.target, false);
                     });
-                $('select.field').updateInclusionSelect();
 
                 $('#id_residues').change(sizeChange);
 
@@ -420,90 +515,123 @@
                 $('#oldLength').val({{maxLength}});
                 sizeChange(1);
 
+                // setup multiselects
+                $('.multiselect li')
+                    .click(function(){
+                        $this = $(this);
+                        if ($this.hasClass('selected')){
+                            $this.removeClass('selected');
+                            $this.children('input').attr('checked',false);
+                        }else{
+                            $this.addClass('selected');
+                            $this.children('input').attr('checked',true);
+                        }
+                        $this.parent().updateInclusionSelect()
+                    })
+                    // update styles based on if its already checked
+                    .each(function(){
+                        $this = $(this);
+                        if ( $this.children('input').attr('checked')){
+                             $this.addClass('selected');
+                        }
+                    });
+
+                $('.multiselect').updateInclusionSelect();
+
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
 
-            var header = document.getElementById('peptide_header');
-            if (header.innerHTML == 'Peptide →'){
-            header.innerHTML = 'Peptide ↓';
-            }
-            else{
-            header.innerHTML = 'Peptide →';
-            }
+                    var header = document.getElementById('peptide_header');
+                    if (header.innerHTML == 'Peptide →'){
+                        header.innerHTML = 'Peptide ↓';
+                    } else {
+                        header.innerHTML = 'Peptide →';
+                    }
                 });
                 $('#ss_header').click(function(evt){
                     $('tr.ss_row').toggle();
-            var header = document.getElementById('ss_header');
-            if (header.innerHTML == 'Secondary Structure →'){
-            header.innerHTML = 'Secondary Structure ↓';
-            }
-            else{
-            header.innerHTML = 'Secondary Structure →';
-            }
+                    var header = document.getElementById('ss_header');
+                    if (header.innerHTML == 'Secondary Structure →'){
+                        header.innerHTML = 'Secondary Structure ↓';
+                    } else {
+                        header.innerHTML = 'Secondary Structure →';
+                    }
                 });
+
                 $('#residue_header').click(function(evt){
                     $('tr.residue_row').toggle();
-            var header = document.getElementById('residue_header');
-            if (header.innerHTML == 'Residue Properties →'){
-            header.innerHTML = 'Residue Properties ↓';
-            }
-            else{
-            header.innerHTML = 'Residue Properties →';
-            }
-
+                    var header = document.getElementById('residue_header');
+                    if (header.innerHTML == 'Residue Properties →'){
+                        header.innerHTML = 'Residue Properties ↓';
+                    } else {
+                        header.innerHTML = 'Residue Properties →';
+                    }
+                    $('tr.angles_row').toggle();
                 });
-        $('tr.lengths_row').toggle();
-                $('#lengths_header').click(function(evt){
-                    $('tr.lengths_row').toggle();
-            var header = document.getElementById('lengths_header');
-            if (header.innerHTML == 'Lengths →'){
-            header.innerHTML = 'Lengths ↓';
-            }
-            else{
-            header.innerHTML = 'Lengths →';
-            }
-                });        
-                
-            createQtips();
-                        
-            $('#residuesContainer input.field,#residuesContainer td.field>select').mousedown(function(event){
+
+                $('#angles_header').click(function(evt){
+                    $('tr.angles_row').toggle();
+                    var header = document.getElementById('angles_header');
+                    if (header.innerHTML == 'Angles →'){
+                        header.innerHTML = 'Angles ↓';
+                    } else {
+                        header.innerHTML = 'Angles →';
+                    }
+                });
+
+                $('tr.lengths_row').toggle();
+                        $('#lengths_header').click(function(evt){
+                            $('tr.lengths_row').toggle();
+                    var header = document.getElementById('lengths_header');
+                    if (header.innerHTML == 'Lengths →'){
+                    header.innerHTML = 'Lengths ↓';
+                    }
+                    else{
+                    header.innerHTML = 'Lengths →';
+                    }
+                        });
+
+                createQtips();
+
+                $('#residuesContainer input.field,#residuesContainer td.field>select').mousedown(function(event){
+                        $clickedOn  = $(event.target);
+                        if($clickedOn.is('input')){
+                            rowTarget = event.target.id;
+                        }
+                        else if($clickedOn.is('option')){
+                            rowTarget = event.target.parentNode.id;
+                        }
+                        if(rowTarget!=''&&rowTarget!=undefined){
+                        rowTarget = rowTarget.substring(0, rowTarget.length-1);
+                        rowTarget = rowTarget.replace('-','');
+                        rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
+                        rowTarget = rowTarget.replace(' ','');
+                        if(rowTarget!=qtipState&&qtipsOn){
+                            $('div.qtip').qtip('hide');
+                            $(rowTarget).qtip('show');
+                        }
+                        qtipState=rowTarget;
+                        rowTarget='';
+                        }
+                    });
+
+                $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').mousedown(function(event){
                     $clickedOn  = $(event.target);
                     if($clickedOn.is('input')){
-                           rowTarget = event.target.id;
+                        rowTarget =event.target.id;
                     }
-                    else if($clickedOn.is('option')){
-                           rowTarget = event.target.parentNode.id;
+                    else if($clickedOn.is('select')){
+                        rowTarget =event.target.id;
                     }
-                    if(rowTarget!=''&&rowTarget!=undefined){
-                    rowTarget = rowTarget.substring(0, rowTarget.length-1);
-                    rowTarget = rowTarget.replace('-','');
-                    rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
-                    rowTarget = rowTarget.replace(' ','');
-                    if(rowTarget!=qtipState&&qtipsOn){
-                           $('div.qtip').qtip('hide');                     
-                           $(rowTarget).qtip('show');      
+                    if(rowTarget!=''&&rowTarget!=undefined&&qtipsOn&&rowTarget!=qtipState){
+                        $('div.qtip').qtip('hide');
+                        $('#'+rowTarget).qtip('show');
+                        qtipState=rowTarget;
+                        rowTarget='';
                     }
-                    qtipState=rowTarget;
-                    rowTarget='';
-                    }
-                });    
-                
-            $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength,#id_proteins').mousedown(function(event){
-                $clickedOn  = $(event.target);
-                if($clickedOn.is('input')){
-                    rowTarget =event.target.id;
-                }
-                else if($clickedOn.is('select')){
-                    rowTarget =event.target.id;
-                }
-                if(rowTarget!=''&&rowTarget!=undefined&&qtipsOn&&rowTarget!=qtipState){
-                    $('div.qtip').qtip('hide');            
-                    $('#'+rowTarget).qtip('show');
-                    qtipState=rowTarget;
-                    rowTarget='';
-                }
-            }); 
-        });
+                });
+            });
+
     </script>
 {% endblock %}
 
@@ -524,12 +652,15 @@
         <form name="search" method="POST" action="{{SITE_ROOT}}search/">
             <table id="protein">
             <tbody>
+
             <tr>
-                <td class="label" rowspan="6">{{form.proteins.label}}</td>
-                <td  rowspan="6">
-                    <span class="toggle">&nbsp;</span>{{form.proteins}} {{form.proteins_i}}
+                <td class="label">Protein</td>
+                <td class="field" colspan="100%">
+                    <span class="toggle">&nbsp;</span>
+                    {{form.proteins}}{{form.proteins_i}}
                 </td>
             </tr>
+
             <tr>
                 <td class="label"> {{form.residues.label}}</td>
                 <td class="field">
@@ -544,11 +675,11 @@
             </tr>
             <tr>
                 <td class="label">R-factor</td>
-                <td>{{form.rfactorMin}} - {{form.rfactorMax}}</td>
+                <td class="field">{{form.rfactorMin}} - {{form.rfactorMax}}</td>
             </tr>
             <tr>
                 <td class="label">R-free</td>
-                <td>{{form.rfreeMin}} - {{form.rfreeMax}}</td>
+                <td class="field">{{form.rfreeMin}} - {{form.rfreeMax}}</td>
             </tr>
             <tr>
                 <td class="label">{{form.threshold.label}}</td>
@@ -566,13 +697,19 @@
                 <th class="field col_{{i.0}}">{{i.1}}</th>
             {% endfor %}
 
-            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Peptide ↓</td></tr>
+            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Composition ↓</td></tr>
             <tr class="peptide_row">
                 <td class="label"></td>
+
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-
-                        <span class="toggle">&nbsp;</span>{{r.aa}}{{r.aa_i}}
+                        <span class="toggle">&nbsp;</span>
+                        <ul id="aa_choices_list" class="multiselect field">
+                            {% for choice in aa_choices|index_lookup:forloop.counter0 %}
+                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                            {% endfor %}
+                        </ul>
+                        {{r.aa_i}}
                     </td>
                 {% endfor %}
             </tr>
@@ -583,8 +720,13 @@
                 <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-
-                        <span class="toggle">&nbsp;</span>{{r.ss}}{{r.ss_i}}
+                        <span class="toggle">&nbsp;</span>
+                        <ul id="ss_choices_list" class="multiselect field">
+                            {% for choice in ss_choices|index_lookup:forloop.counter0 %}
+                                <li>{% autoescape off %}{{choice.1}}{% endautoescape  %}<input type="checkbox" name="ss_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                            {% endfor %}
+                        </ul>
+                        {{r.ss_i}}
                     </td>
                 {% endfor %}
             </tr>
