@@ -352,7 +352,7 @@ def plotDump(request):
 
             cdp.Plot()
             cdp.PrintDump(response)
-            print response
+            
             return response
 
     return HttpResponse('Error')
