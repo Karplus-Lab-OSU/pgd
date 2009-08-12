@@ -27,7 +27,10 @@ def search(request):
             search = processSearchForm(form)
 
             #at least for now limit the size of the result set
-            if search.querySet().count() > 20000:
+            if search.querySet().count() > searchSettings.query_limit:
+                form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
+
+            elif search.querySet().count() == 0:
                 form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
 
             else:
@@ -35,6 +38,7 @@ def search(request):
                 request.session['search'] = search
 
                 return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
+
 
         # package aa_choices and ss_choices
         aa_choices = []
@@ -177,10 +181,11 @@ def decodeSS(val):
     return list
 
 
-"""
-Process a search form copying its data into a search object
-"""
+
 def processSearchForm(form):
+    """
+    Process a search form copying its data into a search object
+    """
     data = form.cleaned_data
     length = searchSettings.segmentSize
 
