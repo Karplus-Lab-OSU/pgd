@@ -15,7 +15,9 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
+from dbsettings.loading import set_setting_value
 from pydra_server.cluster.tasks import TaskContainer, ParallelTask
+
 from ProcessPDBTask import *
 from ftpupdate import *
 from SegmentBuilder import *
@@ -51,12 +53,18 @@ class ParallelProteinImportTask(ParallelTask):
         """
         if kwargs and kwargs.has_key('data'):
             _data = kwargs['data']
-            batch_size = 25
+            batch_size = int(kwargs['batch_size'])
+            self.version = kwargs['version']
 
             logger.debug('ParallelProteinImportTask - repackaging work into batches of %s' % batch_size)
             kwargs['data'] = [_data[i:i+batch_size] for i in range(0, len(_data), batch_size)]
+            logger.debug('ParallelProteinImportTask - %s workunits' % len(kwargs['data']))
 
         ParallelTask._work(self, **kwargs)
+
+    def work_complete(self):
+        set_setting_value('pgd_splicer.models','','DATA_VERSION',self.version)
+
 
 if __name__ == '__main__':
     """

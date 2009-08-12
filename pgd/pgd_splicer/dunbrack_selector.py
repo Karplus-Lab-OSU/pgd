@@ -15,13 +15,17 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from pydra_server.cluster.tasks import Task
-from pgd_splicer.models import *
-
-import urllib
+from datetime import datetime
+import gzip
 import os
 import re
-import gzip
+import urllib
+
+from dbsettings.loading import set_setting_value
+from pydra_server.cluster.tasks import Task
+
+from pgd_splicer.models import *
+
 
 class DunbrackPDBSelectorTask(Task):
     """
@@ -85,9 +89,16 @@ class DunbrackPDBSelectorTask(Task):
             proteins = self.parse_file(path, float(resolution), threshold, proteins)
             os.remove(path)
 
+        # store the date from the first file to use as the version.  The version will be 
+        # updated now even though the import has just begun.  Its marked to indicate that
+        # it is still in progress
+        date = files[0][0][26:32]
+        version = '20%s-%s-%s' % (date[:2], date[2:4], date[4:])
+        set_setting_value('pgd_splicer.models','','DATA_VERSION','%s (import in progress)' % version)
+
         self.progressValue = 100
 
-        return {'data':[v for k,v in proteins.items()]}
+        return {'version':version, 'data':[v for k,v in proteins.items()]}
 
 
     def progress(self):
@@ -140,16 +151,16 @@ class DunbrackPDBSelectorTask(Task):
                 if match:
                     groups = match.groups()
 
-                    try:
+                    if groups[0] in proteins:
                         # if protein already exists just update the additional
                         # chain information.  The properties should not change
                         # between records in the selection file.
                         protein = proteins[groups[0]]
-                        if not groups[1] in protein[1]:
-                            protein[1].append(groups[1])
+                        if not groups[1] in protein['chains']:
+                            protein['chains'].append(groups[1])
                             print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
 
-                    except KeyError, err:
+                    else:
                         # protein is not in proteins dict yet create initial
                         # structure from parsed properties.
                         resolution = float(groups[4])
