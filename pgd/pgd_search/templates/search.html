@@ -594,8 +594,9 @@
                     header.innerHTML = 'Lengths →';
                     }
                         });
-
+				if(qtipsOn){
                 createQtips();
+				}
 
                 $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').mousedown(function(event){
                         $clickedOn  = $(event.target);

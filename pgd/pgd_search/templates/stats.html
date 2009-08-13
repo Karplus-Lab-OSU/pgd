@@ -126,12 +126,46 @@
         }
 
     </style>
-
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
     <script type="text/javascript">
         var col = '';
+        var contentText= 'Mouse over a table cell for more information about it.';
 
         $(document).ready(function() {
             $('#statsDetail').hide();
+           
+            $('#content').qtip({
+                position:{
+                    adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                            resize: true
+                            },
+                    corner: {
+                            target: 'leftTop',
+                            tooltip: 'rightTop'
+                            },
+                    target:$('#content')
+                         },
+                style:{ //Style the qtip to look like the page
+                      color: 'black',
+                      textAlign: 'center',
+                      title: { color: 'white', background: '#666666'},
+                      width: { min: 300, max: 330 },
+                      border:{ 
+                             width: 6, 
+                             color: '#909090'
+                             }
+                       },
+                show: false,
+                hide: false,
+                content:{
+                        prerender: false,//This kills pageload times if enabled
+                        text: contentText,
+                        title:  {
+                                text: 'Additional Data'
+                                }
+                        }
+                    }); 
+            $('#content').qtip('show');
 
             $('.stats').mouseout( function() {$('#statsDetail').hide();})
 
@@ -165,7 +199,8 @@
                 $('#stdev').html(stdev);
                 $('#min').html(min);
                 $('#max').html(max);
-                $('div#statsDetail').css({left:100, top:100}).show();
+                contentText=$('div#statsDetail').html();
+                $('div.qtip').qtip('api').updateContent(contentText);
             }
         }
     </script>
