@@ -16,7 +16,6 @@
                 margin-right:auto;
                 min-height:472px;
                 width: 650px;
-                overflow:hidden;
             }
 
             #canvas {
@@ -59,7 +58,7 @@
             }
 
             #button-plot {
-                margin-top:10px;
+                margin-top:15px;
             }
 
             input{
@@ -264,8 +263,8 @@
                     rect = rects[i]
                     r = paper.rect(rect['x']+aafix,
                         rect['y']+aafix,
-                        rect['height'],
-                        rect['width']);
+                        rect['width'],
+                        rect['height']);
                     r.attr({fill: rect['fill'], stroke:rect['color']});
                     r.attr('stroke-width',rect['stroke']);
                 }
