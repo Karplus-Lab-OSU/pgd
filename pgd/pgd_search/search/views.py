@@ -31,7 +31,7 @@ def search(request):
                 form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
 
             elif search.querySet().count() == 0:
-                form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
+                form._errors['Result Size'] = ErrorList(['Your query returned no results'])
 
             else:
                 #store search in session
@@ -248,15 +248,21 @@ def processSearchForm(form):
 
     return search
 
-"""
-Process a search object copying its values into a searchForm
-"""
+
 def processSearchObject(search):
+    """
+    Process a search object copying its values into a searchForm
+    """
+
     data = {
         #get protein properties
         'residues'      :search.segmentLength,
         'resolutionMin' :search.resolution_min,
         'resolutionMax' :search.resolution_max,
+        'rfreeMin'      :search.rfree_min,
+        'rfreeMax'      :search.rfree_max,
+        'rfactorMin'    :search.rfactor_min,
+        'rfactorMax'    :search.rfactor_max,
         'threshold'     :search.threshold
     }
 
