@@ -5,7 +5,7 @@
             #content {
                 margin-left:auto;
                 margin-right:auto;
-                width:530px;
+                width:730px;
                 min-width:530px;
             }
 
@@ -13,9 +13,9 @@
                 height: 472px;
                 margin: 15px;
                 margin-left:auto;
-                margin-right:auto
+                margin-right:auto;
                 min-height:472px;
-                width: 500px;
+                width: 650px;
             }
 
             #canvas {
@@ -396,13 +396,17 @@
             </tr>
             <tr>
                 <td class="label">X Axis</td>
+                {% autoescape off %}
                 <td>{{form.xProperty}}</td>
+                {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
             </tr>
             <tr>
                 <td class="label">Y Axis</td>
+                {% autoescape off %}
                 <td>{{form.yProperty}}</td>
+                {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
                 <td>{{form.y}}{{form.y1}}</td>
             </tr>
