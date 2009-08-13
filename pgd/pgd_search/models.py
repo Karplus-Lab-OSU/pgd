@@ -66,8 +66,12 @@ class Search(models.Model):
             query = query.filter(length__gte=self.segmentLength)
 
         # ...filter by code lists...
-        if self.codes_include:
-            query = query.__getattribute__('filter' if self.codes_include else 'exclude')(protein__in=(x.code for x in self.codes.all()))
+        if self.codes_include != None:
+            if self.codes_include:
+                query = query.filter(protein__in=(x.code for x in self.codes.all()))
+            else:
+                for x in self.codes.all():
+                    query = query.exclude(protein=x.code)
 
         # ...filter by code lists...
         if self.resolution_min != None:

@@ -206,7 +206,7 @@ def processSearchForm(form):
     search.save()
 
     #get list of proteins to filter
-    if data['proteins_i']:
+    if data['proteins_i'] != None:
         search.codes_include = data['proteins_i']
         for value in filter(lambda x:x!='', data['proteins'].split(',')) :
             searchCode = Search_code()
@@ -261,7 +261,7 @@ def processSearchObject(search):
     }
 
     #get list of proteins to filter
-    if search.codes_include:
+    if search.codes_include != None:
         data['proteins_i'] = search.codes_include
         codes = []
         for code in search.codes.all():
