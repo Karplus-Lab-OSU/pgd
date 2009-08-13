@@ -399,20 +399,22 @@ class ConfDistPlot():
             writer.write('%sDev' % title)
 
         # Cycle through the binPoints
+        xbin = self.xbin
+        ybin = self.ybin
         for key in self.bins:
             bin = self.bins[key]
             writer.write('\n')
 
             # x axis range
-            writer.write(key[0])
+            writer.write(key[0]*xbin)
             writer.write('\t')
-            writer.write(key[0]+self.xbin)
+            writer.write((key[0]+1)*xbin)
 
             # y-axis range
             writer.write('\t')
-            writer.write(key[1])
+            writer.write(key[1]*ybin)
             writer.write('\t')
-            writer.write(key[1]+self.ybin)
+            writer.write((key[1]+1)*ybin)
 
             # observations
             writer.write('\t')
