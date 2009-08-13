@@ -104,10 +104,6 @@
                 background-color:#ee9c98;
             }
 
-            select#id_proteins {
-                height:150;
-            }
-
             .toggle {
                 position: relative;
                 top:.35em;
@@ -474,12 +470,12 @@
                         tar.removeClass('toggle_Include');
                         tar.addClass('toggle_Exclude');
                         $(evt.target.parentNode).children(".include").val(0);
-                        $(evt.target.parentNode).children(".field").addClass('field_exclude').removeClass('field_include');
+                        $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_exclude').removeClass('field_include');
                     }else if (tar.hasClass('toggle_Exclude')){
                         tar.removeClass('toggle_Exclude');
                         tar.addClass('toggle_Include');
                         $(evt.target.parentNode).children(".include").val(1);
-                        $(evt.target.parentNode).children(".field").addClass('field_include').removeClass('field_exclude');
+                        $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_include').removeClass('field_exclude');
                     }
                 });
 
