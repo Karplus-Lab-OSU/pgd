@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.template import RequestContext
 from django.conf import settings
 from django.shortcuts import render_to_response
-import simplejson
+from django.utils import simplejson
 
 from PlotForm import PlotForm
 from ConfDistFuncs import *
