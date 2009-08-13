@@ -1,3 +1,6 @@
+import math
+import re
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
@@ -5,15 +8,12 @@ from django.conf import settings
 from django.forms.util import ErrorList
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 
-import math
-
 from pgd_core.models import Protein
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 
-import re
 
 """
 Handler for search form.
@@ -27,10 +27,11 @@ def search(request):
             search = processSearchForm(form)
 
             #at least for now limit the size of the result set
-            if search.querySet().count() > searchSettings.query_limit:
+            count = search.querySet().count()
+            if count > searchSettings.query_limit:
                 form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
 
-            elif search.querySet().count() == 0:
+            elif count == 0:
                 form._errors['Result Size'] = ErrorList(['Your query returned no results'])
 
             else:
