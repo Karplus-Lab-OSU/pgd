@@ -82,7 +82,7 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     #create a cairo surface to calculate text sizes
     surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
     ctx = cairo.Context (surface)
-    ctx.set_font_size (12*ratio);
+    ctx.set_font_size (12);
 
     #labels
     xstep = ((xEnd - xStart)%360 if xProperty in ANGLES else (xEnd - xStart))/ 4
@@ -111,7 +111,8 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
         ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
         #get Y coordinate offsetting for height of text
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
-        ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
+        #ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
+        ylabel_y = y+(graph_height/4)*(4-i)+(4*ratio)-ybearing/2-theight/2
         #Get X coordinate offsetting for length of hash and length of text
         ylabel_x = (x-(ratio*15))-xbearing-twidth
         #create label
