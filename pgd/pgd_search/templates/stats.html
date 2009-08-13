@@ -3,7 +3,7 @@
 {% block head %}
     <style>
         #content {
-            width:1000px;
+            width:100%;
             text-align:center;
         }
 
@@ -17,8 +17,8 @@
             border-right:1px dotted #888888;
             border-top:1px dotted #888888;
             color:black;
-            padding-right: 7px;
-            padding-left:7px;
+            padding-right: 5px;
+            padding-left:5px;
             text-align:center;
         }
 
@@ -200,17 +200,17 @@
                 {% endfor %}
                 {% for list in peptide.stats %}
                     {% ifequal list.0 "L1" %}
-                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                     {% else %}{% ifequal list.0 "L2" %}
-                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                     {% else %}{% ifequal list.0 "L3" %}
-                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                     {% else %}{% ifequal list.0 "L4" %}
-                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                     {% else %}{% ifequal list.0 "L5" %}
-                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                     {% else %}
-                        <td id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:1}},'{{list.1.min|invalid:1}}','{{list.1.max|invalid:1}}')">{{list.1.mean|invalid:1}}</td>
+                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} {{peptide.longCode}}" onmouseover="showStats({{list.1.std|invalid:1}},'{{list.1.min|invalid:1}}','{{list.1.max|invalid:1}}')">{{list.1.mean|invalid:1}}</td>
                         {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
                 {% endfor %}
             </tr>
@@ -224,17 +224,17 @@
             {% endfor %}
             {% for list in total.stats %}
                 {% ifequal list.0 "L1" %}
-                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                 {% else %}{% ifequal list.0 "L2" %}
-                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                 {% else %}{% ifequal list.0 "L3" %}
-                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                 {% else %}{% ifequal list.0 "L4" %}
-                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                 {% else %}{% ifequal list.0 "L5" %}
-                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
+                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats({{list.1.std|invalid:3}},'{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
                 {% else %}
-                    <td id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} total" onmouseover="showStats({{list.1.std|invalid:1}},'{{list.1.min|invalid:1}}','{{list.1.max|invalid:1}}')">{{list.1.mean|invalid:1}}</td>
+                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} total" onmouseover="showStats({{list.1.std|invalid:1}},'{{list.1.min|invalid:1}}','{{list.1.max|invalid:1}}')">{{list.1.mean|invalid:1}}</td>
                     {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
             {% endfor %}
         </tr>
