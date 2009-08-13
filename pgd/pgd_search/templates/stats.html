@@ -185,7 +185,7 @@
             <th class="sum_I sum">I</th>
             {% autoescape off %}
             {% for attribute in attributes %}
-                <th class="avg_{{attribute.0}}">{{attribute.1}}</th>
+                <th nowrap class="avg_{{attribute.0}}">{{attribute.1}}</th>
             {% endfor %}
             {% endautoescape %}
         </tr>
