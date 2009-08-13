@@ -37,7 +37,7 @@ LABEL_REPLACEMENTS = {
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
+def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
 
     #store functions locally for speed optimization
     local_len = len
@@ -46,22 +46,23 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     svg = SVG()
 
     #size ratio (470 = 1)
-    ratio = width/470.0
+    ratio = width/560.0
 
-    x = round(width*.117);
-    y = round(width*.117);
+    # offsets setup to give 415px for the graph for a default width of 520
+    x = round(width*.17857);
+    y = round(height*.11702);
     graph_height = height-2*y;
     graph_width = width-2*x;
     hashsize = 10*ratio
 
     #image background
-    svg.rect(0, 0, width, height, 0, background_color, background_color);
+    svg.rect(0, 0, height+30, width, 0, background_color, background_color);
 
     #graph background
-    svg.rect(x, y, graph_width, graph_height, 1, hash_color, graph_color);
+    svg.rect(x, y, graph_height, graph_width, 1, hash_color, graph_color);
 
     #border
-    svg.rect(x, y, graph_width, graph_height, 1, text_color);
+    svg.rect(x, y, graph_height, graph_height, 1, text_color);
 
     #axis
     if xStart < 0 and xEnd > 0:
@@ -131,6 +132,16 @@ def drawGraph(request, height=470, width=470, xStart=-180.0, yStart=-180.0, xEnd
     xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
     title_x = (width/2) - xbearing - twidth/2
     svg.text(title_x,35*ratio, title, 12*ratio, text_color)
+
+    #axis labels
+    ctx.set_font_size (18*ratio);
+    xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xTitle)
+    title_x = (width/2) - xbearing - twidth/2
+    svg.text(title_x,y+graph_height+hashsize*5+(15*ratio), xTitle, 18*ratio, text_color)
+
+    xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
+    title_y = (x-(ratio*35))-xbearing-twidth
+    svg.text(title_y,y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
 
     cdp = ConfDistPlot(
             graph_width,    #width
@@ -220,12 +231,12 @@ def renderToPNG(request):
     else:
         form = PlotForm() # An unbound form
         svg,bins = drawGraph(request)
-        width = 460
-        height = 460
+        width = 560
+        height = 480
 
     response = HttpResponse(mimetype="image/png")
     response['Content-Disposition'] = 'attachment; filename="plot.png"'
-    surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
+    surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height+30)
     ctx = cairo.Context (surface)
 
     for rec in svg.rects:
@@ -353,7 +364,7 @@ def plotDump(request):
 
             cdp.Plot()
             cdp.PrintDump(response)
-            
+
             return response
 
     return HttpResponse('Error')

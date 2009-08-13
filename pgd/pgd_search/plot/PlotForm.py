@@ -108,4 +108,4 @@ class PlotForm(forms.Form):
     plot_hue        = forms.ChoiceField(choices=HUE_CHOICES)
     hash_color      = forms.ChoiceField(choices=HASH_CHOICES)
     height          = forms.IntegerField(initial=470, widget=forms.TextInput(attrs={'size':4}))
-    width           = forms.IntegerField(initial=470, widget=forms.TextInput(attrs={'size':4}))
+    width           = forms.IntegerField(initial=560, widget=forms.TextInput(attrs={'size':4}))

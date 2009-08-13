@@ -21,7 +21,7 @@
             #canvas {
                 margin-left:auto;
                 margin-right:auto;
-                width: 471px;
+                width: 560px;
                 height: 100%;
             }
 
@@ -148,7 +148,7 @@
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
             var stats = {};
             var aafix = 0.5;
@@ -171,7 +171,6 @@
 
             $(document).ready(function() {
                 $('div#binDetails').hide();
-
                 $('#button-plot').click(function (evt) {
                     update_svg();
                 });
@@ -285,7 +284,7 @@
 
                 for (i in texts) {
                     text = texts[i]
-                    paper.print(text['x'],text['y'],text['text'], font,12);
+                    paper.print(text['x'],text['y'],text['text'], font, text['size']);
                 }
 
                 stats = {};
