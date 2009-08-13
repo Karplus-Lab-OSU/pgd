@@ -380,7 +380,7 @@
                                      color: '#909090'
                                      },
                               tip: { //Options for the tail
-                                   corner: 'leftMiddle', 
+                                   corner: 'leftMiddle',
                                    color: '#909090',
                                    size: { x: 20, y : 15 }
                                    }
@@ -415,21 +415,21 @@
                         qtipTotal=qtipTotal+1;
                         $(this).qtip({
                             position:{
-                                adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-                                        resize: true, 
-                                        },
-                                corner: {
-                                        target: 'rightMiddle',
-                                        tooltip: 'leftMiddle',
-                                        },
-                                target: $(target),
+                                        adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                                resize: true
+                                                },
+                                        corner: {
+                                                target: 'rightMiddle',
+                                                tooltip: 'leftMiddle'
+                                                },
+                                        target: $(target)
                                      },
                             style:{ //Style the qtip to look like the page
                                   color: 'black',
                                   textAlign: 'center',
                                   title: { color: 'white', background: '#666666'},
                                   width: { min: 350, max: 430 },
-                                  border:{ 
+                                  border:{
                                          width: 6,
                                          color: '#909090'
                                          },
@@ -437,7 +437,7 @@
                                        corner: 'leftMiddle',
                                        color: '#909090',
                                        size: { x: 20, y : 15 }
-                                       },
+                                       }
                                    },
                                    show:false,
                     /*        show:{
@@ -454,7 +454,7 @@
                                             text: titleText,
                                             button: 'Close' //Enables a button that closes the qtip
                                             }
-                                    },
+                                    }
                             });
                     });
             };
