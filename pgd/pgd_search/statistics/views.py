@@ -8,7 +8,7 @@ from pgd_search.models import Search, Segment, iIndex
 from pgd_search.plot.ConfDistFuncs import getCircularStats
 from pgd_search.views import settings_processor
 
-stat_attributes_base = [('L1',u'C<sup>-1,</sup>N'),
+stat_attributes_base = [('L1',u'C<sup>-1</sup>N'),
                         ('L2',u'NC<sup>&alpha;</sup>'),
                         ('L3',u'C<sup>&alpha;</sup>C<sup>&beta;</sup>'),
                         ('L4',u'C<sup>&alpha;</sup>C'),
