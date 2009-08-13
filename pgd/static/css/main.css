@@ -47,23 +47,28 @@ div#headerContainer {
     margin-bottom:10px;
     padding:0px;
     text-align:center;
+    width:100%;
 }
 
 div#mainmenu { 
     background-color:#1854d0;
     color:white;
+    width:100%;
 }
 
 span#version {
     position:absolute;
     right:0px;
-    top:2.15em;
     margin-right:20px;
+}
+span#version, span#version * {
+    font-size:95%;
 }
 
 div#submenu { 
     background-color:#707070;
     min-height:25px;
+    width:100%;
 }
 
 span.menuitem {
@@ -79,9 +84,10 @@ span.lastmenuitem {
 }
 
 span.results {
-    position:absolute;
-    left:20px;
+    color:white;
     font-weight:bold;
+    left:20px;
+    position:absolute;
 }
 
 a.mainmenuitem {

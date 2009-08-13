@@ -18,16 +18,16 @@
                 <!--span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}search/saved/">Saved Searches</a></span-->
                 <!--span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}logout">logout</a></span-->
                 <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}search/help/">Help</a></span>
-            </div>
-            <div id="submenu">
-                <div id="submenu_items">
-                {% block submenu %}{% endblock %}
-                </div>
                 <span id="version">
                     <strong>PGD </strong>{{PGD_VERSION}}
                     &nbsp;&nbsp;&nbsp;
                     <strong>PISCES </strong>{{DATA_VERSION}}
                 </span>
+            </div>
+            <div id="submenu">
+                <div id="submenu_items">
+                {% block submenu %}{% endblock %}
+                </div>
             </div>
         </div>
 
