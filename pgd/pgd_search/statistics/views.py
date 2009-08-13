@@ -59,6 +59,7 @@ def calculate_statistics(queryset):
     for i in range(len(stat_attributes)):
         STAT_INDEX[stat_attributes[i]] = i
 
+
     local_query_filter = queryset.filter
 
     peptides = {}
@@ -103,8 +104,9 @@ def calculate_statistics(queryset):
 
             #store all values for attributes into arrays
             for key in stat_attributes:
-                peptide['stats'][STAT_INDEX[key]][1].append(data[key])
-                total['stats'][STAT_INDEX[key]][1].append(data[key])
+                if not data[key] in (999.9, 0):
+                    peptide['stats'][STAT_INDEX[key]][1].append(data[key])
+                    total['stats'][STAT_INDEX[key]][1].append(data[key])
 
         #calculate statistics
         for attribute in stat_attributes:
