@@ -46,7 +46,7 @@ def searchStatistics(request):
 
 def calculate_statistics(queryset):
 
-    TOTAL_INDEX = {'na':0,'e':1,'E':2,'S':3,'h':4,'H':5,'t':6,'T':7,'g':8,'G':9,'B':10,'i':11,'I':12}
+    TOTAL_INDEX = {'na':0,'E':1,'S':2,'H':3,'T':4,'G':5,'B':6,'I':7}
     STAT_INDEX = {}
 
     ss_field = 'r%i_ss' % iIndex
@@ -68,7 +68,7 @@ def calculate_statistics(queryset):
                 #total
                 'total':0,
                 # attributes with just sums
-                'counts':[['na',0],['e',0],['E',0],['S',0],['h',0],['H',0],['t',0],['T',0],['g',0],['G',0],['B',0],['i',0],['I',0]],
+                'counts':[['na',0],['E',0],['S',0],['H',0],['T',0],['G',0],['B',0],['I',0]],
                 # attributes with stats
                 'stats':[['L1',[]],['L2',[]],['L3',[]],['L4',[]],['L5',[]],['a1',[]],['a2',[]],['a3',[]],['a4',[]],['a5',[]],['a6',[]],['a7',[]],['ome',[]]]
             }
@@ -81,7 +81,7 @@ def calculate_statistics(queryset):
                 #total
                 'total':0,
                 # attributes with just sums
-                'counts':[['na',0],['e',0],['E',0],['S',0],['h',0],['H',0],['t',0],['T',0],['g',0],['G',0],['B',0],['i',0],['I',0]],
+                'counts':[['na',0],['E',0],['S',0],['H',0],['T',0],['G',0],['B',0],['I',0]],
                 # attributes with stats
                 'stats':[['L1',[]],['L2',[]],['L3',[]],['L4',[]],['L5',[]],['a1',[]],['a2',[]],['a3',[]],['a4',[]],['a5',[]],['a6',[]],['a7',[]],['ome',[]]]
             }
