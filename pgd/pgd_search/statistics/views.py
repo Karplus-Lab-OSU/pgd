@@ -158,7 +158,7 @@ def calculate_stats(_list, attribute):
     # if theres only 1 item then the stats are simpler to calculate
     elif list_len == 1:
         mean = _list[0]
-        std_dev = 0
+        stdev = 0
         range_min = 0
         range_max = 0
 
