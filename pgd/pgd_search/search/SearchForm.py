@@ -53,7 +53,7 @@ class SearchFormBase(forms.Form):
     rfreeMax        = forms.FloatField(required=False, min_value=0, widget=forms.TextInput(attrs={'size':3}))
     proteins        = forms.CharField(required=False)
     proteins_i      = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
-    residues        = forms.ChoiceField(choices=[(i,i) for i in range(1, searchSettings.segmentSize+1)], initial=5)
+    residues        = forms.ChoiceField(choices=[(i,i) for i in range(1, searchSettings.segmentSize+1)], initial=3)
 
 # Build a dict for the fields of variable number
 form_dict = {'__module__' : 'pgd_search.views'}

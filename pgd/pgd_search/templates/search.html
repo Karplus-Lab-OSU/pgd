@@ -204,11 +204,11 @@
                     $('#oldLength').val(newValue);
 
                     //update size of table
-                    if (newValue < 5){
-                        val = 54;
-                    } else {
+                    //if (newValue < 5){
+                    //    val = 54;
+                    //} else {
                         val = 10.3*newValue+6
-                    }
+                    //}
 
                     $('table#residues').css({'width':val+'em'});
                     $('table#protein').css({'width':600});
