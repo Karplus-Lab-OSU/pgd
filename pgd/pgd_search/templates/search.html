@@ -38,7 +38,7 @@
             }
 
             input.field {
-                width:8.2em;
+                width:6.0em;
             }
 
             input#id_proteins {
@@ -72,7 +72,7 @@
                 float:left;
                 list-style:none;
                 border: 1px solid #d4d4d4;
-                width:8.3em;
+                width:6.0em;
             }
             ul.multiselect li {
                 color:#b4b4b4;
@@ -211,7 +211,7 @@
                     if (newValue < 5){
                         val = 54;
                     } else {
-                        val = 12.4*newValue+6
+                        val = 10.3*newValue+6
                     }
 
                     $('table#residues').css({'width':val+'em'});
@@ -548,27 +548,28 @@
                         header.innerHTML = 'Peptide →';
                     }
                 });
-                $('#ss_header').click(function(evt){
-                    $('tr.ss_row').toggle();
-                    var header = document.getElementById('ss_header');
-                    if (header.innerHTML == 'Secondary Structure →'){
-                        header.innerHTML = 'Secondary Structure ↓';
+                $('#conf_header').click(function(evt){
+                    $('tr.conf_row').toggle();
+                    var header = document.getElementById('conf_header');
+                    if (header.innerHTML == 'Conformation →'){
+                        header.innerHTML = 'Conformation ↓';
                     } else {
-                        header.innerHTML = 'Secondary Structure →';
+                        header.innerHTML = 'Conformation →';
                     }
                 });
 
-                $('#residue_header').click(function(evt){
-                    $('tr.residue_row').toggle();
-                    var header = document.getElementById('residue_header');
-                    if (header.innerHTML == 'Residue Properties →'){
-                        header.innerHTML = 'Residue Properties ↓';
+                $('tr.mobility_row').toggle();
+                $('#mobility_header').click(function(evt){
+                    $('tr.mobility_row').toggle();
+                    var header = document.getElementById('mobility_header');
+                    if (header.innerHTML == 'Mobility →'){
+                        header.innerHTML = 'Mobility ↓';
                     } else {
-                        header.innerHTML = 'Residue Properties →';
+                        header.innerHTML = 'Mobility →';
                     }
-                    $('tr.angles_row').toggle();
                 });
 
+                $('tr.angles_row').toggle();
                 $('#angles_header').click(function(evt){
                     $('tr.angles_row').toggle();
                     var header = document.getElementById('angles_header');
@@ -654,14 +655,6 @@
             <tbody>
 
             <tr>
-                <td class="label">Protein</td>
-                <td class="field" colspan="100%">
-                    <span class="toggle">&nbsp;</span>
-                    {{form.proteins}}{{form.proteins_i}}
-                </td>
-            </tr>
-
-            <tr>
                 <td class="label"> {{form.residues.label}}</td>
                 <td class="field">
                     {{form.residues}}
@@ -685,6 +678,13 @@
                 <td class="label">{{form.threshold.label}}</td>
 
                 <td class="field">{{form.threshold}}</td>
+            </tr>
+            <tr>
+                <td class="label">Protein</td>
+                <td class="field" colspan="100%">
+                    <span class="toggle">&nbsp;</span>
+                    {{form.proteins}}{{form.proteins_i}}
+                </td>
             </tr>
             </tbody>
             </table>
@@ -715,8 +715,8 @@
             </tr>
 
             <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="ss_header">Secondary Structure ↓</td></tr>
-            <tr class="ss_row">
+            <tr><td colspan="100%" class="sectionheader" id="conf_header">Conformation ↓</td></tr>
+            <tr class="conf_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -730,10 +730,7 @@
                     </td>
                 {% endfor %}
             </tr>
-
-            <tr class="spacer"/>
-            <tr><td colspan="100%" class="sectionheader" id="residue_header">Residue Properties ↓</td></tr>
-            <tr class="residue_row">
+            <tr class="conf_row">
                 <td class="label">&Phi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -742,7 +739,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="residue_row">
+            <tr class="conf_row">
                 <td class="label">&Psi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -750,8 +747,19 @@
                     </td>
                 {% endfor %}
             </tr>
+            <tr class="conf_row">
+                <td class="label">&omega;</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
+                    </td>
 
-            <tr class="residue_row">
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="mobility_header">Mobility →</td></tr>
+            <tr class="mobility_row">
                 <td class="label">B<sup>m</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -759,7 +767,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="residue_row">
+            <tr class="mobility_row">
                 <td class="label">B<sup>&gamma;</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -767,21 +775,12 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="residue_row">
+            <tr class="mobility_row">
                 <td class="label">B<sup>sc</sup></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.bs}}{{r.bs_i}}
                     </td>
-                {% endfor %}
-            </tr>
-            <tr class="residue_row">
-                <td class="label">&omega;</td>
-                {% for r in residueFields %}
-                    <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
-                    </td>
-
                 {% endfor %}
             </tr>
 

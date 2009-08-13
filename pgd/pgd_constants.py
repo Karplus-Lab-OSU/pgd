@@ -42,18 +42,18 @@ for choice in AA_CHOICES:
 	('S', 'S'),
 )'''
 SS_CHOICES = (
-	('G', '3<sub>10</sub> helix'),
-	#('g', '3<sub>10</sub> helix (terminal)'),
 	('H', '&alpha; helix'),
 	#('h', '&alpha; helix (terminal)'),
-	('I', '&pi; helix'),
-	('i', '&pi; helix'),
-	('T', 'H-bonded turn'),
-	#('t', 'H-bonded turn (terminal)'),
+	('G', '3<sub>10</sub> helix'),
+	#('g', '3<sub>10</sub> helix (terminal)'),
 	('E', '&beta; sheet'),
 	#('e', '&beta; sheet (terminal)'),
-	('B', 'Isolated &beta;-bridge'),
+	('T', 'Turn'),
+	#('t', 'H-bonded turn (terminal)'),
 	('S', 'Bend'),
+	('B', '&beta;-bridge'),
+	('I', '&pi; helix'),
+	#('i', '&pi; helix'),
 )
 
 PLOT_PROPERTY_CHOICES = [
