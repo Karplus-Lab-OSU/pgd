@@ -325,7 +325,7 @@ class ConfDistPlot():
                     bin['pixCoords']['height'],
                     fill,
                     fill,
-                    bin,
+                    bin['count'],
                     key,
                 ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
             )
