@@ -156,9 +156,7 @@
 
         $(document).ready(function() {
             // replace invalid values with something to make them stand out from valid data
-            $("td:contains('999.90')").html('--');
-            $("td:contains('0.000')").html('--');
-            $("td:contains('0.00')").html('--');
+            $("td:contains('999.90'), td:contains('0.000'), td:contains('0.00'), td:contains('0.0')").html('--');
         });
 
     </script>
