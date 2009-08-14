@@ -37,8 +37,16 @@
                 white-space: nowrap;
             }
 
+            #protein td.field {padding-left:35px;}
+            #protein #pdb_codes td.field {padding-left:17px;}
+
             input.field {
                 width:6.0em;
+            }
+
+            select {
+                width:5.8em;
+                margin-left:0px;
             }
 
             input#id_proteins {
@@ -333,7 +341,7 @@
                 // select boxes just check for null
                 return val == '' || val == null;
             };
-            
+
             function createQtips(){
                 $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').each(function(){
                     currentID = $(this).attr('id');
@@ -346,10 +354,10 @@
                         target = ('#' + target + col);
                         helpName = currentID.substring(3, currentID.length - 1 );
                         helpName = helpName.replace('_','');
-						helpName = helpName.replace('_','');
-						helpName = helpName.replace('_','');
+                        helpName = helpName.replace('_','');
+                        helpName = helpName.replace('_','');
                         helpName = '#' + helpName.replace(' ','');
-                        contentText = $(helpName).html();    
+                        contentText = $(helpName).html();
                         titleText = $(helpName).attr('name');
                         $(this).qtip({
                         position:{
@@ -372,7 +380,7 @@
                                      color: '#909090'
                                      },
                               tip: { //Options for the tail
-                                   corner: 'leftMiddle', 
+                                   corner: 'leftMiddle',
                                    color: '#909090',
                                    size: { x: 20, y : 15 }
                                    }
@@ -388,45 +396,45 @@
                                         }
                                 }
                             });
-                        }    
-                    });            
-                    $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').each(function(){    
+                        }
+                    });
+                    $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').each(function(){
                         currentID = $(this).attr('id');
                         currentID = currentID.replace(' ','');
                         if(currentID!='' && currentID!=null && currentID!=undefined){
                             if(currentID.substring(currentID.length-3,currentID.length)=='Min'){
-								target='#'+currentID.replace('Min','Max');
-							}
-							else{
-								target='#'+currentID;
-							}
+                                target='#'+currentID.replace('Min','Max');
+                            }
+                            else{
+                                target='#'+currentID;
+                            }
                             helpName = '#'+currentID.replace('_','');
-                            contentText = $(helpName).html();    
+                            contentText = $(helpName).html();
                             titleText = $(helpName).attr('name');
                         }
                         qtipTotal=qtipTotal+1;
                         $(this).qtip({
                             position:{
-                                adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-                                        resize: true
-                                        },
-                                corner: {
-                                        target: 'rightMiddle',
-                                        tooltip: 'leftMiddle'
-                                        },
-                                target: $(target)
+                                        adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                                resize: true
+                                                },
+                                        corner: {
+                                                target: 'rightMiddle',
+                                                tooltip: 'leftMiddle'
+                                                },
+                                        target: $(target)
                                      },
                             style:{ //Style the qtip to look like the page
                                   color: 'black',
                                   textAlign: 'center',
                                   title: { color: 'white', background: '#666666'},
                                   width: { min: 350, max: 430 },
-                                  border:{ 
-                                         width: 6, 
+                                  border:{
+                                         width: 6,
                                          color: '#909090'
                                          },
                                   tip: { //Options for the tail
-                                       corner: 'leftMiddle', 
+                                       corner: 'leftMiddle',
                                        color: '#909090',
                                        size: { x: 20, y : 15 }
                                        }
@@ -444,7 +452,7 @@
                             });
                     });
             };
-            
+
             function toggleQtips(){
                 if(qtipsOn){
                     $('div.qtip').qtip('hide');
@@ -459,9 +467,9 @@
                     qtipState='';
                     $('.qtipToggle').attr('value','Turn Help Off');
                 }
-                
+
             }
-            
+
             $(document).ready(function() {
                 //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1}); 
                 $('#helpPage').hide();  
@@ -677,8 +685,8 @@
 
                 <td class="field">{{form.threshold}}</td>
             </tr>
-            <tr>
-                <td class="label">Protein</td>
+            <tr id="pdb_codes">
+                <td class="label">PDB Codes</td>
                 <td class="field" colspan="100%">
                     <span class="toggle">&nbsp;</span>
                     {{form.proteins}}{{form.proteins_i}}

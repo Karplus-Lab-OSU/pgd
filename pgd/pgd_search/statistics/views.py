@@ -16,7 +16,7 @@ stat_attributes_base = [('L1',u'C<sup>-1</sup>N'),
                         ('a1',u'C<sup>-1</sup>NC<sup>&alpha;</sup>'),
                         ('a2',u'NC<sup>&alpha;</sup>C<sup>&beta;</sup>'),
                         ('a3',u'NC<sup>&alpha;</sup>C'),
-                        ('a4',u'C<sup>&beta</sup>C<sup>&alpha;</sup>C'),
+                        ('a4',u'C<sup>&beta;</sup>C<sup>&alpha;</sup>C'),
                         ('a5',u'C<sup>&alpha;</sup>CO'),
                         ('a6',u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
                         ('a7',u'OCN<sup>+1</sup>'),
@@ -158,7 +158,7 @@ def calculate_stats(_list, attribute):
     # if theres only 1 item then the stats are simpler to calculate
     elif list_len == 1:
         mean = _list[0]
-        std_dev = 0
+        stdev = 0
         range_min = 0
         range_max = 0
 

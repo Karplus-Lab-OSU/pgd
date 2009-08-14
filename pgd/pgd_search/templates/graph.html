@@ -5,7 +5,7 @@
             #content {
                 margin-left:auto;
                 margin-right:auto;
-                width:530px;
+                width:730px;
                 min-width:530px;
             }
 
@@ -13,15 +13,15 @@
                 height: 472px;
                 margin: 15px;
                 margin-left:auto;
-                margin-right:auto
+                margin-right:auto;
                 min-height:472px;
-                width: 500px;
+                width: 650px;
             }
 
             #canvas {
                 margin-left:auto;
                 margin-right:auto;
-                width: 471px;
+                width: 560px;
                 height: 100%;
             }
 
@@ -58,7 +58,7 @@
             }
 
             #button-plot {
-                margin-top:10px;
+                margin-top:15px;
             }
 
             input{
@@ -150,8 +150,8 @@
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
             var stats = {};
             var aafix = 0.5;
@@ -300,8 +300,8 @@
                     rect = rects[i]
                     r = paper.rect(rect['x']+aafix,
                         rect['y']+aafix,
-                        rect['height'],
-                        rect['width']);
+                        rect['width'],
+                        rect['height']);
                     r.attr({fill: rect['fill'], stroke:rect['color']});
                     r.attr('stroke-width',rect['stroke']);
                 }
@@ -321,7 +321,7 @@
 
                 for (i in texts) {
                     text = texts[i]
-                    paper.print(text['x'],text['y'],text['text'], font,12);
+                    paper.print(text['x'],text['y'],text['text'], font, text['size']);
                 }
 
                 stats = {};
@@ -428,13 +428,17 @@
             </tr>
             <tr>
                 <td class="label">X Axis</td>
+                {% autoescape off %}
                 <td>{{form.xProperty}}</td>
+                {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
             </tr>
             <tr>
                 <td class="label">Y Axis</td>
+                {% autoescape off %}
                 <td>{{form.yProperty}}</td>
+                {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
                 <td>{{form.y}}{{form.y1}}</td>
             </tr>

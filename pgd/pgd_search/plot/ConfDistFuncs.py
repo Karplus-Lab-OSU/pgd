@@ -16,6 +16,33 @@ ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
 
 NON_FIELDS = ('Observations', 'all')
 
+"""
+COLOR_RANGES - an RGB color setting for determining the range of colors in a plot
+Made up of the MAX values for each Red, Green, Blue.  Plus an adjustment for each
+RGB value.  A scale will be applied to each number equally then the adjustment added
+This causes a range with all colors at the same proportion.  The adjustment causes
+a grouping of colors closer to the max value.
+"""
+COLOR_RANGES = { 
+    'green':(
+        (255.0,180.0,200.0),
+        (0,75,0)
+     ),
+    'blue':(
+        (180.0,200.0,180.0),
+        (0,0,75)
+     ),
+    'red':(
+        (130.0, 200.0, 180.0),
+        (115,0,0)
+    ),
+    'black':(
+        (180.0,180.0,180.0),
+        (75,75,75)
+     )
+}
+
+
 # getCircularStats: returns (average, standard deviation) of a list of values
 #   values: a list of the values to be examined
 #   size:   the size of the list (in case it has been counted elsewhere)
@@ -85,7 +112,9 @@ class ConfDistPlot():
     # residue:  index of the residue of interest (-n...-1,0,1...n)
     # querySet: Django queryset
     # ******************************************************
-    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet):
+    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet, color='green'):
+        self.color = color
+
         # Convert unicode to strings
         xText,yText,ref = str(xText),str(yText),str(ref)
 
@@ -254,6 +283,7 @@ class ConfDistPlot():
                 minPropAvg = meanPropAvg - 3*stdPropAvg
                 maxPropAvg = meanPropAvg + 3*stdPropAvg
 
+        colors, adjust = COLOR_RANGES[self.color]
         # Color the bins
         for key in self.bins:
             bin = self.bins[key]
@@ -263,7 +293,7 @@ class ConfDistPlot():
                 scale = math.log(num+1, self.maxObs+1)
                 color = map(
                     lambda x: x*scale,
-                    (255.0,180.0,200.0)
+                    colors
                 )
             elif self.ref in ANGLES:
                 avg = bin['%s_avg'%self.refString]
@@ -289,7 +319,7 @@ class ConfDistPlot():
                        ))/2
                     color = map(
                         lambda x: x*scale,
-                        (255.0,180.0,200.0)
+                        colors
                     )
             else:
                 avg = bin['%s_avg'%self.refString]
@@ -309,9 +339,12 @@ class ConfDistPlot():
                         ))/2
                     color = map(
                         lambda x: x*scale,
-                        (255.0,180.0,200.0)
+                        colors
                     )
-            color[1] += 75
+
+            color[0] += adjust[0]
+            color[1] += adjust[1]
+            color[2] += adjust[2]
 
             #convert decimal RGB into HEX rgb
             fill = ''.join('%02x'%round(x) for x in color)
@@ -399,20 +432,22 @@ class ConfDistPlot():
             writer.write('%sDev' % title)
 
         # Cycle through the binPoints
+        xbin = self.xbin
+        ybin = self.ybin
         for key in self.bins:
             bin = self.bins[key]
             writer.write('\n')
 
             # x axis range
-            writer.write(key[0])
+            writer.write(key[0]*xbin)
             writer.write('\t')
-            writer.write(key[0]+self.xbin)
+            writer.write((key[0]+1)*xbin)
 
             # y-axis range
             writer.write('\t')
-            writer.write(key[1])
+            writer.write(key[1]*ybin)
             writer.write('\t')
-            writer.write(key[1]+self.ybin)
+            writer.write((key[1]+1)*ybin)
 
             # observations
             writer.write('\t')
