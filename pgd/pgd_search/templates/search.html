@@ -124,12 +124,12 @@
 
             .toggle_Include {
                 opacity:1;
-                background-image:url('http://doors.osuosl.org/media/plus2.png');
+                background-image:url('{{MEDIA_URL}}/images/plus2.png');
             }
 
             .toggle_Exclude {
                 opacity:1;
-                background-image:url('http://doors.osuosl.org/media/minus2.png');
+                background-image:url('{{MEDIA_URL}}/images/minus2.png');
             }
 
             input.field_include {
@@ -439,13 +439,7 @@
                                        size: { x: 20, y : 15 }
                                        }
                                    },
-                                   show:false,
-                    /*        show:{
-                                when:{
-                                    event: 'click',
-                                } ,
-                                solo: true,
-                            },*/
+                            show: false,
                             hide: false,
                             content:{
                                     prerender: false,//This kills pageload times if enabled
@@ -602,8 +596,9 @@
                     header.innerHTML = 'Lengths →';
                     }
                         });
-
+				if(qtipsOn){
                 createQtips();
+				}
 
                 $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').mousedown(function(event){
                         $clickedOn  = $(event.target);

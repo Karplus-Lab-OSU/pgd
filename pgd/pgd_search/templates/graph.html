@@ -103,6 +103,8 @@
                 margin-right:10px;
                 margin-left:10px;
                 font-weight:bold;
+                text-align:left;
+                padding-right: 10px;
             }
 
             .col2 {
@@ -210,6 +212,7 @@
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.stylish-select.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
             var stats = {};
@@ -219,6 +222,8 @@
             var line_y_aafix = 0.5;
             var rects_y_aafix = 0;
             var is_IE = false;
+            var contentText = 'Mouse over a bin in the plot to see the relevent data.';
+            
 
             // IE checks - check different things not supported by IE to detect them
             if(!(jQuery.support.objectAll && jQuery.support.leadingWhitespace && jQuery.support.noCloneEvent)){
@@ -231,8 +236,40 @@
 
             var stat_field = false;
 
-            $(document).ready(function() {
+            $(document).ready(function(){
                 $('div#binDetails').hide();
+                $('#canvas_container').qtip({
+                        position:{
+                            adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                    resize: true
+                                    },
+                            corner: {
+                                    target: 'leftTop',
+                                    tooltip: 'rightTop'
+                                    },
+                            target:$('#canvas_container')
+                                 },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#666666'},
+                              width: { min: 200, max: 440 },
+                              border:{ 
+                                     width: 6, 
+                                     color: '#909090'
+                                     }
+                               },
+                        show: false,
+                        hide: false,
+                        content:{
+                                prerender: false,//This kills pageload times if enabled
+                                text: contentText,
+                                title:  {
+                                        text: 'Bin Details'
+                                        }
+                                }
+                            }); 
+                $('#canvas_container').qtip('show');
                 $('#button-plot').click(function (evt) {
                     update_svg();
                 });
@@ -414,14 +451,9 @@
                 $('#stat_observations').html(field_stats['observations'])
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
-
-                //show the divs
-                if (stat_field){
-                    $('#stat_field').show();
-                } else {
-                    $('#stat_field').hide();
-                }
-                $('div#binDetails').show();
+                
+                contentText=$('div#binDetails').html();
+                $('div.qtip').qtip('api').updateContent(contentText);
             }
 
             function bin_mouseout(){
@@ -511,8 +543,8 @@
         <table>
             <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
             <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
-            <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
-            <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
+            <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
+            <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
             <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
         </table>
     </div>
