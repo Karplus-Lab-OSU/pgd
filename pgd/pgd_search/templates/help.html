@@ -4,12 +4,9 @@
 {% include 'header.html' %}
 <ol style="padding-left:30px;">
 <h2 style="color:#1854d0;">Table of Contents</h2>
-<li><a href="#int" style="color:#000">Introduction</a></li>
 <li><a href="#sea" style="color:#000">Searching</a></li>
 <ol type="a" start="1" style="padding-left:30px;">
-<li>Motif Level Settings</li>
-<li>Residue Level Settings</li>
-<li>Residue Properties</li>
+<li>Example Searches</li>
 </ol>
 <li><a href="#plo" style="color:#000">Plotting</a></li>
 <li><a href="#sta" style="color:#000">Statistics</a></li>
@@ -20,69 +17,15 @@
 </ol>
 <br>
 <br>
-<h2><a name="int" style="color:#1854d0; text-decoration:none; font-size:25px;">Introduction</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-Using the Protein Geometry Database, you can mine protein conformational space with a user-friendly but surprisingly flexible graphical interface. You can search for structural motifs from 1-10 residues with either broad secondary-structure types (Kabsch and Sander, 1983) or fine-grained ranges of the Φ and Ψ dihedral angles. You can additionally restrict your query by amino acid and by backbone covalent geometry. Cutoff thresholds allow you to search only well-defined residues within a nonredundant set of proteins (Hobohm et al., 1992).
-<br>
-Your search results appear on an interactive and attractive Ramachandran plot. Any of the residues in your motif query can be plotted, and the color indicates observation density. In addition to the observations, you can plot many other properties (primarily geometric) using the color or on the X or Y axes. Additionally, you can look at statistics for each residue type, browse individual results, or download a plain-text dump of the results. This dump allows you to pass the output of the PGD into the analysis tool of your choice, preventing you from being limited by the capabilities of our database in analyzing your results.
-<br>
-A unique aspect of the PGD is your ability to use as much or as little of its flexibility as you need. Many flexible databases are nearly unusable, and many simplistic databases make it impossible to ask your scientific question. The PGD has the advantages of both and disadvantages of neither because of its professionally designed interface.
-<br>
-The protein backbone is defined primarily by three dihedral angles: Φ, Ψ, and ω. The first two are highly rotatable and the concept of protein conformation is based on them. The third, ω, defines the planarity of the peptide bond and generally stays close to 180° or 0° (for cis peptides). All three dihedrals are searchable in the PGD.
-<br>
-Additionally, bond angles and lengths determine the details of peptide geometry, and their averages vary in a conformation-dependent manner (Karplus, 1996). They are labeled above as a1-a7 (angles) and L1-L5 (lengths), and you can search the PGD based on these parameters in addition to or instead of conformation.
-</p>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
 <h2><a name="sea" style="color:#1854d0; text-decoration:none; font-size:25px;">Searching</a></h2>
 <hr/>
 <p style="width:100%;">
 <br>
 The first thing you see when entering the PGD is the search page. On this page, you define all parts of your query for a specific motif.
-<br> 
-We'll go through each aspect of the search page here. In order of appearance, they are:
-</p>
-<br>
-<h3 style="text-decoration:underline; color:#1854d0;">Motif-level settings</h3>
-<p style="width:100%;">
-Proteins: Normally you will leave this unchanged. If you only want to search a certain set of PDB codes, you can set this. Only codes in the nonredundant database are available for searching.
-<br>
-Residues: How many residues are in the motif you want to search for?
-<br>
-Resolution: What resolution of crystal structures is searched?
-<br>
-Threshold: This is the maximum sequence identity between any pair of proteins in the PGD (Hobohm et al., 1992)
 <br>
 <br>
-<h3 style="text-decoration:underline; color:#1854d0;">Residue-level settings</h3>
-Peptide: Which amino acids are searched? The default is all of them. If you click the plus sign next to the field after highlighting residues, this will exclude them instead of include them.
+This section and all later sections accepts a flexible query syntax designed to allow for combinations of ranges and wrap-around searches (such as the complete β region, which goes from Ψ ≈ +90° past +180° to Ψ ≈ -120°). For a typical search, the syntax always goes from the most negative to most positive number. If this is reversed, a wraparound search will be performed instead (going in the opposite direction around the circle). You indicate both ranges and negative signs with a "-" so a search within a negative range will have two adjacent "-" signs. Additionally, you can search multiple ranges by appending them using a "," between them. See the default setting of ω for an example of both negative and multiple ranges.
 <br>
-Secondary Structure: Which secondary-structure types are searched? The default is all of them. These types are defined by DSSP and are:
-<br>
-<ul style="padding-left:30px;">
-<li>G/g: 310-helix</li>
-<li>H/h: α-helix</li>
-<li>I/i: π-helix</li>
-<li>T/t: hydrogen-bonded turn</li>
-<li>E/e: β-sheet</li>
-<li>B: isolated β-bridge</li>
-<li>S: non-hydrogen-bonded turn</li>
-</ul>
-Lowercase letters indicate the initial or terminal residues of the secondary-structure types.
-</p>
-<br>
-<h3 style="text-decoration:underline; color:#1854d0;">Residue Properties</h3>
-<p style="width:100%;">
-Here, you can perform fine-grained searches for specific conformations and residue-level cutoffs. The conformations were described in the "Backbone geometry" section. The cutoffs available are various B-factors. Bm is the average main-chain B-factor, Bg is the B-factor of the γ-carbon (which determines whether the χ1 sidechain dihedral angle is well-defined) and Bsc is the average side-chain B-factor. This section and all later sections accepts a flexible query syntax designed to allow for combinations of ranges and wrap-around searches (such as the complete β region, which goes from Ψ ≈ +90° past +180° to Ψ ≈ -120°). For a typical search, the syntax always goes from the most negative to most positive number. If this is reversed, a wraparound search will be performed instead (going in the opposite direction around the circle). You indicate both ranges and negative signs with a "-" so a search within a negative range will have two adjacent "-" signs. Additionally, you can search multiple ranges by appending them using a "," between them. See the default setting of ω for an example of both negative and multiple ranges.
-<br>
-Angles: The angles were described in the "Backbone geometry" section. The syntax is the same as for "Residue Properties".
-<br>
-Lengths: The lengths were described in the "Backbone geometry" section. The syntax is the same as for "Residue Properties".
 <br>
 Once you've selected values for each parameter (or left them at their defaults), just click Submit!
 </p>
@@ -91,22 +34,20 @@ Once you've selected values for each parameter (or left them at their defaults),
 <hr/>
 <p style="width:100%;">
 <br>
-Here are some examples of how you might want to search PGD. Each example links to a search 
-<br>
-with the fields already filled in, to give you a live example of how to search in different ways.
+Here are some examples of how you might want to search PGD. Each example links to a search with the fields already filled in, to give you a live example of how to search in different ways.
 </p>
 <ul style="padding-left:30px;">
 <li><p style="width:100%;">
-This is some text about this search, and a link back to a search page with the fields filled in.
-<a href="{{SITE_ROOT}}/search/edit/1">Example</a>
+The default search page provides a query ideal for examining a representative set of structural features to assess their existence and relationships to covalent geometry in all atomic-resolution proteins.
+<a href="{{SITE_ROOT}}search/edit/1" style="color:#000">Click here for the example.</a>
 </p></li>
 <li><p style="width:100%;">
-This is some text about this search, and a link back to a search page with the fields filled in.
-<a href="{{SITE_ROOT}}/search/edit/2">Example</a>
+The second example is part of a series designed to uncover which linear groups of residues with repeating conformations exist in proteins. To do so, all well-populated 20° × 20° bins were searched with a 10° sliding window. This particular example searches a 20° bin in the &alpha;-helical region. To see how this was done, take a look at the &phi; and &psi; ranges for residue i.
+<a href="{{SITE_ROOT}}search/edit/2" style="color:#000">Click here for the example.</a>
 </p></li>
 <li><p style="width:100%;">
-This is some text about this search, and a link back to a search page with the fields filled in.
-<a href="{{SITE_ROOT}}/search/edit/3">Example</a>
+The third example asks how common a specific motif is. An active-site loop in glutathione reductase had five consecutive residues, all with nonplanar peptide bonds with a summed deviation of 55° in the same direction. To find out how common this was in all proteins, we searched for all trans pentapeptides for which each residue was at least 5° from planarity. To get a more complete search of available structure instead of a sequence-representative search, we used a 90% sequence-identity threshold.
+<a href="{{SITE_ROOT}}search/edit/3" style="color:#000">Click here for the example.</a>
 </p></li>
 </ul>
 <br>
@@ -120,9 +61,11 @@ This is some text about this search, and a link back to a search page with the f
 <br>
 The first screen that appears when your search completes is the plotting page.
 <br>
-This initially shows a Ramachandran plot colored by the observation density for residue "i", the central residue. Brighter colors indicate higher values for whichever parameter is plotted; in the initial case, this means more observations in a region. Each square indicates a 10° × 10° bin by default; this can be changed with the "Bin" parameter. By scrolling your mouse over a bin, you get a pop-up gray window describing that bin in more detail. You can change which parameter is colored by changing "Plotted Attribute", and the parameters plotted on the X and Y axes can also be changed from Φ and Ψ to be any parameters in the database. Additionally, you can change the plotted residue within your search motif by changing the "Residue" field. You can zoom in or out of any plot by changing the X and Y min and max. To replot after changing any values, click the "Plot" button. To save a copy of the graph, click the "Save" button.
 <br>
-One extremely valuable feature of the plotting page is the ability to download a dump of the data used in all plots. The dump contains the bin definitions, observation counts in each bin, and averages and standard deviations for every parameter in the database. To download a dump, click the "Data" button.
+This initially shows a Ramachandran plot colored by the observation density for residue "i", the central residue. Brighter colors indicate higher values for whichever parameter is plotted; in the initial case, this means more observations in a region. Each square indicates a 10° × 10° bin by default; this can be changed with the "Bin" parameter. By scrolling your mouse over a bin, you get a pop-up gray window describing that bin in more detail. You can change which parameter is colored by changing "Plotted Attribute", and the parameters plotted on the X and Y axes can also be changed from Φ and Ψ to be any parameters in the database. Additionally, you can change the plotted residue within your search motif by changing the "Residue" field. You can zoom in or out of any plot by changing the X and Y min and max. To replot after changing any values, click the "Re-Plot" button. To save a copy of the graph, click the "Save Plot Image" button.
+<br>
+<br>
+One extremely valuable feature of the plotting page is the ability to download a dump of the data used in all plots. The dump contains the bin definitions, observation counts in each bin, and averages and standard deviations for every parameter in the database. To download a dump, click the "Download Plot Data" button.
 </p>
 <br>
 <a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
@@ -134,6 +77,7 @@ One extremely valuable feature of the plotting page is the ability to download a
 <p style="width:100%;">
 <br>
 To get more statistics about each residue type, including its total population, its population by secondary-structure type, and its average backbone covalent geometry, click the "Statistics" link at the top of the page.
+<br>
 <br>
 On the left side is amino acid, total population, and population by secondary-structure type (described in the "Backbone geometry" section). On the right side, you will see the covalent geometry averages. If you scroll your mouse over the covalent geometry values, a pop-up window will also display the standard deviations and ranges. Highlighting of each column and row while your mouse cursor hovers over it eases comparison within a residue or within a parameter.
 </p>
