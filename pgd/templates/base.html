@@ -19,8 +19,8 @@
                 <!--span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}logout">logout</a></span-->
                 <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}search/help/">Help</a>
                 {% if user.is_authenticated %}
-                    <p>Logged in as {{ user.username }}.</p>
-                  <a href="/accounts/logout">Logout</a>
+                <br>
+                    <a href="/accounts/logout">Logout</a>
                 {% else %}
                     <br>
                     <style="text-align:center">Welcome. Please either <a href="/accounts/login"><strong>log in</strong></a> or <a href="/accounts/register"><strong>register</strong></a> to fully utilize PGD.</style>
