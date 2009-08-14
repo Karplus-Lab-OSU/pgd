@@ -1,134 +1,177 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
-<body id="top" style="text-align:left;">
-{% include 'header.html' %}
-<ol style="padding-left:30px;">
-<h2 style="color:#1854d0;">Table of Contents</h2>
-<li><a href="#sea" style="color:#000">Searching</a></li>
-<ol type="a" start="1" style="padding-left:30px;">
-<li>Example Searches</li>
-</ol>
-<li><a href="#plo" style="color:#000">Plotting</a></li>
-<li><a href="#sta" style="color:#000">Statistics</a></li>
-<li><a href="#bro" style="color:#000">Browsing Results</a></li>
-<li><a href="#dum" style="color:#000">Dump Results</a></li>
-<li><a href="#sav" style="color:#000">Saving a Search</a></li>
-<li><a href="#lin" style="color:#000">Logging In</a></li>
-</ol>
-<br>
-<br>
-<h2><a name="sea" style="color:#1854d0; text-decoration:none; font-size:25px;">Searching</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-The first thing you see when entering the PGD is the search page. On this page, you define all parts of your query for a specific motif.
-<br>
-<br>
-This section and all later sections accepts a flexible query syntax designed to allow for combinations of ranges and wrap-around searches (such as the complete β region, which goes from Ψ ≈ +90° past +180° to Ψ ≈ -120°). For a typical search, the syntax always goes from the most negative to most positive number. If this is reversed, a wraparound search will be performed instead (going in the opposite direction around the circle). You indicate both ranges and negative signs with a "-" so a search within a negative range will have two adjacent "-" signs. Additionally, you can search multiple ranges by appending them using a "," between them. See the default setting of ω for an example of both negative and multiple ranges.
-<br>
-<br>
-Once you've selected values for each parameter (or left them at their defaults), just click Submit!
-</p>
-<br>
-<h3 style="text-decoration:underline; color:#1854d0;">Example Searches</h3>
-<hr/>
-<p style="width:100%;">
-<br>
-Here are some examples of how you might want to search PGD. Each example links to a search with the fields already filled in, to give you a live example of how to search in different ways.
-</p>
-<ul style="padding-left:30px;">
-<li><p style="width:100%;">
-The default search page provides a query ideal for examining a representative set of structural features to assess their existence and relationships to covalent geometry in all atomic-resolution proteins.
-<a href="{{SITE_ROOT}}search/edit/1" style="color:#000">Click here for the example.</a>
-</p></li>
-<li><p style="width:100%;">
-The second example is part of a series designed to uncover which linear groups of residues with repeating conformations exist in proteins. To do so, all well-populated 20° × 20° bins were searched with a 10° sliding window. This particular example searches a 20° bin in the &alpha;-helical region. To see how this was done, take a look at the &phi; and &psi; ranges for residue i.
-<a href="{{SITE_ROOT}}search/edit/2" style="color:#000">Click here for the example.</a>
-</p></li>
-<li><p style="width:100%;">
-The third example asks how common a specific motif is. An active-site loop in glutathione reductase had five consecutive residues, all with nonplanar peptide bonds with a summed deviation of 55° in the same direction. To find out how common this was in all proteins, we searched for all trans pentapeptides for which each residue was at least 5° from planarity. To get a more complete search of available structure instead of a sequence-representative search, we used a 90% sequence-identity threshold.
-<a href="{{SITE_ROOT}}search/edit/3" style="color:#000">Click here for the example.</a>
-</p></li>
-</ul>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
-<h2><a name="plo" style="color:#1854d0; text-decoration:none; font-size:25px;">Plotting</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-The first screen that appears when your search completes is the plotting page.
-<br>
-<br>
-This initially shows a Ramachandran plot colored by the observation density for residue "i", the central residue. Brighter colors indicate higher values for whichever parameter is plotted; in the initial case, this means more observations in a region. Each square indicates a 10° × 10° bin by default; this can be changed with the "Bin" parameter. By scrolling your mouse over a bin, you get a pop-up gray window describing that bin in more detail. You can change which parameter is colored by changing "Plotted Attribute", and the parameters plotted on the X and Y axes can also be changed from Φ and Ψ to be any parameters in the database. Additionally, you can change the plotted residue within your search motif by changing the "Residue" field. You can zoom in or out of any plot by changing the X and Y min and max. To replot after changing any values, click the "Re-Plot" button. To save a copy of the graph, click the "Save Plot Image" button.
-<br>
-<br>
-One extremely valuable feature of the plotting page is the ability to download a dump of the data used in all plots. The dump contains the bin definitions, observation counts in each bin, and averages and standard deviations for every parameter in the database. To download a dump, click the "Download Plot Data" button.
-</p>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
-<h2><a name="sta" style="color:#1854d0; text-decoration:none; font-size:25px;">Statistics</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-To get more statistics about each residue type, including its total population, its population by secondary-structure type, and its average backbone covalent geometry, click the "Statistics" link at the top of the page.
-<br>
-<br>
-On the left side is amino acid, total population, and population by secondary-structure type (described in the "Backbone geometry" section). On the right side, you will see the covalent geometry averages. If you scroll your mouse over the covalent geometry values, a pop-up window will also display the standard deviations and ranges. Highlighting of each column and row while your mouse cursor hovers over it eases comparison within a residue or within a parameter.
-</p>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
-<h2><a name="bro" style="color:#1854d0; text-decoration:none; font-size:25px;">Browsing Results</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-You will see each motif shown individually from the i-N to i+N residues. Highlighting of each column and row while your mouse cursor hovers over it eases comparison within a residue or within a parameter. In addition to the other result sets, this set shows the "H Bond" and "Zeta" parameters. The "H Bond" parameter is hydrogen-bonding energy defined by DSSP (Kabsch and Sander, 1983). The "Zeta" parameter is the Cα chirality, defined by the improper torsion Cα-N-C-Cβ. To reduce load time so you don't need to wait as long, pagination splits up the extremely large result sets into multiple pages so each page loads quickly.
-</p>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
-<h2><a name="dum" style="color:#1854d0; text-decoration:none; font-size:25px;">Dump Results</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-Clicking the "Data Dump" link lets you download a plain-text dump of the results. This dump allows you to pass the output of the PGD into the analysis tool of your choice, preventing you from being limited by the capabilities of our database in analyzing your results. It is a tab-delimited file that can be easily imported into common spreadsheet or graphing programs.
-</p>
-<br>
-<a href="#top" style="color:#000;">Back To Top</a>
-<hr/>
-<br>
-<br>
-<h2><a name="sav" style="color:#1854d0; text-decoration:none; font-size:25px;">Saving and Loading Previous Searches</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-The ability to save your search credentials is a feature that is will be implemented in the future.
-</p>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
-<h2><a name="lin" style="color:#1854d0; text-decoration:none; font-size:25px;">Logging In and Out</a></h2>
-<hr/>
-<p style="width:100%;">
-<br>
-The ability to have a user account to access the PGD is a feature that is will be implemented in the future.
-</p>
-<br>
-<a href="#top" style="color:#000; font-style:italic;">Back To Top</a>
-<hr/>
-<br>
-<br>
-</body>
-</html>
+{% extends 'search_base.html' %}
+
+{% block head %}
+    <style>
+        #content {
+            width:700px;
+        }
+
+        #table_of_contents {
+             margin-bottom: 30px;
+             padding-left:30px;
+        }
+
+        #table_of_contents li a {
+            color: #000;
+        }
+
+        .section {
+            border-bottom: 2px solid gray;
+            margin-bottom: 50px;
+        }
+
+        .section a {
+            border-bottom:1px blue dotted;
+            text-decoration:none;
+        }
+
+        .section a:hover {
+            border-bottom:1px blue solid;
+            color:#1854d0;
+        }
+
+        .section h2 {
+            border-bottom: 2px solid gray;
+            font-size:25px;
+            margin-bottom:10px;
+        }
+
+        .section h2 a, .section h2 a:hover{
+            border: 0;
+            color:#1854d0;
+            font-size:25px;
+            text-decoration:none;
+        }
+
+        .subsection h3 {
+            border:0;
+            color:#1854d0;
+            font-size:16px;
+            margin-top:20px;
+        }
+
+        .section p {
+            margin-bottom:20px;
+        }
+
+        .section ul li{
+            margin-bottom:10px;
+            margin-left: 40px;
+        }
+
+        a.top {
+            border:0;
+            color:#000;
+            font-style:italic;
+            margin-top:10px;
+        }
+
+
+
+        a.top:hover {
+            border:0;
+            color:#1854d0;
+            font-style:italic;
+            margin-top:10px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+    <h2 style="color:#1854d0;">Table of Contents</h2>
+    <ol id="table_of_contents">
+        <li><a href="#sea" style="color:#000">Searching</a></li>
+        <ol type="a" start="1" style="padding-left:30px;">
+            <li>Example Searches</li>
+        </ol>
+        <li><a href="#plo">Plotting</a></li>
+        <li><a href="#sta">Statistics</a></li>
+        <li><a href="#bro">Browsing Results</a></li>
+        <li><a href="#dum">Dump Results</a></li>
+        <li><a href="#sav">Saving a Search</a></li>
+        <li><a href="#lin">Logging In</a></li>
+    </ol>
+
+
+    <div class="section">
+        <h2><a name="sea">Searching</a></h2>
+        <p>The first thing you see when entering the PGD is the search page. On this page, you define all parts of your query for a specific motif.</p>
+        <p>This section and all later sections accepts a flexible query syntax designed to allow for combinations of ranges and wrap-around searches (such as the complete β region, which goes from Ψ ≈ +90° past +180° to Ψ ≈ -120°). For a typical search, the syntax always goes from the most negative to most positive number. If this is reversed, a wraparound search will be performed instead (going in the opposite direction around the circle). You indicate both ranges and negative signs with a "-" so a search within a negative range will have two adjacent "-" signs. Additionally, you can search multiple ranges by appending them using a "," between them. See the default setting of ω for an example of both negative and multiple ranges.</p>
+        <p>Once you've selected values for each parameter (or left them at their defaults), just click Submit!</p>
+
+        <div class="subsection">
+            <h3>Example Searches</h3>
+            <p>
+            Here are some examples of how you might want to search PGD. Each example links to a search with the fields already filled in, to give you a live example of how to search in different ways.
+            </p>
+            <ul>
+                <li>
+                    The default search page provides a query ideal for examining a representative set of structural features to assess their existence and relationships to covalent geometry in all atomic-resolution proteins.
+                    <a href="{{SITE_ROOT}}search/edit/1" style="color:#000">Click here for the example.</a>
+                </li>
+                <li>
+                    The second example is part of a series designed to uncover which linear groups of residues with repeating conformations exist in proteins. To do so, all well-populated 20° × 20° bins were searched with a 10° sliding window. This particular example searches a 20° bin in the &alpha;-helical region. To see how this was done, take a look at the &phi; and &psi; ranges for residue i.
+                    <a href="{{SITE_ROOT}}search/edit/2" style="color:#000">Click here for the example.</a>
+                </li>
+                <li>
+                    The third example asks how common a specific motif is. An active-site loop in glutathione reductase had five consecutive residues, all with nonplanar peptide bonds with a summed deviation of 55° in the same direction. To find out how common this was in all proteins, we searched for all trans pentapeptides for which each residue was at least 5° from planarity. To get a more complete search of available structure instead of a sequence-representative search, we used a 90% sequence-identity threshold.
+                    <a href="{{SITE_ROOT}}search/edit/3" style="color:#000">Click here for the example.</a>
+                </li>
+            </ul>
+        </div>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+    <div class="section">
+        <h2><a name="plo">Plotting</a></h2>
+        <p>The first screen that appears when your search completes is the plotting page.</p>
+        <p>This initially shows a Ramachandran plot colored by the observation density for residue "i", the central residue. Brighter colors indicate higher values for whichever parameter is plotted; in the initial case, this means more observations in a region. Each square indicates a 10° × 10° bin by default; this can be changed with the "Bin" parameter. By scrolling your mouse over a bin, you get a pop-up gray window describing that bin in more detail. You can change which parameter is colored by changing "Plotted Attribute", and the parameters plotted on the X and Y axes can also be changed from Φ and Ψ to be any parameters in the database. Additionally, you can change the plotted residue within your search motif by changing the "Residue" field. You can zoom in or out of any plot by changing the X and Y min and max. To replot after changing any values, click the "Re-Plot" button. To save a copy of the graph, click the "Save Plot Image" button.</p>
+        <p>One extremely valuable feature of the plotting page is the ability to download a dump of the data used in all plots. The dump contains the bin definitions, observation counts in each bin, and averages and standard deviations for every parameter in the database. To download a dump, click the "Download Plot Data" button.</p>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+    <div class="section">
+        <h2><a name="sta">Statistics</a></h2>
+        <p>
+            To get more statistics about each residue type, including its total population, its population by secondary-structure type, and its average backbone covalent geometry, click the "Statistics" link at the top of the page.
+        </p>
+        <p>
+        On the left side is amino acid, total population, and population by secondary-structure type (described in the "Backbone geometry" section). On the right side, you will see the covalent geometry averages. If you scroll your mouse over the covalent geometry values, a pop-up window will also display the standard deviations and ranges. Highlighting of each column and row while your mouse cursor hovers over it eases comparison within a residue or within a parameter.
+        </p>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+    <div class="section">
+        <h2><a name="bro">Browsing Results</a></h2>
+        <p>
+        You will see each motif shown individually from the i-N to i+N residues. Highlighting of each column and row while your mouse cursor hovers over it eases comparison within a residue or within a parameter. In addition to the other result sets, this set shows the "H Bond" and "Zeta" parameters. The "H Bond" parameter is hydrogen-bonding energy defined by DSSP (Kabsch and Sander, 1983). The "Zeta" parameter is the Cα chirality, defined by the improper torsion Cα-N-C-Cβ. To reduce load time so you don't need to wait as long, pagination splits up the extremely large result sets into multiple pages so each page loads quickly.
+        </p>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+    <div class="section">
+        <h2><a name="dum">Dump Results</a></h2>
+        <p>
+        Clicking the "Data Dump" link lets you download a plain-text dump of the results. This dump allows you to pass the output of the PGD into the analysis tool of your choice, preventing you from being limited by the capabilities of our database in analyzing your results. It is a tab-delimited file that can be easily imported into common spreadsheet or graphing programs.
+        </p>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+    <div class="section">
+        <h2><a name="sav">Saving and Loading Previous Searches</a></h2>
+        <p>
+        The ability to save your search credentials is a feature that is will be implemented in the future.
+        </p>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+    <div class="section">
+        <h2><a name="lin">Logging In and Out</a></h2>
+        <p>
+        The ability to have a user account to access the PGD is a feature that is will be implemented in the future.
+        </p>
+        <a href="#top" class="top">Back To Top</a>
+    </div>
+
+{% endblock content %}
