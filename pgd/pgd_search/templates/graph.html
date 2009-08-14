@@ -61,8 +61,11 @@
                 margin-top:15px;
             }
 
-            input{
+            input {
                 margin-right:10px;
+                height:1.71em;
+                padding-top:.5em;
+                line-height:2.15em;
             }
 
             #binDetails {
@@ -145,8 +148,67 @@
             tr.spacer {
                 height:10px;
             }
+
+            /*==================================
+            remove default focus style
+            ====================================*/
+            :focus {outline:none;}
+            .js ul.newList {left:-9999px;}
+
+            /*======================================
+            windows xp style - div that contains the 
+            <select> has been given an id of 
+            (for the purposes of this example
+            ========================================*/
+             .newListSelected {
+                background:#FFF url({{MEDIA_URL}}/images/dropdown.gif) no-repeat scroll 155px 1px; 
+                border:1px solid #d4d4d4;
+                color:#000;
+                height:2.21em;
+                padding:0;
+                width:7.5em;
+                }
+             .newListSelected div {
+                display:block;
+                font-size:.85em;
+                line-height:2.2em;
+                padding-left:3px;
+                text-align:left !important;
+                width:7.5em;
+                }
+             ul.newList {
+                background:#fff;
+                border:6px solid #999999;
+                color:#000;
+                font-size: 0.85em;
+                height:auto;
+                left:0;
+                list-style:none;
+                overflow:auto;
+                position:absolute;
+                text-align:left !important;
+                top:22px;
+                width:8em;
+                z-index:9999;
+                }
+             ul.newList li {
+                border-bottom: 1px solid #cccccc;
+                height:2em;
+                line-height:1em;
+                padding-left:5px;
+                padding-right:5px;
+                }
+             .hiLite {background:#316ac5!important; color:#fff!important;}
+             .newListHover {background:#ccc!important; color:#000!important; cursor:default;}
+             .newListSelHover {cursor:default;}
+             .newListSelHover,  .newListSelFocus {background-position:auto;}
+             div.selectedTxt {
+                width:8.75em;
+                height:100%;
+             }
         </style>
 
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.stylish-select.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
@@ -174,6 +236,9 @@
                 $('#button-plot').click(function (evt) {
                     update_svg();
                 });
+
+                $('select').sSelect();
+
                 $('#button-save').click(function (evt) {
                     $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
                 });
@@ -184,19 +249,19 @@
 
                 $('#id_xProperty').change(function (){
                         $('#id_xProperty option:selected').each(function () {
-                            _default = DEFAULTS[$(this).val()];
-                            $('#id_x').val(_default['min']);
-                            $('#id_x1').val(_default['max']);
-                            $('#id_xBin').val(_default['stepsize']);
+                            //_default = DEFAULTS[$(this).val()];
+                            //$('#id_x').val(_default['min']);
+                            //$('#id_x1').val(_default['max']);
+                            //$('#id_xBin').val(_default['stepsize']);
                         });
                 });
 
                 $('#id_yProperty').change(function (){
                         $('#id_yProperty option:selected').each(function () {
                             //_default = DEFAULTS[$(this).val()];
-                            $('#id_y').val(_default['min']);
-                            $('#id_y1').val(_default['max']);
-                            $('#id_yBin').val(_default['stepsize']);
+                            //$('#id_y').val(_default['min']);
+                            //$('#id_y1').val(_default['max']);
+                            //$('#id_yBin').val(_default['stepsize']);
                         });
                 });
 
@@ -256,10 +321,10 @@
                 $('#canvas').show();
 
                 // process graph
-                var paper = Raphael("canvas", 700, 700);
+                var paper = Raphael("canvas", 700, 472);
 
                 rects = data['background']['rects']
-                for (i in rects) {
+                for (i=0; i<rects.length; i++) {
                     rect = rects[i]
                     r = paper.rect(rect['x']+aafix,
                         rect['y']+aafix,
@@ -289,7 +354,7 @@
 
                 stats = {};
                 boxes = data['boxes'];
-                for (i in boxes) {
+                for (i=0; i<boxes.length; i++) {
                     rect = boxes[i];
                     r = paper.rect(rect[0]+aafix,
                         rect[1]+rects_y_aafix,
@@ -297,7 +362,6 @@
                         rect[3]+boxsizefix);
                     r.attr({fill: "#" +rect[4], stroke:"#" +rect[4]});
                     r.attr('stroke-width',0);
-
 
                     r[0].onmouseover = function(){
                         if (is_IE) {
