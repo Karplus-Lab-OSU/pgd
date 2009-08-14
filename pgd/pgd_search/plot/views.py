@@ -160,7 +160,8 @@ def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd
             yProperty,      #Y property
             attribute,      #property
             residue,        #residue Index
-            request.session['search'].querySet()
+            request.session['search'].querySet(),
+            hue                
     )
 
     boxes = cdp.Plot()
