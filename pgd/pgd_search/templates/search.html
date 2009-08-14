@@ -408,13 +408,13 @@
                         $(this).qtip({
                             position:{
                                 adjust: { //Make the tooltip avoid going outside the window due to browser resizing
-                                        resize: true, 
+                                        resize: true
                                         },
                                 corner: {
                                         target: 'rightMiddle',
-                                        tooltip: 'leftMiddle',
+                                        tooltip: 'leftMiddle'
                                         },
-                                target: $(target),
+                                target: $(target)
                                      },
                             style:{ //Style the qtip to look like the page
                                   color: 'black',
@@ -429,15 +429,9 @@
                                        corner: 'leftMiddle', 
                                        color: '#909090',
                                        size: { x: 20, y : 15 }
-                                       },
+                                       }
                                    },
-                                   show:false,
-                    /*        show:{
-                                when:{
-                                    event: 'click',
-                                } ,
-                                solo: true,
-                            },*/
+                            show: false,
                             hide: false,
                             content:{
                                     prerender: false,//This kills pageload times if enabled
@@ -446,7 +440,7 @@
                                             text: titleText,
                                             button: 'Close' //Enables a button that closes the qtip
                                             }
-                                    },
+                                    }
                             });
                     });
             };

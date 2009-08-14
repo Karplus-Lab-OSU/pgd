@@ -100,6 +100,8 @@
                 margin-right:10px;
                 margin-left:10px;
                 font-weight:bold;
+                text-align:left;
+                padding-right: 10px;
             }
 
             .col2 {
@@ -189,7 +191,7 @@
                               color: 'black',
                               textAlign: 'center',
                               title: { color: 'white', background: '#666666'},
-                              width: { min: 350, max: 430 },
+                              width: { min: 200, max: 440 },
                               border:{ 
                                      width: 6, 
                                      color: '#909090'
@@ -473,8 +475,8 @@
         <table>
             <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
             <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
-            <tr><td class="label">Observations</td><td id="stat_observations"></td></tr>
-            <tr id="stat_field"><td class="label">Avg {{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
+            <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
+            <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
             <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
         </table>
     </div>
