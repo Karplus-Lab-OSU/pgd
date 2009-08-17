@@ -1,8 +1,10 @@
 import math
 
+from pgd import VERSION
 from pgd_search.models import searchSettings
 from pgd_splicer.models import pdb_select_settings
 import settings
+
 
 """
 Properties for residues as indexes
@@ -18,7 +20,7 @@ def settings_processor(request):
     """
 
     return {
-        'PGD_VERSION':settings.PGD_VERSION,
+        'PGD_VERSION':VERSION,
         'MEDIA':settings.MEDIA_URL,
         'ROOT':settings.SITE_ROOT,
         'DATA_VERSION':pdb_select_settings.DATA_VERSION
