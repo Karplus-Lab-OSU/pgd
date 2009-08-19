@@ -1,9 +1,10 @@
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.forms.util import ErrorList
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from datetime import datetime
 
 import math
 
@@ -11,6 +12,7 @@ from pgd_search.models import Search, Search_residue, Search_code, searchSetting
 from pgd_search.views import RESIDUE_INDEXES
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
+from pgd_search.models import saveSearchForm
 
 import re
 
@@ -68,6 +70,8 @@ def editSearch(request, search_id=None):
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
+        if search.user != request.user:
+            return HttpResponse("<p>You don't have access to this search</p>")
         form = processSearchObject(search)
     #else use the search in the session if it exists
     else:
@@ -264,7 +268,7 @@ def processSearchObject(search):
 
 def saved(request):
 
-    searches = Search.objects.all()
+    searches = Search.objects.filter(user=request.user)#CHANGE THIS TO INCLUDE ONLY THE USER'S SAVED SEARCHES
 
     paginator = Paginator(searches, 20) # Show 20 searches per page
 
@@ -288,5 +292,19 @@ def help(request):
     return render_to_response('help.html', context_instance=RequestContext(request))
 	
 def qtiphelp(request):
-    return render_to_response('qtiphelp.html', context_instance=RequestContext(request))
- 
+    return render_to_response('qtiphelp.html')
+    
+def saveSearch(request):
+    if request.method == 'POST':
+        form = saveSearchForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            request.session['search'].title = data['title']
+            request.session['search'].description = data['description']
+            request.session['search'].user=request.user
+            request.session['search'].timestamp=datetime.now().strftime("%d/%m/%y")
+            request.session['search'].save()
+            return HttpResponseRedirect('/search/saved/')
+    else:
+        form = saveSearchForm()
+    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))

@@ -7,6 +7,9 @@
         <span class="menuitem"><a href="{{SITE_ROOT}}search/plot/svg/">Plot</a></span>
         <span class="menuitem"><a href="{{SITE_ROOT}}search/statistics/">Statistics</a></span>
         <span class="menuitem"><a href="{{SITE_ROOT}}search/dump/">Data Dump</a></span>
-        <span class="menuitem lastmenuitem"><a href="{{SITE_ROOT}}search/browse/">Browse Results</a></span>
+        <span class="menuitem {% if not user.is_authenticated %} lastmenuitem {% endif %}"><a href="{{SITE_ROOT}}search/browse/">Browse Results</a></span>
+        {% if user.is_authenticated %}
+        <span class="menuitem lastmenuitem"><a href="/search/saveSearch">Save Search</a></span>
+        {% endif %}
     {% endif %}
 {% endblock %}

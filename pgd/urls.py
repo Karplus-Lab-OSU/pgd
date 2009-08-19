@@ -17,7 +17,6 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     (r'^admin/(.*)', admin.site.root),
-    (r'^tasks/', include('tasks.urls')),
     (r'^settings/', include('dbsettings.urls')),
 	(r'^accounts/', include('registration.urls')),
     (r'^search/', include('pgd_search.urls')),

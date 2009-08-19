@@ -1,9 +1,10 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<html xmlns="http://www.w3.org/1999/xhtml">
+{% extends "search_base.html" %}
 
-<html>
-    <head>
+    {% block head %}
         <style>
+            tr.even{
+                background-color:darkgray;
+            }
             tr.odd {
                 background-color:gray;
             }
@@ -17,28 +18,65 @@
             a.pagination:hover             { color:blue; text-decoration:underline; }
             a.pagination:active            { color:blue; text-decoration:none;}
         </style>
-    </head>
-    <body>
+        <script type="text/javascript">
+        function hideDescription(id){
+            if(id==undefined){
+                $('tr.hidden').hide();
+            }
+            else{
+                $('tr#id_'+id).hide();
+            }
+        }
 
-    {% include 'header.html' %}
+        
+        $(document).ready(function() {
+            hideDescription();
+
+            $('div.showhide').click(function(event){
+                if(event!=undefined){
+                    var target = event.target.id;
+                    var control = document.getElementById(target);
+
+                    if(control.innerHTML=='[+]'){
+                        control.innerHTML='[-]';
+                    }
+                    else{
+                        control.innerHTML='[+]';
+                    }
+                    target=target.substring(target.length-1,target.length);
+                    $('tr#id_'+target).toggle();
+                }
+                
+                
+              
+            })
+        })
+
+
+        </script>
+    {% endblock %}
+
+    {% include search_base.html %}
+
+    {% block content %}
 
         <div id="content">
-            <table id="searches">
+            <table id="searches" border="0" rules="columns" cellspacing="0">
                 <tbody>
                 <tr>
-                    <th>ID</th>
-                    <th>Timestamp</th>
-                    <th>Results</th>
-                    <th>Note</th>
+                    <th width="200">Title</th>
+                    <th width="10">ID</th>
+                    <th width="100">Date Created</th>
                 </tr>
 
                 {% for search in searches.object_list %}
-                    <tr class="{% cycle 'even' 'odd' %}">
-                        <td><a href="{{SITE_ROOT}}search/edit/{{search.id}}">{{search.id}}</a></td>
+                    <tr class="{% cycle 'even''odd' %}">
+                        <td><a href="{{SITE_ROOT}}search/edit/{{search.id}}">{{search.title}}</a><div class="showhide"id="header_{{search.id}}">[+]</div></td>
+                        <td>{{search.id}}</td>
                         <td>{{search.timestamp}}</td>
-                        <td>{{search.results}}</td>
-                        <td>{{search.note}}</td>
+                        
                     </tr>
+                    <tr id="id_{{search.id}}" class="{% cycle 'even''odd' %} hidden"><td colspan="3">{{search.description}}</td></tr>
                 {% endfor %}
                </tbody>
             </table>
@@ -58,6 +96,5 @@
                     {% endif %}
                 </span>
             </div>
-    </body>
-</html>
+    {% endblock %}
 
