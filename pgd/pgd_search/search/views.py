@@ -71,7 +71,7 @@ def editSearch(request, search_id=None):
     if search_id:
         search = Search.objects.get(id=search_id)
         if search.user != request.user:
-            return HttpResponse("<p>You don't have access to this search</p>")
+            return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
         form = processSearchObject(search)
     #else use the search in the session if it exists
     else:
@@ -268,7 +268,7 @@ def processSearchObject(search):
 
 def saved(request):
 
-    searches = Search.objects.filter(user=request.user)#CHANGE THIS TO INCLUDE ONLY THE USER'S SAVED SEARCHES
+    searches = Search.objects.filter(user=request.user)
 
     paginator = Paginator(searches, 20) # Show 20 searches per page
 
@@ -308,3 +308,13 @@ def saveSearch(request):
     else:
         form = saveSearchForm()
     return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))
+
+def deleteSearch(request,search_id=None):
+    if search_id:
+        search = Search.objects.get(id=search_id)
+        if search.user != request.user:
+            return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
+        search.delete()
+        return HttpResponseRedirect('/search/saved' )
+    else:
+        return HttpResponseRedirect('/search/saved' )
