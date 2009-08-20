@@ -88,6 +88,10 @@
                 width:6em;
             }
 
+            td.dev, td.y {
+                padding-left:20px;
+            }
+
             #binDetails table {
                 margin: 0px;
                 background-color:grey;
@@ -217,13 +221,14 @@
         <script type="text/javascript">
             var stats = {};
             var aafix = 0.5;
+
             var boxsizefix = 1;
-            var line_x_aafix = 1;
+            var line_x_aafix = 0.5;
             var line_y_aafix = 0.5;
+            var rects_x_aafix = 0
             var rects_y_aafix = 0;
             var is_IE = false;
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
-            
 
             // IE checks - check different things not supported by IE to detect them
             if(!(jQuery.support.objectAll && jQuery.support.leadingWhitespace && jQuery.support.noCloneEvent)){
@@ -232,6 +237,7 @@
                 line_x_aafix = 2
                 line_y_aafix = 2
                 rects_y_aafix = 0.5;
+                rects_x_aafix = 0.5;
             }
 
             var stat_field = false;
@@ -253,7 +259,7 @@
                               color: 'black',
                               textAlign: 'center',
                               title: { color: 'white', background: '#666666'},
-                              width: { min: 200, max: 440 },
+                              width: { min: 240, max: 440 },
                               border:{ 
                                      width: 6, 
                                      color: '#909090'
@@ -393,7 +399,7 @@
                 boxes = data['boxes'];
                 for (i=0; i<boxes.length; i++) {
                     rect = boxes[i];
-                    r = paper.rect(rect[0]+aafix,
+                    r = paper.rect(rect[0]+rects_x_aafix,
                         rect[1]+rects_y_aafix,
                         rect[2]+boxsizefix,
                         rect[3]+boxsizefix);
@@ -419,8 +425,8 @@
                     stats[key] = {
                         'observations':rect[6],
                         'bin': [rect[7][0],rect[7][1]],
-                        'avg': rect[8],
-                        'dev': rect[9]
+                        'avg': rect[8].toFixed(3),
+                        'dev': rect[9].toFixed(3)
                     };
                 }
             }
@@ -446,12 +452,10 @@
                 $('#stat_xattribute td.y').html(""+(field_stats['bin'][0]*{{xBin}}+{{xBin}}))
                 $('#stat_yattribute td.x').html(""+(field_stats['bin'][1]*{{yBin}}))
                 $('#stat_yattribute td.y').html(""+(field_stats['bin'][1]*{{yBin}}+{{yBin}}))
-                $('#stat_bin td.x').html(""+field_stats['bin'][0])
-                $('#stat_bin td.y').html(""+field_stats['bin'][1])
                 $('#stat_observations').html(field_stats['observations'])
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
-                
+
                 contentText=$('div#binDetails').html();
                 $('div.qtip').qtip('api').updateContent(contentText);
             }
@@ -545,7 +549,6 @@
             <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
             <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
             <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
-            <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
         </table>
     </div>
 {% endblock %}

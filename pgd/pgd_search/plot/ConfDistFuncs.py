@@ -7,13 +7,16 @@
    # Use: Use ConfDistPlot to create a plot, other classes are used by ConfDistPlot
    #-------------------------------------------------------------------------------------------------------------------
 
-from pgd_core.models import *
-from pgd_search.models import *
-from pgd_constants import *
 import math
 
-ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
+from django.db.models import Count, Avg, StdDev
 
+from pgd_constants import *
+from pgd_core.models import *
+from pgd_search.models import *
+from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev
+
+ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
 NON_FIELDS = ('Observations', 'all')
 
 """
@@ -163,21 +166,16 @@ class ConfDistPlot():
         # Pick fields for retrieving values
         self.fields     = [(field,self.resString%str(field)) for field in (
             [
-                xText, yText,
+
             ] if ref == "Observations" else [
                 field for field,none in PLOT_PROPERTY_CHOICES
             ] if ref == "all" else [
-                xText, yText, ref
+                ref
             ]
         )]
 
-        # 
-        self.querySet = querySet.exclude(reduce(
-            # exclude dummy values
-            lambda x,y: x|y,
-            [Q(**{"%s__in"%fieldString:(999.90,0)}) for field,fieldString in self.fields]
-        )).filter(
-            # Exclude values outside the plotted values
+        # Exclude values outside the plotted values
+        self.querySet = querySet.filter(
             (Q(**{
                 '%s__gte'%self.xTextString: xMin,
                 '%s__lt'%self.xTextString: xMax,
@@ -196,6 +194,39 @@ class ConfDistPlot():
         # Total # of observations
         self.numObs = self.querySet.count()
 
+        # create set of annotations to include in the query
+        annotations = {'count':Count('id')}
+        for field in self.fields:
+            avg = '%s_avg' % field[1]
+            stddev = '%s_stddev' % field[1]
+            if field[0] in ANGLES:
+                annotations[avg] = DirectionalAvg(field[1])
+            else:
+                annotations[avg] = Avg(field[1])
+                annotations[stddev] = StdDev(field[1])
+        annotated_query = self.querySet.annotate(**annotations)
+
+        # calculating x,y bin numbers for every row.  This allows us
+        # to group on the bin numbers automagically sorting them into bins
+        # and applying the aggregate functions on them.
+        x_aggregate = 'FLOOR(%s/%s)' % (self.xTextString, xbin)
+        y_aggregate = 'FLOOR(%s/%s)' % (self.yTextString, ybin)
+        annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
+
+        # add all the names of the aggregates and x,y properties to the list 
+        # of fields to display.  This is required for the annotation to be
+        # applied with a group_by.
+        values = annotations.keys() + ['x','y']
+        annotated_query = annotated_query.values(*values)
+
+        # XXX remove the id field from the group_by.  By default django 
+        # adds this to the group by clause.  This would prevent grouping
+        # because the id is a unique field.  There is no official API for 
+        # modifying group by and this is a big hack, but its a very simple
+        # way of making this work
+        annotated_query.query.group_by = []
+
+
         ### Sort the values from observations into bins
         # save these beforehand to avoid recalculating per bin
         xScale = xLimit / float(xSize - 2 * xPadding)
@@ -209,63 +240,67 @@ class ConfDistPlot():
         #  Adjust to make + indices for the Marks lists
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
 
-        for entry in self.querySet.values(*[fieldString for field,fieldString in self.fields]):
-            # Adjustments for the axes values
-            xAdj,yAdj = int(math.floor(entry[self.xTextString] / xbin)),int(math.floor(entry[self.yTextString] / ybin))
+        for entry in annotated_query:
 
-            key = (xAdj,yAdj)
-            xDex,yDex = xAdj - xMarkOff,yAdj - yMarkOff
+            x = int(entry['x'])
+            y = int(entry['y'])
+            key = (x,y)
+            xDex = x - xMarkOff
+            yDex = y - yMarkOff
+
             if xText in ANGLES: xDex = xDex%xModder
             if yText in ANGLES: yDex = yDex%yModder
 
-            if self.bins.has_key(key):
-                # Append the observation to the bin entry...
-                self.bins[key]['obs'].append(entry)
-            else:
-                # ...or add a new entry to the bins dict
-
-                self.bins[key] = {
-                    'obs'         : [entry],
-                    'pixCoords'   : {
-                        # The pixel coordinates of the x and y values
-                        'x' : xMarks[xDex],
-                        'y' : yMarks[yDex],
-                        'width'  : widths[xDex],
-                        'height' : heights[yDex],
-                    }
+            # add  entry to the bins dict
+            bin = {
+                'count' : entry['count'],
+                'obs'         : [entry],
+                'pixCoords'   : {
+                    # The pixel coordinates of the x and y values
+                    'x' : xMarks[xDex],
+                    'y' : yMarks[yDex],
+                    'width'  : widths[xDex],
+                    'height' : heights[yDex],
                 }
+            }
 
-        # Calculate stats for each bin
-        for bin in self.bins.values():
+            # add all statistics
+            for k, v in entry.items():
+                if k in ('x','y','count'):
+                    continue
+                bin[k] = v 
 
-            obs = bin['obs']
-            bin['count'] = len(obs)
+            if bin['count'] > 1:
+                # if this is an angle the stddev must be calculated in separate query
+                # using the circular standard deviation method
+                annotations = {}
+                for field in self.fields:
+                    if field[0] in ANGLES:
+                        stddev = '%s_stddev' % field[1]
+                        avg = entry['%s_avg' % field[1]]
+                        annotations[stddev] = DirectionalStdDev(field[1], avg=avg)
+
+                if annotations:
+                    bin_where_clause = ['%s=%s and %s=%s' % (x_aggregate,x,y_aggregate,y)]
+                    values = annotations.keys()
+                    stddev_query = self.querySet.extra(where=bin_where_clause) \
+                                        .annotate(**annotations) \
+                                        .values(*values)
+                    stddev_query.query.group_by = []
+                    for k, v in stddev_query[0].items():
+                        bin[k] = v if v else 0
+            else:
+                # no need for calculation, stddev infered from bincount
+                for field in self.fields:
+                    if field[0] in ANGLES:
+                        bin['%s_stddev' % field[1]] = 0
+
+            self.bins[key] = bin
 
             # Find the bin with the most observations
             if self.maxObs < bin['count']:
                 self.maxObs = bin['count']
 
-            # Calculate bin stats for each field
-            for field,fieldString in self.fields:
-
-                # Skip axes fields, unless 'll' is the indicated field
-                #  (This reduces unnecessary stats calculations)
-                if self.ref != 'all' and field in (self.xTextString, self.yTextString): continue
-
-                # If only 1 observation, avg is the only value and stdev is zero
-                if bin['count'] == 1:
-                    bin['%s_avg'%fieldString] = obs[0][fieldString]
-                    bin['%s_std'%fieldString] = 0
-
-                # If >1 observation, calculate the avg and stdev
-                else:
-                    bin['%s_avg'%fieldString], bin['%s_std'%fieldString] = (
-                        # Use the appropriate stats method
-                        getCircularStats if field in ANGLES else getLinearStats
-                    )(
-                        [ob[fieldString] for ob in obs],
-                        bin['count'],
-                    )
 
     # ******************************************************
     # Plots observations
@@ -360,7 +395,7 @@ class ConfDistPlot():
                     fill,
                     bin['count'],
                     key,
-                ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_std'%self.refString]])
+                ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_stddev'%self.refString]])
             )
 
         return binVals
@@ -456,7 +491,8 @@ class ConfDistPlot():
             # Start averages and standard deviations
             for fieldStat in STATS_FIELDS_STRINGS:
                 writer.write('\t')
-                writer.write(round(bin[fieldStat], 1))
+                val = bin[fieldStat]
+                writer.write(round(val if val else 0, 1))
 
 
 # ******************************************************
