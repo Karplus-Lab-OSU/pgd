@@ -3,7 +3,7 @@ from django.conf.urls.defaults import *
 
 from pgd_search.search.views import search, protein_search, saved, editSearch, help, qtiphelp
 from pgd_search.plot.views import renderToSVG, renderToPNG, plotDump, plot
-from pgd_search.statistics.views import searchStatistics
+from pgd_search.statistics.views import search_statistics, search_statistics_data
 from pgd_search.dump.views import dataDump
 from pgd_search.browse.views import browse
 
@@ -15,7 +15,8 @@ urlpatterns = patterns('',
     (r'^plot/svg/render/$', renderToSVG),
     (r'^plot/png/$', renderToPNG),
     (r'^plot/dump/$', plotDump),
-    (r'^statistics/$', searchStatistics),
+    (r'^statistics/$', search_statistics),
+    (r'^statistics/data/$', search_statistics_data),
     (r'^dump/$', dataDump),
     (r'^browse/$', browse),
     (r'^saved/$', saved),

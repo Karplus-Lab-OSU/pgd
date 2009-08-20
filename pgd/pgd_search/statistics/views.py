@@ -1,12 +1,19 @@
+import math
+import time
+import simplejson
+
+from django.conf import settings
+from django.db.models import Avg, Max, Min, Count, StdDev
+from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.conf import settings
-import math
 
-from pgd_constants import AA_CHOICES
+from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import Search, Segment, iIndex
-from pgd_search.plot.ConfDistFuncs import getCircularStats
+from pgd_search.statistics.aggregates import *
 from pgd_search.views import settings_processor
+
+
 
 stat_attributes_base = [('L1',u'C<sup>-1</sup>N'),
                         ('L2',u'NC<sup>&alpha;</sup>'),
@@ -22,150 +29,104 @@ stat_attributes_base = [('L1',u'C<sup>-1</sup>N'),
                         ('a7',u'OCN<sup>+1</sup>'),
                         ('ome',u'&omega;')]
 
-ANGLES_BASE = ('ome', 'phi', 'psi', 'chi', 'zeta')
+FIELDS_BASE = ('L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7')
+ANGLES_BASE = ('ome', ) #,'phi')#, 'psi', 'chi', 'zeta')
 angles = ['r%i_%s' %(iIndex, angle) for angle in ANGLES_BASE]
 
 
-"""
-display statistics about the search
-"""
-def searchStatistics(request):
-
-    # get search from session
-    search = request.session['search']
-
-    peptides, total = calculate_statistics(search.querySet())
-
+def search_statistics(request):
+    """
+    display statistics about the search
+    """
     return render_to_response('stats.html', {
-        'attributes': stat_attributes_base,
-        'peptides':peptides,
-        'total':total
+        'aa_types': AA_CHOICES,
+        'ss_types': SS_CHOICES,
+        'fields':FIELDS_BASE,
+        'angles':ANGLES_BASE
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
+def search_statistics_data(request):
+    """
+    returns ajax'ified statistics data for the current search
+    """
+    search = request.session['search']
+    stats = calculate_statistics(search.querySet())
+
+    return HttpResponse(simplejson.dumps(stats))
+
 
 def calculate_statistics(queryset):
+    """
+    Calculates statistics across most fields stored in the database.  This
+    function uses SQL aggregate functions to perform calculations in place
+    on the database.  This requires multiple queries but ultimately performs
+    and scales better with large datasets.
+    """
 
-    TOTAL_INDEX = {'na':0,'E':1,'S':2,'H':3,'T':4,'G':5,'B':6,'I':7}
-    STAT_INDEX = {}
-
+    start = time.time()
     ss_field = 'r%i_ss' % iIndex
     aa_field = 'r%i_aa' % iIndex
 
-    stat_attributes = ['r%i_%s'%(iIndex, f[0]) for f in stat_attributes_base]
-    fieldNames      = ['r%i_%s'%(iIndex, f[0]) for f in stat_attributes_base]
-    fieldNames.append(ss_field)
+    # statistics for fields - build a list of aggregations to annote
+    # against all fields that calculate avg/std normally
+    field_annotations = {}
+    for f in FIELDS_BASE:
+        field_annotations['avg_%s' % f] = Avg('r4_%s' % f)
+        field_annotations['stddev_%s' % f] = StdDev('r4_%s' % f)
+        field_annotations['min_%s' % f] = Min('r4_%s' % f)
+        field_annotations['max_%s' % f] = Max('r4_%s' % f)
+    field_stats = queryset.values(aa_field).annotate(**field_annotations) \
+                                                .order_by(aa_field)
+    field_stats_totals = queryset.aggregate(**field_annotations)
 
-    for i in range(len(stat_attributes)):
-        STAT_INDEX[stat_attributes[i]] = i
+    # statistics for angles - must be done in two passes because there is no
+    # apparent way to do standard devation in a single pass
+    angle_annotations = {}
+    for f in ANGLES_BASE:
+        angle_annotations['avg_%s' % f] = DirectionalAvg('r4_%s' % f)
+        angle_annotations['min_%s' % f] = Min('r4_%s' % f)
+        angle_annotations['max_%s' % f] = Max('r4_%s' % f)
+    angles_stats = queryset.values(aa_field).annotate(**angle_annotations) \
+                                                    .order_by(aa_field)
 
+    angles_stats_totals = queryset.aggregate(**angle_annotations)
 
-    local_query_filter = queryset.filter
+    angles_stddev = []
+    for res in angles_stats:
+        aa = res[aa_field]
+        angle_annotations = {}
+        for f in ANGLES_BASE:
+            field = 'r4_%s' % f
+            avg = res['avg_%s' % f]
+            angle_annotations['stddev_%s' % f] = DirectionalStdDev(field, avg=avg)
+        angles_stddev.append(queryset.filter(**{aa_field:aa}).values(aa_field).annotate(**angle_annotations))
 
-    peptides = {}
+    angle_annotations = {}
+    for f in ANGLES_BASE:
+        field = 'r4_%s' % f
+        avg = angles_stats_totals['avg_%s' % f]
+        angle_annotations['stddev_%s' % f] = DirectionalStdDev(field, avg=avg)
+    angles_stddev_totals = queryset.aggregate(**angle_annotations)
 
-    total = {
-                #total
-                'total':0,
-                # attributes with just sums
-                'counts':[['na',0],['E',0],['S',0],['H',0],['T',0],['G',0],['B',0],['I',0]],
-                # attributes with stats
-                'stats':[['L1',[]],['L2',[]],['L3',[]],['L4',[]],['L5',[]],['a1',[]],['a2',[]],['a3',[]],['a4',[]],['a5',[]],['a6',[]],['a7',[]],['ome',[]]]
-            }
+    # ss/aa counts and totals
+    ss_counts = queryset.values(aa_field, ss_field).annotate(ss_count=Count(ss_field)).order_by(aa_field)
+    ss_totals = queryset.values(ss_field).annotate(ss_count=Count(ss_field))
+    aa_totals = queryset.values(aa_field).annotate(aa_count=Count(aa_field)).order_by(aa_field)
 
-    #iterate through the aa_choices
-    for code,long_code in AA_CHOICES:
-        #create data structure
-        peptide = {
-                'longCode':long_code,
-                #total
-                'total':0,
-                # attributes with just sums
-                'counts':[['na',0],['E',0],['S',0],['H',0],['T',0],['G',0],['B',0],['I',0]],
-                # attributes with stats
-                'stats':[['L1',[]],['L2',[]],['L3',[]],['L4',[]],['L5',[]],['a1',[]],['a2',[]],['a3',[]],['a4',[]],['a5',[]],['a6',[]],['a7',[]],['ome',[]]]
-            }
+    end = time.time()
+    print 'Search Statistics Data in seconds: ', end-start
 
-        #query segments matching this AA with just the fields we want to perform calcuations on
-        residueData = local_query_filter(**{aa_field:code}).values(*fieldNames)
-        peptide['total'] = local_query_filter(**{aa_field:code}).count()
-        total['total'] += peptide['total']
-
-        #iterate through all the segment data
-        for data in residueData:
-
-            #calculate values
-            if data[ss_field] in (' ','-'):
-                peptide['counts'][TOTAL_INDEX['na']][1] += 1
-                total['counts'][TOTAL_INDEX['na']][1] += 1
-            else:
-                peptide['counts'][TOTAL_INDEX[data[ss_field]]][1] += 1
-                total['counts'][TOTAL_INDEX[data[ss_field]]][1] += 1
-
-            #store all values for attributes into arrays
-            for key in stat_attributes:
-                if not data[key] in (999.9, 0):
-                    peptide['stats'][STAT_INDEX[key]][1].append(data[key])
-                    total['stats'][STAT_INDEX[key]][1].append(data[key])
-
-        #calculate statistics
-        for attribute in stat_attributes:
-            list = peptide['stats'][STAT_INDEX[attribute]][1]
-            peptide['stats'][STAT_INDEX[attribute]][1] = calculate_stats(list, attribute)
-
-        peptides[code] = peptide
-
-
-    #calculate statistics for totals
-    for attribute in stat_attributes:
-        list = total['stats'][STAT_INDEX[attribute]][1]
-        total['stats'][STAT_INDEX[attribute]][1] = calculate_stats(list, attribute)
-
-    return peptides, total
-
-
-def calculate_stats(_list, attribute):
-    """
-    Calculates stats for a list of residues and saves it in the dictionary
-    passed in.  The expected structure is defined  in the above view handler
-    for statistics.
-    """
-
-    #store globals locally for speed optimization
-    local_pow = pow
-
-    list_len = len(_list)
-    if list_len > 1:
-        if attribute in angles:
-            mean, stdev = getCircularStats(_list, list_len)
-            range_min = 0
-            range_max = 0
-        else:
-            #Average/mean
-            mean = sum(_list)/list_len
-
-            #now that we have mean calculate standard deviation
-            stdev = math.sqrt(
-                sum([
-                    local_pow(value - mean, 2)
-                    for value in _list
-                ])/(list_len - 1)
-            )
-
-            range_min = '%+.3f' % (min(_list) - mean)
-            range_max = '%+.3f' % (max(_list) - mean)
-
-    # if theres only 1 item then the stats are simpler to calculate
-    elif list_len == 1:
-        mean = _list[0]
-        stdev = 0
-        range_min = 0
-        range_max = 0
-
-    else:
-        mean = 0
-        stdev = 0
-        range_min = 0
-        range_max = 0
-
-    return {'mean':mean,'std':stdev,'min':range_min, 'max':range_max}
+    return {
+        'index':4,
+        'fields': list(field_stats),                       # list of dictionaries, list by aa
+        'fields_totals':field_stats_totals,          # dict of agg per field
+        'angles':list(angles_stats),                       # list of dictionaries, list by aa
+        'angles_stddev':[list(s) for s in angles_stddev],               # list of dictionaries, list by aa
+        'angles_totals':angles_stats_totals,         # dictionary of agg per field
+        'angles_stddev_totals':angles_stddev_totals, # dictionary of agg per field
+        'aa_totals':list(aa_totals),
+        'ss_counts':list(ss_counts),                       # list of dictionaries, list by AA/SS
+        'ss_totals':list(ss_totals),                        # list of dictionaries,  list by SS
+        'total':queryset.count()
+    }

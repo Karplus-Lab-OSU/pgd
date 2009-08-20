@@ -3,8 +3,6 @@
 {% block head %}
     <style>
         #content {
-            width:100%;
-            text-align:center;
         }
 
         table {
@@ -65,7 +63,7 @@
             font-weight:bold;
         }
 
-        #statsDetail {
+        #stats.fieldsDetail {
             position: absolute;
             border: 1px solid black;
             width:20em;
@@ -94,15 +92,16 @@
             text-align:left;
         }
 
-        .avg_L5, .avg_ome  {
+        .L5, .ome, .peptide, .aa_total {
             border-right:1px solid black;
         } 
-        .avg_L1, .avg_ome, .sum_na, .peptide{
+        .L1, .ome, .na, .peptide, .aa_total{
             border-left:1px solid black;
         }
 
-        .Tyr, tr.total{
+        tr.total{
             border-bottom:1px solid black;
+            border-top:1px solid black;
         }
 
         tr.total td {
@@ -113,7 +112,7 @@
             text-align:right;
         }
 
-        #stats {
+        #stats.fields {
             /* Reset alignment to compensate for 'text-align:center': */
             text-align: left;
             /* Specify the width of the element. This should be the same
@@ -125,6 +124,8 @@
             margin-right: auto;
         }
 
+        div#stats_fieldsDetail { display:none; }
+
     </style>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
     <script type="text/javascript">
@@ -132,8 +133,8 @@
         var contentText= 'Mouse over a table cell for more information about it.';
 
         $(document).ready(function() {
-            $('#statsDetail').hide();
-           
+            $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
+
             $('#content').qtip({
                 position:{
                     adjust: { //Make the tooltip avoid going outside the window due to browser resizing
@@ -167,7 +168,7 @@
                     }); 
             $('#content').qtip('show');
 
-            $('.stats').mouseout( function() {$('#statsDetail').hide();})
+            $('.stats.fields').mouseout( function() {$('#stats.fieldsDetail').hide();})
 
             $('tr.data')
                 .mouseover(function() {
@@ -189,15 +190,118 @@
                     $(this).removeClass('selected');
                 })
 
-            $('td.sum:contains(0)').html('-')
+
         });
 
-        function showStats(stdev, min, max) {
-            if (stdev != '' && min != '' && max != '') {
-                $('#stdev').html(stdev);
+        var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var angles = [{% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var details = {};
+
+        /* converts a field to the required precision */
+        function precision(value, field) {
+            if (value || value == 0){
+                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5') {
+                    return value.toFixed(3);
+                }
+                return value.toFixed(1);
+            }
+            return '--';
+        }
+
+
+        /* processes data incoming from ajax request */
+        function process_data(data) {
+            // replace details with completely new list since the new one may
+            // not have all rows/columns in it.
+            details = {};
+
+            iIndex = data['index'];
+            /* regular fields */
+            for (i in data['aa_totals']){
+                aa = data['aa_totals'][i]['r'+iIndex+'_aa'];
+                $row = $('tr.'+aa);
+
+                $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
+
+                for (f in fields) {
+                    field = fields[f];
+                    avg = precision(data['fields'][i]['avg_'+field], field);
+                    stddev = precision(data['fields'][i]['stddev_'+field], field);
+                    min = precision(data['fields'][i]['min_'+field], field);
+                    max = precision(data['fields'][i]['max_'+field], field);
+
+                    $row.children('td.'+field).html(avg);
+
+                    details[aa+'_'+field] = [stddev, min, max];
+                }
+
+                for (f in angles) {
+                    field = angles[f];
+                    wtf = data['angles_stddev'];
+
+                    avg = precision(data['angles'][i]['avg_'+field], field);
+                    min = precision(data['angles'][i]['min_'+field], field);
+                    max = precision(data['angles'][i]['max_'+field], field);
+                    stddev = precision(data['angles_stddev'][i][0]['stddev_'+field], field);
+
+                    $row.children('.'+field).html(avg);
+                    details[aa+'_'+field] = [stddev, min, max];
+                }
+            }
+
+            for (i in data['ss_counts']){
+                row = data['ss_counts'][i];
+                aa = row['r'+iIndex+'_aa'];
+                ss = row['r'+iIndex+'_ss'];
+                $td = $('tr.'+aa).children('.sum.'+ss)
+                $td.html(row['ss_count']);
+            }
+
+
+            $row = $('tr.total');
+            for (f in fields) {
+                field = fields[f];
+                avg = precision(data['fields_totals']['avg_'+field], field);
+                stddev = precision(data['fields_totals']['stddev_'+field], field);
+                min = precision(data['fields_totals']['min_'+field], field);
+                max = precision(data['fields_totals']['max_'+field], field);
+
+                $row.children('td.'+field).html(avg);
+                details['total_'+field] = [stddev, min, max];
+            }
+
+            for (i in data['ss_totals']) {
+                row = data['ss_totals'][i];
+                ss = row['r'+iIndex+'_ss'];
+                $row.children('.sum.'+ss).html(row['ss_count']);
+            }
+
+            for (f in angles) {
+                field = angles[f];
+                avg = precision(data['angles_totals']['avg_'+field], field);
+                min = precision(data['angles_totals']['min_'+field], field);
+                max = precision(data['angles_totals']['max_'+field], field);
+                stddev = precision(data['angles_stddev_totals']['stddev_'+field], field);
+                $row.children('.'+field).html(avg);
+                details['total_'+field] = [stddev, min, max];
+            }
+
+            $row.children('.aa_total').html(data['total']);
+
+        }
+
+        function showStats(key) {
+            details_ = details[key];
+            if (details_ != undefined) {
+
+                stddev = details_[0];
+                min = details_[1];
+                max = details_[2];
+
+                $('#stdev').html(stddev);
                 $('#min').html(min);
                 $('#max').html(max);
-                contentText=$('div#statsDetail').html();
+                contentText=$('div#stats_fieldsDetail').html();
                 $('div.qtip').qtip('api').updateContent(contentText);
             }
         }
@@ -205,79 +309,69 @@
 {% endblock %}
 
 {% block content %}
-    <table id="stats" >
+    <table id="stats.fields" >
         <thead>
         <tr>
             <th class="peptide">Type</th>
-            <th class="total">Total</th>
+            <th class="aa_total">Total</th>
             <th class="sum_na sum borderleft">N/A</th>
-            <th class="sum_E sum">E</th>
-            <th class="sum_S sum">S</th>
-            <th class="sum_H sum">H</th>
-            <th class="sum_T sum">T</th>
-            <th class="sum_G sum">G</th>
-            <th class="sum_B sum">B</th>
-            <th class="sum_I sum">I</th>
+            {% for ss in ss_types %}
+                <th class="sum {{ss.0}}">{{ss.0}}</th>
+            {% endfor %}
+
             {% autoescape off %}
-            {% for attribute in attributes %}
-                <th nowrap class="avg_{{attribute.0}}">{{attribute.1}}</th>
+            {% for field in fields %}
+                <th nowrap class="avg {{field}}">{{field}}</th>
+            {% endfor %}
+            {% for field in angles %}
+                <th nowrap class="avg {{field}}">{{field}}</th>
             {% endfor %}
             {% endautoescape %}
         </tr>
         </thead>
         <tbody>
-        {% for code, peptide in peptides.items %}
-            <tr class="data {% cycle 'row-a' 'row-b' %}">
-                <td class="peptide {{peptide.longCode}}">{{peptide.longCode|upper}}</td>
-                <td class="borderright {{peptide.longCode}}">{{peptide.total}}</td>
-                {% for list in peptide.counts %}
-                    <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
+
+        {% for aa in aa_types %}
+            <tr class="data {{aa.0}} {% cycle 'row-a' 'row-b' %}">
+                <td class="peptide {{aa.1}}">{{aa.1|upper}}</td>
+                <td class="borderright {{aa.1}} aa_total">-</td>
+                <td id="data_{{aa.1}}_na" class="data sum na -">-</td>
+                {% for ss in ss_types %}
+                    <td id="data_{{aa.1}}_{{ss.0}}" class="data sum {{ss.0}} {{aa.1}}">-</td>
                 {% endfor %}
-                {% for list in peptide.stats %}
-                    {% ifequal list.0 "L1" %}
-                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                    {% else %}{% ifequal list.0 "L2" %}
-                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                    {% else %}{% ifequal list.0 "L3" %}
-                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                    {% else %}{% ifequal list.0 "L4" %}
-                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                    {% else %}{% ifequal list.0 "L5" %}
-                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} stats {{peptide.longCode}}" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                    {% else %}
-                        <td nowrap id="data_{{peptide.longCode}}_avg_{{list.0}}"  class="data avg_{{list.0}} {{peptide.longCode}}" onmouseover="showStats('{{list.1.std|invalid:1}}','{{list.1.min|invalid:1}}','{{list.1.max|invalid:1}}')">{{list.1.mean|invalid:1}}</td>
-                        {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
+
+                {% for field in fields %}
+                     <td nowrap id="data_{{aa.1}}_{{field}}"  class="data avg {{field}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field}}')">--</td>
+                {% endfor %}
+
+                {% for field in angles %}
+                     <td nowrap id="data_{{aa.1}}_{{field}}"  class="data avg {{field}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field}}')">--</td>
                 {% endfor %}
             </tr>
         {% endfor %}
 
         <tr class="data total {% cycle 'row-a' 'row-b' %}">
             <td class="peptide total">Total</td>
-            <td class="borderright total">{{total.total}}</td>
-            {% for list in total.counts %}
-                <td id="data_{{peptide.longCode}}_sum_{{list.0}}" class="data sum sum_{{list.0}} {{peptide.longCode}}">{{list.1}}</td>
+            <td class="borderright total aa_total"></td>
+            <td id="data_total_sum_{{ss.0}}" class="data sum na - total">0</td>
+            {% for ss in ss_types %}
+                <td id="data_total_{{ss.0}}" class="data sum {{ss.0}} total">0</td>
             {% endfor %}
-            {% for list in total.stats %}
-                {% ifequal list.0 "L1" %}
-                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                {% else %}{% ifequal list.0 "L2" %}
-                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                {% else %}{% ifequal list.0 "L3" %}
-                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                {% else %}{% ifequal list.0 "L4" %}
-                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                {% else %}{% ifequal list.0 "L5" %}
-                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} stats total" onmouseover="showStats('{{list.1.std|invalid:3}}','{{list.1.min|invalid:3}}','{{list.1.max|invalid:3}}')">{{list.1.mean|invalid:3}}</td>
-                {% else %}
-                    <td nowrap id="data_total_avg_{{list.0}}"  class="data avg_{{list.0}} total" onmouseover="showStats('{{list.1.std|invalid:1}}','{{list.1.min|invalid:1}}','{{list.1.max|invalid:1}}')">{{list.1.mean|invalid:1}}</td>
-                    {% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}{% endifequal %}
+
+            {% for field in fields %}
+                <td nowrap id="data_total_{{field}}"  class="data avg {{field}} total" onmouseover="showStats('total_{{field}}')">--</td>
             {% endfor %}
+
+            {% for field in angles %}
+                <td nowrap id="data_total_{{field}}"  class="data avg {{field}} total" onmouseover="showStats('total_{{field}}')">--</td>
+            {% endfor %}
+
         </tr>
 
       </tbody>
     </table>
 
-    <div id="statsDetail">
+    <div id="stats_fieldsDetail">
             <span class="label">Standard Deviation:</span><div id="stdev"></div>
             <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
     </div>
