@@ -70,7 +70,7 @@ def editSearch(request, search_id=None):
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
-        if search.user != request.user:
+        if search.user != request.user and search.isPublic == False:
             return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
         form = processSearchObject(search)
     #else use the search in the session if it exists
@@ -270,7 +270,7 @@ def saved(request):
 
     searches = Search.objects.filter(user=request.user)
 
-    paginator = Paginator(searches, 20) # Show 20 searches per page
+    paginator = Paginator(searches, 200000) # Show enough searches per page to effectively disable this feature for now
 
     # Make sure page request is an int. If not, deliver first page.
     try:
@@ -294,19 +294,42 @@ def help(request):
 def qtiphelp(request):
     return render_to_response('qtiphelp.html')
     
-def saveSearch(request):
+def saveSearch(request,search_id=None):
     if request.method == 'POST':
         form = saveSearchForm(request.POST)
         if form.is_valid():
-            data = form.cleaned_data
-            request.session['search'].title = data['title']
-            request.session['search'].description = data['description']
-            request.session['search'].user=request.user
-            request.session['search'].timestamp=datetime.now().strftime("%d/%m/%y")
-            request.session['search'].save()
-            return HttpResponseRedirect('/search/saved/')
+            if search_id:
+                editedsearch = Search.objects.get(id=search_id)
+                if request.user!=editedsearch.user:
+                    return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
+                else:
+                    data = form.cleaned_data
+                    editedsearch = Search.objects.get(id=search_id)
+                    editedsearch.title = data['title']
+                    editedsearch.description = data['description']
+                    editedsearch.user=request.user
+                    editedsearch.timestamp=datetime.now().strftime("%d/%m/%y")
+                    editedsearch.isPublic = data['isPublic']
+                    editedsearch.save()
+                    return HttpResponseRedirect('/search/saved/')     
+                
+            else:
+                data = form.cleaned_data
+                request.session['search'].title = data['title']
+                request.session['search'].description = data['description']
+                request.session['search'].user=request.user
+                request.session['search'].timestamp=datetime.now().strftime("%d/%m/%y")
+                request.session['search'].isPublic = data['isPublic']
+                request.session['search'].save()
+                return HttpResponseRedirect('/search/saved/')
     else:
-        form = saveSearchForm()
+        if search_id:
+            oldsearch = Search.objects.get(id=search_id)
+            if request.user!=oldsearch.user:
+                return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
+            form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description, 'search_id':search_id})
+        else:
+            form = saveSearchForm()
     return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))
 
 def deleteSearch(request,search_id=None):

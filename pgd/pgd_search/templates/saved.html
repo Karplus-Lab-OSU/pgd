@@ -4,16 +4,27 @@
         <style>
             table{
                 border-color: black;
-                border-width: 1px 1px 1px 1px;
+                border-width: 1px 1px 0px 1px;
                 border-style: solid;
             }
 
+            th{
+                border-bottom-style:solid;
+                border-bottom-width: 1px;
+                border-bottom-color:black;
+            }
+
             th#spacer{
+                border-bottom-width: 0px;
                 width:10px;
             }
-            th#delete{
+            th#edit_column{
                 padding:6px;
-                width:100px;
+                width:40px;
+            }
+            th#delete_column{
+                padding:6px;
+                width:40px;
             }
             th#id_column{
                 padding:6px;
@@ -21,11 +32,15 @@
             }
             th#date_column{
                 padding:6px;
-                width:115px;
+                width:340px;
             }
             th#title_column{
                 padding:6px;
                 width:300px;
+            }
+            th#shared_column{
+                padding:6px;
+                width:600px;
             }
             
             tr.even{
@@ -44,46 +59,72 @@
             a.pagination:hover             { color:blue; text-decoration:underline; }
             a.pagination:active            { color:blue; text-decoration:none;}
 
-            div.showhide{
-                width: 150px;
-                float: right;
-            }
-
-            a.title_link
-            {
+            a.title_link{
                 font-weight: bold; 
                 color:black;
+            }
+            a.shared_link{
+                font-weight: bold; 
+                color:black;
+            }
+
+            td{
+                padding:6px;
+                border-bottom-width:1px;
+                border-bottom-style:solid;
+                border-bottom-color:black;
+                border-left-width:1px;
+                border-left-style:solid;
+                border-left-color:black;
+            }
+
+            td.showhide{
+                padding:6px;
+                width:300px;
+                border-left-width:0;
             }
             
             td.open{
                 border-bottom-width: 0px;
             }
-            
-            td{
-                padding:6px;
-                border-bottom-style: solid;
-                border-bottom-color: black;
-                border-bottom-width: 1px;
+            td.description{
+                width:300px;
+                border-left-width:0px;
             }
             td.search_id{
-                border-left-style: solid;
-                border-left-color: black;
-                border-left-width: 1px;
-                border-right-style: solid;
-                border-right-color: black;
-                border-right-width: 1px;
+            }
+
+            td.edit{
+                text-align:center;
             }
             td.delete{
-                border-left-style: solid;
-                border-left-color: black;
-                border-left-width: 1px;
+                text-align:center;
             }
+
+            td.spacer{
+                border-width:0;
+            }
+            
+            td.title{
+                border-left-width:0;
+            }
+            td.last{
+                border-bottom-width:1px;
+            }
+
+            td.open{
+                border-bottom-width: 0px;
+            }
+            
             p{
                 margin: 6px;
                 padding:6px;
-                border-top-style: dotted; 
-                border-top-color: black;
-                border-top-width: 1px;   
+            }
+
+            .bottom-border{
+                border-bottom-style:solid;
+                border-bottom-width:1;
+                border-bottom-color:black;
             }
         </style>
         <script type="text/javascript">
@@ -100,30 +141,46 @@
         $(document).ready(function() {
             hideDescription();
 
-            $('div.showhide').click(function(event){
+            $('td.showhide').click(function(event){
                 if(event!=undefined){
                     var target = event.target.id;
-                    var targetParent = event.target.parentNode.parentNode.id;
+                    var targetParent = event.target.parentNode.id;
                     var control = document.getElementById(target);
 
                     if(control.innerHTML=='→'){
                         control.innerHTML='↓';
-                        $('#'+targetParent+' td').addClass('open');
+                        $('#'+targetParent+' td.title').addClass('open');
+                        $('#'+targetParent+' td.showhide').addClass('open');
+                        $('#'+targetParent+' td.spacer').addClass('open');
                     }
                     else{
                         control.innerHTML='→';
                         $('#'+targetParent+' td').removeClass('open');
                     }
-                    target=target.substring(target.length-1,target.length);
+                    target=target.replace('header_','');
                     $('tr#id_'+target).toggle();
+                    console.log(target);
                 }
             })
 
             $('td.delete').click(function(event){
-                toBeDeleted=event.target.id;
-                toBeDeleted=toBeDeleted.replace('delete_','');
-                if(confirm("Are you sure you want to delete this search?")){
-                   window.location="/search/deleteSearch/"+toBeDeleted;
+                 if(event.target.id!=undefined){
+                    toBeDeleted=event.target.id;
+                    toBeDeleted=toBeDeleted.replace('delete_','');
+                    if(confirm("Are you sure you want to delete this search?")){
+                       window.location="/search/deleteSearch/"+toBeDeleted;
+                    }
+                }
+            })
+            
+            $('td.edit').click(function(event){
+                if(event.target.id!=undefined){
+                    toBeEdited=event.target.id;
+                    console.log(event.target.id);
+                    toBeEdited=toBeEdited.replace('edit_','');
+                    if(confirm("Are you sure you want to edit this search?")){
+                      window.location="/search/saveSearch/"+toBeEdited;
+                    }
                 }
             })
         })
@@ -142,29 +199,30 @@
                 <tr>
                     <th id="spacer"></th>
                     <th id="title_column">Title</th>
-                    <th id="spacer"></th>
+                    <th class="showhide"></th>
                     <th id="id_column">ID</th>
                     <th id="date_column">Date Created</th>
-                    <th id="delete">Delete</th>
+                    <th id="shared_column">Publically Viewable</th>
+                    <th id="edit_column">Edit</th>
+                    <th id="delete_column">Delete</th>
                     <th id="spacer"></th>
                 </tr>
                 {% for search in searches.object_list %}
                     <tr class="{% cycle 'even''odd' %}" id="row_{{forloop.counter}}">
-                        <td></td>
-                        <td><a class="title_link" href="{{SITE_ROOT}}search/edit/{{search.id}}">{{search.title}}</a></td>
-                        <td><div class="showhide"id="header_{{search.id}}">→</div></td>
+                        <td class="spacer {% if forloop.last %} last {% endif %}" ></td>
+                        <td class="title{% if forloop.last %} lastll {% endif %}"><a class="title_link" href="{{SITE_ROOT}}search/edit/{{search.id}}">{{search.title}}</a></td>
+                        <td class="showhide"id="header_{{search.id}}">→</td>
                         <td class="search_id">{{search.id}}</td>
-                        <td>{{search.timestamp}}</td>
-                        <td class="delete" id="delete_{{search.id}}">[X]</td>
-                        <td></td>
+                        <td class="timestamp">{{search.timestamp}}</td>
+                        <td>{% if search.isPublic %} Yes: <a class="shared_link" href="/search/viewSearch/{{ search.id }}/">Link to Search</a>{% else %} No {% endif %}</td>
+                        <td class="edit" id="edit_{{search.id}}"><img id="edit_{{search.id}}" src="{{MEDIA_URL}}/images/edit.png"</></td>
+                        <td class="delete" id="delete_{{search.id}}"><img id="delete_{{search.id}}" src="{{MEDIA_URL}}/images/delete.png"</></td>
+                        <td class="spacer {% if forloop.last %} last {% endif %}"></td>
                     </tr>
                     <tr id="id_{{search.id}}" class="{% cycle 'even''odd' %} hidden">
-                    <td></td>
-                    <td class='description bordered'colspan="2"><p>{{search.description}}</p></td>
-                    <td class="search_id"></td>
-                    <td></td>
-                    <td></td>
-                    <td></td>
+                    <td class="spacer{% if forloop.last %} last {% endif %}"></td>
+                    <td class="description bordered"colspan="7"><p>{{search.description}}</p></td>
+                    <td class="spacer{% if forloop.last %} last {% endif %}"></td>
                     </tr>
                 {% endfor %}
                </tbody>
