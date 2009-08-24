@@ -142,29 +142,37 @@ def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd
     xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
     title_y = (x-(ratio*35))-xbearing-twidth
     svg.text(title_y,y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
+    try:
+        cdp = ConfDistPlot(
+                graph_width,    #width
+                graph_height,   #height
+                0,              #Xpadding
+                0,              #Ypadding
+                x,              #Xoffset
+                y,              #Yoffset
+                xStart,         #Xstart
+                xEnd,           #Xend
+                yStart,         #Ystart
+                yEnd,           #Yend
+                xBin,           #Xbin
+                yBin,           #Ybin
+                xProperty,      #X property
+                yProperty,      #Y property
+                attribute,      #property
+                residue,        #residue Index
+                request.session['search'].querySet(),
+                hue
+        )
 
-    cdp = ConfDistPlot(
-            graph_width,    #width
-            graph_height,   #height
-            0,              #Xpadding
-            0,              #Ypadding
-            x,              #Xoffset
-            y,              #Yoffset
-            xStart,         #Xstart
-            xEnd,           #Xend
-            yStart,         #Ystart
-            yEnd,           #Yend
-            xBin,           #Xbin
-            yBin,           #Ybin
-            xProperty,      #X property
-            yProperty,      #Y property
-            attribute,      #property
-            residue,        #residue Index
-            request.session['search'].querySet(),
-            hue                
-    )
+        boxes = cdp.Plot()
+    except Exception, e:
+        print 'exception', e
+        import traceback, sys
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        print "*** print_tb:"
+        traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
-    boxes = cdp.Plot()
+        raise e
     return (svg,boxes)
 
 def RGBTuple(rgbString):
