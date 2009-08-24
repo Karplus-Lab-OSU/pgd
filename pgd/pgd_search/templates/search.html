@@ -37,6 +37,9 @@
                 white-space: nowrap;
             }
 
+            #residues TD.field, TH.field {display:None;}
+            #residues TD.field.col_0, TH.field.col_0 {display:table-cell}
+
             #protein td.field {padding-left:35px;}
             #protein #pdb_codes td.field {padding-left:17px;}
 
@@ -55,9 +58,10 @@
             }
 
             TD.sectionheader {
-                padding-left:5px;
                 background-color:#a2ddff;
                 font-weight:bold;
+                padding-left:5px;
+                width:500px;
             }
 
             TD.submit {
@@ -193,11 +197,12 @@
                         $('div.qtip').qtip("destroy");
                         createQtips();
                     }
+
                     //removing values
                     if (oldValue > newValue) {
                         for(i={{maxLength}}-1; i>=newValue; i--){
                             str = '.col_' + iArray[i-1]
-                            $(str).fadeOut(500);
+                            $(str).hide();
                             $(str + ' input.field').attr("disabled", true);
                         }
                     // adding values
@@ -205,7 +210,7 @@
                         for(i=0; i<=newValue; i++){
                             str = '.col_' + iArray[i-2]
                             $(str + ' input.field').attr("disabled", false);
-                            $(str).fadeIn(500);
+                            $(str).show();
                         }
                     }
                     //update length
@@ -398,7 +403,7 @@
                             });
                         }
                     });
-                    $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').each(function(){
+                $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').each(function(){
                         currentID = $(this).attr('id');
                         currentID = currentID.replace(' ','');
                         if(currentID!='' && currentID!=null && currentID!=undefined){
@@ -472,7 +477,6 @@
 
             $(document).ready(function() {
                 //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1}); 
-                $('#helpPage').hide();  
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
                     if ( tar.hasClass('toggle_Include')) {
@@ -488,40 +492,38 @@
                     }
                 });
 
-                //setup the search box to be ajax'ified
-                $('input#id_proteins')
-                    .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
-
-                $('input.field').keyup(function(evt){
-                        updateInclusionField(evt.target, true);
-                    });
-                $('input.field').change(function(evt){
-                        updateInclusionField(evt.target, true);
-                    });
-                $('input.field').updateInclusionField();
+                $('input.field')
+                    .keyup(function(evt){
+                            updateInclusionField(evt.target, true);
+                        })
+                    .change(function(evt){
+                            updateInclusionField(evt.target, true);
+                        }).updateInclusionField();
 
 
-                $('#id_proteins').keyup(function(evt){
+                $('#protein #id_proteins')
+                     .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
+                    .keyup(function(evt){
+                            updateInclusionField(evt.target, false);
+                        })
+                    .change(function(evt){
+                            updateInclusionField(evt.target, false);
+                        })
+                    .each(function(){updateInclusionField(this, false);});
+
+
+                /*$('select.field').change(function(evt){
                         updateInclusionField(evt.target, false);
-                    });
-                $('#id_proteins').change(function(evt){
-                        updateInclusionField(evt.target, false);
-                    });
-                $('#id_proteins').each(function(){updateInclusionField(this, false);});
-
-
-                $('select.field').change(function(evt){
-                        updateInclusionField(evt.target, false);
-                    });
+                    });*/
 
                 $('#id_residues').change(sizeChange);
 
                 //force update of segments
-                $('#oldLength').val({{maxLength}});
+                $('#oldLength').val(1);
                 sizeChange(1);
 
                 // setup multiselects
-                $('.multiselect li')
+                $('tr.peptide_row .multiselect li, tr.conf_row .multiselect li')
                     .click(function(){
                         $this = $(this);
                         if ($this.hasClass('selected')){
@@ -541,16 +543,17 @@
                         }
                     });
 
-                $('.multiselect').updateInclusionSelect();
+                $('tr.peptide_row .multiselect, tr.conf_row .multiselect').updateInclusionSelect();
+
 
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
 
                     var header = document.getElementById('peptide_header');
-                    if (header.innerHTML == 'Peptide →'){
-                        header.innerHTML = 'Peptide ↓';
+                    if (header.innerHTML == 'Composition →'){
+                        header.innerHTML = 'Composition ↓';
                     } else {
-                        header.innerHTML = 'Peptide →';
+                        header.innerHTML = 'Composition →';
                     }
                 });
                 $('#conf_header').click(function(evt){
@@ -596,9 +599,10 @@
                     header.innerHTML = 'Lengths →';
                     }
                         });
-				if(qtipsOn){
-                createQtips();
-				}
+
+                if(qtipsOn){
+                    createQtips();
+                }
 
                 $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').mousedown(function(event){
                         $clickedOn  = $(event.target);
@@ -664,7 +668,7 @@
                 <td class="label"> {{form.residues.label}}</td>
                 <td class="field">
                     {{form.residues}}
-                    <input type="hidden" id="oldLength" value="5">
+                    <input type="hidden" id="oldLength" value="1">
 
                 </td>
             </tr>

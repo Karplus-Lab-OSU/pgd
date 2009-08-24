@@ -214,6 +214,7 @@
              }
         </style>
 
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jqbrowser.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.stylish-select.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
@@ -221,28 +222,38 @@
         <script type="text/javascript">
             var stats = {};
             var aafix = 0.5;
-
-            var boxsizefix = 1;
-            var line_x_aafix = 0.5;
+            var rects_width_fix = 1;
+            var rects_height_fix = 1;
+            var line_x_aafix = 0;
             var line_y_aafix = 0.5;
-            var rects_x_aafix = 0
+            var rects_x_aafix = -.5
             var rects_y_aafix = 0;
             var is_IE = false;
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
 
             // IE checks - check different things not supported by IE to detect them
-            if(!(jQuery.support.objectAll && jQuery.support.leadingWhitespace && jQuery.support.noCloneEvent)){
+            if($.jqbrowser.msie()){
                 is_IE = true;
-                boxsizefix = 0;
+                rects_width_fix = 0;
+                rects_height_fix = 0;
                 line_x_aafix = 2
                 line_y_aafix = 2
-                rects_y_aafix = 0.5;
                 rects_x_aafix = 0.5;
+                rects_y_aafix = 0.5;
+            } else if ($.jqbrowser.win()) {
+                aafix = 0;
+                rects_x_aafix = -1
+                rects_y_aafix = -.5
+                line_x_aafix = -.5;
+                line_y_aafix = 0;
+                rects_width_fix = 1.5
             }
 
             var stat_field = false;
 
             $(document).ready(function(){
+                //console.log($.browser);
+
                 $('div#binDetails').hide();
                 $('#canvas_container').qtip({
                         position:{
@@ -371,19 +382,10 @@
                     rect = rects[i]
                     r = paper.rect(rect['x']+aafix,
                         rect['y']+aafix,
-                        rect['width'],
+                        rect['width']-.5,
                         rect['height']);
                     r.attr({fill: rect['fill'], stroke:rect['color']});
                     r.attr('stroke-width',rect['stroke']);
-                }
-
-                lines = data['background']['lines']
-                for (i in lines) {
-                    line = lines[i];
-                    l = paper
-                        .path({stroke: line['color']})
-                        .moveTo(line['x']+line_x_aafix, line['y']+line_y_aafix)
-                        .lineTo(line['x1']+line_x_aafix, line['y1']+line_y_aafix);
                 }
 
                 texts = data['background']['texts'];
@@ -401,8 +403,8 @@
                     rect = boxes[i];
                     r = paper.rect(rect[0]+rects_x_aafix,
                         rect[1]+rects_y_aafix,
-                        rect[2]+boxsizefix,
-                        rect[3]+boxsizefix);
+                        rect[2]+rects_width_fix,
+                        rect[3]+rects_height_fix);
                     r.attr({fill: "#" +rect[4], stroke:"#" +rect[4]});
                     r.attr('stroke-width',0);
 
@@ -429,6 +431,16 @@
                         'dev': rect[9].toFixed(3)
                     };
                 }
+
+                lines = data['background']['lines']
+                for (i in lines) {
+                    line = lines[i];
+                    l = paper
+                        .path({stroke: line['color']})
+                        .moveTo(line['x']+line_x_aafix, line['y']+line_y_aafix)
+                        .lineTo(line['x1']+line_x_aafix, line['y1']+line_y_aafix);
+                }
+
             }
 
             function process_form_errors(errors) {
