@@ -37,6 +37,9 @@
                 white-space: nowrap;
             }
 
+            #residues TD.field, TH.field {display:None;}
+            #residues TD.field.col_0, TH.field.col_0 {display:table-cell}
+
             #protein td.field {padding-left:35px;}
             #protein #pdb_codes td.field {padding-left:17px;}
 
@@ -55,9 +58,10 @@
             }
 
             TD.sectionheader {
-                padding-left:5px;
                 background-color:#a2ddff;
                 font-weight:bold;
+                padding-left:5px;
+                width:500px;
             }
 
             TD.submit {
@@ -193,6 +197,7 @@
                         $('div.qtip').qtip("destroy");
                         createQtips();
                     }
+
                     //removing values
                     if (oldValue > newValue) {
                         for(i={{maxLength}}-1; i>=newValue; i--){
@@ -514,7 +519,7 @@
                 $('#id_residues').change(sizeChange);
 
                 //force update of segments
-                $('#oldLength').val({{maxLength}});
+                $('#oldLength').val(1);
                 sizeChange(1);
 
                 // setup multiselects
@@ -540,14 +545,15 @@
 
                 $('tr.peptide_row .multiselect, tr.conf_row .multiselect').updateInclusionSelect();
 
+
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
 
                     var header = document.getElementById('peptide_header');
-                    if (header.innerHTML == 'Peptide →'){
-                        header.innerHTML = 'Peptide ↓';
+                    if (header.innerHTML == 'Composition →'){
+                        header.innerHTML = 'Composition ↓';
                     } else {
-                        header.innerHTML = 'Peptide →';
+                        header.innerHTML = 'Composition →';
                     }
                 });
                 $('#conf_header').click(function(evt){
@@ -662,7 +668,7 @@
                 <td class="label"> {{form.residues.label}}</td>
                 <td class="field">
                     {{form.residues}}
-                    <input type="hidden" id="oldLength" value="5">
+                    <input type="hidden" id="oldLength" value="1">
 
                 </td>
             </tr>
