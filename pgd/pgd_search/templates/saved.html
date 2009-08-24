@@ -2,6 +2,11 @@
 
     {% block head %}
         <style>
+
+            div#content{
+                width:1000px;
+            }
+
             table{
                 border-color: black;
                 border-width: 1px 1px 0px 1px;
@@ -36,12 +41,16 @@
             }
             th#title_column{
                 padding:6px;
-                width:300px;
+                width:600px;
             }
             th#shared_column{
                 padding:6px;
                 width:600px;
             }
+            th.showhide{
+                width:200px;
+            }
+
             
             tr.even{
                 background-color:#f0f7ff;
@@ -80,8 +89,8 @@
 
             td.showhide{
                 padding:6px;
-                width:300px;
                 border-left-width:0;
+                text-align:center;
             }
             
             td.open{
@@ -147,14 +156,14 @@
                     var targetParent = event.target.parentNode.id;
                     var control = document.getElementById(target);
 
-                    if(control.innerHTML=='→'){
-                        control.innerHTML='↓';
+                    if(control.innerHTML=='[More]'){
+                        control.innerHTML='[Less]';
                         $('#'+targetParent+' td.title').addClass('open');
                         $('#'+targetParent+' td.showhide').addClass('open');
                         $('#'+targetParent+' td.spacer').addClass('open');
                     }
                     else{
-                        control.innerHTML='→';
+                        control.innerHTML='[More]';
                         $('#'+targetParent+' td').removeClass('open');
                     }
                     target=target.replace('header_','');
@@ -211,7 +220,7 @@
                     <tr class="{% cycle 'even''odd' %}" id="row_{{forloop.counter}}">
                         <td class="spacer {% if forloop.last %} last {% endif %}" ></td>
                         <td class="title{% if forloop.last %} lastll {% endif %}"><a class="title_link" href="{{SITE_ROOT}}search/edit/{{search.id}}">{{search.title}}</a></td>
-                        <td class="showhide"id="header_{{search.id}}">→</td>
+                        <td class="showhide"id="header_{{search.id}}">[More]</td>
                         <td class="search_id">{{search.id}}</td>
                         <td class="timestamp">{{search.timestamp}}</td>
                         <td>{% if search.isPublic %} Yes: <a class="shared_link" href="/search/viewSearch/{{ search.id }}/">Link to Search</a>{% else %} No {% endif %}</td>

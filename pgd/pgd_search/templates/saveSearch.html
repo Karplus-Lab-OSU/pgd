@@ -2,6 +2,16 @@
 {% block head %}
 
 <style>
+
+    div#content{
+        padding:5px;
+        width:1000px;
+        margin-left:auto;
+        margin-right:auto;
+    }
+    div#save_form{
+
+    }
     label{
         float:left;
     }
@@ -35,13 +45,13 @@
         margin: 6px;
     }
     th#label_column{
-        width:200px;
+        width:400px;
     }
     th#field_column{
-        width:300px;
+        width:600px;
     }
     input#id_title{
-        width:305px;
+        width:100%;
         float:left;
     }
     textarea{
@@ -51,6 +61,7 @@
         font-weight:2;
         line-height:15px;
         padding:1px;
+        width:100%;
     }
 </style>
 
@@ -58,7 +69,7 @@
 
 {% block content %}
 
-<div id="form">
+<div id="save_form">
     <form method="post" action=".">
         <table>
         <th id="label_column"></th>

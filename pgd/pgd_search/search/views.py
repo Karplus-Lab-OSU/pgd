@@ -327,7 +327,7 @@ def saveSearch(request,search_id=None):
             oldsearch = Search.objects.get(id=search_id)
             if request.user!=oldsearch.user:
                 return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
-            form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description, 'search_id':search_id})
+            form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description,'isPublic':oldsearch.isPublic, 'search_id':search_id})
         else:
             form = saveSearchForm()
     return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))
