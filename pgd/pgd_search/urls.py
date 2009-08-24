@@ -28,5 +28,14 @@ urlpatterns = patterns('',
     (r'^saveSearch/(?P<search_id>\d+)/$', saveSearch),
     (r'^deleteSearch/$', deleteSearch),
     (r'^deleteSearch/(?P<search_id>\d+)/$', deleteSearch),
-    
+
+    #new style here
+    (r'^view/$', editSearch),
+    (r'^(?P<search_id>\d+)/view/$', editSearch),
+    (r'^/$', editSearch),
+    (r'^(?P<search_id>\d+)/$', editSearch),
+    (r'^save/$', saveSearch),
+    (r'^save/(?P<search_id>\d+)/$', saveSearch),
+    (r'^delete/$', deleteSearch),
+    (r'^(?P<search_id>\d+)/delete/$', deleteSearch),
 )

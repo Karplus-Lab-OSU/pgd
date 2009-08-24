@@ -311,7 +311,7 @@ def saveSearch(request,search_id=None):
                     editedsearch.timestamp=datetime.now().strftime("%d/%m/%y")
                     editedsearch.isPublic = data['isPublic']
                     editedsearch.save()
-                    return HttpResponseRedirect('/search/saved/')     
+                    return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)     
                 
             else:
                 data = form.cleaned_data
@@ -321,7 +321,7 @@ def saveSearch(request,search_id=None):
                 request.session['search'].timestamp=datetime.now().strftime("%d/%m/%y")
                 request.session['search'].isPublic = data['isPublic']
                 request.session['search'].save()
-                return HttpResponseRedirect('/search/saved/')
+                return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)
     else:
         if search_id:
             oldsearch = Search.objects.get(id=search_id)
@@ -338,6 +338,6 @@ def deleteSearch(request,search_id=None):
         if search.user != request.user:
             return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
         search.delete()
-        return HttpResponseRedirect('/search/saved' )
+        return HttpResponseRedirect('%ssearch/saved' % settings.SITE_ROOT)
     else:
-        return HttpResponseRedirect('/search/saved' )
+        return HttpResponseRedirect('%ssearch/saved' % settings.SITE_ROOT)
