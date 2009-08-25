@@ -22,11 +22,11 @@
                     <strong>PISCES </strong>{{DATA_VERSION}}
                 </span>
                 {% if user.is_authenticated %}
-                     <span class="menuitem"><a class="mainmenuitem" href="/search/saved">Saved Searches</a></span>
-                     <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="/accounts/logout">Logout</a></span>
+                     <span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}search/saved">Saved Searches</a></span>
+                     <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}accounts/logout">Logout</a></span>
                 {% else %}
-                    <span class="menuitem"><a class="mainmenuitem" href="/accounts/login">Login</a></span>
-                    <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="/accounts/register">Register</a></span>
+                    <span class="menuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}accounts/login">Login</a></span>
+                    <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}accounts/register">Register</a></span>
                 {% endif %}
             </div>
             <div id="submenu">

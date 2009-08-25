@@ -79,7 +79,7 @@
 {% endblock %}
 
 {% block content %}
-    <h2 style="color:#1854d0;">Table of Contents</h2>
+    <h2 id="top" style="color:#1854d0;">Table of Contents</h2>
     <ol id="table_of_contents">
         <li><a href="#sea" style="color:#000">Searching</a></li>
         <ol type="a" start="1" style="padding-left:30px;">
@@ -160,17 +160,41 @@
 
     <div class="section">
         <h2><a name="sav">Saving and Loading Previous Searches</a></h2>
-        <p>
-        The ability to save your search credentials is a feature that is will be implemented in the future.
-        </p>
+        <ul>
+            <p><li><strong>Saving Searches:</strong>
+                To save your current search, click the save search button. Note that this only appears when there is a search to be saved.</li>
+            </p>
+            <li><strong>The Save Search Form</strong>
+                <ul>
+                    <li>Title: The title is a brief summary of the search. It will appear on the saved search page.</li>
+                    <li>Description: The description is a more in depth summary of the search. It will only appear when the [More] button is clicked on the saved search page.</li>
+                    <li>Publically Viewable: Use this option to make the search viewable to anyone.</li>
+                </ul></li>
+            <li><strong>The Saved Search Page</strong>
+                <ul>
+                    <li>Editing search title/description: To edit the description of a search, click on the edit icon on the 	right side of the search. A popup box will confirm that you want to edit. This will direct you 	back to the same form as before, filled in with the old title and description. Once you submit it again, it will show up in the saved searches page. </li>
+                    <li>Deleting Searches: To delete a search, click on the red delete icon to the right of the search. A 	popup box will confirm your deletion. Once the search is deleted it is gone for good.</li>
+                    <li>Viewing Descriptions: To view your description, click on the [More] box next to the search title. 	To hide the description, click on the [Less] box. </li>
+                    <li>Reload a Search: To reload the criteria from a search, click on the title of the search, and it will 	redirect you to the search page with the criteria filled in before. </li>
+                    <li>Public Link: This link goes to a view page.</li>
+                </ul></li>
+        </ul>
         <a href="#top" class="top">Back To Top</a>
     </div>
 
     <div class="section">
         <h2><a name="lin">Logging In and Out</a></h2>
-        <p>
-        The ability to have a user account to access the PGD is a feature that is will be implemented in the future.
-        </p>
+        <p>PGD has a simple system for user validation, including registration, validation, and logging in and out.</p>
+        <ul>
+            <p><li><strong>Registration:</strong>
+            To register, click the register button and fill out the form. You will receive a confirmation email with an activation link. Note that you must register in order to make use of PGD's user account system.</li>
+            <li><strong>Activation:</strong>
+            Your account will be inactive (and inaccessible) until you click the activation link that you received in the email. Once activated, you can log in. Make sure that you activate before the activation link expires.</li>
+            <li><strong>Logging In</strong>
+            To log in, click the log in button on the top of the control bar. This will appear on every page of the PGD. Note that this only appears when not logged in. It's also important to remember that any search criteria currently entered will be lost, although the results will remain. </li>
+            <li><strong>Logging Out</strong>
+            When you're finished using PGD, you may wish to log out. To do this, click the log out button at the top of the control bar. Note that this only appears when logged in. The current search will not be saved when you log out.</li></p> 
+        </ul>
         <a href="#top" class="top">Back To Top</a>
     </div>
 

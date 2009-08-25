@@ -34,7 +34,7 @@ urlpatterns = patterns('',
     (r'^/$', editSearch),
     (r'^(?P<search_id>\d+)/$', editSearch),
     (r'^save/$', saveSearch),
-    (r'^save/(?P<search_id>\d+)/$', saveSearch),
+    (r'^(?P<search_id>\d+)/save/$', saveSearch),
     (r'^delete/$', deleteSearch),
     (r'^(?P<search_id>\d+)/delete/$', deleteSearch),
 )
