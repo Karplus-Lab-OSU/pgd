@@ -86,7 +86,7 @@
 {% endblock %}
 
 {% block content %}
-{% if session.search %}
+{% if session.search or form.id %}
 <div id="save_form">
     <form method="post" action=".">
         <table>
