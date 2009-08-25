@@ -1,7 +1,5 @@
 from django.conf.urls.defaults import *
-
-
-from pgd_search.search.views import search, protein_search, saved, editSearch, help, qtiphelp
+from pgd_search.search.views import search, saved, editSearch, help, qtiphelp, saveSearch, deleteSearch, protein_search
 from pgd_search.plot.views import renderToSVG, renderToPNG, plotDump, plot
 from pgd_search.statistics.views import searchStatistics
 from pgd_search.dump.views import dataDump
@@ -21,6 +19,22 @@ urlpatterns = patterns('',
     (r'^saved/$', saved),
     (r'^help/$', help),
     (r'^qtiphelp/$', qtiphelp),
+    (r'^viewSearch/$', editSearch),
+    (r'^viewSearch/(?P<search_id>\d+)/$', editSearch),
     (r'^edit/$', editSearch),
     (r'^edit/(?P<search_id>\d+)/$', editSearch),
+    (r'^saveSearch/$', saveSearch),
+    (r'^saveSearch/(?P<search_id>\d+)/$', saveSearch),
+    (r'^deleteSearch/$', deleteSearch),
+    (r'^deleteSearch/(?P<search_id>\d+)/$', deleteSearch),
+
+    #new style here
+    (r'^view/$', editSearch),
+    (r'^(?P<search_id>\d+)/view/$', editSearch),
+    (r'^/$', editSearch),
+    (r'^(?P<search_id>\d+)/$', editSearch),
+    (r'^save/$', saveSearch),
+    (r'^save/(?P<search_id>\d+)/$', saveSearch),
+    (r'^delete/$', deleteSearch),
+    (r'^(?P<search_id>\d+)/delete/$', deleteSearch),
 )

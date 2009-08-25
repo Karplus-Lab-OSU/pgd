@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
 from pgd_constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
+from django import forms
 import re
 from math import ceil
 
@@ -28,6 +29,10 @@ class Search(models.Model):
     """
     A query submitted by a user
     """
+    isPublic         = models.BooleanField()
+    timestamp        = models.CharField(max_length='30')
+    title            = models.CharField(max_length='300')
+    description      = models.CharField(max_length='5000')
     user             = models.ForeignKey(User, null=True)
     codes_include    = models.NullBooleanField(null=True)
     threshold        = models.IntegerField(null=True)
@@ -508,3 +513,10 @@ for i in range(searchSettings.segmentSize):
 
 # Create the Segment model class with the fields from the dict
 Segment = type('Segment', (Segment_abstract,), seq_dict)
+
+class saveSearchForm(forms.Form):
+    title       = forms.CharField(label='Title')
+    description = forms.CharField(label='Description', widget=forms.Textarea)
+    isPublic    = forms.BooleanField(label='Publically Viewable',required=False)
+    id          = forms.IntegerField(None, widget=forms.HiddenInput, required=False)
+
