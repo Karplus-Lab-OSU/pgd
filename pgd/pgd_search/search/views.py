@@ -353,13 +353,13 @@ def saved(request):
 
     return render_to_response('saved.html', {
         'searches': paginatedSearch,
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request,processors=[settings_processor]))
 
 def help(request):
     return render_to_response('help.html', context_instance=RequestContext(request))
 
 def qtiphelp(request):
-    return render_to_response('qtiphelp.html', context_instance=RequestContext(request))
+    return render_to_response('qtiphelp.html')
     
 def saveSearch(request,search_id=None):
     if request.method == 'POST':
@@ -397,7 +397,7 @@ def saveSearch(request,search_id=None):
             form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description,'isPublic':oldsearch.isPublic, 'search_id':search_id})
         else:
             form = saveSearchForm()
-    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))
+    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request),processors=[settings_processor])
 
 def deleteSearch(request,search_id=None):
     if search_id:

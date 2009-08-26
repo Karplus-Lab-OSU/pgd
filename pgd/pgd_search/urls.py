@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     (r'^saved/$', saved),
     (r'^help/$', help),
     (r'^qtiphelp/$', qtiphelp),
+    #old style, for compatibility in the case of forgotton/overlooked links
     (r'^viewSearch/$', editSearch),
     (r'^viewSearch/(?P<search_id>\d+)/$', editSearch),
     (r'^edit/$', editSearch),
@@ -28,7 +29,7 @@ urlpatterns = patterns('',
     (r'^deleteSearch/$', deleteSearch),
     (r'^deleteSearch/(?P<search_id>\d+)/$', deleteSearch),
 
-    #new style here
+    #new style 
     (r'^view/$', editSearch),
     (r'^(?P<search_id>\d+)/view/$', editSearch),
     (r'^/$', editSearch),
