@@ -1,5 +1,4 @@
 import math
-import time
 import simplejson
 
 from django.conf import settings
@@ -15,7 +14,7 @@ from pgd_search.views import settings_processor
 
 
 
-stat_attributes_base = [('L1',u'C<sup>-1</sup>N'),
+stat_attributes = [('L1',u'C<sup>-1</sup>N'),
                         ('L2',u'NC<sup>&alpha;</sup>'),
                         ('L3',u'C<sup>&alpha;</sup>C<sup>&beta;</sup>'),
                         ('L4',u'C<sup>&alpha;</sup>C'),
@@ -42,7 +41,8 @@ def search_statistics(request):
         'aa_types': AA_CHOICES,
         'ss_types': SS_CHOICES,
         'fields':FIELDS_BASE,
-        'angles':ANGLES_BASE
+        'angles':ANGLES_BASE,
+        'stat_attributes':stat_attributes
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
@@ -52,7 +52,6 @@ def search_statistics_data(request):
     """
     search = request.session['search']
     stats = calculate_statistics(search.querySet())
-
     return HttpResponse(simplejson.dumps(stats))
 
 
@@ -63,8 +62,6 @@ def calculate_statistics(queryset):
     on the database.  This requires multiple queries but ultimately performs
     and scales better with large datasets.
     """
-
-    start = time.time()
     ss_field = 'r%i_ss' % iIndex
     aa_field = 'r%i_aa' % iIndex
 
@@ -76,8 +73,8 @@ def calculate_statistics(queryset):
         field_annotations['stddev_%s' % f] = StdDev('r4_%s' % f)
         field_annotations['min_%s' % f] = Min('r4_%s' % f)
         field_annotations['max_%s' % f] = Max('r4_%s' % f)
-    field_stats = queryset.values(aa_field).annotate(**field_annotations) \
-                                                .order_by(aa_field)
+    field_stats = list(queryset.values(aa_field).annotate(**field_annotations) \
+                                                .order_by(aa_field))
     field_stats_totals = queryset.aggregate(**field_annotations)
 
     # statistics for angles - must be done in two passes because there is no
@@ -87,9 +84,8 @@ def calculate_statistics(queryset):
         angle_annotations['avg_%s' % f] = DirectionalAvg('r4_%s' % f)
         angle_annotations['min_%s' % f] = Min('r4_%s' % f)
         angle_annotations['max_%s' % f] = Max('r4_%s' % f)
-    angles_stats = queryset.values(aa_field).annotate(**angle_annotations) \
-                                                    .order_by(aa_field)
-
+    angles_stats = list(queryset.values(aa_field).annotate(**angle_annotations) \
+                                                    .order_by(aa_field))
     angles_stats_totals = queryset.aggregate(**angle_annotations)
 
     angles_stddev = []
@@ -100,7 +96,9 @@ def calculate_statistics(queryset):
             field = 'r4_%s' % f
             avg = res['avg_%s' % f]
             angle_annotations['stddev_%s' % f] = DirectionalStdDev(field, avg=avg)
-        angles_stddev.append(queryset.filter(**{aa_field:aa}).values(aa_field).annotate(**angle_annotations))
+        q = queryset.filter(**{aa_field:aa}).aggregate(**angle_annotations)
+        q[field] = aa
+        angles_stddev.append(q)
 
     angle_annotations = {}
     for f in ANGLES_BASE:
@@ -110,23 +108,22 @@ def calculate_statistics(queryset):
     angles_stddev_totals = queryset.aggregate(**angle_annotations)
 
     # ss/aa counts and totals
-    ss_counts = queryset.values(aa_field, ss_field).annotate(ss_count=Count(ss_field)).order_by(aa_field)
-    ss_totals = queryset.values(ss_field).annotate(ss_count=Count(ss_field))
-    aa_totals = queryset.values(aa_field).annotate(aa_count=Count(aa_field)).order_by(aa_field)
+    ss_counts = list(queryset.values(aa_field, ss_field).annotate(ss_count=Count(ss_field)).order_by(aa_field))
+    ss_totals = list(queryset.values(ss_field).annotate(ss_count=Count(ss_field)))
+    aa_totals = list(queryset.values(aa_field).annotate(aa_count=Count(aa_field)).order_by(aa_field))
 
-    end = time.time()
-    print 'Search Statistics Data in seconds: ', end-start
-
-    return {
+    stats = {
         'index':4,
-        'fields': list(field_stats),                       # list of dictionaries, list by aa
+        'fields': field_stats,                       # list of dictionaries, list by aa
         'fields_totals':field_stats_totals,          # dict of agg per field
-        'angles':list(angles_stats),                       # list of dictionaries, list by aa
-        'angles_stddev':[list(s) for s in angles_stddev],               # list of dictionaries, list by aa
+        'angles':angles_stats,                       # list of dictionaries, list by aa
+        'angles_stddev':angles_stddev,               # list of dictionaries, list by aa
         'angles_totals':angles_stats_totals,         # dictionary of agg per field
         'angles_stddev_totals':angles_stddev_totals, # dictionary of agg per field
-        'aa_totals':list(aa_totals),
-        'ss_counts':list(ss_counts),                       # list of dictionaries, list by AA/SS
-        'ss_totals':list(ss_totals),                        # list of dictionaries,  list by SS
+        'aa_totals':aa_totals,
+        'ss_counts':ss_counts,                       # list of dictionaries, list by AA/SS
+        'ss_totals':ss_totals,                        # list of dictionaries,  list by SS
         'total':queryset.count()
     }
+
+    return stats
