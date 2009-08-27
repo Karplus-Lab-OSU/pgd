@@ -397,7 +397,7 @@ def saveSearch(request,search_id=None):
             form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description,'isPublic':oldsearch.isPublic, 'search_id':search_id})
         else:
             form = saveSearchForm()
-    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request),processors=[settings_processor])
+    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))
 
 def deleteSearch(request,search_id=None):
     if search_id:
