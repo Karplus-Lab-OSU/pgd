@@ -356,7 +356,7 @@ def saved(request):
     }, context_instance=RequestContext(request,processors=[settings_processor]))
 
 def help(request):
-    return render_to_response('help.html', context_instance=RequestContext(request))
+    return render_to_response('help.html', context_instance=RequestContext(request,processors=[settings_processor]))
 
 def qtiphelp(request):
     return render_to_response('qtiphelp.html')
@@ -371,7 +371,6 @@ def saveSearch(request,search_id=None):
                     return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
                 else:
                     data = form.cleaned_data
-                    editedsearch = Search.objects.get(id=search_id)
                     editedsearch.title = data['title']
                     editedsearch.description = data['description']
                     editedsearch.user=request.user
@@ -397,7 +396,7 @@ def saveSearch(request,search_id=None):
             form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description,'isPublic':oldsearch.isPublic, 'search_id':search_id})
         else:
             form = saveSearchForm()
-    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request))
+    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request,processors=[settings_processor]))
 
 def deleteSearch(request,search_id=None):
     if search_id:

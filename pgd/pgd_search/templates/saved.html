@@ -222,7 +222,7 @@
                     <th id="spacer"></th>
                 </tr>
                 {% for search in searches.object_list %}
-                    <tr class="{% cycle 'even''odd' %}" id="row_{{forloop.counter}}">
+                    <tr class="{% cycle 'even' 'odd' %}" id="row_{{forloop.counter}}">
                         <td class="spacer spacerLeft {% if forloop.last %} last {% endif %}" ></td>
                         <td class="title{% if forloop.last %} lastll {% endif %}"><a class="title_link" href="{{SITE_ROOT}}search/{{search.id}}/">{{search.title}}</a></td>
                         <td class="showhide"id="header_{{search.id}}">[More]</td>
@@ -233,7 +233,7 @@
                         <td class="delete" id="delete_{{search.id}}"><img id="delete_{{search.id}}" src="{{MEDIA_URL}}/images/delete.png"</></td>
                         <td class="spacer {% if forloop.last %} last {% endif %}"></td>
                     </tr>
-                    <tr id="id_{{search.id}}" class="{% cycle 'even''odd' %} hidden">
+                    <tr id="id_{{search.id}}" class="{% cycle 'even' 'odd' %} hidden">
                     <td class="spacer{% if forloop.last %} last {% endif %}"></td>
                     <td class="description bordered"colspan="7"><p>{{search.description}}</p></td>
                     <td class="spacer{% if forloop.last %} last {% endif %}"></td>
