@@ -319,6 +319,16 @@
                         });
                 });
 
+                $('#extra').hide()
+                $('#extra_toggle').click(function(){
+                    $('#extra').toggle();
+                    if ($(this).html()=='Extra Options &gt;&gt;') {
+                        $(this).html('Extra Options &lt;&lt;');
+                    }else{
+                        $(this).html('Extra Options &gt;&gt;');
+                    }
+                })                
+                
                 $('#advanced').hide()
                 $('#advanced_toggle').click(function(){
                     $('#advanced').toggle();
@@ -502,14 +512,16 @@
                 <td class="label">Plotted Attribute</td>
                 {% autoescape off %}
                 <td>{{form.attribute}}</td>
+                <td>{{form.residue_attribute}}</td>
                 {% endautoescape %}
-                <td class="label col2">Reference</td>
-                <td>{{form.reference}}</td>
+                <td class="label col2">Bin X, Y</td>
+                <td>{{form.xBin}}{{form.yBin}}</td>
             </tr>
             <tr>
                 <td class="label">X Axis</td>
                 {% autoescape off %}
                 <td>{{form.xProperty}}</td>
+                <td>{{form.residue_xproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
@@ -518,18 +530,22 @@
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
                 <td>{{form.yProperty}}</td>
+                <td>{{form.residue_yproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
                 <td>{{form.y}}{{form.y1}}</td>
             </tr>
-            <tr>
-                <td class="label">Residue</td>
-                <td>{{form.residue}}</td>
-                <td class="label col2">Bin X, Y</td>
-                <td>{{form.xBin}}{{form.yBin}}</td>
-            </tr>
-
         </tbody>
+
+                <tr class="spacer"/>
+                <tr><td id="extra_toggle" class="header" colspan="100%">Extra Options &gt;&gt;</td></tr>
+                <tbody id="extra">
+                    <tr>
+                        <td class="label col2">Reference</td>
+                        <td>{{form.reference}}</td>
+                    </tr>
+                </tbody>
+
 
         <tr class="spacer"/>
         <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>

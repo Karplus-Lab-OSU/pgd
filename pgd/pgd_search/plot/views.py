@@ -37,7 +37,7 @@ LABEL_REPLACEMENTS = {
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
+def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue_attribute=None, residue_xproperty=None, residue_yproperty=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
 
     #store functions locally for speed optimization
     local_len = len
@@ -159,7 +159,9 @@ def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd
                 xProperty,      #X property
                 yProperty,      #Y property
                 attribute,      #property
-                residue,        #residue Index
+                residue_attribute,
+                residue_xproperty,
+                residue_yproperty,
                 request.session['search'].querySet(),
                 hue
         )
@@ -228,7 +230,9 @@ def renderToPNG(request):
                         data['xProperty'],
                         data['yProperty'],
                         data['reference'],
-                        int(data['residue']),
+                        int(data['residue_attribute']),
+                        int(data['residue_xproperty']),
+                        int(data['residue_yproperty']),
                         data['xBin'],
                         data['yBin'],
                         data['background_color'],
@@ -311,7 +315,9 @@ def renderToSVG(request):
                     data['xProperty'],
                     data['yProperty'],
                     data['reference'],
-                    int(data['residue']),
+                    int(data['residue_attribute']),
+                    int(data['residue_xproperty']),
+                    int(data['residue_yproperty']),
                     data['xBin'],
                     data['yBin'],
                     data['background_color'],
@@ -364,7 +370,9 @@ def plotDump(request):
                 #data['attribute'],#property
                 'all',#property
                 #data['reference'],
-                int(data['residue']),
+                int(data['residue_attribute']),
+                int(data['residue_xproperty']),
+                int(data['residue_yproperty']),
                 request.session['search'].querySet()
             )
 

@@ -1,6 +1,6 @@
 from django import forms
 
-from pgd_search.views import RESIDUE_INDEX_START, RESIDUE_INDEX_STOP
+from pgd_search.views import RESIDUE_INDEXES
 
 #choice for occurence of property
 ATTRIBUTE_CHOICES = [
@@ -97,7 +97,9 @@ class PlotForm(forms.Form):
     x1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
     y               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
     y1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
-    residue         = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in range(RESIDUE_INDEX_START,RESIDUE_INDEX_STOP)], initial=0)
+    residue_attribute = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
+    residue_xproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
+    residue_yproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
     xBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
     yBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
 

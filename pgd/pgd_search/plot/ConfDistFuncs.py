@@ -115,7 +115,7 @@ class ConfDistPlot():
     # residue:  index of the residue of interest (-n...-1,0,1...n)
     # querySet: Django queryset
     # ******************************************************
-    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue, querySet, color='green'):
+    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue_attribute, residue_xproperty, residue_yproperty, querySet, color='green'):
         self.color = color
 
         # Convert unicode to strings
@@ -143,14 +143,15 @@ class ConfDistPlot():
         self.height = round(self.ybin/((yLimit) / float(ySize - 2 * yPadding)))
 
         # Index of the residue of interest in the segment
-        self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue if residue else 0)
-
-        # Printf-style string for the given residue
-        self.resString = "r%i_%%s"%self.residue
+        self.residue_attribute = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_attribute if residue_attribute else 0)
+        self.residue_xproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_xproperty if residue_xproperty else 0)
+        self.residue_yproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_yproperty if residue_yproperty else 0)
 
         # Graphed quantity and its field string representation, e.g. 'r4_ome'
         self.ref = ref
-        self.refString = self.resString%ref
+        self.refString = "r%i_%s"%(residue_attribute,ref)
+        self.xTextString = "r%i_%s"%(residue_xproperty,xText)
+        self.yTextString = "r%i_%s"%(residue_yproperty,yText)
 
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
@@ -158,21 +159,17 @@ class ConfDistPlot():
 
         # Labels for graph axes
         self.xText,self.yText = xText,yText
-        self.xTextString,self.yTextString = self.resString%xText,self.resString%yText
 
         # Variable to store number of values in the bin with the most values
         self.maxObs = 0
 
         # Pick fields for retrieving values
-        self.fields     = [(field,self.resString%str(field)) for field in (
-            [
-
-            ] if ref == "Observations" else [
-                field for field,none in PLOT_PROPERTY_CHOICES
-            ] if ref == "all" else [
-                ref
-            ]
-        )]
+        if ref == "Observations":
+            self.fields = [(xText,self.xTextString), (yText,self.yTextString)]
+        elif ref == "all":
+            raise Exception("This broke like it should.")
+        else:
+            self.fields = [(xText,self.xTextString), (yText,self.yTextString), (self.ref,self.refString)]
 
         # Exclude values outside the plotted values
         self.querySet = querySet.filter(
