@@ -147,11 +147,16 @@ class ConfDistPlot():
         self.residue_xproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_xproperty if residue_xproperty else 0)
         self.residue_yproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_yproperty if residue_yproperty else 0)
 
-        # Graphed quantity and its field string representation, e.g. 'r4_ome'
+        # Printf-style string for the given residue for plot dump
+        self.resString = "r%i_%%s"%self.residue_attribute        
+        self.resXString = "r%i_%%s"%self.residue_xproperty
+        self.resYString = "r%i_%%s"%self.residue_yproperty
+        
+        # Graphed quantity and its field string representation for plotting
         self.ref = ref
-        self.refString = "r%i_%s"%(residue_attribute,ref)
-        self.xTextString = "r%i_%s"%(residue_xproperty,xText)
-        self.yTextString = "r%i_%s"%(residue_yproperty,yText)
+        self.refString = "r%i_%s"%(self.residue_attribute,ref)
+        self.xTextString = "r%i_%s"%(self.residue_xproperty,xText)
+        self.yTextString = "r%i_%s"%(self.residue_yproperty,yText)
 
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
@@ -167,7 +172,7 @@ class ConfDistPlot():
         if ref == "Observations":
             self.fields = [(xText,self.xTextString), (yText,self.yTextString)]
         elif ref == "all":
-            raise Exception("This broke like it should.")
+            self.fields = [(field,self.resString%str(field)) for field in ([field for field,none in PLOT_PROPERTY_CHOICES]),(field,self.resXString%str(field)) for field in ([field for field,none in PLOT_PROPERTY_CHOICES]),(field,self.resYString%str(field)) for field in ([field for field,none in PLOT_PROPERTY_CHOICES])]
         else:
             self.fields = [(xText,self.xTextString), (yText,self.yTextString), (self.ref,self.refString)]
 
@@ -403,15 +408,29 @@ class ConfDistPlot():
     # *****************************************************************************
     def PrintDump(self, writer):
 
-        residue = self.residue
+        residue = self.residue_attribute
+        residueX = self.residue_xproperty
+        residueY = self.residue_yproperty
 
         #fields to include, order in this list is important
         STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta')
         avgString = '%s_avg'%self.resString
-        stdString = '%s_avg'%self.resString
+        stdString = '%s_stddev'%self.resString
+        avgXString = '%s_avg'%self.resXString
+        stdXString = '%s_stddev'%self.resXString
+        avgYString = '%s_avg'%self.resYString
+        stdYString = '%s_stddev'%self.resYString
         STATS_FIELDS_STRINGS = reduce(
             lambda x,y:x+y,
-            ((avgString%stat,stdString%stat) for stat in STATS_FIELDS)
+            ((avgString%stat,stdString%stat) for stat in STATS_FIELDS),
+        )
+        STATSX_FIELDS_STRINGS = reduce(
+            lambda x,y:x+y,
+            ((avgXString%stat,stdXString%stat) for stat in STATS_FIELDS),
+        )
+        STATSY_FIELDS_STRINGS = reduce(
+            lambda x,y:x+y,
+            ((avgYString%stat,stdYString%stat) for stat in STATS_FIELDS),
         )
         lower_case_fields = ['a1','a2','a3','a4','a5','a6','a7']
         field_replacements = {
@@ -429,6 +448,7 @@ class ConfDistPlot():
             'a7':u'O-C-N(+1)',
             'h_bond_energy':'HBond'
         }
+        
 
         #capitalize parameters where needed
         if self.xText in lower_case_fields:
@@ -451,7 +471,20 @@ class ConfDistPlot():
         writer.write('%sStop' % yText)
         writer.write('\t')
         writer.write('Observations')
-
+        
+        residue_replacements = {
+            0:u'(i-4)',
+            1:u'(i-3)',
+            2:u'(i-2)',
+            3:u'(i-1)',
+            4:u'(i)',
+            5:u'(i+1)',
+            6:u'(i+2)',
+            7:u'(i+3)',
+            8:u'(i+4)',
+            9:u'(i+5)'
+        }        
+        
         #output the generic titles
         for title in STATS_FIELDS:
             if title in field_replacements:
@@ -459,9 +492,31 @@ class ConfDistPlot():
             elif not title in lower_case_fields:
                 title = title.capitalize()
             writer.write('\t')
-            writer.write('%sAvg' % title)
+            writer.write('%sAvg%s' % (title,residue_replacements[self.residue_attribute]))
             writer.write('\t')
-            writer.write('%sDev' % title)
+            writer.write('%sDev%s' % (title,residue_replacements[self.residue_attribute]))
+            
+        #output the generic titles for x res
+        for title in STATS_FIELDS:
+            if title in field_replacements:
+                title = field_replacements[title]
+            elif not title in lower_case_fields:
+                title = title.capitalize()
+            writer.write('\t')
+            writer.write('%sAvg%s' % (title,residue_replacements[self.residue_xproperty]))
+            writer.write('\t')
+            writer.write('%sDev%s' % (title,residue_replacements[self.residue_xproperty]))
+            
+        #output the generic titles for y res
+        for title in STATS_FIELDS:
+            if title in field_replacements:
+                title = field_replacements[title]
+            elif not title in lower_case_fields:
+                title = title.capitalize()
+            writer.write('\t')
+            writer.write('%sAvg%s' % (title,residue_replacements[self.residue_yproperty]))
+            writer.write('\t')
+            writer.write('%sDev%s' % (title,residue_replacements[self.residue_yproperty]))
 
         # Cycle through the binPoints
         xbin = self.xbin
@@ -487,6 +542,18 @@ class ConfDistPlot():
 
             # Start averages and standard deviations
             for fieldStat in STATS_FIELDS_STRINGS:
+                writer.write('\t')
+                val = bin[fieldStat]
+                writer.write(round(val if val else 0, 1))
+                
+            # Start averages and standard deviations
+            for fieldStat in STATSX_FIELDS_STRINGS:
+                writer.write('\t')
+                val = bin[fieldStat]
+                writer.write(round(val if val else 0, 1))
+                
+            # Start averages and standard deviations
+            for fieldStat in STATSY_FIELDS_STRINGS:
                 writer.write('\t')
                 val = bin[fieldStat]
                 writer.write(round(val if val else 0, 1))
