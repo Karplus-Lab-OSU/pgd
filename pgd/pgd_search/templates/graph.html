@@ -319,6 +319,17 @@
                         });
                 });
 
+		if ($('#id_attribute :selected').text()=='Observations') {
+                            $('#residue_attribute').css({'visibility': 'hidden'})
+                    	}
+                $('#id_attribute').change(function (){
+			if ($('#id_attribute :selected').text()=='Observations') {
+                            $('#residue_attribute').css({'visibility': 'hidden'})
+                    	}else{
+                            $('#residue_attribute').css({'visibility': 'visible'})
+                    	}
+                })                
+                
                 $('#extra').hide()
                 $('#extra_toggle').click(function(){
                     $('#extra').toggle();
@@ -511,8 +522,8 @@
             <tr>
                 <td class="label">Plotted Attribute</td>
                 {% autoescape off %}
-                <td>{{form.attribute}}</td>
-                <td>{{form.residue_attribute}}</td>
+                <td id="attribute">{{form.attribute}}</td>
+                <td id="residue_attribute">{{form.residue_attribute}}</td>
                 {% endautoescape %}
                 <td class="label col2">Bin X, Y</td>
                 <td>{{form.xBin}}{{form.yBin}}</td>
