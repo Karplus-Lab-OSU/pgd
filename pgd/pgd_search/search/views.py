@@ -1,18 +1,18 @@
 import math
 import re
-
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
 from django.shortcuts import render_to_response
 from django.conf import settings
 from django.forms.util import ErrorList
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
-
+from datetime import datetime
 from pgd_core.models import Protein
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
+from pgd_search.models import saveSearchForm
 
 
 """
@@ -87,6 +87,8 @@ def editSearch(request, search_id=None):
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
+        if search.user != request.user and search.isPublic == False:
+            return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
         form = processSearchObject(search)
 
 
@@ -333,9 +335,9 @@ def protein_search(request):
 
 def saved(request):
 
-    searches = Search.objects.all()
+    searches = Search.objects.filter(user=request.user)
 
-    paginator = Paginator(searches, 20) # Show 20 searches per page
+    paginator = Paginator(searches, 200000) # Show enough searches per page to effectively disable this feature for now
 
     # Make sure page request is an int. If not, deliver first page.
     try:
@@ -351,11 +353,57 @@ def saved(request):
 
     return render_to_response('saved.html', {
         'searches': paginatedSearch,
-    }, context_instance=RequestContext(request))
+    }, context_instance=RequestContext(request,processors=[settings_processor]))
 
 def help(request):
-    return render_to_response('help.html', context_instance=RequestContext(request))
+    return render_to_response('help.html', context_instance=RequestContext(request,processors=[settings_processor]))
 
 def qtiphelp(request):
-    return render_to_response('qtiphelp.html', context_instance=RequestContext(request))
+    return render_to_response('qtiphelp.html')
+    
+def saveSearch(request,search_id=None):
+    if request.method == 'POST':
+        form = saveSearchForm(request.POST)
+        if form.is_valid():
+            if search_id:
+                editedsearch = Search.objects.get(id=search_id)
+                if request.user!=editedsearch.user:
+                    return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
+                else:
+                    data = form.cleaned_data
+                    editedsearch.title = data['title']
+                    editedsearch.description = data['description']
+                    editedsearch.user=request.user
+                    editedsearch.timestamp=datetime.now().strftime("%d/%m/%y")
+                    editedsearch.isPublic = data['isPublic']
+                    editedsearch.save()
+                    return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)     
+                
+            else:
+                data = form.cleaned_data
+                request.session['search'].title = data['title']
+                request.session['search'].description = data['description']
+                request.session['search'].user=request.user
+                request.session['search'].timestamp=datetime.now().strftime("%d/%m/%y")
+                request.session['search'].isPublic = data['isPublic']
+                request.session['search'].save()
+                return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)
+    else:
+        if search_id:
+            oldsearch = Search.objects.get(id=search_id)
+            if request.user!=oldsearch.user:
+                return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
+            form = saveSearchForm({'title':oldsearch.title,'description':oldsearch.description,'isPublic':oldsearch.isPublic, 'search_id':search_id})
+        else:
+            form = saveSearchForm()
+    return render_to_response('saveSearch.html', {'form': form },context_instance=RequestContext(request,processors=[settings_processor]))
 
+def deleteSearch(request,search_id=None):
+    if search_id:
+        search = Search.objects.get(id=search_id)
+        if search.user != request.user:
+            return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
+        search.delete()
+        return HttpResponseRedirect('%ssearch/saved' % settings.SITE_ROOT)
+    else:
+        return HttpResponseRedirect('%ssearch/saved' % settings.SITE_ROOT)

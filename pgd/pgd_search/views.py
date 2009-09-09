@@ -23,5 +23,6 @@ def settings_processor(request):
         'PGD_VERSION':VERSION,
         'MEDIA':settings.MEDIA_URL,
         'ROOT':settings.SITE_ROOT,
-        'DATA_VERSION':pdb_select_settings.DATA_VERSION
+        'DATA_VERSION':pdb_select_settings.DATA_VERSION,
+        'GOOGLE_ID':settings.GOOGLE_ID
     }
