@@ -57,6 +57,8 @@ class Residue(models.Model):
 
     protein         = models.ForeignKey(Protein, related_name='residues')
     chain           = models.ForeignKey(Chain, related_name='residues')
+    prev            = models.ForeignKey('self', related_name='prev_next')
+    next            = models.ForeignKey('self', related_name='next_prev')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1) # integer id
     oldID           = models.CharField(max_length=5, null=True)# id[icode] from pdb file
@@ -92,7 +94,6 @@ class Residue(models.Model):
     def __getattribute__(self,name):
         if name == 'aa_full':
             return AA_CHOICES_DICT[self.aa]
-    
         # normal attribute
         else:
             return object.__getattribute__(self, name)

@@ -146,7 +146,14 @@ class ConfDistPlot():
         self.residue = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue if residue else 0)
 
         # Printf-style string for the given residue
-        self.resString = "r%i_%%s"%self.residue
+        # get field prefix for this residue
+        if residue == 0:
+            prefix = ''
+        elif residue < 0:
+            prefix = ''.join(['prev__' for i in range(residue, 0)])
+        else:
+            prefix = ''.join(['next__' for i in range(residue)])
+        self.resString = '%s%%s' % prefix
 
         # Graphed quantity and its field string representation, e.g. 'r4_ome'
         self.ref = ref
@@ -209,8 +216,8 @@ class ConfDistPlot():
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR(%s/%s)' % (self.xTextString, xbin)
-        y_aggregate = 'FLOOR(%s/%s)' % (self.yTextString, ybin)
+        x_aggregate = 'FLOOR(pgd_core_residue.%s/%s)' % (self.xTextString, xbin)
+        y_aggregate = 'FLOOR(pgd_core_residue.%s/%s)' % (self.yTextString, ybin)
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -239,7 +246,6 @@ class ConfDistPlot():
         heights = [yMarks[i] - yMarks[i+1] - 2 for i in range(0,len(yMarks)-1)]
         #  Adjust to make + indices for the Marks lists
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
-
         for entry in annotated_query:
 
             x = int(entry['x'])

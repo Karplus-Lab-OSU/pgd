@@ -59,11 +59,11 @@ class Search(models.Model):
     def parse_search(self):
 
         # Start with all segments...
-        query = Segment.objects.all()
+        query = Residue.objects.all()
 
         # ...filter by segmentLength...
-        if self.segmentLength > 1:
-            query = query.filter(length__gte=self.segmentLength)
+        #if self.segmentLength > 1:
+        #    query = query.filter(length__gte=self.segmentLength)
 
         # ...filter by code lists...
         if self.codes_include != None:
@@ -103,11 +103,27 @@ class Search(models.Model):
             query = query.filter(protein__threshold__lte=self.threshold)
 
         # ...filter by query strings (for values and value ranges)...
-        for search_res in self.residues.all(): # iterate through all search residues in self
-            seg_prefix = "r%i_"%(
-                # convert from the search residue index to indexes 0...n
-                search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)
-            )
+        def compare(x,y):
+            if x == y:
+                return 0
+            elif x < y:
+                return -1
+            return 1
+        residues = sorted(self.residues.all(), compare, lambda x: abs(x.index) )
+
+        for search_res in residues: # iterate through all search residues in self
+            #seg_prefix = "r%i_"%(
+            #    # convert from the search residue index to indexes 0...n
+            #    search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)
+            #)
+
+            # get field prefix for this residue
+            if search_res.index == 0:
+                seg_prefix = ''
+            elif search_res.index < 0:
+                seg_prefix = ''.join(['prev__' for i in range(search_res.index, 0)])
+            else:
+                seg_prefix = ''.join(['next__' for i in range(search_res.index)])
 
             # ...handle boolean values...
             #   (Filter on each binary field that is not set to NULL/None.)
