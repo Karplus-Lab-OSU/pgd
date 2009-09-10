@@ -283,7 +283,8 @@ class ConfDistPlot():
                     if field[0] in ANGLES:
                         stddev = '%s_stddev' % field[1]
                         avg = entry['%s_avg' % field[1]]
-                        annotations[stddev] = DirectionalStdDev(field[1], avg=avg)
+                        if avg != None:
+                            annotations[stddev] = DirectionalStdDev(field[1], avg=avg)
 
                 if annotations:
                     bin_where_clause = ['%s=%s and %s=%s' % (x_aggregate,x,y_aggregate,y)]
@@ -540,8 +541,9 @@ class ConfDistPlot():
             # Start averages and standard deviations
             for fieldStat in STATS_FIELDS_STRINGS:
                 writer.write('\t')
-                val = bin[fieldStat]
-                writer.write(round(val if val else 0, 1))
+                val = bin[fieldStat] if fieldStat in bin else 0
+                precision = 3 if fieldStat[3:5] in ('L1','L2','L3','L4','L5') else 1
+                writer.write(round(val if val else 0, precision))
                 
             
 
