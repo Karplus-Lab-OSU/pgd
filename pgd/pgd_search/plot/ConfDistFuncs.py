@@ -251,6 +251,11 @@ class ConfDistPlot():
         #  Adjust to make + indices for the Marks lists
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
 
+        torsion_avgs = {}
+        for field in self.stats_fields:
+            if field[0] in ANGLES:
+                torsion_avgs[field[0]] = {}
+
         for entry in annotated_query:
 
             x = int(entry['x'])
@@ -289,19 +294,8 @@ class ConfDistPlot():
                 # out nulls for just that field
                 for field in self.stats_fields:
                     if field[0] in ANGLES:
-                        stddev = '%s_stddev' % field[1]
-                        avg = entry['%s_avg' % field[1]]
-                        annotations = {stddev:DirectionalStdDev(field[1], avg=avg)}
-                        if avg != None:
-                            bin_where_clause = ['%s=%s AND %s=%s' % (x_aggregate,x,y_aggregate,y),
-                                                'NOT %s IS NULL' % field[1]
-                                            ]
-                            stddev_query = self.querySet.extra(where=bin_where_clause) \
-                                                .annotate(**annotations) \
-                                                .values(*annotations.keys())
-                            stddev_query.query.group_by = []
-                            for k, v in stddev_query[0].items():
-                                bin[k] = v if v else 0
+                        if avg:
+                            torsion_avgs[field[0]]['%s%s' % (x,y)] = bin[avg]
 
             else:
                 # no need for calculation, stddev infered from bincount
@@ -314,6 +308,32 @@ class ConfDistPlot():
             # Find the bin with the most observations
             if self.maxObs < bin['count']:
                 self.maxObs = bin['count']
+
+        # run queries to get stddevs for all torsion angles
+        # this is done outside the main loop because all of the averages 
+        # must first be collected so that they can be run in a single query
+        #
+        # This query uses a large case statement to select the average matching
+        # the bin the result is grouped into.  This isn't the cleanest way
+        # of doing this but it does work
+        for field in self.stats_fields:
+            if field[0] in ANGLES:
+                stddev = '%s_stddev' % field[1]
+                cases = ' '.join(['WHEN %s THEN %s' % (k,v) if v else '' for k,v in torsion_avgs[field[0]].items()])
+                avgs = 'CASE CONCAT(FLOOR(%s/10.0),FLOOR(%s/10.0)) %s END' % (self.xTextString, self.yTextString, cases)
+                annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
+                bin_where_clause = ['NOT %s IS NULL' % field[1]]
+                stddev_query = self.querySet \
+                                    .extra(select={'x':x_aggregate, 'y':y_aggregate}) \
+                                    .extra(where=bin_where_clause) \
+                                    .annotate(**annotations) \
+                                    .values(*annotations.keys()+['x','y']) \
+                                    .order_by('x','y')
+                stddev_query.query.group_by = []
+
+                for r in stddev_query:
+                    value = r[stddev] if r[stddev] else 0
+                    self.bins[(r['x'],r['y'])][stddev] = value
 
 
     # ******************************************************
@@ -346,7 +366,7 @@ class ConfDistPlot():
                 )
             elif self.ref in ANGLES:
                 avg = bin['%s_avg'%self.refString]
-                if avg:
+                if avg and '%s_stddev'%self.refString in bin:
                     straight = avg - meanPropAvg
                     difference = (
                         straight
@@ -356,6 +376,7 @@ class ConfDistPlot():
                 else:
                     # no average, mark bin as outlier
                     difference = 9999
+
                 if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
                     color = [255,-75,255]
                 else:
@@ -428,6 +449,7 @@ class ConfDistPlot():
                     bin_stddev
                 ]
             )
+
         return binVals
 
 
