@@ -115,8 +115,9 @@ class ConfDistPlot():
     # residue:  index of the residue of interest (-n...-1,0,1...n)
     # querySet: Django queryset
     # ******************************************************
-    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, residue_attribute, residue_xproperty, residue_yproperty, querySet, color='green'):
+    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, sigmaVal, residue_attribute, residue_xproperty, residue_yproperty, querySet, color='green'):
         self.color = color
+        self.sigmaVal = sigmaVal
 
         # Convert unicode to strings
         xText,yText,ref = str(xText),str(yText),str(ref)
@@ -312,16 +313,16 @@ class ConfDistPlot():
     # ******************************************************
     def Plot(self):
         binVals = []
-
+        sig = self.sigmaVal
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
             if self.ref in ANGLES:
                 meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
-                stdPropAvgX3 = 180 if stdPropAvg > 60 else 3*stdPropAvg
+                stdPropAvgXSigma = 180 if stdPropAvg > 60 else sig*stdPropAvg
             else:
                 meanPropAvg,stdPropAvg = getLinearStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
-                minPropAvg = meanPropAvg - 3*stdPropAvg
-                maxPropAvg = meanPropAvg + 3*stdPropAvg
+                minPropAvg = meanPropAvg - sig*stdPropAvg
+                maxPropAvg = meanPropAvg + sig*stdPropAvg
 
         colors, adjust = COLOR_RANGES[self.color]
         # Color the bins
@@ -343,18 +344,18 @@ class ConfDistPlot():
                 ) if -180 < straight < 180 else (
                     (360 if straight < 0 else -360) + straight
                 )
-                if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
+                if -difference >= stdPropAvgXSigma or difference >= stdPropAvgXSigma:
                     color = [255,-75,255]
                 else:
                     scale = 0.5+((
                             math.log(
                                 difference+1,
-                                stdPropAvgX3+1
+                                stdPropAvgXSigma+1
                             )
                         ) if difference >= 0 else (
                             -math.log(
                                 -difference+1,
-                                stdPropAvgX3+1
+                                stdPropAvgXSigma+1
                           )
                        ))/2
                     color = map(
