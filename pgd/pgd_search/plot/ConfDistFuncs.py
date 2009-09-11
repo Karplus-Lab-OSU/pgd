@@ -59,6 +59,9 @@ def getCircularStats(values,size):
 
     # Circular Average - use some fancy trig that takes circular values
     #   into account.  This requires all values to be converted to radians.
+    values = filter(lambda x:x!=None, values)
+    size = len(values)
+
     radAngles = [lradians(val) for val in values]
     radAvg = math.atan2(
         sum([lsin(radAngle) for radAngle in radAngles])/size,
@@ -148,10 +151,10 @@ class ConfDistPlot():
         self.residue_yproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_yproperty if residue_yproperty else 0)
 
         # Printf-style string for the given residue for plot dump
-        self.resString = "r%i_%%s"%self.residue_attribute        
+        self.resString = "r%i_%%s"%self.residue_attribute
         self.resXString = "r%i_%%s"%self.residue_xproperty
         self.resYString = "r%i_%%s"%self.residue_yproperty
-        
+
         # Graphed quantity and its field string representation for plotting
         self.ref = ref
         self.refString = "r%i_%s"%(self.residue_attribute,ref)
@@ -170,14 +173,17 @@ class ConfDistPlot():
 
         # index set creation
         self.index_set = set([self.resString,self.resXString,self.resYString])
-        
+
         # Pick fields for retrieving values
         if ref == "Observations":
             self.fields = [(xText,self.xTextString), (yText,self.yTextString)]
+            self.stats_fields = []
         elif ref == "all":
             self.fields = [(field,i%(str(field))) for field in ([field for field,none in PLOT_PROPERTY_CHOICES]) for i in self.index_set]
+            self.stats_fields = self.fields
         else:
             self.fields = [(xText,self.xTextString), (yText,self.yTextString), (self.ref,self.refString)]
+            self.stats_fields = [(self.ref,self.refString)]
 
         # Exclude values outside the plotted values
         self.querySet = querySet.filter(
@@ -278,23 +284,25 @@ class ConfDistPlot():
             if bin['count'] > 1:
                 # if this is an angle the stddev must be calculated in separate query
                 # using the circular standard deviation method
-                annotations = {}
-                for field in self.fields:
+                #
+                # due to null causing errors, each field must be run separate to filter
+                # out nulls for just that field
+                for field in self.stats_fields:
                     if field[0] in ANGLES:
                         stddev = '%s_stddev' % field[1]
                         avg = entry['%s_avg' % field[1]]
+                        annotations = {stddev:DirectionalStdDev(field[1], avg=avg)}
                         if avg != None:
-                            annotations[stddev] = DirectionalStdDev(field[1], avg=avg)
+                            bin_where_clause = ['%s=%s AND %s=%s' % (x_aggregate,x,y_aggregate,y),
+                                                'NOT %s IS NULL' % field[1]
+                                            ]
+                            stddev_query = self.querySet.extra(where=bin_where_clause) \
+                                                .annotate(**annotations) \
+                                                .values(*annotations.keys())
+                            stddev_query.query.group_by = []
+                            for k, v in stddev_query[0].items():
+                                bin[k] = v if v else 0
 
-                if annotations:
-                    bin_where_clause = ['%s=%s and %s=%s' % (x_aggregate,x,y_aggregate,y)]
-                    values = annotations.keys()
-                    stddev_query = self.querySet.extra(where=bin_where_clause) \
-                                        .annotate(**annotations) \
-                                        .values(*values)
-                    stddev_query.query.group_by = []
-                    for k, v in stddev_query[0].items():
-                        bin[k] = v if v else 0
             else:
                 # no need for calculation, stddev infered from bincount
                 for field in self.fields:
@@ -338,12 +346,16 @@ class ConfDistPlot():
                 )
             elif self.ref in ANGLES:
                 avg = bin['%s_avg'%self.refString]
-                straight = avg - meanPropAvg
-                difference = (
-                    straight
-                ) if -180 < straight < 180 else (
-                    (360 if straight < 0 else -360) + straight
-                )
+                if avg:
+                    straight = avg - meanPropAvg
+                    difference = (
+                        straight
+                    ) if -180 < straight < 180 else (
+                        (360 if straight < 0 else -360) + straight
+                    )
+                else:
+                    # no average, mark bin as outlier
+                    difference = 9999
                 if -difference >= stdPropAvgX3 or difference >= stdPropAvgX3:
                     color = [255,-75,255]
                 else:
@@ -391,6 +403,17 @@ class ConfDistPlot():
             fill = ''.join('%02x'%round(x) for x in color)
 
             # add rectangle to list
+            if self.ref in NON_FIELDS:
+                bin_avg, bin_stddev = 0,0 
+            else:
+                try:
+                    bin_avg = bin['%s_avg'%self.refString]
+                    bin_stddev = bin['%s_stddev'%self.refString]
+                    if bin_avg == None:
+                        continue
+                except KeyError:
+                    continue
+
             binVals.append(
                 [
                     bin['pixCoords']['x'],
@@ -401,9 +424,10 @@ class ConfDistPlot():
                     fill,
                     bin['count'],
                     key,
-                ] + ([0,0] if self.ref in NON_FIELDS else [bin['%s_avg'%self.refString],bin['%s_stddev'%self.refString]])
+                    bin_avg,
+                    bin_stddev
+                ]
             )
-
         return binVals
 
 
@@ -420,9 +444,9 @@ class ConfDistPlot():
         STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta')
         avgString = 'r%i_%s_avg'
         stdString = 'r%i_%s_stddev'
-        
+
         index_set = set([residue,residueX,residueY])
-        
+
         STATS_FIELDS_STRINGS = reduce(
             lambda x,y:x+y,
             ((avgString%(i,stat),stdString%(i,stat)) for stat in STATS_FIELDS for i in index_set),
@@ -444,7 +468,7 @@ class ConfDistPlot():
             'a7':u'O-C-N(+1)',
             'h_bond_energy':'HBond'
         }
-        
+
 
         #capitalize parameters where needed
         if self.xText in lower_case_fields:
@@ -467,7 +491,7 @@ class ConfDistPlot():
         writer.write('%sStop' % yText)
         writer.write('\t')
         writer.write('Observations')
-        
+
         residue_replacements = {
             0:u'(i-4)',
             1:u'(i-3)',
@@ -479,8 +503,8 @@ class ConfDistPlot():
             7:u'(i+3)',
             8:u'(i+4)',
             9:u'(i+5)'
-        }        
-        
+        }
+
         #output the generic titles
         for title in STATS_FIELDS:
             if title in field_replacements:
@@ -491,7 +515,7 @@ class ConfDistPlot():
             writer.write('%sAvg%s' % (title,residue_replacements[self.residue_attribute]))
             writer.write('\t')
             writer.write('%sDev%s' % (title,residue_replacements[self.residue_attribute]))
-            
+
         #output the generic titles for x res
         for title in STATS_FIELDS:
             if title in field_replacements:
@@ -503,7 +527,7 @@ class ConfDistPlot():
                 writer.write('%sAvg%s' % (title,residue_replacements[self.residue_xproperty]))
                 writer.write('\t')
                 writer.write('%sDev%s' % (title,residue_replacements[self.residue_xproperty]))
-            
+
         #output the generic titles for y res
         for title in STATS_FIELDS:
             if title in field_replacements:
@@ -542,10 +566,7 @@ class ConfDistPlot():
             for fieldStat in STATS_FIELDS_STRINGS:
                 writer.write('\t')
                 val = bin[fieldStat] if fieldStat in bin else 0
-                precision = 3 if fieldStat[3:5] in ('L1','L2','L3','L4','L5') else 1
-                writer.write(round(val if val else 0, precision))
-                
-            
+                writer.write(val if val else 0)
 
 
 # ******************************************************
