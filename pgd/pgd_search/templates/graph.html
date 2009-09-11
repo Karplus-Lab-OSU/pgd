@@ -252,8 +252,6 @@
             var stat_field = false;
 
             $(document).ready(function(){
-                //console.log($.browser);
-
                 $('div#binDetails').hide();
                 $('#canvas_container').qtip({
                         position:{
@@ -319,17 +317,17 @@
                         });
                 });
 
-		if ($('#id_attribute :selected').text()=='Observations') {
+            if ($('#id_attribute :selected').text()=='Observations') {
                             $('#residue_attribute').css({'visibility': 'hidden'})
-                    	}
+                        }
                 $('#id_attribute').change(function (){
-			if ($('#id_attribute :selected').text()=='Observations') {
+            if ($('#id_attribute :selected').text()=='Observations') {
                             $('#residue_attribute').css({'visibility': 'hidden'})
-                    	}else{
+                        }else{
                             $('#residue_attribute').css({'visibility': 'visible'})
-                    	}
-                })                
-                
+                        }
+                })
+
                 $('#extra').hide()
                 $('#extra_toggle').click(function(){
                     $('#extra').toggle();
@@ -338,8 +336,8 @@
                     }else{
                         $(this).html('Extra Options &gt;&gt;');
                     }
-                })                
-                
+                })
+
                 $('#advanced').hide()
                 $('#advanced_toggle').click(function(){
                     $('#advanced').toggle();
@@ -350,7 +348,28 @@
                     }
                 })
 
+
+                // Explicitly select x and y defaults.  the stylish select
+                // does not work when the select box contains a special character
+                // it will instead select the first item in the list
+                $('#id_xProperty option').each(function() {
+                    if (this.value == 'phi') {
+                        this.selected = true;
+                    } else {
+                        this.selected = false;
+                    }
+                });
+
+                $(' #id_yProperty option').each(function() {
+                    if (this.value == 'psi') {
+                        this.selected = true;
+                    } else {
+                        this.selected = false;
+                    }
+                });
+
                 update_svg();
+
             });
 
             var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
