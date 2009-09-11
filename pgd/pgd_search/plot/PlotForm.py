@@ -17,11 +17,11 @@ ATTRIBUTE_CHOICES = [
                     ("a5",u'C<sup>&alpha;</sup>CO'),
                     ("a6",u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
                     ("a7",u'OCN<sup>+1</sup>'),
-                    ("ome",u'ome'),
-                    ("chi",u'chi'),
-                    ("phi",u'phi'),
-                    ("psi",u'psi'),
-                    ('zeta',u'zeta'),
+                    ("ome",u'&omega;'),
+                    ("chi",u'&chi;'),
+                    ("phi",u'&phi;'),
+                    ("psi",u'&psi;'),
+                    ('zeta',u'&zeta;'),
                     #('h_bond_energy','H Bond'),
                     ]
 
@@ -39,11 +39,11 @@ PROPERTY_CHOICES = [
                     ("a5",u'C<sup>&alpha;</sup>CO'),
                     ("a6",u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
                     ("a7",u'OCN<sup>+1</sup>'),
-                    ("ome",u'ome'),
-                    ("chi",u'chi'),
-                    ("phi",u'phi'),
-                    ("psi",u'psi'),
-                    ('zeta',u'zeta'),
+                    ("ome",u'&omega;'),
+                    ("chi",u'&chi;'),
+                    ("phi",u'&phi;'),
+                    ("psi",u'&psi;'),
+                    ('zeta',u'&zeta;'),
                     #('h_bond_energy','H Bond'),
                     ]
 
