@@ -3,7 +3,6 @@
 # This file is also used to provide a reliable view deployment for test purposes.
 
 from django.conf.urls.defaults import *
-from django.views.generic.simple import direct_to_template
 from registration_local import views as auth_views
 from registration_local.views import *
 
@@ -54,7 +53,6 @@ urlpatterns = patterns('',
                            register,
                            name='registration_register'),
                        url(r'^register/complete/$',
-                           direct_to_template,
-                           {'template': 'registration/registration_complete.html'},
+                           registration_complete,
                            name='registration_complete'),
                        )
