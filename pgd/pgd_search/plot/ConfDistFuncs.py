@@ -295,7 +295,7 @@ class ConfDistPlot():
                 for field in self.stats_fields:
                     if field[0] in ANGLES:
                         if avg:
-                            torsion_avgs[field[0]]['%s%s' % (x,y)] = bin[avg]
+                            torsion_avgs[field[0]]["'%s:%s'" % (x,y)] = bin[avg]
 
             else:
                 # no need for calculation, stddev infered from bincount
@@ -320,7 +320,7 @@ class ConfDistPlot():
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) if v else '' for k,v in torsion_avgs[field[0]].items()])
-                avgs = 'CASE CONCAT(FLOOR(%s/10.0),FLOOR(%s/10.0)) %s END' % (self.xTextString, self.yTextString, cases)
+                avgs = "CASE CONCAT(FLOOR(%s/10.0),':',FLOOR(%s/10.0)) %s END" % (self.xTextString, self.yTextString, cases)
                 annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
                 bin_where_clause = ['NOT %s IS NULL' % field[1]]
                 stddev_query = self.querySet \

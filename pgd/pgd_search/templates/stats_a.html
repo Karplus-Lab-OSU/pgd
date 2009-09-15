@@ -1,0 +1,379 @@
+{% extends 'search_base.html' %}
+{% load search_extras %}
+{% block head %}
+    <style>
+        #content {
+            
+        }
+
+        table {
+            border-collapse:collapse;
+            border-spacing:0px;
+            margin:20px;
+        }
+
+        td {
+            border-right:1px dotted #888888;
+            border-top:1px dotted #888888;
+            color:black;
+            padding-right: 5px;
+            padding-left:5px;
+            text-align:center;
+        }
+
+
+        th {
+            color:black;
+            margin: 0px;
+            padding:5px;
+            border-bottom: 1px solid black;
+            border-right:1px dotted black;
+            border-top: 1px solid black;
+            background-color:#ffe680;
+            line-height:3em;
+            text-align:center;
+        }
+
+        tr {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        tr.row-b {
+            background-color:#f0f7ff;
+        }
+
+        tr.selected, td.col_selected {
+            color:black;
+            background-color:#9adaff;
+        }
+
+        th.col_selected {
+            background-color:#fff1ba;
+        }
+
+        td.selected {
+            background-color:#3a76f1;
+            color:white;
+        }
+
+        .section {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            border-top: 1px solid black;
+            font-weight:bold;
+        }
+
+        #stats.fieldsDetail {
+            position: absolute;
+            border: 1px solid black;
+            width:20em;
+            height:4em;
+            background-color:white;
+            padding:10px;
+        }
+
+        span.label {
+            font-weight:bold;
+            float:left;
+            width:10em;
+            text-align:right;
+            margin-right:1em;
+        }
+
+        #stdev {
+            text-align:left;
+        }
+
+        #min {
+            margin-right:1em;
+        }
+
+        #range {
+            text-align:left;
+        }
+
+        .L5, .ome, .peptide, .aa_total {
+            border-right:1px solid black;
+        } 
+        .L1, .ome, .na, .peptide, .aa_total{
+            border-left:1px solid black;
+        }
+
+        tr.total{
+            border-bottom:1px solid black;
+            border-top:1px solid black;
+        }
+
+        tr.total td {
+            font-weight:bold;
+        }
+
+        td.sum, td.total {
+            text-align:right;
+        }
+
+        #stats.fields {
+            /* Reset alignment to compensate for 'text-align:center': */
+            text-align: left;
+            /* Specify the width of the element. This should be the same
+                as 'body min-width': */
+            width: 500px;
+            /* Set left and right margins to auto, thus centering the 
+                element in the containing (body) tag: */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        div#stats_fieldsDetail { display:none; }
+
+    </style>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+    <script type="text/javascript">
+        var col = '';
+        var contentText= 'Mouse over a table cell for more information about it.';
+
+        $(document).ready(function() {
+            $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
+
+            $('#content').qtip({
+                position:{
+                    adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                            resize: true
+                            },
+                    corner: {
+                            target: 'leftTop',
+                            tooltip: 'rightTop'
+                            },
+                    target:$('th.peptide')
+                         },
+                style:{ //Style the qtip to look like the page
+                      color: 'black',
+                      textAlign: 'center',
+                      title: { color: 'white', background: '#666666'},
+                      width: { min: 300, max: 330 },
+                      border:{ 
+                             width: 6, 
+                             color: '#909090'
+                             }
+                       },
+                show: false,
+                hide: false,
+                content:{
+                        prerender: false,//This kills pageload times if enabled
+                        text: contentText,
+                        title:  {
+                                text: 'Additional Data'
+                                }
+                        }
+                    }); 
+            $('#content').qtip('show');
+
+            $('.stats.fields').mouseout( function() {$('#stats.fieldsDetail').hide();})
+
+            $('tr.data')
+                .mouseover(function() {
+                    $(this).addClass('selected');
+                })
+                .mouseout(function(){
+                    $(this).removeClass('selected');
+                })
+
+            $('td.data')
+                .mouseover(function() {
+                    id = this.id;
+                    col = id.replace(/^(data_)[\w]{3,5}_/, '.');
+                    $(col).addClass('col_selected');
+                    $(this).addClass('selected');
+                })
+                .mouseout(function(){
+                    $(col).removeClass('col_selected');
+                    $(this).removeClass('selected');
+                })
+
+
+        });
+
+        var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var angles = [{% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var details = {};
+
+        /* converts a field to the required precision */
+        function precision(value, field) {
+            if (value || value == 0){
+                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5') {
+                    return value.toFixed(3);
+                }
+                return value.toFixed(1);
+            }
+            return '--';
+        }
+
+
+        /* processes data incoming from ajax request */
+        function process_data(data) {
+            // replace details with completely new list since the new one may
+            // not have all rows/columns in it.
+            details = {};
+
+            iIndex = data['index'];
+            /* regular fields */
+            for (i in data['aa_totals']){
+                aa = data['aa_totals'][i]['r'+iIndex+'_aa'];
+                $row = $('tr.'+aa);
+
+                $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
+
+                for (f in fields) {
+                    field = fields[f];
+                    avg = precision(data['fields'][i]['avg_'+field], field);
+                    stddev = precision(data['fields'][i]['stddev_'+field], field);
+                    min = precision(data['fields'][i]['min_'+field], field);
+                    max = precision(data['fields'][i]['max_'+field], field);
+
+                    $row.children('td.'+field).html(avg);
+
+                    details[aa+'_'+field] = [stddev, min, max];
+                }
+
+                for (f in angles) {
+                    field = angles[f];
+                    wtf = data['angles_stddev'];
+
+                    avg = precision(data['angles'][i]['avg_'+field], field);
+                    min = precision(data['angles'][i]['min_'+field], field);
+                    max = precision(data['angles'][i]['max_'+field], field);
+                    stddev = precision(data['angles_stddev'][i][0]['stddev_'+field], field);
+
+                    $row.children('.'+field).html(avg);
+                    details[aa+'_'+field] = [stddev, min, max];
+                }
+            }
+
+            for (i in data['ss_counts']){
+                row = data['ss_counts'][i];
+                aa = row['r'+iIndex+'_aa'];
+                ss = row['r'+iIndex+'_ss'];
+                $td = $('tr.'+aa).children('.sum.'+ss)
+                $td.html(row['ss_count']);
+            }
+
+
+            $row = $('tr.total');
+            for (f in fields) {
+                field = fields[f];
+                avg = precision(data['fields_totals']['avg_'+field], field);
+                stddev = precision(data['fields_totals']['stddev_'+field], field);
+                min = precision(data['fields_totals']['min_'+field], field);
+                max = precision(data['fields_totals']['max_'+field], field);
+
+                $row.children('td.'+field).html(avg);
+                details['total_'+field] = [stddev, min, max];
+            }
+
+            for (i in data['ss_totals']) {
+                row = data['ss_totals'][i];
+                ss = row['r'+iIndex+'_ss'];
+                $row.children('.sum.'+ss).html(row['ss_count']);
+            }
+
+            for (f in angles) {
+                field = angles[f];
+                avg = precision(data['angles_totals']['avg_'+field], field);
+                min = precision(data['angles_totals']['min_'+field], field);
+                max = precision(data['angles_totals']['max_'+field], field);
+                stddev = precision(data['angles_stddev_totals']['stddev_'+field], field);
+                $row.children('.'+field).html(avg);
+                details['total_'+field] = [stddev, min, max];
+            }
+
+            $row.children('.aa_total').html(data['total']);
+
+        }
+
+        function showStats(key) {
+            details_ = details[key];
+            if (details_ != undefined) {
+
+                stddev = details_[0];
+                min = details_[1];
+                max = details_[2];
+
+                $('#stdev').html(stddev);
+                $('#min').html(min);
+                $('#max').html(max);
+                contentText=$('div#stats_fieldsDetail').html();
+                $('div.qtip').qtip('api').updateContent(contentText);
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <table id="stats.fields" >
+        <thead>
+        <tr>
+            <th class="peptide">Type</th>
+            <th class="aa_total">Total</th>
+            <th class="sum_na sum borderleft">N/A</th>
+            {% for ss in ss_types %}
+                <th class="sum {{ss.0}}">{{ss.0}}</th>
+            {% endfor %}
+
+            {% autoescape off %}
+            {% for field in fields %}
+                <th nowrap class="avg {{field}}">{{field}}</th>
+            {% endfor %}
+            {% for field in angles %}
+                <th nowrap class="avg {{field}}">{{field}}</th>
+            {% endfor %}
+            {% endautoescape %}
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for aa in aa_types %}
+            <tr class="data {{aa.0}} {% cycle 'row-a' 'row-b' %}">
+                <td class="peptide {{aa.1}}">{{aa.1|upper}}</td>
+                <td class="borderright {{aa.1}} aa_total">-</td>
+                <td id="data_{{aa.1}}_na" class="data sum na -">-</td>
+                {% for ss in ss_types %}
+                    <td id="data_{{aa.1}}_{{ss.0}}" class="data sum {{ss.0}} {{aa.1}}">-</td>
+                {% endfor %}
+
+                {% for field in fields %}
+                     <td nowrap id="data_{{aa.1}}_{{field}}"  class="data avg {{field}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field}}')">--</td>
+                {% endfor %}
+
+                {% for field in angles %}
+                     <td nowrap id="data_{{aa.1}}_{{field}}"  class="data avg {{field}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field}}')">--</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+
+        <tr class="data total {% cycle 'row-a' 'row-b' %}">
+            <td class="peptide total">Total</td>
+            <td class="borderright total aa_total"></td>
+            <td id="data_total_sum_{{ss.0}}" class="data sum na - total">0</td>
+            {% for ss in ss_types %}
+                <td id="data_total_{{ss.0}}" class="data sum {{ss.0}} total">0</td>
+            {% endfor %}
+
+            {% for field in fields %}
+                <td nowrap id="data_total_{{field}}"  class="data avg {{field}} total" onmouseover="showStats('total_{{field}}')">--</td>
+            {% endfor %}
+
+            {% for field in angles %}
+                <td nowrap id="data_total_{{field}}"  class="data avg {{field}} total" onmouseover="showStats('total_{{field}}')">--</td>
+            {% endfor %}
+
+        </tr>
+
+      </tbody>
+    </table>
+
+    <div id="stats_fieldsDetail">
+            <span class="label">Standard Deviation:</span><div id="stdev"></div>
+            <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
+    </div>
+{% endblock %}
