@@ -93,6 +93,7 @@ class PlotForm(forms.Form):
     xProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='phi')
     yProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='psi')
     reference       = forms.FloatField(required=False, widget=forms.TextInput(attrs={'size':8}))
+    sigmaVal        = forms.FloatField(initial=3, min_value=0, required=False, widget=forms.TextInput(attrs={'size':8}))
     x               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
     x1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
     y               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
