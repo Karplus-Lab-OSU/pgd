@@ -313,3 +313,8 @@ password_change = login_required(password_change)
 
 def password_change_done(request, template_name='registration/password_change_done.html'):
     return render_to_response(template_name, context_instance=RequestContext(request,processors=[settings_processor]))
+
+def registration_complete(request, template_name='registration/registration_complete.html'):
+    return render_to_response(template_name, context_instance=RequestContext(request,processors=[settings_processor]))
+
+    
