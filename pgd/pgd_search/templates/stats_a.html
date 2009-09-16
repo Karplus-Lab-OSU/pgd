@@ -3,6 +3,7 @@
 {% block head %}
     <style>
         #content {
+            
         }
 
         table {
@@ -133,34 +134,6 @@
         var contentText= 'Mouse over a table cell for more information about it.';
 
         $(document).ready(function() {
-            $('table').qtip({
-                position:{
-                    corner: {
-                            target: 'center',
-                            tooltip: 'center'
-                            },
-                         },
-                style:{ //Style the qtip to look like the page
-                        name:'light',
-                        width:300,
-                        height:80,
-                        padding:50,
-                        textAlign: 'center',
-                        border: {
-                                radius:5,
-                                width: 5,
-                                color: '#909090'
-                                },
-                    },
-                show: false,
-                hide: false,
-                content:{
-                        prerender: false,//This kills pageload times if enabled
-                        text: '<img src="{{MEDIA_URL}}/images/ajax-loader.gif"/><br/><b>Calculating Statistics</b>',
-                        }
-                    });
-            $('table').qtip('show');
-
             $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
 
             $('#content').qtip({
@@ -270,7 +243,7 @@
                     avg = precision(data['angles'][i]['avg_'+field], field);
                     min = precision(data['angles'][i]['min_'+field], field);
                     max = precision(data['angles'][i]['max_'+field], field);
-                    stddev = precision(data['angles_stddev'][i]['stddev_'+field], field);
+                    stddev = precision(data['angles_stddev'][i][0]['stddev_'+field], field);
 
                     $row.children('.'+field).html(avg);
                     details[aa+'_'+field] = [stddev, min, max];
@@ -315,7 +288,7 @@
             }
 
             $row.children('.aa_total').html(data['total']);
-            $('table').qtip('hide');
+
         }
 
         function showStats(key) {
@@ -330,7 +303,7 @@
                 $('#min').html(min);
                 $('#max').html(max);
                 contentText=$('div#stats_fieldsDetail').html();
-                $('#content').qtip('api').updateContent(contentText);
+                $('div.qtip').qtip('api').updateContent(contentText);
             }
         }
     </script>
@@ -348,8 +321,11 @@
             {% endfor %}
 
             {% autoescape off %}
-            {% for field in stat_attributes %}
-                <th nowrap class="avg {{field.0}}">{{field.1}}</th>
+            {% for field in fields %}
+                <th nowrap class="avg {{field}}">{{field}}</th>
+            {% endfor %}
+            {% for field in angles %}
+                <th nowrap class="avg {{field}}">{{field}}</th>
             {% endfor %}
             {% endautoescape %}
         </tr>
@@ -365,10 +341,13 @@
                     <td id="data_{{aa.1}}_{{ss.0}}" class="data sum {{ss.0}} {{aa.1}}">-</td>
                 {% endfor %}
 
-                {% for field in stat_attributes %}
-                     <td nowrap id="data_{{aa.1}}_{{field.0}}"  class="data avg {{field.0}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field.0}}')">--</td>
+                {% for field in fields %}
+                     <td nowrap id="data_{{aa.1}}_{{field}}"  class="data avg {{field}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field}}')">--</td>
                 {% endfor %}
 
+                {% for field in angles %}
+                     <td nowrap id="data_{{aa.1}}_{{field}}"  class="data avg {{field}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field}}')">--</td>
+                {% endfor %}
             </tr>
         {% endfor %}
 
@@ -380,9 +359,14 @@
                 <td id="data_total_{{ss.0}}" class="data sum {{ss.0}} total">0</td>
             {% endfor %}
 
-            {% for field in stat_attributes %}
-                <td nowrap id="data_total_{{field.0}}"  class="data avg {{field.0}} total" onmouseover="showStats('total_{{field.0}}')">--</td>
+            {% for field in fields %}
+                <td nowrap id="data_total_{{field}}"  class="data avg {{field}} total" onmouseover="showStats('total_{{field}}')">--</td>
             {% endfor %}
+
+            {% for field in angles %}
+                <td nowrap id="data_total_{{field}}"  class="data avg {{field}} total" onmouseover="showStats('total_{{field}}')">--</td>
+            {% endfor %}
+
         </tr>
 
       </tbody>

@@ -88,6 +88,10 @@
                 width:6em;
             }
 
+            td.dev, td.y {
+                padding-left:20px;
+            }
+
             #binDetails table {
                 margin: 0px;
                 background-color:grey;
@@ -248,8 +252,6 @@
             var stat_field = false;
 
             $(document).ready(function(){
-                //console.log($.browser);
-
                 $('div#binDetails').hide();
                 $('#canvas_container').qtip({
                         position:{
@@ -266,7 +268,7 @@
                               color: 'black',
                               textAlign: 'center',
                               title: { color: 'white', background: '#666666'},
-                              width: { min: 200, max: 440 },
+                              width: { min: 240, max: 440 },
                               border:{ 
                                      width: 6, 
                                      color: '#909090'
@@ -315,6 +317,27 @@
                         });
                 });
 
+            if ($('#id_attribute :selected').text()=='Observations') {
+                            $('#residue_attribute').css({'visibility': 'hidden'})
+                        }
+                $('#id_attribute').change(function (){
+            if ($('#id_attribute :selected').text()=='Observations') {
+                            $('#residue_attribute').css({'visibility': 'hidden'})
+                        }else{
+                            $('#residue_attribute').css({'visibility': 'visible'})
+                        }
+                })
+
+                $('#extra').hide()
+                $('#extra_toggle').click(function(){
+                    $('#extra').toggle();
+                    if ($(this).html()=='Extra Options &gt;&gt;') {
+                        $(this).html('Extra Options &lt;&lt;');
+                    }else{
+                        $(this).html('Extra Options &gt;&gt;');
+                    }
+                })
+
                 $('#advanced').hide()
                 $('#advanced_toggle').click(function(){
                     $('#advanced').toggle();
@@ -325,7 +348,28 @@
                     }
                 })
 
+
+                // Explicitly select x and y defaults.  the stylish select
+                // does not work when the select box contains a special character
+                // it will instead select the first item in the list
+                $('#id_xProperty option').each(function() {
+                    if (this.value == 'phi') {
+                        this.selected = true;
+                    } else {
+                        this.selected = false;
+                    }
+                });
+
+                $(' #id_yProperty option').each(function() {
+                    if (this.value == 'psi') {
+                        this.selected = true;
+                    } else {
+                        this.selected = false;
+                    }
+                });
+
                 update_svg();
+
             });
 
             var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
@@ -423,8 +467,8 @@
                     stats[key] = {
                         'observations':rect[6],
                         'bin': [rect[7][0],rect[7][1]],
-                        'avg': rect[8],
-                        'dev': rect[9]
+                        'avg': rect[8].toFixed(3),
+                        'dev': rect[9].toFixed(3)
                     };
                 }
 
@@ -460,12 +504,10 @@
                 $('#stat_xattribute td.y').html(""+(field_stats['bin'][0]*{{xBin}}+{{xBin}}))
                 $('#stat_yattribute td.x').html(""+(field_stats['bin'][1]*{{yBin}}))
                 $('#stat_yattribute td.y').html(""+(field_stats['bin'][1]*{{yBin}}+{{yBin}}))
-                $('#stat_bin td.x').html(""+field_stats['bin'][0])
-                $('#stat_bin td.y').html(""+field_stats['bin'][1])
                 $('#stat_observations').html(field_stats['observations'])
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
-                
+
                 contentText=$('div#binDetails').html();
                 $('div.qtip').qtip('api').updateContent(contentText);
             }
@@ -499,15 +541,17 @@
             <tr>
                 <td class="label">Plotted Attribute</td>
                 {% autoescape off %}
-                <td>{{form.attribute}}</td>
+                <td id="attribute">{{form.attribute}}</td>
+                <td id="residue_attribute">{{form.residue_attribute}}</td>
                 {% endautoescape %}
-                <td class="label col2">Reference</td>
-                <td>{{form.reference}}</td>
+                <td class="label col2">Bin X, Y</td>
+                <td>{{form.xBin}}{{form.yBin}}</td>
             </tr>
             <tr>
                 <td class="label">X Axis</td>
                 {% autoescape off %}
                 <td>{{form.xProperty}}</td>
+                <td>{{form.residue_xproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
@@ -516,18 +560,25 @@
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
                 <td>{{form.yProperty}}</td>
+                <td>{{form.residue_yproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
                 <td>{{form.y}}{{form.y1}}</td>
             </tr>
-            <tr>
-                <td class="label">Residue</td>
-                <td>{{form.residue}}</td>
-                <td class="label col2">Bin X, Y</td>
-                <td>{{form.xBin}}{{form.yBin}}</td>
-            </tr>
-
         </tbody>
+
+                <tr class="spacer"/>
+                <tr><td id="extra_toggle" class="header" colspan="100%">Extra Options &gt;&gt;</td></tr>
+                <tbody id="extra">
+                    <tr>
+                        <td class="label col2">Reference</td>
+                        <td>{{form.reference}}</td>
+			
+			<td class="label col2">Sigma Value</td>
+                        <td>{{form.sigmaVal}}</td>
+                    </tr>
+                </tbody>
+
 
         <tr class="spacer"/>
         <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>
@@ -559,7 +610,6 @@
             <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
             <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
             <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
-            <tr id="stat_bin"><td class="label">Bin:</td><td class="x"></td><td class="y"></td></tr>
         </table>
     </div>
 {% endblock %}

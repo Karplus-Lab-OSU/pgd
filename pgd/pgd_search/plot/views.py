@@ -37,7 +37,7 @@ LABEL_REPLACEMENTS = {
 Renders a conformational distribution graph
 @return: retusns an SVG instance.
 """
-def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, residue=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
+def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, sigmaVal=3, residue_attribute=None, residue_xproperty=None, residue_yproperty=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
 
     #store functions locally for speed optimization
     local_len = len
@@ -142,29 +142,40 @@ def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd
     xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
     title_y = (x-(ratio*35))-xbearing-twidth
     svg.text(title_y,y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
+    try:
+        cdp = ConfDistPlot(
+                graph_width,    #width
+                graph_height,   #height
+                0,              #Xpadding
+                0,              #Ypadding
+                x,              #Xoffset
+                y,              #Yoffset
+                xStart,         #Xstart
+                xEnd,           #Xend
+                yStart,         #Ystart
+                yEnd,           #Yend
+                xBin,           #Xbin
+                yBin,           #Ybin
+                xProperty,      #X property
+                yProperty,      #Y property
+                attribute,      #property
+                sigmaVal,
+                residue_attribute,
+                residue_xproperty,
+                residue_yproperty,
+                request.session['search'].querySet(),
+                hue
+        )
 
-    cdp = ConfDistPlot(
-            graph_width,    #width
-            graph_height,   #height
-            0,              #Xpadding
-            0,              #Ypadding
-            x,              #Xoffset
-            y,              #Yoffset
-            xStart,         #Xstart
-            xEnd,           #Xend
-            yStart,         #Ystart
-            yEnd,           #Yend
-            xBin,           #Xbin
-            yBin,           #Ybin
-            xProperty,      #X property
-            yProperty,      #Y property
-            attribute,      #property
-            residue,        #residue Index
-            request.session['search'].querySet(),
-            hue                
-    )
+        boxes = cdp.Plot()
+    except Exception, e:
+        print 'exception', e
+        import traceback, sys
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        print "*** print_tb:"
+        traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
-    boxes = cdp.Plot()
+        raise e
     return (svg,boxes)
 
 def RGBTuple(rgbString):
@@ -220,7 +231,10 @@ def renderToPNG(request):
                         data['xProperty'],
                         data['yProperty'],
                         data['reference'],
-                        int(data['residue']),
+                        int(data['sigmaVal']),
+                        int(data['residue_attribute']),
+                        int(data['residue_xproperty']),
+                        int(data['residue_yproperty']),
                         data['xBin'],
                         data['yBin'],
                         data['background_color'],
@@ -303,7 +317,10 @@ def renderToSVG(request):
                     data['xProperty'],
                     data['yProperty'],
                     data['reference'],
-                    int(data['residue']),
+                    int(data['sigmaVal']),
+                    int(data['residue_attribute']),
+                    int(data['residue_xproperty']),
+                    int(data['residue_yproperty']),
                     data['xBin'],
                     data['yBin'],
                     data['background_color'],
@@ -356,7 +373,10 @@ def plotDump(request):
                 #data['attribute'],#property
                 'all',#property
                 #data['reference'],
-                int(data['residue']),
+                int(data['sigmaVal']),
+                int(data['residue_attribute']),
+                int(data['residue_xproperty']),
+                int(data['residue_yproperty']),
                 request.session['search'].querySet()
             )
 

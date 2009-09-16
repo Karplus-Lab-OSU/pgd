@@ -1,6 +1,6 @@
 from django import forms
 
-from pgd_search.views import RESIDUE_INDEX_START, RESIDUE_INDEX_STOP
+from pgd_search.views import RESIDUE_INDEXES
 
 #choice for occurence of property
 ATTRIBUTE_CHOICES = [
@@ -17,11 +17,11 @@ ATTRIBUTE_CHOICES = [
                     ("a5",u'C<sup>&alpha;</sup>CO'),
                     ("a6",u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
                     ("a7",u'OCN<sup>+1</sup>'),
-                    ("ome",u'ome'),
-                    ("chi",u'chi'),
-                    ("phi",u'phi'),
-                    ("psi",u'psi'),
-                    ('zeta',u'zeta'),
+                    ("ome",u'&omega;'),
+                    ("chi",u'&chi;'),
+                    ("phi",u'&phi;'),
+                    ("psi",u'&psi;'),
+                    ('zeta',u'&zeta;'),
                     #('h_bond_energy','H Bond'),
                     ]
 
@@ -39,11 +39,11 @@ PROPERTY_CHOICES = [
                     ("a5",u'C<sup>&alpha;</sup>CO'),
                     ("a6",u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
                     ("a7",u'OCN<sup>+1</sup>'),
-                    ("ome",u'ome'),
-                    ("chi",u'chi'),
-                    ("phi",u'phi'),
-                    ("psi",u'psi'),
-                    ('zeta',u'zeta'),
+                    ("ome",u'&omega;'),
+                    ("chi",u'&chi;'),
+                    ("phi",u'&phi;'),
+                    ("psi",u'&psi;'),
+                    ('zeta',u'&zeta;'),
                     #('h_bond_energy','H Bond'),
                     ]
 
@@ -93,11 +93,14 @@ class PlotForm(forms.Form):
     xProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='phi')
     yProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='psi')
     reference       = forms.FloatField(required=False, widget=forms.TextInput(attrs={'size':8}))
+    sigmaVal        = forms.FloatField(initial=3, min_value=0, required=False, widget=forms.TextInput(attrs={'size':8}))
     x               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
     x1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
     y               = forms.FloatField(initial=-180, widget=forms.TextInput(attrs={'size':4}))
     y1              = forms.FloatField(initial=180, widget=forms.TextInput(attrs={'size':4}))
-    residue         = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in range(RESIDUE_INDEX_START,RESIDUE_INDEX_STOP)], initial=0)
+    residue_attribute = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
+    residue_xproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
+    residue_yproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
     xBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
     yBin            = forms.FloatField(initial=10, widget=forms.TextInput(attrs={'size':4}))
 
