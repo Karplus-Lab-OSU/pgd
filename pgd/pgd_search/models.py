@@ -30,7 +30,7 @@ class Search(models.Model):
     A query submitted by a user
     """
     isPublic         = models.BooleanField()
-    timestamp        = models.CharField(max_length='30')
+    timestamp        = models.DateTimeField()
     title            = models.CharField(max_length='300')
     description      = models.CharField(max_length='5000')
     user             = models.ForeignKey(User, null=True)

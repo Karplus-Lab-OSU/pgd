@@ -384,7 +384,7 @@ def saveSearch(request,search_id=None):
                 request.session['search'].title = data['title']
                 request.session['search'].description = data['description']
                 request.session['search'].user=request.user
-                request.session['search'].timestamp=datetime.now().strftime("%d/%m/%y")
+                request.session['search'].timestamp=datetime.now()
                 request.session['search'].isPublic = data['isPublic']
                 request.session['search'].save()
                 return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)

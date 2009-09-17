@@ -229,7 +229,7 @@
                         <td class="title{% if forloop.last %} lastll {% endif %}"><a class="title_link" href="{{ROOT}}search/{{search.id}}/">{{search.title}}</a></td>
                         <td class="showhide"id="header_{{search.id}}">[More]</td>
                         <td class="search_id">{{search.id}}</td>
-                        <td class="timestamp">{{search.timestamp}}</td>
+                        <td class="timestamp">{{search.timestamp|date:"D, M d, Y"}}</td>
                         <td>{% if search.isPublic %} Yes: <a class="shared_link" href="{{ROOT}}search/{{ search.id }}/view/">Link to Search</a>{% else %} No {% endif %}</td>
                         <td class="edit" id="edit_{{search.id}}"><img id="edit_{{search.id}}" src="{{MEDIA_URL}}/images/edit.png"</></td>
                         <td class="delete" id="delete_{{search.id}}"><img id="delete_{{search.id}}" src="{{MEDIA_URL}}/images/delete.png"</></td>
