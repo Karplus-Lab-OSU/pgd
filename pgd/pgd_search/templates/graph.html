@@ -230,6 +230,8 @@
             var rects_y_aafix = 0;
             var is_IE = false;
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
+            var xBin = {{xBin}};
+            var yBin = {{yBin}};
 
             // IE checks - check different things not supported by IE to detect them
             if($.jqbrowser.msie()){
@@ -286,6 +288,14 @@
                             }); 
                 $('#canvas_container').qtip('show');
                 $('#button-plot').click(function (evt) {
+                    xBin = $('input#id_xBin').attr('value');
+                    yBin = $('input#id_yBin').attr('value');
+              //      xProperty = $('#id_xProperty').html();
+              //      yProperty = $('#id_yProperty').html();
+              //      $('#x_property_label').html(xProperty);
+              //      $('#y_property_label').html(yProperty);
+                    xBin=parseInt(xBin);
+                    yBin=parseInt(yBin);
                     update_svg();
                 });
 
@@ -500,11 +510,11 @@
                 field_stats = stats[val];
 
                 // set static properties
-                $('#stat_xattribute td.x').html(""+(field_stats['bin'][0]*{{xBin}}))
-                $('#stat_xattribute td.y').html(""+(field_stats['bin'][0]*{{xBin}}+{{xBin}}))
-                $('#stat_yattribute td.x').html(""+(field_stats['bin'][1]*{{yBin}}))
-                $('#stat_yattribute td.y').html(""+(field_stats['bin'][1]*{{yBin}}+{{yBin}}))
-                $('#stat_observations').html(field_stats['observations'])
+                $('#stat_xattribute td.x').html(""+(field_stats['bin'][0]*xBin));
+                $('#stat_xattribute td.y').html(""+(field_stats['bin'][0]*xBin+xBin));
+                $('#stat_yattribute td.x').html(""+(field_stats['bin'][1]*yBin));
+                $('#stat_yattribute td.y').html(""+(field_stats['bin'][1]*yBin+yBin));
+                $('#stat_observations').html(field_stats['observations']);
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
 
@@ -606,8 +616,8 @@
     </form>
     <div id="binDetails">
         <table>
-            <tr id="stat_xattribute"><td class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
-            <tr id="stat_yattribute"><td class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+            <tr id="stat_xattribute"><td id="x_property_label" class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+            <tr id="stat_yattribute"><td id="y_property_label" class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
             <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
             <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
         </table>
