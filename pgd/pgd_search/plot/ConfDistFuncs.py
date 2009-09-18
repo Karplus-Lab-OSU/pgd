@@ -62,6 +62,9 @@ def getCircularStats(values,size):
     values = filter(lambda x:x!=None, values)
     size = len(values)
 
+    if size == 1:
+        return values[0],0
+
     radAngles = [lradians(val) for val in values]
     radAvg = math.atan2(
         sum([lsin(radAngle) for radAngle in radAngles])/size,
