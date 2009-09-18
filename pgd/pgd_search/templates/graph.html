@@ -232,6 +232,8 @@
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
             var xBin = {{xBin}};
             var yBin = {{yBin}};
+            var xProperty = "{{xProperty}}";
+            var yProperty = "{{yProperty}}";
 
             // IE checks - check different things not supported by IE to detect them
             if($.jqbrowser.msie()){
@@ -288,14 +290,14 @@
                             }); 
                 $('#canvas_container').qtip('show');
                 $('#button-plot').click(function (evt) {
-                    xBin = $('input#id_xBin').attr('value');
-                    yBin = $('input#id_yBin').attr('value');
-              //      xProperty = $('#id_xProperty').html();
-              //      yProperty = $('#id_yProperty').html();
-              //      $('#x_property_label').html(xProperty);
-              //      $('#y_property_label').html(yProperty);
-                    xBin=parseInt(xBin);
-                    yBin=parseInt(yBin);
+
+                    // update details popup with new parameters
+                    xBin = parseFloat($('input#id_xBin').attr('value'));
+                    yBin = parseFloat($('input#id_yBin').attr('value'));
+                    xProperty = $('tr#xaxis div.selectedTxt').html();
+                    yProperty = $('tr#yaxis div.selectedTxt').html();
+                    $('#x_property_label').html(xProperty);
+                    $('#y_property_label').html(yProperty);
                     update_svg();
                 });
 
@@ -510,16 +512,26 @@
                 field_stats = stats[val];
 
                 // set static properties
-                $('#stat_xattribute td.x').html(""+(field_stats['bin'][0]*xBin));
-                $('#stat_xattribute td.y').html(""+(field_stats['bin'][0]*xBin+xBin));
-                $('#stat_yattribute td.x').html(""+(field_stats['bin'][1]*yBin));
-                $('#stat_yattribute td.y').html(""+(field_stats['bin'][1]*yBin+yBin));
+                $('#stat_xattribute td.x').html(""+precision(field_stats['bin'][0]*xBin, xProperty));
+                $('#stat_xattribute td.y').html(""+precision(field_stats['bin'][0]*xBin+xBin, xProperty));
+                $('#stat_yattribute td.x').html(""+precision(field_stats['bin'][1]*yBin, yProperty));
+                $('#stat_yattribute td.y').html(""+precision(field_stats['bin'][1]*yBin+yBin, yProperty));
                 $('#stat_observations').html(field_stats['observations']);
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
 
                 contentText=$('div#binDetails').html();
                 $('div.qtip').qtip('api').updateContent(contentText);
+            }
+
+            function precision(value, field) {
+                if (value || value == 0){
+                    if (field=='CO' || field=='C<sup>-1</sup>N' || field=='NC<sup>&alpha;</sup>' || field=='C<sup>&alpha;</sup>C<sup>&beta;</sup>' || field=='C<sup>&alpha;</sup>C') {
+                        return value.toFixed(3);
+                    }
+                    return value.toFixed(1);
+                }
+                return '--';
             }
 
             function bin_mouseout(){
@@ -557,7 +569,7 @@
                 <td class="label col2">Bin X, Y</td>
                 <td>{{form.xBin}}{{form.yBin}}</td>
             </tr>
-            <tr>
+            <tr id="xaxis">
                 <td class="label">X Axis</td>
                 {% autoescape off %}
                 <td>{{form.xProperty}}</td>
@@ -566,7 +578,7 @@
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
             </tr>
-            <tr>
+            <tr id="yaxis">
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
                 <td>{{form.yProperty}}</td>
@@ -583,8 +595,7 @@
                     <tr>
                         <td class="label col2">Reference</td>
                         <td>{{form.reference}}</td>
-			
-			<td class="label col2">Sigma Value</td>
+                        <td class="label col2">Sigma Value</td>
                         <td>{{form.sigmaVal}}</td>
                     </tr>
                 </tbody>
