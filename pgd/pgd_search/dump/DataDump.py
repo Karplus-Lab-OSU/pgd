@@ -33,10 +33,34 @@ FIELD_LABEL_REPLACEMENTS = {
     'a4':u'CB-CA-C',
     'a5':u'CA-C-O',
     'a6':u'CA-C-N(+1)',
-    'a7':u'O-C-N(+1)'
+    'a7':u'O-C-N(+1)',
+    'a1_include':u'C(-1)-N-CA include',
+    'a2_include':u'N-CA-CB include',
+    'a3_include':u'N-CA-C include',
+    'a4_include':u'CB-CA-C include',
+    'a5_include':u'CA-C-O include',
+    'a6_include':u'CA-C-N(+1) include',
+    'a7_include':u'O-C-N(+1) include',
+    'L1_include':u'C(-1)N include',
+    'L2_include':u'N-CA include',
+    'L3_include':u'CA-CB include',
+    'L4_include':u'CA-C include',
+    'L5_include':'C-O include',
+    'phi_include':'phi include',
+    'ome_include':'ome include',
+    'chi_include':'chi include',
+    'bm_include':'bm include',
+    'bs_include':'bs include',
+    'bg_include':'bg include',
+    'h_bond_energy_include':'H bond energy include',
+    'zeta_include':'zeta include'
     }
 FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
-
+RESIDUE_FIELDS =    ['index','chainID','a1','a1_include','a2','a2_include','a3','a3_include','a4','a4_include','a5','a5_include','a6','a6_include','a7',
+                    'a7_include','L1','L1_include','L2','L2_include','L3','L3_include','L4','L4_include','L5','L5_include','ss','phi', 'psi','phi_include', 'ome',
+                    'ome_include','chi','chi_include', 'bm','bm_include','bs','bs_include','bg','bg_include', 'h_bond_energy','h_bond_energy_include', 'zeta','zeta_include']
+SS_KEY_LIST = ['&alpha; helix','3<sub>10</sub> helix','&beta; sheet','Turn','Bend','&beta;-bridge','&pi; helix']
+SS_HEADER = [u'Alpha Helix',u'3_10 Helix',u'Beta Sheet',u'Turn',u'Bend','Beta-Bridge','Pi Helix']
 
 class BufferThread(Thread):
     """
@@ -73,6 +97,8 @@ class BufferThread(Thread):
                     segment.chainID,
                 ]
 
+                #print segment.__dict__.keys()
+
                 #field values
                 for field in FIELDS:
                     # replace field with display value if needed
@@ -84,6 +110,7 @@ class BufferThread(Thread):
                                     parts.append(str(v))
                     # just write value
                     else:
+                        #print 'Current field:\t' + field + '\n' + 'Looking for:\tr%i_%s as the key' % (iIndex+offset, field)
                         parts.append(str(segment.__dict__['r%i_%s' % (iIndex+offset, field)]))
 
                 s = '\t'.join(parts)
@@ -123,12 +150,13 @@ class Dump():
         self.buffer = []
         self.buffer_thread = None
         self.buffer_lock = Lock()
-
+        self.search = search
         self.pages = Paginator(search.querySet(), self.buffer_increment)
         self.page_max = self.pages.page_range[-1]
         self.current_page = 1
         self.count = 0
         self.nEOF = True
+        self.create_meta_data(search)
         self.create_header()
 
         #calculate list of iValues
@@ -146,6 +174,41 @@ class Dump():
         self.iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
 
 
+    def create_meta_data(self,search):
+        """Prints out all of the relevent data about how the search was 
+        conducted."""
+
+        #The first run sets up the headers
+        parts = ['Dataset Date']
+        
+        for header in RESIDUE_FIELDS:
+            if header in FIELD_LABEL_REPLACEMENTS:
+                parts.append(str(FIELD_LABEL_REPLACEMENTS[header]))
+            else:
+                if header is 'ss':
+                    parts+=SS_HEADER
+                else:
+                    parts.append(header)
+        string = '%s\n' % '\t'.join(parts)
+        self.buffer.append(string)
+        parts = []
+        #The rest of the loops are to fill in the data
+        search_fields = search.residues.all()
+        for residue in search_fields:
+            parts.append(str(search.dataset_version))
+            for key in RESIDUE_FIELDS:
+                if key is 'ss':
+                    ss = residue.__dict__[key]
+                    for ss_key in SS_KEY_LIST:
+                        parts.append(str(ss[ss_key]))
+                else:
+                    print key,residue.__dict__[key]
+                    parts.append(str(residue.__dict__[key]))
+                if key is 'zeta_include':#If we're on the last key, time to make a new line
+                    string = '%s\n' % '\t'.join(parts)
+                    self.buffer.append(string)
+                    parts = []
+                    
     def create_header(self):
         """
         Creates the header for the dump.  This must happen before any calls to
@@ -163,6 +226,7 @@ class Dump():
                 parts.append(field)
 
         string = '%s\n' % '\t'.join(parts)
+        #print 'Here\'s the string!: '+string
         self.buffer.append(string)
 
 
