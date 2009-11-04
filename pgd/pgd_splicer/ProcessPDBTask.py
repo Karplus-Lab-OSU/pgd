@@ -27,7 +27,7 @@ import Bio.PDB
 from Bio.PDB import calc_angle as pdb_calc_angle
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
-from pydra_server.cluster.tasks import Task
+from pydra.cluster.tasks.tasks import Task
 
 from pgd_core.models import Protein as ProteinModel
 from pgd_core.models import Chain as ChainModel
@@ -587,11 +587,11 @@ if __name__ == '__main__':
     """
     Run if file is executed from the command line
     """
-    from pydra_server.cluster.worker_proxy import WorkerProxy
+    #from pydra.cluster.worker import WorkerProxy
     import sys
 
     task = ProcessPDBTask()
-    task.parent = WorkerProxy()
+    #task.parent = WorkerProxy()
 
     pdbs = {}
     argv = sys.argv
