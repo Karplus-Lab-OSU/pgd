@@ -14,6 +14,8 @@ from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import saveSearchForm
 
+#This might be a big faux pas
+from pgd_splicer.models import pdb_select_settings
 
 """
 Handler for search form.
@@ -36,6 +38,7 @@ def search(request):
 
             else:
                 #store search in session
+                search.dataset_version = pdb_select_settings.DATA_VERSION
                 request.session['search'] = search
 
                 return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
