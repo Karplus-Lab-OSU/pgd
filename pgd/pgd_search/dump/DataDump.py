@@ -175,14 +175,11 @@ class Dump():
 
 
     def create_meta_data(self,search):
-        """Adds all of the relevent data about how the search was 
-        conducted."""
+        """Adds all of the relevent data about how the search was conducted."""
         self.buffer.append("***BEGIN_META_DATA***\n")
-        #line_counter = -1
         #The first run sets up the headers
         parts = ['Dataset Date']
         for header in RESIDUE_FIELDS:
-            #line_counter = line_counter + 1
             if header in FIELD_LABEL_REPLACEMENTS:
                 parts.append(str(FIELD_LABEL_REPLACEMENTS[header]))
             else:
@@ -190,31 +187,24 @@ class Dump():
                     parts+=SS_HEADER
                 else:
                     parts.append(header)
-        #print line_counter
-        #line_counter = -1
         string = '%s\n' % '\t'.join(parts)
-        #print string
         self.buffer.append(string)
         parts = []
-        #The rest of the loops are to fill in the data
+        #The rest of the loops fill in the data
         search_fields = search.residues.all()
         for residue in search_fields:
-            #line_counter = -1
             parts.append(str(search.dataset_version))
             for key in RESIDUE_FIELDS:
-                #line_counter = line_counter + 1
                 if key is 'ss':
                     ss = residue.__dict__[key]
                     for ss_key in SS_KEY_LIST:
                         parts.append(str(ss[ss_key]))
                 else:
-                    #print key,residue.__dict__[key]
                     parts.append(str(residue.__dict__[key]))
-                if key is 'zeta_include':#If we're on the last key, time to make a new line
-                    string = '%s\n' % '\t'.join(parts)
-                    self.buffer.append(string)
-                    parts = []
-                    #print line_counter
+            #At the end of a row, so join string and add newline
+            string = '%s\n' % '\t'.join(parts)
+            self.buffer.append(string)
+            parts = []
         self.buffer.append("***END_META_DATA***\n")
     def create_header(self):
         """
