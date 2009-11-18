@@ -96,9 +96,6 @@ class BufferThread(Thread):
                     segment.__dict__['r%i_oldID' % (self.parent.iIndex+offset) ],
                     segment.chainID,
                 ]
-
-                #print segment.__dict__.keys()
-
                 #field values
                 for field in FIELDS:
                     # replace field with display value if needed
@@ -110,7 +107,6 @@ class BufferThread(Thread):
                                     parts.append(str(v))
                     # just write value
                     else:
-                        #print 'Current field:\t' + field + '\n' + 'Looking for:\tr%i_%s as the key' % (iIndex+offset, field)
                         parts.append(str(segment.__dict__['r%i_%s' % (iIndex+offset, field)]))
 
                 s = '\t'.join(parts)
@@ -176,6 +172,7 @@ class Dump():
 
     def create_meta_data(self,search):
         """Adds all of the relevent data about how the search was conducted."""
+        #Add meta data begin tag to make parsing dumped searches easier
         self.buffer.append("***BEGIN_META_DATA***\n")
         #The first run sets up the headers
         parts = ['Dataset Date']
