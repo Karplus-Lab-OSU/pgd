@@ -170,7 +170,7 @@ class DunbrackPDBSelectorTask(Task):
                                 'chains':[groups[1]],
                                 'resolution':groups[4],
                                 'rfactor':groups[5],
-                                'rfreevalue':groups[6],
+                                'rfree':groups[6],
                                 'threshold':threshold
                             }
 
