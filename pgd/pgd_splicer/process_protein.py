@@ -53,7 +53,7 @@ class ParallelProteinImportTask(ParallelTask):
         """
         if kwargs and kwargs.has_key('data'):
             _data = kwargs['data']
-            batch_size = int(kwargs['batch_size'])
+            batch_size = int(kwargs['batch_size']) if kwargs.has_key('batch_size') else 50
             self.version = kwargs['version']
 
             logger.debug('ParallelProteinImportTask - repackaging work into batches of %s' % batch_size)
