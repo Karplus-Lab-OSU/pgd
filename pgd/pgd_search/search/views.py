@@ -67,7 +67,7 @@ def search(request):
     residueFields = []
     for i in RESIDUE_INDEXES:
         dict = {}
-        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i

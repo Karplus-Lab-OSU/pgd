@@ -209,7 +209,6 @@ class ProcessPDBTask(Task):
                     #     property keys should match property name in object
                     for key, value in residue_props.items():
                         residue.__dict__[key] = value
-
                     # 4c) save
                     residue.save()
                     chain.residues.add(residue)
@@ -373,8 +372,11 @@ def parseWithBioPython(file, props, chains_filter=None):
                         """
                         chain = res.get_parent().get_id()
                         try:
-                            residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, (hetflag, res_id, icode))]
+                            residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, (hetflag, res_id, icode)) ]
                         except KeyError, e:
+                            import sys, traceback
+                            t, v, tb = sys.exc_info()
+                            traceback.print_tb(tb, limit=10, file=sys.stdout)
                             raise InvalidResidueException('KeyError in DSSP')
 
                         res_dict['chain_id'] = chain
@@ -478,8 +480,8 @@ def parseWithBioPython(file, props, chains_filter=None):
                         chi mappings.
                         """
                         calc_chi(res, res_dict)
-                        if res_dict['chi1']:
-                            res_dict['chi'] = res_dict['chi1']
+                     #   if res_dict['chi1']:
+                     #       res_dict['chi'] = res_dict['chi1']
 
 
                         """
@@ -605,7 +607,7 @@ if __name__ == '__main__':
                       'rfree':float(argv[i+4])
                       })
         except IndexError:
-            print 'Usage: process_protein.py code threshold resolution rfactor ...'
+            print 'Usage: process_protein.py code threshold resolution rfactor rfree...'
             sys.exit(0)
 
     print pdbs
