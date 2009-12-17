@@ -475,7 +475,6 @@
 
             }
             $(document).ready(function() {
-                //$("#example").slider({change:sizeChange, min:1, max: {{maxLength}}, stepping:1});	
                 $('#helpPage').hide();	
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
@@ -502,7 +501,7 @@
 
 
                 $('#protein #id_proteins')
-                     .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
+                    .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
                     .keyup(function(evt){
                             updateInclusionField(evt.target, false);
                         })
@@ -545,6 +544,18 @@
 
                 $('tr.peptide_row .multiselect, tr.conf_row .multiselect').updateInclusionSelect();
 
+
+                $('#chi_header').click(function(evt){
+                    $('tr.chi_row').toggle();
+
+                    var header = document.getElementById('chi_header');
+                    if (header.innerHTML == 'Chi Angles →'){
+                        header.innerHTML = 'Chi Angles ↓';
+                    } else {
+                        header.innerHTML = 'Chi Angles →';
+                    }
+                });
+                $('tr.chi_row').toggle();
 
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
@@ -899,6 +910,45 @@
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                     <span class="toggle">&nbsp;</span>{{r.L5}}{{r.L5_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="chi_header">Chi Angles →</td></tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>1</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi1}}{{r.chi1_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>2</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi2}}{{r.chi2_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>3</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi3}}{{r.chi3_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>4</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi4}}{{r.chi4_i}}
                 </td>
                 {% endfor %}
             </tr>
