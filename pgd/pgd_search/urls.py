@@ -1,5 +1,5 @@
 from django.conf.urls.defaults import *
-from pgd_search.search.views import search, saved, editSearch, help, qtiphelp, saveSearch, deleteSearch, protein_search
+from pgd_search.search.views import search, saved, editSearch, help, qtiphelp, saveSearch, deleteSearch, protein_search, chi_help
 from pgd_search.plot.views import renderToSVG, renderToPNG, plotDump, plot
 from pgd_search.statistics.views import search_statistics, search_statistics_data
 from pgd_search.dump.views import dataDump
@@ -19,6 +19,7 @@ urlpatterns = patterns('',
     (r'^browse/$', browse),
     (r'^saved/$', saved),
     (r'^help/$', help),
+    (r'^chi_help/$', chi_help),
     (r'^qtiphelp/$', qtiphelp),
    
     #old style, for compatibility in the case of forgotton/overlooked links

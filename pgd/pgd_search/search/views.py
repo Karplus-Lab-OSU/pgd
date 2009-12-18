@@ -13,6 +13,7 @@ from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import saveSearchForm
+from pgd_splicer.chi import CHI_MAP, PROTEIN_ORDER
 
 #This might be a big faux pas
 from pgd_splicer.models import pdb_select_settings
@@ -360,6 +361,9 @@ def saved(request):
 
 def help(request):
     return render_to_response('help.html', context_instance=RequestContext(request,processors=[settings_processor]))
+
+def chi_help(request):
+    return render_to_response('chi_help.html', context_instance=RequestContext(request,CHI_MAP,PROTEIN_ORDER,processors=[settings_processor]))
 
 def qtiphelp(request):
     return render_to_response('qtiphelp.html')

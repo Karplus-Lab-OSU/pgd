@@ -1,6 +1,9 @@
 """
 Dictionary used to map peptides to the list of atoms used to make up its chi's
 """
+
+PROTEIN_ORDER = ['VAL','LEU','ILE','PRO','PHE','TYR','TRP','MET','CYS','SER','THR','ASP','GLU','HIS','LYS','ARG','ASN','GLN']
+
 CHI_MAP = {
     'VAL':(('N', 'CA', 'CB', 'CG1'),),
     'LEU':(

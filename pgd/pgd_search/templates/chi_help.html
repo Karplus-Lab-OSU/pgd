@@ -1,0 +1,86 @@
+{% extends 'search_base.html' %}
+
+{% block head %}
+    <style>
+        #content {
+            width:700px;
+        }
+
+        #table_of_contents {
+             margin-bottom: 30px;
+             padding-left:30px;
+        }
+
+        #table_of_contents li a {
+            color: #000;
+        }
+
+        .section {
+            border-bottom: 2px solid gray;
+            margin-bottom: 50px;
+        }
+
+        .section a {
+            border-bottom:1px blue dotted;
+            text-decoration:none;
+        }
+
+        .section a:hover {
+            border-bottom:1px blue solid;
+            color:#1854d0;
+        }
+
+        .section h2 {
+            border-bottom: 2px solid gray;
+            font-size:25px;
+            margin-bottom:10px;
+        }
+
+        .section h2 a, .section h2 a:hover{
+            border: 0;
+            color:#1854d0;
+            font-size:25px;
+            text-decoration:none;
+        }
+
+        .subsection h3 {
+            border:0;
+            color:#1854d0;
+            font-size:16px;
+            margin-top:20px;
+        }
+
+        .section p {
+            margin-bottom:20px;
+        }
+
+        .section ul li{
+            margin-bottom:10px;
+            margin-left: 40px;
+        }
+
+        a.top {
+            border:0;
+            color:#000;
+            font-style:italic;
+            margin-top:10px;
+        }
+
+
+
+        a.top:hover {
+            border:0;
+            color:#1854d0;
+            font-style:italic;
+            margin-top:10px;
+        }
+
+    </style>
+{% endblock %}
+
+{% block content %}
+<p>This is the help for &chi;</p>
+{% for protein in PROTEIN_ORDER %}
+<p>protein</p>
+{% endfor %}
+{% endblock content %}
