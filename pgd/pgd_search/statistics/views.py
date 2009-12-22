@@ -225,16 +225,14 @@ def calculate_statistics_a(queryset, iIndex=0):
     ss_totals_thread.join()
     aa_totals_thread.join()
 
-    angles_stats = dsq_thread.results
+    field_stats = dsq_thread.results
     ss_counts = ss_counts_thread.results
     ss_totals = ss_totals_thread.results
     aa_totals = aa_totals_thread.results
 
     stats = {
-        'index':4,
-        'fields': angles_stats,                       # list of dictionaries, list by aa
-        'angles_totals':[],         # dictionary of agg per field
-        'angles_stddev_totals':[], # dictionary of agg per field
+        'index':iIndex,
+        'fields': field_stats,                       # list of dictionaries, list by aa
         'aa_totals':aa_totals,
         'ss_counts':ss_counts,                       # list of dictionaries, list by AA/SS
         'ss_totals':ss_totals,                        # list of dictionaries,  list by SS
