@@ -38,7 +38,16 @@ from pgd_splicer.chi import CHI_MAP
 #import logging
 #logger = logging.getLogger('root')
 
-NO_VALUE = 999.9
+
+def NO_VALUE(field):
+    """
+    Helper function for determining the value to use when the field is an
+    invalid value.
+    """
+    if field in ('bm','bg','bs'):
+        return 0
+    else:
+        return None
 
 AA3to1 =  {
     'ALA' : 'a',
@@ -378,7 +387,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                         initialize_geometry(res_dict, angles_list, 'angle')
                         initialize_geometry(res_dict, dihedral_list, 'angle')
 
-
                         """
                         Get Properties from DSSP and other per residue properties
                         """
@@ -538,9 +546,9 @@ def initialize_geometry(residue, geometry_list, type):
     for item in geometry_list:
         if not residue.has_key(item) or residue[item] is None:
             if type == 'angle':
-                residue[item] = math.degrees(math.radians(NO_VALUE))
+                residue[item] = NO_VALUE(item)
             elif type == 'length':
-                residue[item] = NO_VALUE
+                residue[item] = NO_VALUE(item)
             else:
                 print "Don't know how to deal with type", type
 
