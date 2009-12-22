@@ -65,6 +65,7 @@ class SegmentBuilderTask(Task):
             newer than the segments pdb_date.  This prevents processing of
             Proteins that are up to date.
             """
+            self.proteinCount += 1
             try:
                 segmented_protein = SegmentedProtein.objects.get(code=protein.code)
                 if segmented_protein.pdb_date >= protein.pdb_date:
@@ -75,7 +76,6 @@ class SegmentBuilderTask(Task):
                 # if segmented protein object does not exist then this is a
                 # newly segmented protein
                 segmented_protein = None
-
             self.segment_protein(protein, segmented_protein, length, existingSegments, lastIndex, lastIndexOffset)
 
     @transaction.commit_manually
@@ -85,7 +85,6 @@ class SegmentBuilderTask(Task):
         loop so that each protein is contained in its own transaction
         """
 
-        self.proteinCount += 1
         print 'protein (%d/%d) : %s' % (self.proteinCount, self.proteinTotal, protein.code)
 
         chains = protein.chains.all()
