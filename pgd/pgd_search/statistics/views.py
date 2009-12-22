@@ -227,8 +227,8 @@ def calculate_statistics_a(queryset, iIndex=0):
 
     angles_stats = dsq_thread.results
     ss_counts = ss_counts_thread.results
-    ss_totals = ss_counts_thread.results
-    aa_totals = ss_counts_thread.results
+    ss_totals = ss_totals_thread.results
+    aa_totals = aa_totals_thread.results
 
     stats = {
         'index':4,

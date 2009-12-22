@@ -31,7 +31,7 @@ class DirectionalStatisticsQuery():
             outer_parts.append('MAX(%s)' % field)
             outer_parts.append('avg_%s' % field)
             outer_parts.append(
-                'SQRT(IF (((%(field)s+360)%%%%360 - avgs.avg_%(field)s) < 180,SUM(POW((%(field)s+360)%%%%360-avgs.avg_%(field)s, 2)),SUM(POW(360-((%(field)s+360)%%%%360-avgs.avg_%(field)s),2)))/(COUNT(%(field)s)-1))AS stddev_%(field)s' % {'field':field}
+                'SQRT(IF (((%(field)s+360)%%360 - avgs.avg_%(field)s) < 180,SUM(POW((%(field)s+360)%%360-avgs.avg_%(field)s, 2)),SUM(POW(360-((%(field)s+360)%%360-avgs.avg_%(field)s),2)))/(COUNT(%(field)s)-1))AS stddev_%(field)s' % {'field':field}
             )
 
         for f in self.indexed_fields:
@@ -50,7 +50,7 @@ class DirectionalStatisticsQuery():
             'outer': outer
         }
 
-        return 'SELECT pgd_search_segment.%(aa_field)s, %(outer)s FROM (%(base)s) AS pgd_search_segment,(SELECT  %(aa_field)s, %(inner)s FROM (%(base)s) AS pgd_search_segment GROUP BY %(aa_field)s) AS avgs WHERE pgd_search_segment.%(aa_field)s = avgs.%(aa_field)s GROUP BY pgd_search_segment.%(aa_field)s' % params
+        return 'SELECT pgd_search_segment.%(aa_field)s, %(outer)s FROM (%(base)s) AS pgd_search_segment,(SELECT  %(aa_field)s, %(inner)s FROM (%(base)s) AS pgd_search_segment GROUP BY %(aa_field)s) AS avgs WHERE pgd_search_segment.%(aa_field)s = avgs.%(aa_field)s GROUP BY pgd_search_segment.%(aa_field)s WITH ROLLUP' % params
 
 
     def __str__(self):
