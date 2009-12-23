@@ -88,6 +88,10 @@ class Residue(models.Model):
     terminal_flag   = models.BooleanField(default=False)#indicates this residue is next to a chain break
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
+    def __init__(self, *args, **kwargs):
+        self.segment = Segmenter(self)
+        models.Model.__init__(self, *args, **kwargs)
+
     #def __str__(self):
     #    return '%d' % self.chainIndex
 
@@ -97,3 +101,31 @@ class Residue(models.Model):
         # normal attribute
         else:
             return object.__getattribute__(self, name)
+
+
+class Segmenter():
+    """
+    Helper Class for walking a protein chain through prev/next properties
+    of Residue
+    """
+    def __init__(self, residue):
+        self.residue = residue
+
+    def __getitem__(self, index):
+        if not type(index) == int:
+            raise IndexError
+        if index == 0:
+            return self.residue
+        residue = self.residue
+        try:
+            if index < 0:
+                while index != 0 and residue:
+                    residue = residue.prev
+                    index += 1
+            else:
+                while index != 0 and residue:
+                    residue = residue.next
+                    index -= 1
+        except Residue.DoesNotExist:
+            return None
+        return residue
