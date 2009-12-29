@@ -220,6 +220,8 @@
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
+            var bins = {};
+            var selected_bin = undefined;
             var stats = {};
             var aafix = 0.5;
             var rects_width_fix = 1;
@@ -450,6 +452,7 @@
                 }
 
                 stats = {};
+                bins = {};
                 boxes = data['boxes'];
                 for (i=0; i<boxes.length; i++) {
                     rect = boxes[i];
@@ -468,6 +471,14 @@
                         }
                     };
 
+                    r[0].onclick = function(){
+                        if (is_IE) {
+                            bin_click(this.id);
+                        } else {
+                            bin_click(this.getAttribute('x')+'-'+this.getAttribute('y'));
+                        }
+                    };
+
                     //add static fields
                     if (is_IE){
                         key = rect[0]+'-'+rect[1];
@@ -475,13 +486,13 @@
                     } else {
                         key = r[0].getAttribute('x')+'-'+r[0].getAttribute('y');
                     }
-
                     stats[key] = {
                         'observations':rect[6],
                         'bin': [rect[7][0],rect[7][1]],
                         'avg': rect[8].toFixed(3),
                         'dev': rect[9].toFixed(3)
                     };
+                    bins[key] = r;
                 }
 
                 lines = data['background']['lines']
@@ -508,8 +519,38 @@
                 }
             }
 
-            function bin_mouseover(val){
-                field_stats = stats[val];
+            /*
+               handler for clicked bins.  This selects a bin allowing actions
+               such as displaying a histogram.  this locks the bin in place
+               preventing mouseover actions
+            */
+            function bin_click(key) {
+                old_selected = selected_bin;
+                // show new bin only if it wasn't the same bin
+                if (key != selected_bin) {
+                    bin = bins[key];
+                    bin.attr({'stroke-width':1, stroke:'#FF0000'});
+                    selected_bin = key;
+
+                    update_stats(key)
+                } else {
+                    selected_bin = undefined;
+                }
+
+                // deselect old bin if there was one
+                if (old_selected != undefined) {
+                    bins[old_selected].attr({'stroke-width':0, stroke:'#000000'});
+                }
+            }
+
+            function bin_mouseover(key){
+                if (selected_bin == undefined) {
+                    update_stats(key);
+                }
+            }
+
+            function update_stats(key) {
+                field_stats = stats[key];
 
                 // set static properties
                 $('#stat_xattribute td.x').html(""+precision(field_stats['bin'][0]*xBin, xProperty));
