@@ -31,7 +31,7 @@ class DirectionalStatisticsQuery():
             outer_parts.append('MAX(%s)' % field)
             outer_parts.append('avg_%s' % field)
             outer_parts.append(
-                'SQRT(IF (((%(field)s+360)%%360 - avgs.avg_%(field)s) < 180,SUM(POW((%(field)s+360)%%360-avgs.avg_%(field)s, 2)),SUM(POW(360-((%(field)s+360)%%360-avgs.avg_%(field)s),2)))/(COUNT(%(field)s)-1))AS stddev_%(field)s' % {'field':field}
+                'SQRT(IF (((%(field)s+360)%%%%360 - avgs.avg_%(field)s) < 180,SUM(POW((%(field)s+360)%%%%360-avgs.avg_%(field)s, 2)),SUM(POW(360-((%(field)s+360)%%%%360-avgs.avg_%(field)s),2)))/(COUNT(%(field)s)-1))AS stddev_%(field)s' % {'field':field}
             )
 
         for f in self.indexed_fields:
