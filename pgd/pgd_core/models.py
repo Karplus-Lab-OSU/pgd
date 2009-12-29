@@ -57,6 +57,8 @@ class Residue(models.Model):
 
     protein         = models.ForeignKey(Protein, related_name='residues')
     chain           = models.ForeignKey(Chain, related_name='residues')
+    prev            = models.ForeignKey('self', related_name='prev_next')
+    next            = models.ForeignKey('self', related_name='next_prev')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1) # integer id
     oldID           = models.CharField(max_length=5, null=True)# id[icode] from pdb file
@@ -86,13 +88,44 @@ class Residue(models.Model):
     terminal_flag   = models.BooleanField(default=False)#indicates this residue is next to a chain break
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
+    def __init__(self, *args, **kwargs):
+        self.segment = Segmenter(self)
+        models.Model.__init__(self, *args, **kwargs)
+
     #def __str__(self):
     #    return '%d' % self.chainIndex
 
     def __getattribute__(self,name):
         if name == 'aa_full':
             return AA_CHOICES_DICT[self.aa]
-    
         # normal attribute
         else:
             return object.__getattribute__(self, name)
+
+
+class Segmenter():
+    """
+    Helper Class for walking a protein chain through prev/next properties
+    of Residue
+    """
+    def __init__(self, residue):
+        self.residue = residue
+
+    def __getitem__(self, index):
+        if not type(index) == int:
+            raise IndexError
+        if index == 0:
+            return self.residue
+        residue = self.residue
+        try:
+            if index < 0:
+                while index != 0 and residue:
+                    residue = residue.prev
+                    index += 1
+            else:
+                while index != 0 and residue:
+                    residue = residue.next
+                    index -= 1
+        except Residue.DoesNotExist:
+            return None
+        return residue

@@ -159,7 +159,7 @@
                         text: '<img src="{{MEDIA_URL}}/images/ajax-loader.gif"/><br/><b>Calculating Statistics</b>',
                         }
                     });
-            $('table').qtip('show');
+            //$('table').qtip('show');
 
             $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
 
@@ -221,13 +221,13 @@
 
         });
 
-        var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
-        var angles = [{% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}, {% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var angles = [];
         var details = {};
 
         /* converts a field to the required precision */
         function precision(value, field) {
-            if (value || value == 0){
+            if (value || value != 0){
                 if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5') {
                     return value.toFixed(3);
                 }
@@ -236,86 +236,60 @@
             return '--';
         }
 
-
         /* processes data incoming from ajax request */
         function process_data(data) {
             // replace details with completely new list since the new one may
             // not have all rows/columns in it.
             details = {};
 
-            iIndex = data['index'];
             /* regular fields */
-            for (i in data['aa_totals']){
-                aa = data['aa_totals'][i]['r'+iIndex+'_aa'];
-                $row = $('tr.'+aa);
+            for (i in data['fields']){
+                f_data = data['fields'][i][1]
+                aa = f_data['aa'];
 
-                $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
+                if (aa == 'total') {
+                    $row = $('tr.total');
+                } else {
+                    $row = $('tr.'+aa);
+                }
 
                 for (f in fields) {
                     field = fields[f];
-                    avg = precision(data['fields'][i]['avg_'+field], field);
-                    stddev = precision(data['fields'][i]['stddev_'+field], field);
-                    min = precision(data['fields'][i]['min_'+field], field);
-                    max = precision(data['fields'][i]['max_'+field], field);
+
+                    avg = precision(f_data['avg_'+field], field);
+                    stddev = precision(f_data['stddev_'+field], field);
+                    min = precision(f_data['min_'+field], field);
+                    max = precision(f_data['max_'+field], field);
 
                     $row.children('td.'+field).html(avg);
 
                     details[aa+'_'+field] = [stddev, min, max];
                 }
 
-                for (f in angles) {
-                    field = angles[f];
-                    wtf = data['angles_stddev'];
-
-                    avg = precision(data['angles'][i]['avg_'+field], field);
-                    min = precision(data['angles'][i]['min_'+field], field);
-                    max = precision(data['angles'][i]['max_'+field], field);
-                    stddev = precision(data['angles_stddev'][i]['stddev_'+field], field);
-
-                    $row.children('.'+field).html(avg);
-                    details[aa+'_'+field] = [stddev, min, max];
+                if (aa != 'total'){
+                    $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
                 }
             }
 
             for (i in data['ss_counts']){
                 row = data['ss_counts'][i];
-                aa = row['r'+iIndex+'_aa'];
-                ss = row['r'+iIndex+'_ss'];
+                aa = row['aa'];
+                ss = row['ss'];
                 $td = $('tr.'+aa).children('.sum.'+ss)
                 $td.html(row['ss_count']);
             }
 
 
-            $row = $('tr.total');
-            for (f in fields) {
-                field = fields[f];
-                avg = precision(data['fields_totals']['avg_'+field], field);
-                stddev = precision(data['fields_totals']['stddev_'+field], field);
-                min = precision(data['fields_totals']['min_'+field], field);
-                max = precision(data['fields_totals']['max_'+field], field);
-
-                $row.children('td.'+field).html(avg);
-                details['total_'+field] = [stddev, min, max];
-            }
-
             for (i in data['ss_totals']) {
                 row = data['ss_totals'][i];
-                ss = row['r'+iIndex+'_ss'];
+                ss = row['ss'];
                 $row.children('.sum.'+ss).html(row['ss_count']);
-            }
-
-            for (f in angles) {
-                field = angles[f];
-                avg = precision(data['angles_totals']['avg_'+field], field);
-                min = precision(data['angles_totals']['min_'+field], field);
-                max = precision(data['angles_totals']['max_'+field], field);
-                stddev = precision(data['angles_stddev_totals']['stddev_'+field], field);
-                $row.children('.'+field).html(avg);
-                details['total_'+field] = [stddev, min, max];
             }
 
             $row.children('.aa_total').html(data['total']);
             $('table').qtip('hide');
+
+
         }
 
         function showStats(key) {

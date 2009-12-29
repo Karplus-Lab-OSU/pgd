@@ -150,20 +150,15 @@ class ConfDistPlot():
         self.height = round(self.ybin/((yLimit) / float(ySize - 2 * yPadding)))
 
         # Index of the residue of interest in the segment
-        self.residue_attribute = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_attribute if residue_attribute else 0)
-        self.residue_xproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_xproperty if residue_xproperty else 0)
-        self.residue_yproperty = int(math.ceil(searchSettings.segmentSize/2.0)-1) + (residue_yproperty if residue_yproperty else 0)
+        self.residue_attribute = residue_attribute
+        self.residue_xproperty = residue_xproperty
+        self.residue_yproperty = residue_yproperty
 
-        # Printf-style string for the given residue for plot dump
-        self.resString = "r%i_%%s"%self.residue_attribute
-        self.resXString = "r%i_%%s"%self.residue_xproperty
-        self.resYString = "r%i_%%s"%self.residue_yproperty
-
-        # Graphed quantity and its field string representation for plotting
+        # get field prefix for this residue
+        self.resString, self.refString = self.create_res_string(self.residue_attribute, ref)
+        self.resXString, self.xTextString = self.create_res_string(self.residue_xproperty, xText)
+        self.resYString, self.yTextString = self.create_res_string(self.residue_yproperty, yText)
         self.ref = ref
-        self.refString = "r%i_%s"%(self.residue_attribute,ref)
-        self.xTextString = "r%i_%s"%(self.residue_xproperty,xText)
-        self.yTextString = "r%i_%s"%(self.residue_yproperty,yText)
 
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
@@ -221,11 +216,18 @@ class ConfDistPlot():
                 annotations[stddev] = StdDev(field[1])
         annotated_query = self.querySet.annotate(**annotations)
 
+        # determine aliases used for the table joins.  This is needed because
+        # the aliases will be different depending on what fields were queried
+        # even if the query is length 10, not all residues will be joined unless
+        # each residue has a property in the where clause.
+        x_alias = self.determine_alias(annotated_query, residue_xproperty)
+        y_alias = self.determine_alias(annotated_query, residue_yproperty)
+
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR(%s/%s)' % (self.xTextString, xbin)
-        y_aggregate = 'FLOOR(%s/%s)' % (self.yTextString, ybin)
+        x_aggregate = 'FLOOR(%s.%s/%s)' % (x_alias, self.xText, xbin)
+        y_aggregate = 'FLOOR(%s.%s/%s)' % (y_alias, self.yText, ybin)
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -241,7 +243,6 @@ class ConfDistPlot():
         # way of making this work
         annotated_query.query.group_by = []
 
-
         ### Sort the values from observations into bins
         # save these beforehand to avoid recalculating per bin
         xScale = xLimit / float(xSize - 2 * xPadding)
@@ -254,11 +255,6 @@ class ConfDistPlot():
         heights = [yMarks[i] - yMarks[i+1] - 2 for i in range(0,len(yMarks)-1)]
         #  Adjust to make + indices for the Marks lists
         xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
-
-        torsion_avgs = {}
-        for field in self.stats_fields:
-            if field[0] in ANGLES:
-                torsion_avgs[field[0]] = {}
 
         for entry in annotated_query:
 
@@ -340,6 +336,55 @@ class ConfDistPlot():
                     self.bins[(r['x'],r['y'])][stddev] = value
 
 
+    def create_res_string(self, index, property):
+        """
+        helper function for creating property references
+        """
+        if index == 0:
+            prefix = ''
+        elif index < 0:
+            prefix = ''.join(['prev__' for i in range(index, 0)])
+        else:
+            prefix = ''.join(['next__' for i in range(index)])
+        resString = '%s%%s' % prefix
+        refString = '%s%s' % (prefix, property)
+        print resString, refString, index
+        
+        return resString, refString
+    
+    
+    def determine_alias(self, query, index):
+        """
+        determines the table alias used for a given residue index.
+        
+        XXX This takes into account django internal structure as of 12/29/2009
+        this may change with future releases.
+        
+        query.join_map is a dict mapping a tuple of (table1, table2, fk, key)
+        mapped to a list of aliases the table is joined on.  multiple aliases
+        means the table was joined on itself multiple times.
+        
+        we must walk the list of joins to find the index number we want.
+        
+        @returns alias if table is joined, otherwise None
+        """
+        query = query.query
+        if index == 0:
+            return 'pgd_core_residue'
+        if index > 0:
+            k = ('pgd_core_residue','pgd_core_residue','next_id','id')
+        else:
+            k = ('pgd_core_residue','pgd_core_residue','prev_id','id')
+            
+        if not query.join_map.has_key(k):
+            return None
+        try:
+            return query.join_map[k][int(math.fabs(index))-1]
+        except IndexError:
+            return None
+
+        
+            
     # ******************************************************
     # Plots observations
     # ******************************************************

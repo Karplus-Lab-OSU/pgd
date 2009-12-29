@@ -62,6 +62,9 @@ def browse(request):
     return render_to_response('browse.html', {
         'segments': paginatedSegments,
         'segmentSlice':'%i:%i'%(iIndex+start,iIndex+stop),
+        'indexes':range(start,stop),
+        'start':start,
+        'stop':stop-1,
         'iIndex':iIndex,
         'pageStart':(page-1)*25,
         'indexColors':colors,
