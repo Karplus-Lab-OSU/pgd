@@ -54,7 +54,7 @@ def search_statistics_data(request):
     """
     search = request.session['search']
     try:
-        stats = calculate_statistics_a(search.querySet())
+        stats = calculate_statistics(search.querySet())
     except Exception, e:
         print 'exception', e
         import traceback, sys
@@ -67,117 +67,6 @@ def search_statistics_data(request):
 
 
 def calculate_statistics(queryset, iIndex=0):
-    """
-    Calculates statistics across most fields stored in the database.  This
-    function uses SQL aggregate functions to perform calculations in place
-    on the database.  This requires multiple queries but ultimately performs
-    and scales better with large datasets.
-    """
-
-    start = time.time()
-    last = start
-
-    # get field prefix for this residue
-    if iIndex == 0:
-        prefix = ''
-    elif iIndex < 0:
-        prefix = ''.join(['prev__' for i in range(iIndex, 0)])
-    else:
-        prefix = ''.join(['next__' for i in range(iIndex)])
-    field_prefix = '%s%%s' % prefix
-
-    ss_field = '%sss' % prefix
-    aa_field = '%saa' % prefix
-
-    # statistics for fields - build a list of aggregations to annote
-    # against all fields that calculate avg/std normally
-    field_annotations = {}
-    for f in FIELDS_BASE:
-        field_annotations['avg_%s' % f] = Avg(field_prefix % f)
-        field_annotations['stddev_%s' % f] = StdDev(field_prefix % f)
-        field_annotations['min_%s' % f] = Min(field_prefix % f)
-        field_annotations['max_%s' % f] = Max(field_prefix % f)
-    field_stats = list(queryset.values(aa_field).annotate(**field_annotations) \
-                                                .order_by(aa_field))
-    field_stats_totals = queryset.aggregate(**field_annotations)
-
-    now = time.time()
-    print '  -fields: %s (%s)' % (now-start, now-last)
-    last = now
-
-    # statistics for angles - must be done in two passes because there is no
-    # apparent way to do standard devation in a single pass
-    angle_annotations = {}
-    for f in ANGLES_BASE:
-        angle_annotations['avg_%s' % f] = DirectionalAvg(field_prefix % f)
-        angle_annotations['min_%s' % f] = Min(field_prefix % f)
-        angle_annotations['max_%s' % f] = Max(field_prefix % f)
-    angles_stats = list(queryset.values(aa_field).annotate(**angle_annotations) \
-                                                    .order_by(aa_field))
-    angles_stats_totals = queryset.aggregate(**angle_annotations)
-    now = time.time()
-    print '  -angles: %s (%s)' % (now-start, now-last)
-    last = now
-
-    angles_stddev = []
-    for res in angles_stats:
-        aa = res[aa_field]
-        angle_annotations = {}
-        for f in ANGLES_BASE:
-            field = field_prefix % f
-            avg = res['avg_%s' % f]
-            angle_annotations['stddev_%s' % f] = DirectionalStdDev(field, avg=avg)
-        q = queryset.filter(**{aa_field:aa}).aggregate(**angle_annotations)
-        q[field] = aa
-        angles_stddev.append(q)
-    now = time.time()
-    print '  -angles stdev: %s (%s)' % (now-start, now-last)
-    last = now
-
-    angle_annotations = {}
-    for f in ANGLES_BASE:
-        field = field_prefix % f
-        avg = angles_stats_totals['avg_%s' % f]
-        angle_annotations['stddev_%s' % f] = DirectionalStdDev(field, avg=avg)
-    angles_stddev_totals = queryset.aggregate(**angle_annotations)
-
-    now = time.time()
-    print '  -angles total stdev: %s (%s)' % (now-start, now-last)
-    last = now
-
-
-    # ss/aa counts and totals
-    ss_counts = list(queryset.values(aa_field, ss_field).annotate(ss_count=Count(ss_field)).order_by(aa_field))
-    ss_totals = list(queryset.values(ss_field).annotate(ss_count=Count(ss_field)))
-    aa_totals = list(queryset.values(aa_field).annotate(aa_count=Count(aa_field)).order_by(aa_field))
-    now = time.time()
-    print '  -counts: %s (%s)' % (now-start, now-last)
-    last = now
-
-    stats = {
-        'index':4,
-        'fields': field_stats,                       # list of dictionaries, list by aa
-        'fields_totals':field_stats_totals,          # dict of agg per field
-        'angles':angles_stats,                       # list of dictionaries, list by aa
-        'angles_stddev':angles_stddev,               # list of dictionaries, list by aa
-        'angles_totals':angles_stats_totals,         # dictionary of agg per field
-        'angles_stddev_totals':angles_stddev_totals, # dictionary of agg per field
-        'aa_totals':aa_totals,
-        'ss_counts':ss_counts,                       # list of dictionaries, list by AA/SS
-        'ss_totals':ss_totals,                        # list of dictionaries,  list by SS
-        'total':queryset.count()
-    }
-
-    now = time.time()
-    print '  -stats: %s (%s)' % (now-start, now-last)
-    last = now
-    end = time.time()
-    print 'Search Statistics Data in seconds: ', end-start
-
-    return stats
-
-
-def calculate_statistics_a(queryset, iIndex=0):
     """
     Calculates statistics across most fields stored in the database.  This
     function uses SQL aggregate functions to perform calculations in place
@@ -240,7 +129,7 @@ def calculate_statistics_a(queryset, iIndex=0):
     }
 
     now = time.time()
-    print '  -stats: %s (%s)' % (now-start, now-last)
+    #print '  -stats: %s (%s)' % (now-start, now-last)
     last = now
     end = time.time()
     print 'Search Statistics Data in seconds: ', end-start
@@ -262,4 +151,4 @@ class ListQueryThread(Thread):
         start = time.time()
         self.results = list(self.query)
         end = time.time()
-        print '  -counts: f=%s, t=%s' % (end, end-start)
+        #print '  -counts: f=%s, t=%s' % (end, end-start)
