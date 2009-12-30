@@ -206,11 +206,13 @@ class ConfDistPlot():
 
         # create set of annotations to include in the query
         annotations = {'count':Count('id')}
+        torsion_avgs = {}
         for field in self.fields:
             avg = '%s_avg' % field[1]
             stddev = '%s_stddev' % field[1]
             if field[0] in ANGLES:
                 annotations[avg] = DirectionalAvg(field[1])
+                torsion_avgs[field[0]] = {}
             else:
                 annotations[avg] = Avg(field[1])
                 annotations[stddev] = StdDev(field[1])
@@ -222,12 +224,15 @@ class ConfDistPlot():
         # each residue has a property in the where clause.
         x_alias = self.determine_alias(annotated_query, residue_xproperty)
         y_alias = self.determine_alias(annotated_query, residue_yproperty)
+        attr_alias = self.determine_alias(annotated_query, residue_attribute)
+        x_field = '%s.%s' % (x_alias, self.xText)
+        y_field = '%s.%s' % (y_alias, self.yText)
 
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR(%s.%s/%s)' % (x_alias, self.xText, xbin)
-        y_aggregate = 'FLOOR(%s.%s/%s)' % (y_alias, self.yText, ybin)
+        x_aggregate = 'FLOOR(%s/%s)' % (x_field, xbin)
+        y_aggregate = 'FLOOR(%s/%s)' % (y_field, ybin)
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -320,9 +325,9 @@ class ConfDistPlot():
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) if v else '' for k,v in torsion_avgs[field[0]].items()])
-                avgs = "CASE CONCAT(FLOOR(%s/10.0),':',FLOOR(%s/10.0)) %s END" % (self.xTextString, self.yTextString, cases)
+                avgs = "CASE CONCAT(FLOOR(%s/10.0),':',FLOOR(%s/10.0)) %s END" % (x_field, y_field, cases)
                 annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
-                bin_where_clause = ['NOT %s IS NULL' % field[1]]
+                bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
                 stddev_query = self.querySet \
                                     .extra(select={'x':x_aggregate, 'y':y_aggregate}) \
                                     .extra(where=bin_where_clause) \
