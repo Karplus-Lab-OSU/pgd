@@ -254,8 +254,8 @@ class ConfDistPlot():
         yMarks = [math.floor(-(mark*ybin) / yScale + yAllOffset)-1 for mark in range(0,int(math.floor(yLimit/ybin))+1)]
         heights = [yMarks[i] - yMarks[i+1] - 2 for i in range(0,len(yMarks)-1)]
         #  Adjust to make + indices for the Marks lists
-        xMarkOff,yMarkOff = int(xMin/xbin),int(yMin/ybin)
-
+        xMarkOff,yMarkOff = int(math.floor(xMin/xbin)), int(math.floor(yMin/ybin))
+    
         for entry in annotated_query:
 
             x = int(entry['x'])
@@ -348,7 +348,6 @@ class ConfDistPlot():
             prefix = ''.join(['next__' for i in range(index)])
         resString = '%s%%s' % prefix
         refString = '%s%s' % (prefix, property)
-        print resString, refString, index
         
         return resString, refString
     
@@ -645,66 +644,79 @@ class ConfDistPlot():
 # ******************************************************
 def RefDefaults():
     return {
-                'phi': {'stepsize':10},
+                'phi': {
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10},
                 'L1': {
-                        'stepsize':0.0025,
-                        'min':1,
-                        'max':2,},
+                        'stepsize':'',
+                        'min':'',
+                        'max':'',},
                 'L2': {
-                        'stepsize':0.005,
-                        'min':1,
-                        'max':2},
+                        'stepsize':'',
+                        'min':'',
+                        'max':''},
                 'L3': {
-                        'stepsize':0.005,
-                        'min':1,
-                        'max':2
+                        'stepsize':'',
+                        'min':'',
+                        'max':''
                         },
                 'L4': {
-                        'stepsize':0.005,
-                        'min':1,
-                        'max':2},
+                        'stepsize':'',
+                        'min':'',
+                        'max':''},
                 'L5': {
-                        'stepsize':0.005,
-                        'min':1,
-                        'max':2},
+                        'stepsize':'',
+                        'min':'',
+                        'max':''},
                 'L6': {
-                        'stepsize':0.005,
-                        'min':1,
-                        'max':2},
+                        'stepsize':'',
+                        'min':'',
+                        'max':''},
                 'L7': {
                         'ref': 1.465,
-                        'stepsize':0.005,
-                        'min':1,
-                        'max':2},
+                        'stepsize':'',
+                        'min':'',
+                        'max':''},
                 'a1': {
-                        'min':0,
-                        'max':180,
-                        'stepsize':10},
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
                 'a2': {
-                        'min':0,
-                        'max':180,
-                        'stepsize':10},
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
                 'a3': {
-                        'min':0,
-                        'max':180,
-                        'stepsize':10},
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
                 'a4': {
-                        'min':0,
-                        'max':180,
-                        'stepsize':10},
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
                 'a5': {
-                        'min':0,
-                        'max':180,
-                        'stepsize':10},
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
                 'a6': {
-                        'min':0,
-                        'max':180,
-                        'stepsize':10},
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
                 'a7': {
-                        'min':0,
+                        'min':'',
+                        'max':'',
+                        'stepsize':''},
+                'ome':{
+                        'min':-180,
                         'max':180,
                         'stepsize':10},
-                'ome':{
+                'chi':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10},
+                'zeta':{
+                        'min':-180,
+                        'max':180,
                         'stepsize':10}
                 }
 

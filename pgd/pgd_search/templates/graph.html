@@ -232,8 +232,8 @@
             var rects_y_aafix = 0;
             var is_IE = false;
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
-            var xBin = {{xBin}};
-            var yBin = {{yBin}};
+            var xBin = {{xBin|default:'""'}};
+            var yBin = {{yBin|default:'""'}};
             var xProperty = "{{xProperty}}";
             var yProperty = "{{yProperty}}";
 
@@ -315,19 +315,19 @@
 
                 $('#id_xProperty').change(function (){
                         $('#id_xProperty option:selected').each(function () {
-                            //_default = DEFAULTS[$(this).val()];
-                            //$('#id_x').val(_default['min']);
-                            //$('#id_x1').val(_default['max']);
-                            //$('#id_xBin').val(_default['stepsize']);
+                            _default = DEFAULTS[$(this).val()];
+                            $('#id_x').val(_default['min']);
+                            $('#id_x1').val(_default['max']);
+                            $('#id_xBin').val(_default['stepsize']);
                         });
                 });
 
                 $('#id_yProperty').change(function (){
                         $('#id_yProperty option:selected').each(function () {
-                            //_default = DEFAULTS[$(this).val()];
-                            //$('#id_y').val(_default['min']);
-                            //$('#id_y1').val(_default['max']);
-                            //$('#id_yBin').val(_default['stepsize']);
+                            _default = DEFAULTS[$(this).val()];
+                            $('#id_y').val(_default['min']);
+                            $('#id_y1').val(_default['max']);
+                            $('#id_yBin').val(_default['stepsize']);
                         });
                 });
 
@@ -427,6 +427,15 @@
                 // deactivate spinner
                 $('#ajax_progress').hide();
                 $('#canvas').show();
+
+                xBin = data['xBin']
+                yBin = data['yBin']
+                $('#id_x').val(data['x']);
+                $('#id_x1').val(data['x1']);
+                $('#id_xBin').val(xBin);
+                $('#id_y').val(data['y']);
+                $('#id_y1').val(data['y1']);
+                $('#id_yBin').val(yBin);
 
                 // process graph
                 var paper = Raphael("canvas", 700, 472);
