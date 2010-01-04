@@ -69,11 +69,14 @@ LABEL_REPLACEMENTS = {
             }
 
 
-# getCircularStats: returns (average, standard deviation) of a list of values
-#   values: a list of the values to be examined
-#   size:   the size of the list (in case it has been counted elsewhere)
-def getCircularStats(values,size):
 
+def getCircularStats(values,size):
+    """
+    getCircularStats: returns (average, standard deviation) of a list of values
+    @param values: a list of the values to be examined
+    @param size:   the size of the list (in case it has been counted elsewhere)
+    """
+    
     # Store locals for speed
     lsin = math.sin
     lcos = math.cos
@@ -108,10 +111,13 @@ def getCircularStats(values,size):
 
     return math.degrees(radAvg),math.degrees(math.sqrt(msum/(size-1)))
 
-# getLinearStats: returns (average, standard deviation) of a list of values
-#   values: a list of the values to be examined
-#   size:   the size of the list (in case it has been counted elsewhere)
+
 def getLinearStats(values,size):
+    """
+    getLinearStats: returns (average, standard deviation) of a list of values
+    @param values: a list of the values to be examined
+    @param size:   the size of the list (in case it has been counted elsewhere)
+    """
 
     # Average
     avg = sum(values)/size
@@ -208,7 +214,7 @@ class ConfDistPlot():
 
 
 
-    def query_bins(self, svg, xOffset, yOffset, height, width):
+    def query_bins(self):
         """
         Runs the query to calculate the bins and their relevent data
         """
@@ -310,16 +316,10 @@ class ConfDistPlot():
         # way of making this work
         annotated_query.query.group_by = []
 
-        # calculate bin count and sizes.
-        xBinCount = math.floor(x1/xbin) - math.floor(x/xbin)
-        yBinCount = math.floor(y1/ybin) - math.floor(y/ybin)
-        binWidth = math.floor((width-xBinCount+1)/xBinCount)
-        binHeight = math.floor((height-yBinCount+1)/yBinCount)
+        
 
         for entry in annotated_query:
-            x = int(entry['x'])
-            y = int(entry['y'])
-            key = (x,y)
+            key = (int(entry['x']), int(entry['y']))
 
             #if xText in ANGLES: xDex = xDex%xModder
             #if yText in ANGLES: yDex = yDex%yModder
@@ -328,13 +328,7 @@ class ConfDistPlot():
             bin = {
                 'count' : entry['count'],
                 'obs'         : [entry],
-                'pixCoords'   : {
-                    # The pixel coordinates of the x and y values
-                    'x' : x*(binWidth+1)+xOffset+1,
-                    'y' : y*(binHeight+1)+yOffset+1,
-                    'width'  : binWidth,
-                    'height' : binHeight,
-                }
+                'pixCoords'   : key
             }
 
             # add all statistics
@@ -352,7 +346,7 @@ class ConfDistPlot():
                 for field in self.stats_fields:
                     if field[0] in ANGLES:
                         if avg:
-                            torsion_avgs[field[0]]["'%s:%s'" % (x,y)] = bin[avg]
+                            torsion_avgs[field[0]]["'%s:%s'" % key] = bin[avg]
 
             else:
                 # no need for calculation, stddev infered from bincount
@@ -461,9 +455,6 @@ class ConfDistPlot():
 
         svg = SVG()
 
-        #run calculations
-        #TODO move down from init
-
         # draw background
         #size ratio (470 = 1)
         ratio = width/560.0
@@ -483,8 +474,8 @@ class ConfDistPlot():
         svg.rect(graph_x+0.5, graph_y+0.5, graph_height, graph_width, 1, hash_color);
 
         #draw data area (bins)
-        self.query_bins(svg, graph_x, graph_y, graph_height, graph_width)
-        self.render_bins(svg)
+        self.query_bins()
+        self.render_bins(svg, graph_x, graph_y, graph_height, graph_width)
 
         #axis
         if self.x < 0 and self.x1 > 0:
@@ -568,11 +559,25 @@ class ConfDistPlot():
         return svg
 
 
-    def render_bins(self, svg):
+    def render_bins(self, svg, xOffset, yOffset, height, width):
         """
         Renders the already calculated bins.
         """
+        #cache variables
         sig = self.sigmaVal
+        x = self.x
+        x1 = self.x1
+        y = self.y
+        y1 = self.y1
+        xbin = self.xbin
+        ybin = self.ybin
+
+        # calculate bin count and sizes.
+        xBinCount = math.floor(x1/xbin) - math.floor(x/xbin)
+        yBinCount = math.floor(y1/ybin) - math.floor(y/ybin)
+        binWidth = math.floor((width-xBinCount+1)/xBinCount)
+        binHeight = math.floor((height-yBinCount+1)/yBinCount)
+
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
             if self.ref in ANGLES:
@@ -592,7 +597,7 @@ class ConfDistPlot():
             if self.ref in NON_FIELDS:
                 scale = math.log(num+1, self.maxObs+1)
                 color = map(
-                    lambda x: x*scale,
+                    lambda z: z*scale,
                     colors
                 )
             elif self.ref in ANGLES:
@@ -666,11 +671,12 @@ class ConfDistPlot():
                 except KeyError:
                     continue
 
+            # create rect object.  positions are based on bin_index
             svg.rect(
-                    bin['pixCoords']['x'],
-                    bin['pixCoords']['y'],
-                    bin['pixCoords']['height'],
-                    bin['pixCoords']['width'],
+                    bin['pixCoords'][0]*(binWidth+1)+xOffset+1,
+                    bin['pixCoords'][1]*(binHeight+1)+yOffset+1,
+                    binHeight,
+                    binWidth,
                     0,
                     fill,
                     fill,
@@ -825,10 +831,12 @@ class ConfDistPlot():
                 writer.write(val if val else 0)
 
 
-# ******************************************************
-# Returns default reference values
-# ******************************************************
 def RefDefaults():
+    """
+    Returns dictionary of default values for all properties.   These are used
+    to provide defaults to fields that we do not want to automatically
+    calculate dimensions for
+    """
     return {
                 'phi': {
                         'min':-180,
