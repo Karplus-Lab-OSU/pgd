@@ -64,17 +64,17 @@ def drawGraph(request, height=470, width=560, xStart=None, yStart=None, xEnd=Non
     else:
         yPrefix = ''.join(['next__' for i in range(residue_yproperty)])
 
-    if not xStart:
+    if xStart == None:
         xStart = query.aggregate(min=Min('%s%s' % (xPrefix, xProperty)))['min']
-    if not xEnd:
+    if xEnd == None:
         xEnd = query.aggregate(max=Max('%s%s' % (xPrefix, xProperty)))['max']
-    if not yStart:
+    if yStart == None:
         yStart = query.aggregate(min=Min('%s%s' % (yPrefix ,yProperty)))['min']
-    if not yEnd:
+    if yEnd == None:
         yEnd = query.aggregate(max=Max('%s%s' % (yPrefix ,yProperty)))['max']
-    if not xBin:
+    if xBin == None:
         xBin = math.fabs(xEnd - xStart) / 36
-    if not yBin:
+    if yBin == None:
         yBin = math.fabs(yEnd - yStart) / 36
 
     #size ratio (470 = 1)

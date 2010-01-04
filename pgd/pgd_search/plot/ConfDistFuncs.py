@@ -231,8 +231,8 @@ class ConfDistPlot():
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR(%s/%s)' % (x_field, xbin)
-        y_aggregate = 'FLOOR(%s/%s)' % (y_field, ybin)
+        x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, xMin, xbin)
+        y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, yMin, ybin)
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -248,29 +248,19 @@ class ConfDistPlot():
         # way of making this work
         annotated_query.query.group_by = []
 
-        ### Sort the values from observations into bins
-        # save these beforehand to avoid recalculating per bin
-        xScale = xLimit / float(xSize - 2 * xPadding)
-        yScale = yLimit / float(ySize - 2 * yPadding)
-        yAllOffset = (ySize - 2 * yPadding) + yOffset
-        #  Calculate the bin boundaries (to avoid recalculation)
-        xMarks = [math.floor((mark*xbin) / xScale + xOffset)+1 for mark in range(0,int(math.floor(xLimit/xbin))+1)]
-        widths = [xMarks[i+1] - xMarks[i] - 2 for i in range(0,len(xMarks)-1)]
-        yMarks = [math.floor(-(mark*ybin) / yScale + yAllOffset)-1 for mark in range(0,int(math.floor(yLimit/ybin))+1)]
-        heights = [yMarks[i] - yMarks[i+1] - 2 for i in range(0,len(yMarks)-1)]
-        #  Adjust to make + indices for the Marks lists
-        xMarkOff,yMarkOff = int(math.floor(xMin/xbin)), int(math.floor(yMin/ybin))
-    
-        for entry in annotated_query:
+        # calculate bin count and sizes.
+        xBinCount = math.floor(xMax/xbin) - math.floor(xMin/xbin)
+        yBinCount = math.floor(yMax/ybin) - math.floor(yMin/ybin)
+        binWidth = math.floor((xSize-xBinCount+1)/xBinCount)
+        binHeight = math.floor((ySize-yBinCount+1)/yBinCount)
 
+        for entry in annotated_query:
             x = int(entry['x'])
             y = int(entry['y'])
             key = (x,y)
-            xDex = x - xMarkOff
-            yDex = y - yMarkOff
 
-            if xText in ANGLES: xDex = xDex%xModder
-            if yText in ANGLES: yDex = yDex%yModder
+            #if xText in ANGLES: xDex = xDex%xModder
+            #if yText in ANGLES: yDex = yDex%yModder
 
             # add  entry to the bins dict
             bin = {
@@ -278,10 +268,10 @@ class ConfDistPlot():
                 'obs'         : [entry],
                 'pixCoords'   : {
                     # The pixel coordinates of the x and y values
-                    'x' : xMarks[xDex],
-                    'y' : yMarks[yDex],
-                    'width'  : widths[xDex],
-                    'height' : heights[yDex],
+                    'x' : x*(binWidth+1)+101,
+                    'y' : y*(binHeight+1)+56,
+                    'width'  : binWidth,
+                    'height' : binHeight,
                 }
             }
 
@@ -491,7 +481,7 @@ class ConfDistPlot():
             binVals.append(
                 [
                     bin['pixCoords']['x'],
-                    bin['pixCoords']['y'] - bin['pixCoords']['height'],
+                    bin['pixCoords']['y'],
                     bin['pixCoords']['width'],
                     bin['pixCoords']['height'],
                     fill,

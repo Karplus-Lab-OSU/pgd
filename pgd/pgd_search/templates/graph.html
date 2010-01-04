@@ -224,8 +224,8 @@
             var selected_bin = undefined;
             var stats = {};
             var aafix = 0.5;
-            var rects_width_fix = 1;
-            var rects_height_fix = 1;
+            var rects_width_fix = 0;
+            var rects_height_fix = 0;
             var line_x_aafix = 0;
             var line_y_aafix = 0.5;
             var rects_x_aafix = -.5
@@ -234,6 +234,8 @@
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
             var xBin = {{xBin|default:'""'}};
             var yBin = {{yBin|default:'""'}};
+            var xMin = -180;
+            var yMax = 180;
             var xProperty = "{{xProperty}}";
             var yProperty = "{{yProperty}}";
 
@@ -428,8 +430,10 @@
                 $('#ajax_progress').hide();
                 $('#canvas').show();
 
-                xBin = data['xBin']
-                yBin = data['yBin']
+                xBin = data['xBin'];
+                yBin = data['yBin'];
+                xMin = data['x'];
+                yMax = data['y1'];
                 $('#id_x').val(data['x']);
                 $('#id_x1').val(data['x1']);
                 $('#id_xBin').val(xBin);
@@ -501,6 +505,7 @@
                         'avg': rect[8].toFixed(3),
                         'dev': rect[9].toFixed(3)
                     };
+
                     bins[key] = r;
                 }
 
@@ -562,10 +567,10 @@
                 field_stats = stats[key];
 
                 // set static properties
-                $('#stat_xattribute td.x').html(""+precision(field_stats['bin'][0]*xBin, xProperty));
-                $('#stat_xattribute td.y').html(""+precision(field_stats['bin'][0]*xBin+xBin, xProperty));
-                $('#stat_yattribute td.x').html(""+precision(field_stats['bin'][1]*yBin, yProperty));
-                $('#stat_yattribute td.y').html(""+precision(field_stats['bin'][1]*yBin+yBin, yProperty));
+                $('#stat_xattribute td.x').html(""+precision(xMin+field_stats['bin'][0]*xBin, xProperty));
+                $('#stat_xattribute td.y').html(""+precision(xMin+field_stats['bin'][0]*xBin+xBin, xProperty));
+                $('#stat_yattribute td.x').html(""+precision(yMax-(field_stats['bin'][1]+1)*yBin, yProperty));
+                $('#stat_yattribute td.y').html(""+precision(yMax-(field_stats['bin'][1]+1)*yBin+yBin, yProperty));
                 $('#stat_observations').html(field_stats['observations']);
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);
