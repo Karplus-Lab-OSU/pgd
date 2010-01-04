@@ -480,7 +480,7 @@ class ConfDistPlot():
         #graph background
         svg.rect(graph_x, graph_y, graph_height, graph_width, 0, self.graph_color, self.graph_color);
         #border
-        svg.rect(graph_x+1, graph_y+1, graph_height, graph_width, 1, text_color);
+        svg.rect(graph_x+0.5, graph_y+0.5, graph_height, graph_width, 1, hash_color);
 
         #draw data area (bins)
         self.query_bins(svg, graph_x, graph_y, graph_height, graph_width)

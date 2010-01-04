@@ -1,4 +1,3 @@
-import cairo
 import math
 
 from django.db.models import Max, Min
@@ -86,34 +85,7 @@ def drawGraph(request, height=470, width=560, xStart=None, yStart=None, xEnd=Non
         raise e
     return (svg, xStart, xEnd, xBin, yStart, yEnd, yBin)
 
-def RGBTuple(rgbString):
-    sub = rgbString[-6:]
-    red = int(sub[:2],16)/255.0
-    green = int(sub[2:4],16)/255.0
-    blue = int(sub[4:], 16)/255.0
-    return (red,green,blue)
 
-def line(input, context):
-    context.move_to(input.x+.5, input.y+.5)
-    context.line_to(input.x1+.5, input.y1+.5)
-    context.set_line_width(input.stroke)
-    r,g,b = RGBTuple(input.color)
-    context.set_source_rgba(r,g,b,1)
-    context.stroke()
-
-def rect(input, context):
-    context.rectangle(input.x+.5, input.y+.5, input.width, input.height)
-
-    if input.color and input.color <> 'None':
-        red, green, blue = RGBTuple(input.color)
-        context.set_source_rgba(red,green,blue,1)
-        context.set_line_width(input.stroke)
-        context.stroke_preserve()
-
-    if input.fill and input.fill <> 'None':
-        r,g,b = RGBTuple(input.fill)
-        context.set_source_rgba(r,g,b,1)
-        context.fill()
 
 
 """
@@ -127,7 +99,7 @@ def renderToPNG(request):
             data = form.cleaned_data
             width = data['width']
             height = data['height']
-            svg, bins = drawGraph(
+            svg, x,x1,xBin,y,y1,yBin = drawGraph(
                         request,
                         height,
                         width,
@@ -153,33 +125,13 @@ def renderToPNG(request):
 
     else:
         form = PlotForm() # An unbound form
-        svg,bins,x,x1,xBin,y,y1,yBin = drawGraph(request)
+        svg,x,x1,xBin,y,y1,yBin = drawGraph(request)
         width = 560
         height = 480
 
     response = HttpResponse(mimetype="image/png")
     response['Content-Disposition'] = 'attachment; filename="plot.png"'
-    surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height+30)
-    ctx = cairo.Context (surface)
-
-    for rec in svg.rects:
-        rect(rec, ctx)
-
-    for action in svg.lines:
-        line(action, ctx)
-
-    for bin in bins:
-        svgrec = Rect(bin[0], bin[1], bin[3], bin[2], 1, bin[4], bin[4])
-        rect(svgrec, ctx)
-
-    for text in svg.texts:
-        red, green, blue = RGBTuple(text.color)
-        ctx.set_source_rgba(red,green,blue,1)
-        ctx.set_font_size (text.size);
-        ctx.move_to (text.x, text.y);
-        ctx.show_text (text.text);
-
-    surface.write_to_png(response)
+    svg.render_png(response, width, height+30)
 
     return response
 

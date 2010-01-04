@@ -22,7 +22,7 @@ function render_svg(svg, paper, font, func) {
     var rects_height_fix = 0;
     var line_x_aafix = 0.5;
     var line_y_aafix = 0.5;
-    var rects_x_aafix = -.5
+    var rects_x_aafix = 0;
     var rects_y_aafix = 0;
     var is_IE = false;
     
@@ -60,7 +60,10 @@ function render_svg(svg, paper, font, func) {
             op['y']+rects_y_aafix,
             op['width']+rects_width_fix,
             op['height']+rects_height_fix);
-            r.attr({fill: op['fill'], stroke:op['color']});
+            if(op['fill'] != undefined) {
+                r.attr('fill', op['fill']);
+            }
+            r.att('stroke', op['color'])
             r.attr('stroke-width',op['stroke']);
             
             if (op['data'] != undefined) {
