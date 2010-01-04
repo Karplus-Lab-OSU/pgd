@@ -526,7 +526,7 @@ class ConfDistPlot():
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             #get X coordinate of hash, offsetting for length of text
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xtext)
-            xlabel_x = graph_x+(graph_width/4)*i-xbearing-twidth/2+1
+            xlabel_x = graph_x+(graph_width_used/4)*i-xbearing-twidth/2+1
             #create label
             svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
     
@@ -538,7 +538,7 @@ class ConfDistPlot():
             #get Y coordinate offsetting for height of text
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
             #ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
-            ylabel_y = graph_y+(graph_height/4)*(4-i)+(4*ratio)-ybearing/2-theight/2
+            ylabel_y = graph_y+(graph_height_used/4)*(4-i)+(4*ratio)-ybearing/2-theight/2
             #Get X coordinate offsetting for length of hash and length of text
             ylabel_x = (graph_x-(ratio*15))-xbearing-twidth
             #create label
