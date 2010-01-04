@@ -9,12 +9,14 @@
 
 import math
 
+import cairo
 from django.db.models import Count, Avg, StdDev
 
 from pgd_constants import *
 from pgd_core.models import *
 from pgd_search.models import *
 from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev
+from svg import *
 
 ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
 NON_FIELDS = ('Observations', 'all')
@@ -44,6 +46,27 @@ COLOR_RANGES = {
         (75,75,75)
      )
 }
+
+LABEL_REPLACEMENTS = {
+            "L1":u'C\u207B\u00B9N',
+            "L2":u'NC\u1D45',
+            "L3":u'C\u1D45C\u1D5D',
+            "L4":u'C\u1D45C',
+            "L5":u'CO',
+            "a1":u'C\u207B\u00B9NC\u1D5D',
+            "a2":u'NC\u1D45C\u1D5D',
+            "a3":u'NC\u1D45C',
+            "a4":u'C\u1D5DC\u1D45C',
+            "a5":u'C\u1D45CO',
+            "a6":u'C\u1D45CN\u207A\u00B9',
+            "a7":u'OCN\u207A\u00B9',
+            "ome":u'\u03C9',
+            "chi":u'\u03C7',
+            "phi":u'\u03D5',
+            "psi":u'\u03A8',
+            'zeta':u'\u03B6',
+            'h_bond_energy':'H Bond'
+            }
 
 
 # getCircularStats: returns (average, standard deviation) of a list of values
@@ -101,32 +124,65 @@ def getLinearStats(values,size):
         ])/(size-1)
     )
 
-#-------------------------------------------------------------------------------------------------------------------
-# Class that plots conformation distribution plots
-# Construction: X, Y image dimensions
-#                             X, Y offsets from top left corner
-#                             Query to used to populate plot
-#-------------------------------------------------------------------------------------------------------------------
+
 class ConfDistPlot():
+    """ 
+     Class that plots conformation distribution plots
+     Construction: X, Y image dimensions
+                                 X, Y offsets from top left corner
+                                 Query to used to populate plot
+    """ 
 
-    # ******************************************************
-    # Constructor
-    # Size:     size of plot
-    # Padding:  space to either side of the plot
-    # 0ffset:   offset from top right corner of image for plot to being
-    # Min, Max: min and max field values of plot
-    # bin:      field value size of a bin
-    # Text:     axes of the plot
-    # ref:      the field of interest (if 'all', observation count is plotted)
-    # residue:  index of the residue of interest (-n...-1,0,1...n)
-    # querySet: Django queryset
-    # ******************************************************
-    def __init__(self, xSize, ySize, xPadding, yPadding, xOffset, yOffset, xMin, xMax, yMin, yMax, xbin, ybin, xText, yText, ref, sigmaVal, residue_attribute, residue_xproperty, residue_yproperty, querySet, color='green'):
-        self.color = color
-        self.sigmaVal = sigmaVal
-
+    
+    def __init__(self, xSize, ySize, xMin, xMax, yMin, yMax,
+                 xbin, ybin, xText, yText, ref, sigmaVal, residue_attribute,
+                 residue_xproperty, residue_yproperty, querySet,
+                 color='green',
+                 background_color='#ffffff',
+                 graph_color='#222222',
+                 text_color='#000000',
+                 hash_color='#666666'
+                 ):
+        """
+         Constructor
+         Size:     size of plot
+         Padding:  space to either side of the plot
+         0ffset:   offset from top right corner of image for plot to begining
+         Min, Max: min and max field values of plot
+         bin:      field value size of a bin
+         Text:     field name to plot on each axis
+         ref:      field name of interest (if 'all', observation count is plotted)
+         residue:  index of the residue of interest (-n...-1,0,1...n)
+         querySet: Django queryset
+         
+         color:    Hue to use for bin colorations
+         background_color: color used for background of entire image
+         graph_color: color used for background of plotted area
+         text_color: color used for axis labels, hash labels, and title
+         hash_color: color used for axis and hashes
+        """
+    
         # Convert unicode to strings
         xText,yText,ref = str(xText),str(yText),str(ref)
+    
+        # save properties
+        self.querySet = querySet
+        self.ref = ref
+        self.xText = xText
+        self.yText = yText
+        self.x = xMin
+        self.x1 = xMax
+        self.y = yMin
+        self.y1 = yMax
+        self.sigmaVal = sigmaVal
+        
+        self.width = xSize
+        self.height = ySize
+        self.color = color
+        self.background_color = background_color
+        self.graph_color = graph_color
+        self.text_color = text_color
+        self.hash_color = hash_color    
 
         # Width/height in field units of graph bins
         self.xbin = xbin
@@ -145,64 +201,70 @@ class ConfDistPlot():
             if yMax < yMin:
                 yLimit = yLimit%360
 
-        # Width/height of a graph bin in pixels
-        self.width  = round(self.xbin/((xLimit) / float(xSize - 2 * xPadding)))
-        self.height = round(self.ybin/((yLimit) / float(ySize - 2 * yPadding)))
-
         # Index of the residue of interest in the segment
         self.residue_attribute = residue_attribute
         self.residue_xproperty = residue_xproperty
         self.residue_yproperty = residue_yproperty
 
-        # get field prefix for this residue
-        self.resString, self.refString = self.create_res_string(self.residue_attribute, ref)
-        self.resXString, self.xTextString = self.create_res_string(self.residue_xproperty, xText)
-        self.resYString, self.yTextString = self.create_res_string(self.residue_yproperty, yText)
-        self.ref = ref
+
+
+    def query_bins(self, svg, xOffset, yOffset, height, width):
+        """
+        Runs the query to calculate the bins and their relevent data
+        """
+        # local vars
+        x = self.x
+        x1 = self.x1
+        y = self.y
+        y1 = self.y1
+        xbin = self.xbin
+        ybin = self.ybin
 
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
         self.bins = {}
 
-        # Labels for graph axes
-        self.xText,self.yText = xText,yText
-
         # Variable to store number of values in the bin with the most values
         self.maxObs = 0
 
-        # index set creation
-        self.index_set = set([self.resString,self.resXString,self.resYString])
-
-        # Pick fields for retrieving values
-        if ref == "Observations":
-            self.fields = [(xText,self.xTextString), (yText,self.yTextString)]
-            self.stats_fields = []
-        elif ref == "all":
-            self.fields = [(field,i%(str(field))) for field in ([field for field,none in PLOT_PROPERTY_CHOICES]) for i in self.index_set]
-            self.stats_fields = self.fields
-        else:
-            self.fields = [(xText,self.xTextString), (yText,self.yTextString), (self.ref,self.refString)]
-            self.stats_fields = [(self.ref,self.refString)]
+        # get field prefix for this residue
+        self.resString, self.refString = self.create_res_string(self.residue_attribute, self.ref)
+        self.resXString, self.xTextString = self.create_res_string(self.residue_xproperty, self.xText)
+        self.resYString, self.yTextString = self.create_res_string(self.residue_yproperty, self.yText)
 
         # Exclude values outside the plotted values
-        self.querySet = querySet.filter(
+        querySet = self.querySet.filter(
             (Q(**{
-                '%s__gte'%self.xTextString: xMin,
-                '%s__lt'%self.xTextString: xMax,
-            }) if (xMin <= xMax) else ( # Altered logic for circular values
-                Q(**{'%s__gte'%self.xTextString: xMin}) |
-                Q(**{'%s__lt'%self.xTextString: xMax})
+                '%s__gte'%self.xTextString: x,
+                '%s__lt'%self.xTextString: x1,
+            }) if (x <= x1) else ( # Altered logic for circular values
+                Q(**{'%s__gte'%self.xTextString: x}) |
+                Q(**{'%s__lt'%self.xTextString: x1})
             )) & (Q(**{
-                '%s__gte'%self.yTextString: yMin,
-                '%s__lt'%self.yTextString: yMax,
-            }) if (yMin <= yMax) else ( # altered logic for circular values
-                Q(**{'%s__gte'%self.yTextString: yMin}) |
-                Q(**{'%s__lt'%self.yTextString: yMax})
+                '%s__gte'%self.yTextString: y,
+                '%s__lt'%self.yTextString: y1,
+            }) if (y <= y1) else ( # altered logic for circular values
+                Q(**{'%s__gte'%self.yTextString: y}) |
+                Q(**{'%s__lt'%self.yTextString: y1})
             ))
         )
 
         # Total # of observations
-        self.numObs = self.querySet.count()
+        self.numObs = querySet.count()
+
+        # index set creation
+        self.index_set = set([self.resString,self.resXString,self.resYString])
+        
+        # Pick fields for retrieving values
+        if self.ref == "Observations":
+            self.fields = [(self.xText,self.xTextString), (self.yText,self.yTextString)]
+            self.stats_fields = []
+        elif self.ref == "all":
+            self.fields = [(field,i%(str(field))) for field in ([field for field,none in PLOT_PROPERTY_CHOICES]) for i in self.index_set]
+            self.stats_fields = self.fields
+        else:
+            self.fields = [(self.xText,self.xTextString), (self.yText,self.yTextString), (self.ref,self.refString)]
+            self.stats_fields = [(self.ref,self.refString)]
 
         # create set of annotations to include in the query
         annotations = {'count':Count('id')}
@@ -216,23 +278,23 @@ class ConfDistPlot():
             else:
                 annotations[avg] = Avg(field[1])
                 annotations[stddev] = StdDev(field[1])
-        annotated_query = self.querySet.annotate(**annotations)
+        annotated_query = querySet.annotate(**annotations)
 
         # determine aliases used for the table joins.  This is needed because
         # the aliases will be different depending on what fields were queried
         # even if the query is length 10, not all residues will be joined unless
         # each residue has a property in the where clause.
-        x_alias = self.determine_alias(annotated_query, residue_xproperty)
-        y_alias = self.determine_alias(annotated_query, residue_yproperty)
-        attr_alias = self.determine_alias(annotated_query, residue_attribute)
+        x_alias = self.determine_alias(annotated_query, self.residue_xproperty)
+        y_alias = self.determine_alias(annotated_query, self.residue_yproperty)
+        attr_alias = self.determine_alias(annotated_query, self.residue_attribute)
         x_field = '%s.%s' % (x_alias, self.xText)
         y_field = '%s.%s' % (y_alias, self.yText)
 
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, xMin, xbin)
-        y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, yMin, ybin)
+        x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
+        y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -249,10 +311,10 @@ class ConfDistPlot():
         annotated_query.query.group_by = []
 
         # calculate bin count and sizes.
-        xBinCount = math.floor(xMax/xbin) - math.floor(xMin/xbin)
-        yBinCount = math.floor(yMax/ybin) - math.floor(yMin/ybin)
-        binWidth = math.floor((xSize-xBinCount+1)/xBinCount)
-        binHeight = math.floor((ySize-yBinCount+1)/yBinCount)
+        xBinCount = math.floor(x1/xbin) - math.floor(x/xbin)
+        yBinCount = math.floor(y1/ybin) - math.floor(y/ybin)
+        binWidth = math.floor((width-xBinCount+1)/xBinCount)
+        binHeight = math.floor((height-yBinCount+1)/yBinCount)
 
         for entry in annotated_query:
             x = int(entry['x'])
@@ -268,8 +330,8 @@ class ConfDistPlot():
                 'obs'         : [entry],
                 'pixCoords'   : {
                     # The pixel coordinates of the x and y values
-                    'x' : x*(binWidth+1)+101,
-                    'y' : y*(binHeight+1)+56,
+                    'x' : x*(binWidth+1)+xOffset+1,
+                    'y' : y*(binHeight+1)+yOffset+1,
                     'width'  : binWidth,
                     'height' : binHeight,
                 }
@@ -311,14 +373,15 @@ class ConfDistPlot():
         # This query uses a large case statement to select the average matching
         # the bin the result is grouped into.  This isn't the cleanest way
         # of doing this but it does work
+        
         for field in self.stats_fields:
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) if v else '' for k,v in torsion_avgs[field[0]].items()])
-                avgs = "CASE CONCAT(FLOOR(%s/10.0),':',FLOOR(%s/10.0)) %s END" % (x_field, y_field, cases)
+                avgs = "CASE CONCAT(FLOOR((%s-%s)/%s),':',FLOOR((%s-%s)/%s)) %s END" % (x_field, x, xbin, y_field, y, ybin, cases)
                 annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
                 bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
-                stddev_query = self.querySet \
+                stddev_query = querySet \
                                     .extra(select={'x':x_aggregate, 'y':y_aggregate}) \
                                     .extra(where=bin_where_clause) \
                                     .annotate(**annotations) \
@@ -379,11 +442,136 @@ class ConfDistPlot():
 
         
             
-    # ******************************************************
-    # Plots observations
-    # ******************************************************
+    
     def Plot(self):
-        binVals = []
+        """
+        Calculates and renders the plot
+        """
+        
+        #cache local variables
+        x1 = self.x1
+        y1 = self.y1
+        xText = self.xText
+        yText = self.yText
+        height = self.height
+        width = self.width
+        bg_color = self.background_color
+        hash_color = self.hash_color
+        text_color = self.text_color
+
+        svg = SVG()
+
+        #run calculations
+        #TODO move down from init
+
+        # draw background
+        #size ratio (470 = 1)
+        ratio = width/560.0
+    
+        # offsets setup to give 415px for the graph for a default width of 520
+        graph_x = round(width*.17857);
+        graph_y = round(height*.11702);
+        graph_height = height-2*graph_y;
+        graph_width = width-2*graph_x;
+        hashsize = 10*ratio
+        
+        #image background
+        svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
+        #graph background
+        svg.rect(graph_x, graph_y, graph_height, graph_width, 0, self.graph_color, self.graph_color);
+        #border
+        svg.rect(graph_x+1, graph_y+1, graph_height, graph_width, 1, text_color);
+
+        #draw data area (bins)
+        self.query_bins(svg, graph_x, graph_y, graph_height, graph_width)
+        self.render_bins(svg)
+
+        #axis
+        if self.x < 0 and self.x1 > 0:
+            xZero = (graph_width/(self.x1-self.x)) * abs (self.x)
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height, 1, hash_color);
+    
+        if self.y < 0 and self.x1 > 0:
+            yZero = graph_height+graph_y - (graph_height/(y1-self.y)) * abs (self.y)
+            svg.line( graph_x, yZero, graph_x+graph_width, yZero, 1, hash_color);
+
+        #hashes
+        for i in range(9):
+            hashx = graph_x+(graph_width/8.0)*i
+            hashy = graph_y+(graph_height/8.0)*i
+            svg.line( hashx, graph_y+graph_height, hashx, graph_y+graph_height+hashsize, 1, hash_color);
+            svg.line( graph_x, hashy, graph_x-hashsize, hashy, 1, self.hash_color);
+    
+        #create a cairo surface to calculate text sizes
+        surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
+        ctx = cairo.Context (surface)
+        ctx.set_font_size (12);
+    
+        #hash labels
+        xstep = ((x1 - self.x)%360 if xText in ANGLES else (x1 - self.x))/ 4
+        if not xstep: xstep = 90
+        #ystep = (self.y1 - self.y) / 4
+        ystep = ((y1 - self.y)%360 if yText in ANGLES else (y1 - self.y))/ 4
+        if not ystep: ystep = 90
+    
+        #get Y coordinate for xaxis hashes, this is the same for all x-labels
+        xlabel_y = graph_y+graph_height+hashsize*3+(5*ratio)
+        for i in range(5):
+            #text value
+            xtext = ((self.x + xstep*i + 180)%360 - 180) if self.xText in ANGLES else (self.x + xstep*i)
+            #drop decimal if value is an integer
+            xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
+            #get X coordinate of hash, offsetting for length of text
+            xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xtext)
+            xlabel_x = graph_x+(graph_width/4)*i-xbearing-twidth/2+1
+            #create label
+            svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
+    
+            #text value
+            #ytext = self.y1 - ystep*i
+            ytext = ((self.y + ystep*i + 180)%360 - 180) if self.yText in ANGLES else (self.y + ystep*i)
+            #drop decimal if value is an integer
+            ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
+            #get Y coordinate offsetting for height of text
+            xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
+            #ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
+            ylabel_y = graph_y+(graph_height/4)*(4-i)+(4*ratio)-ybearing/2-theight/2
+            #Get X coordinate offsetting for length of hash and length of text
+            ylabel_x = (graph_x-(ratio*15))-xbearing-twidth
+            #create label
+            svg.text(ylabel_x, ylabel_y, ytext,12*ratio, text_color)
+
+        #title text
+        xTitle = LABEL_REPLACEMENTS[xText] if xText in LABEL_REPLACEMENTS else xText
+        yTitle = LABEL_REPLACEMENTS[yText] if yText in LABEL_REPLACEMENTS else yText
+        title = 'Plot of %s vs. %s' % (xTitle,yTitle)
+        xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
+        title_x = (width/2) - xbearing - twidth/2
+        svg.text(title_x,15*ratio, title, 12*ratio, text_color)
+    
+        attribute_title = LABEL_REPLACEMENTS[self.ref] if self.ref in LABEL_REPLACEMENTS else self.ref
+        title = 'Shading Based Off of %s' % attribute_title
+        xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
+        title_x = (width/2) - xbearing - twidth/2
+        svg.text(title_x,35*ratio, title, 12*ratio, text_color)
+    
+        #axis labels
+        ctx.set_font_size (18*ratio);
+        xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xTitle)
+        title_x = (width/2) - xbearing - twidth/2
+        svg.text(title_x,graph_y+graph_height+hashsize*5+(15*ratio), xTitle, 18*ratio, text_color)
+    
+        xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
+        title_y = (graph_x-(ratio*35))-xbearing-twidth
+        svg.text(title_y,graph_y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
+
+        return svg
+
+
+    def render_bins(self, svg):
+        """
+        Renders the already calculated bins.
+        """
         sig = self.sigmaVal
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
@@ -464,7 +652,7 @@ class ConfDistPlot():
             color[2] += adjust[2]
 
             #convert decimal RGB into HEX rgb
-            fill = ''.join('%02x'%round(x) for x in color)
+            fill = '#%s' % ''.join('%02x'%round(x) for x in color)
 
             # add rectangle to list
             if self.ref in NON_FIELDS:
@@ -478,28 +666,31 @@ class ConfDistPlot():
                 except KeyError:
                     continue
 
-            binVals.append(
-                [
+            svg.rect(
                     bin['pixCoords']['x'],
                     bin['pixCoords']['y'],
-                    bin['pixCoords']['width'],
                     bin['pixCoords']['height'],
+                    bin['pixCoords']['width'],
+                    0,
                     fill,
                     fill,
-                    bin['count'],
-                    key,
-                    bin_avg,
-                    bin_stddev
-                ]
+                    data = [
+                        bin['count'],
+                        key,
+                        bin_avg,
+                        bin_stddev
+                    ]
             )
 
-        return binVals
 
-
-    # *****************************************************************************
-    # Prints out the query results in a dump file
-    # *****************************************************************************
     def PrintDump(self, writer):
+        """
+        Prints out the query results in a dump file
+        
+        @param writer - any object that has a write(str) method
+        """
+        if not self.bins:
+            self.query_bins()
 
         residue = self.residue_attribute
         residueX = self.residue_xproperty
