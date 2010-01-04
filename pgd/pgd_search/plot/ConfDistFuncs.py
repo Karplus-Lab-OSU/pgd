@@ -443,8 +443,12 @@ class ConfDistPlot():
         """
         
         #cache local variables
+        x = self.x
+        y = self.y
         x1 = self.x1
         y1 = self.y1
+        xbin = self.xbin
+        ybin = self.ybin
         xText = self.xText
         yText = self.yText
         height = self.height
@@ -466,6 +470,14 @@ class ConfDistPlot():
         graph_width = width-2*graph_x;
         hashsize = 10*ratio
         
+        # calculate bin count and sizes.
+        xBinCount = math.floor(x1/xbin) - math.floor(x/xbin)
+        yBinCount = math.floor(y1/ybin) - math.floor(y/ybin)
+        binWidth = math.floor((graph_width-xBinCount+1)/xBinCount)
+        binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
+        graph_height_used = (binHeight+1)*yBinCount
+        graph_width_used = (binWidth+1)*xBinCount
+        
         #image background
         svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
         #graph background
@@ -475,21 +487,21 @@ class ConfDistPlot():
 
         #draw data area (bins)
         self.query_bins()
-        self.render_bins(svg, graph_x, graph_y, graph_height, graph_width)
+        self.render_bins(svg, graph_x, graph_y, binWidth, binHeight)
 
         #axis
-        if self.x < 0 and self.x1 > 0:
-            xZero = (graph_width/(self.x1-self.x)) * abs (self.x)
+        if x < 0 and x1 > 0:
+            xZero = (graph_width_used/(x1-x)) * abs (x)
             svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height, 1, hash_color);
     
-        if self.y < 0 and self.x1 > 0:
-            yZero = graph_height+graph_y - (graph_height/(y1-self.y)) * abs (self.y)
+        if y < 0 and x1 > 0:
+            yZero = graph_height_used+graph_y - (graph_height_used/(y1-y)) * abs (y)
             svg.line( graph_x, yZero, graph_x+graph_width, yZero, 1, hash_color);
 
         #hashes
         for i in range(9):
-            hashx = graph_x+(graph_width/8.0)*i
-            hashy = graph_y+(graph_height/8.0)*i
+            hashx = graph_x+(graph_width_used/8.0)*i
+            hashy = graph_y+(graph_height_used/8.0)*i
             svg.line( hashx, graph_y+graph_height, hashx, graph_y+graph_height+hashsize, 1, hash_color);
             svg.line( graph_x, hashy, graph_x-hashsize, hashy, 1, self.hash_color);
     
@@ -499,17 +511,17 @@ class ConfDistPlot():
         ctx.set_font_size (12);
     
         #hash labels
-        xstep = ((x1 - self.x)%360 if xText in ANGLES else (x1 - self.x))/ 4
+        xstep = ((x1 - x)%360 if xText in ANGLES else (x1 - x))/ 4
         if not xstep: xstep = 90
         #ystep = (self.y1 - self.y) / 4
-        ystep = ((y1 - self.y)%360 if yText in ANGLES else (y1 - self.y))/ 4
+        ystep = ((y1 - y)%360 if yText in ANGLES else (y1 - y))/ 4
         if not ystep: ystep = 90
     
         #get Y coordinate for xaxis hashes, this is the same for all x-labels
         xlabel_y = graph_y+graph_height+hashsize*3+(5*ratio)
         for i in range(5):
             #text value
-            xtext = ((self.x + xstep*i + 180)%360 - 180) if self.xText in ANGLES else (self.x + xstep*i)
+            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES else (x + xstep*i)
             #drop decimal if value is an integer
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             #get X coordinate of hash, offsetting for length of text
@@ -520,7 +532,7 @@ class ConfDistPlot():
     
             #text value
             #ytext = self.y1 - ystep*i
-            ytext = ((self.y + ystep*i + 180)%360 - 180) if self.yText in ANGLES else (self.y + ystep*i)
+            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES else (y + ystep*i)
             #drop decimal if value is an integer
             ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
             #get Y coordinate offsetting for height of text
@@ -559,24 +571,12 @@ class ConfDistPlot():
         return svg
 
 
-    def render_bins(self, svg, xOffset, yOffset, height, width):
+    def render_bins(self, svg, xOffset, yOffset, binWidth, binHeight):
         """
         Renders the already calculated bins.
         """
         #cache variables
         sig = self.sigmaVal
-        x = self.x
-        x1 = self.x1
-        y = self.y
-        y1 = self.y1
-        xbin = self.xbin
-        ybin = self.ybin
-
-        # calculate bin count and sizes.
-        xBinCount = math.floor(x1/xbin) - math.floor(x/xbin)
-        yBinCount = math.floor(y1/ybin) - math.floor(y/ybin)
-        binWidth = math.floor((width-xBinCount+1)/xBinCount)
-        binHeight = math.floor((height-yBinCount+1)/yBinCount)
 
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):

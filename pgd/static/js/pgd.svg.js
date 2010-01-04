@@ -63,7 +63,7 @@ function render_svg(svg, paper, font, func) {
             if(op['fill'] != undefined) {
                 r.attr('fill', op['fill']);
             }
-            r.att('stroke', op['color'])
+            r.attr('stroke', op['color'])
             r.attr('stroke-width',op['stroke']);
             
             if (op['data'] != undefined) {
