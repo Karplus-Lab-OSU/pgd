@@ -471,8 +471,8 @@ class ConfDistPlot():
         hashsize = 10*ratio
         
         # calculate bin count and sizes.
-        xBinCount = math.floor(x1/xbin) - math.floor(x/xbin)
-        yBinCount = math.floor(y1/ybin) - math.floor(y/ybin)
+        xBinCount = math.ceil((float(x1)-x)/xbin)
+        yBinCount = math.ceil((float(y1)-y)/ybin)
         binWidth = math.floor((graph_width-xBinCount+1)/xBinCount)
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
