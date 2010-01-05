@@ -125,6 +125,9 @@
         }
 
         div#stats_fieldsDetail { display:none; }
+        
+        #index {border-top:0;}
+        
 
     </style>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
@@ -133,7 +136,14 @@
         var contentText= 'Mouse over a table cell for more information about it.';
 
         $(document).ready(function() {
-            $('table').qtip({
+            $('select')
+                .change(function(){
+                    val = $(this).val();
+                    $('table').qtip('show');
+                    $.getJSON('{{SITE_ROOT}}search/statistics/data/',{'i':val},process_data)
+                });
+
+            $('#stats').qtip({
                 position:{
                     corner: {
                             target: 'center',
@@ -159,7 +169,7 @@
                         text: '<img src="{{MEDIA_URL}}/images/ajax-loader.gif"/><br/><b>Calculating Statistics</b>',
                         }
                     });
-            //$('table').qtip('show');
+            $('#stats').qtip('show');
 
             $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
 
@@ -241,7 +251,8 @@
             // replace details with completely new list since the new one may
             // not have all rows/columns in it.
             details = {};
-
+            prefix = data['prefix'];
+            
             /* regular fields */
             for (i in data['fields']){
                 f_data = data['fields'][i][1]
@@ -273,8 +284,8 @@
 
             for (i in data['ss_counts']){
                 row = data['ss_counts'][i];
-                aa = row['aa'];
-                ss = row['ss'];
+                aa = row[prefix+'aa'];
+                ss = row[prefix+'ss'];
                 $td = $('tr.'+aa).children('.sum.'+ss)
                 $td.html(row['ss_count']);
             }
@@ -282,14 +293,12 @@
 
             for (i in data['ss_totals']) {
                 row = data['ss_totals'][i];
-                ss = row['ss'];
+                ss = row[prefix+'ss'];
                 $row.children('.sum.'+ss).html(row['ss_count']);
             }
 
             $row.children('.aa_total').html(data['total']);
-            $('table').qtip('hide');
-
-
+            $('#stats').qtip('hide');
         }
 
         function showStats(key) {
@@ -310,9 +319,10 @@
     </script>
 {% endblock %}
 
-{% block content %}
-    <table id="stats.fields" >
+{% block content %}   
+    <table id="stats" >
         <thead>
+        <tr><td colspan=100% id="index"><label>Index: <label> {{form.index}}</td></tr>
         <tr>
             <th class="peptide">Type</th>
             <th class="aa_total">Total</th>

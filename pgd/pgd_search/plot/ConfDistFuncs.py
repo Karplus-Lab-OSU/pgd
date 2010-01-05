@@ -290,9 +290,9 @@ class ConfDistPlot():
         # the aliases will be different depending on what fields were queried
         # even if the query is length 10, not all residues will be joined unless
         # each residue has a property in the where clause.
-        x_alias = self.determine_alias(annotated_query, self.residue_xproperty)
-        y_alias = self.determine_alias(annotated_query, self.residue_yproperty)
-        attr_alias = self.determine_alias(annotated_query, self.residue_attribute)
+        x_alias = determine_alias(annotated_query, self.residue_xproperty)
+        y_alias = determine_alias(annotated_query, self.residue_yproperty)
+        attr_alias = determine_alias(annotated_query, self.residue_attribute)
         x_field = '%s.%s' % (x_alias, self.xText)
         y_field = '%s.%s' % (y_alias, self.yText)
 
@@ -402,40 +402,7 @@ class ConfDistPlot():
         refString = '%s%s' % (prefix, property)
         
         return resString, refString
-    
-    
-    def determine_alias(self, query, index):
-        """
-        determines the table alias used for a given residue index.
-        
-        XXX This takes into account django internal structure as of 12/29/2009
-        this may change with future releases.
-        
-        query.join_map is a dict mapping a tuple of (table1, table2, fk, key)
-        mapped to a list of aliases the table is joined on.  multiple aliases
-        means the table was joined on itself multiple times.
-        
-        we must walk the list of joins to find the index number we want.
-        
-        @returns alias if table is joined, otherwise None
-        """
-        query = query.query
-        if index == 0:
-            return 'pgd_core_residue'
-        if index > 0:
-            k = ('pgd_core_residue','pgd_core_residue','next_id','id')
-        else:
-            k = ('pgd_core_residue','pgd_core_residue','prev_id','id')
-            
-        if not query.join_map.has_key(k):
-            return None
-        try:
-            return query.join_map[k][int(math.fabs(index))-1]
-        except IndexError:
-            return None
 
-        
-            
     
     def Plot(self):
         """

@@ -1,5 +1,3 @@
-
-
 class DirectionalStatisticsQuery():
     """
     This is a specialized query that uses aggregates and subqueries to
@@ -11,47 +9,49 @@ class DirectionalStatisticsQuery():
         self.angles = angles
         self.fields = fields
         self.combined = angles+fields
-        self.indexed_angles = [prefix % f for f in angles]
-        self.indexed_fields = [prefix % f for f in fields]
-        self.aa_field = prefix % 'aa'
-        self.queryset = queryset.values(*(self.indexed_angles+self.indexed_fields+[self.aa_field]))
 
+        # create set of fields to query.  these require the django style
+        # prefix for the fields.
+        self.queryset = queryset.values(*([prefix % f for f in angles] + 
+                                        [prefix % f for f in fields] + 
+                                        [prefix % 'aa']))
         self.results = None
 
-
-    def as_sql(self):
+    def as_sql(self):       
         outer_parts = []
         inner_parts = []
-        for field in self.indexed_angles:
+        for field in self.angles:
             inner_parts.append(
-                'ROUND(IF(DEGREES(ATAN2(-AVG(SIN(RADIANS(%(field)s))),-AVG(COS(RADIANS(%(field)s))))) < 0,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(field)s))),-AVG(COS(RADIANS(%(field)s))))) + 180,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(field)s))),-AVG(COS(RADIANS(%(field)s))))) - 180),1) AS avg_%(field)s' % {'field':field}
+                'ROUND(IF(DEGREES(ATAN2(-AVG(SIN(RADIANS(%(f)s))),-AVG(COS(RADIANS(%(f)s))))) < 0,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(f)s))),-AVG(COS(RADIANS(%(f)s))))) + 180,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(f)s))),-AVG(COS(RADIANS(%(f)s))))) - 180),1) AS avg_%(f)s' % {'f':field}
             )
 
             outer_parts.append('MIN(%s)' % field)
             outer_parts.append('MAX(%s)' % field)
             outer_parts.append('avg_%s' % field)
             outer_parts.append(
-                'SQRT(IF (((%(field)s+360)%%%%360 - avgs.avg_%(field)s) < 180,SUM(POW((%(field)s+360)%%%%360-avgs.avg_%(field)s, 2)),SUM(POW(360-((%(field)s+360)%%%%360-avgs.avg_%(field)s),2)))/(COUNT(%(field)s)-1))AS stddev_%(field)s' % {'field':field}
+                'SQRT(IF (((%(f)s+360)%%%%360 - avgs.avg_%(f)s) < 180,SUM(POW((%(f)s+360)%%%%360-avgs.avg_%(f)s, 2)),SUM(POW(360-((%(f)s+360)%%%%360-avgs.avg_%(f)s),2)))/(COUNT(%(f)s)-1))AS stddev_%(f)s' % {'f':field}
             )
 
-        for f in self.indexed_fields:
-            outer_parts.append('MIN(%(f)s) AS min_%(f)s' % {'f':f})
-            outer_parts.append('MAX(%(f)s) as max_%(f)s' % {'f':f})
-            outer_parts.append('AVG(%(f)s) as avg_%(f)s' % {'f':f})
-            outer_parts.append('STDDEV(%(f)s) as stddev_%(f)s' % {'f':f})
+        for f in self.fields:
+            f = {'f':f}
+            outer_parts.append('MIN(%(f)s) AS min_%(f)s' % f)
+            outer_parts.append('MAX(%(f)s) as max_%(f)s' % f)
+            outer_parts.append('AVG(%(f)s) as avg_%(f)s' % f)
+            outer_parts.append('STDDEV(%(f)s) as stddev_%(f)s' % f)
 
         inner = ','.join(inner_parts)
         outer = ','.join(outer_parts)
 
         params = {
             'base': self.queryset.query.__str__(),
-            'aa_field': self.aa_field,
             'inner': inner,
             'outer': outer
         }
 
-        return 'SELECT pgd_search_segment.%(aa_field)s, %(outer)s FROM (%(base)s) AS pgd_search_segment,(SELECT  %(aa_field)s, %(inner)s FROM (%(base)s) AS pgd_search_segment GROUP BY %(aa_field)s) AS avgs WHERE pgd_search_segment.%(aa_field)s = avgs.%(aa_field)s GROUP BY pgd_search_segment.%(aa_field)s WITH ROLLUP' % params
-
+        return 'SELECT residues.aa, %(outer)s FROM (%(base)s) AS residues, \
+            (SELECT aa, %(inner)s FROM (%(base)s) AS residues GROUP BY aa) \
+            AS avgs WHERE residues.aa = avgs.aa GROUP BY residues.aa \
+            WITH ROLLUP' % params
 
     def __str__(self):
         if not self.results:
@@ -80,7 +80,7 @@ class DirectionalStatisticsQuery():
         row = cursor.fetchone()
         combined = self.combined
         while row:
-            dict_ = {self.aa_field: row[0] if row[0] else 'total'}
+            dict_ = {'aa': row[0] if row[0] else 'total'}
 
             for i in range(len(combined)):
                 f = combined[i]

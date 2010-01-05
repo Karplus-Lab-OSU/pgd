@@ -10,9 +10,11 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 
 from pgd_constants import AA_CHOICES, SS_CHOICES
-from pgd_search.models import Search, Segment
+from pgd_core.models import determine_alias
+from pgd_search.models import Search
 from pgd_search.statistics.aggregates import *
 from pgd_search.statistics.directional_stddev import *
+from pgd_search.statistics.form import StatsForm
 from pgd_search.views import settings_processor
 
 
@@ -40,6 +42,7 @@ def search_statistics(request):
     display statistics about the search
     """
     return render_to_response('stats.html', {
+        'form': StatsForm(),
         'aa_types': AA_CHOICES,
         'ss_types': SS_CHOICES,
         'fields':FIELDS_BASE,
@@ -53,8 +56,9 @@ def search_statistics_data(request):
     returns ajax'ified statistics data for the current search
     """
     search = request.session['search']
-    try:
-        stats = calculate_statistics(search.querySet())
+    try:        
+        index = int(request.GET['i']) if request.GET.has_key('i') else 0
+        stats = calculate_statistics(search.querySet(), index)
     except Exception, e:
         print 'exception', e
         import traceback, sys
@@ -73,7 +77,6 @@ def calculate_statistics(queryset, iIndex=0):
     on the database.  This requires multiple queries but ultimately performs
     and scales better with large datasets.
     """
-
     start = time.time()
     last = start
 
@@ -84,7 +87,7 @@ def calculate_statistics(queryset, iIndex=0):
         prefix = ''.join(['prev__' for i in range(iIndex, 0)])
     else:
         prefix = ''.join(['next__' for i in range(iIndex)])
-    field_prefix = '%s%%s' % prefix
+    field_prefix = '%s%%s' % prefix  
 
     ss_field = '%sss' % prefix
     aa_field = '%saa' % prefix
@@ -120,6 +123,7 @@ def calculate_statistics(queryset, iIndex=0):
     aa_totals = aa_totals_thread.results
 
     stats = {
+        'prefix':prefix,
         'index':iIndex,
         'fields': field_stats,                       # list of dictionaries, list by aa
         'aa_totals':aa_totals,

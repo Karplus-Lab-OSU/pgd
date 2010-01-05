@@ -1,3 +1,5 @@
+import math
+
 from django.db import models
 from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 
@@ -129,3 +131,34 @@ class Segmenter():
         except Residue.DoesNotExist:
             return None
         return residue
+
+
+def determine_alias(query, index):
+        """
+        determines the table alias used for a given residue index.
+        
+        XXX This takes into account django internal structure as of 12/29/2009
+        this may change with future releases.
+        
+        query.join_map is a dict mapping a tuple of (table1, table2, fk, key)
+        mapped to a list of aliases the table is joined on.  multiple aliases
+        means the table was joined on itself multiple times.
+        
+        we must walk the list of joins to find the index number we want.
+        
+        @returns alias if table is joined, otherwise None
+        """
+        query = query.query
+        if index == 0:
+            return 'pgd_core_residue'
+        if index > 0:
+            k = ('pgd_core_residue','pgd_core_residue','next_id','id')
+        else:
+            k = ('pgd_core_residue','pgd_core_residue','prev_id','id')
+            
+        if not query.join_map.has_key(k):
+            return None
+        try:
+            return query.join_map[k][int(math.fabs(index))-1]
+        except IndexError:
+            return None
