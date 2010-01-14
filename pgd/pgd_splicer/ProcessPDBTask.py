@@ -480,8 +480,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                         chi mappings.
                         """
                         calc_chi(res, res_dict)
-                     #   if res_dict['chi1']:
-                     #       res_dict['chi'] = res_dict['chi1']
 
 
                         """
