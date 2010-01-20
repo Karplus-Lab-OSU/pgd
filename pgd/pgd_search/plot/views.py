@@ -1,4 +1,6 @@
-import cairo
+import math
+
+from django.db.models import Max, Min
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.conf import settings
@@ -7,149 +9,50 @@ from django.utils import simplejson
 
 from PlotForm import PlotForm
 from ConfDistFuncs import *
-from svg import *
 from pgd_search.views import settings_processor
-
-LABEL_REPLACEMENTS = {
-            "L1":u'C\u207B\u00B9N',
-            "L2":u'NC\u1D45',
-            "L3":u'C\u1D45C\u1D5D',
-            "L4":u'C\u1D45C',
-            "L5":u'CO',
-            "a1":u'C\u207B\u00B9NC\u1D5D',
-            "a2":u'NC\u1D45C\u1D5D',
-            "a3":u'NC\u1D45C',
-            "a4":u'C\u1D5DC\u1D45C',
-            "a5":u'C\u1D45CO',
-            "a6":u'C\u1D45CN\u207A\u00B9',
-            "a7":u'OCN\u207A\u00B9',
-            "ome":u'\u03C9',
-            "chi":u'\u03C7',
-            "phi":u'\u03D5',
-            "psi":u'\u03A8',
-            'zeta':u'\u03B6',
-            'h_bond_energy':'H Bond'
-            }
 
 #ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7')
 
-"""
-Renders a conformational distribution graph
-@return: retusns an SVG instance.
-"""
-def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd=180.0, yEnd=180.0, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, sigmaVal=3, residue_attribute=None, residue_xproperty=None, residue_yproperty=None, xBin=10, yBin=10, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='#666666'):
 
-    #store functions locally for speed optimization
-    local_len = len
-    local_int = int
+def drawGraph(request, height=470, width=560, xStart=None, yStart=None, xEnd=None, yEnd=None, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, sigmaVal=3, residue_attribute=None, residue_xproperty=None, residue_yproperty=None, xBin=None, yBin=None, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='666666'):
+    """
+    Renders a conformational distribution graph
+    @return: returns an SVG instance.
+    """
 
-    svg = SVG()
+    query = request.session['search'].querySet()
+    # calculate default values for min, max, and binsize if no values were given
+    if residue_xproperty == 0:
+        xPrefix = ''
+    elif residue_xproperty < 0:
+        xPrefix = ''.join(['prev__' for i in range(residue_xproperty, 0)])
+    else:
+        xPrefix = ''.join(['next__' for i in range(residue_xproperty)])
 
-    #size ratio (470 = 1)
-    ratio = width/560.0
+    if residue_yproperty == 0:
+        yPrefix = ''
+    elif residue_yproperty < 0:
+        yPrefix = ''.join(['prev__' for i in range(residue_yproperty, 0)])
+    else:
+        yPrefix = ''.join(['next__' for i in range(residue_yproperty)])
 
-    # offsets setup to give 415px for the graph for a default width of 520
-    x = round(width*.17857);
-    y = round(height*.11702);
-    graph_height = height-2*y;
-    graph_width = width-2*x;
-    hashsize = 10*ratio
+    if xStart == None:
+        xStart = query.aggregate(min=Min('%s%s' % (xPrefix, xProperty)))['min']
+    if xEnd == None:
+        xEnd = query.aggregate(max=Max('%s%s' % (xPrefix, xProperty)))['max']
+    if yStart == None:
+        yStart = query.aggregate(min=Min('%s%s' % (yPrefix ,yProperty)))['min']
+    if yEnd == None:
+        yEnd = query.aggregate(max=Max('%s%s' % (yPrefix ,yProperty)))['max']
+    if xBin == None:
+        xBin = math.fabs(xEnd - xStart) / 36
+    if yBin == None:
+        yBin = math.fabs(yEnd - yStart) / 36
 
-    #image background
-    svg.rect(0, 0, height+30, width, 0, background_color, background_color);
-
-    #graph background
-    svg.rect(x, y, graph_height, graph_width, 1, hash_color, graph_color);
-
-    #border
-    svg.rect(x, y, graph_height, graph_height, 1, text_color);
-
-    #axis
-    if xStart < 0 and xEnd > 0:
-        xZero = (graph_width/(xEnd-xStart)) * abs (xStart)
-        svg.line( x+xZero, y, x+xZero, y+graph_height, 1, hash_color);
-
-    if yStart < 0 and xEnd > 0:
-        yZero = graph_height+y - (graph_height/(yEnd-yStart)) * abs (yStart)
-        svg.line( x, yZero, x+graph_width, yZero, 1, hash_color);
-
-    #hashes
-    for i in range(9):
-        hashx = x+(graph_width/8.0)*i
-        hashy = y+(graph_height/8.0)*i
-        svg.line( hashx, y+graph_height, hashx, y+graph_height+hashsize, 1, hash_color);
-        svg.line( x, hashy, x-hashsize, hashy, 1, hash_color);
-
-    #create a cairo surface to calculate text sizes
-    surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
-    ctx = cairo.Context (surface)
-    ctx.set_font_size (12);
-
-    #labels
-    xstep = ((xEnd - xStart)%360 if xProperty in ANGLES else (xEnd - xStart))/ 4
-    if not xstep: xstep = 90
-    #ystep = (yEnd - yStart) / 4
-    ystep = ((yEnd - yStart)%360 if yProperty in ANGLES else (yEnd - yStart))/ 4
-    if not ystep: ystep = 90
-
-    #get Y coordinate for xaxis hashes, this is the same for all x-labels
-    xlabel_y = y+graph_height+hashsize*3+(5*ratio)
-    for i in range(5):
-        #text value
-        xtext = ((xStart + xstep*i + 180)%360 - 180) if xProperty in ANGLES else (xStart + xstep*i)
-        #drop decimal if value is an integer
-        xtext = '%i' % local_int(xtext) if not xtext%1 else '%.1f' %  xtext
-        #get X coordinate of hash, offsetting for length of text
-        xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xtext)
-        xlabel_x = x+(graph_width/4)*i-xbearing-twidth/2+1
-        #create label
-        svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
-
-        #text value
-        #ytext = yEnd - ystep*i
-        ytext = ((yStart + ystep*i + 180)%360 - 180) if yProperty in ANGLES else (yStart + ystep*i)
-        #drop decimal if value is an integer
-        ytext = '%i' % local_int(ytext) if not ytext%1 else '%.1f' % ytext
-        #get Y coordinate offsetting for height of text
-        xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
-        #ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
-        ylabel_y = y+(graph_height/4)*(4-i)+(4*ratio)-ybearing/2-theight/2
-        #Get X coordinate offsetting for length of hash and length of text
-        ylabel_x = (x-(ratio*15))-xbearing-twidth
-        #create label
-        svg.text(ylabel_x, ylabel_y, ytext,12*ratio, text_color)
-
-    #title text
-    xTitle = LABEL_REPLACEMENTS[xProperty] if xProperty in LABEL_REPLACEMENTS else xProperty
-    yTitle = LABEL_REPLACEMENTS[yProperty] if yProperty in LABEL_REPLACEMENTS else yProperty
-    title = 'Plot of %s vs. %s' % (xTitle,yTitle)
-    xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
-    title_x = (width/2) - xbearing - twidth/2
-    svg.text(title_x,15*ratio, title, 12*ratio, text_color)
-
-    attribute_title = LABEL_REPLACEMENTS[attribute] if attribute in LABEL_REPLACEMENTS else attribute
-    title = 'Shading Based Off of %s' % attribute_title
-    xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
-    title_x = (width/2) - xbearing - twidth/2
-    svg.text(title_x,35*ratio, title, 12*ratio, text_color)
-
-    #axis labels
-    ctx.set_font_size (18*ratio);
-    xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xTitle)
-    title_x = (width/2) - xbearing - twidth/2
-    svg.text(title_x,y+graph_height+hashsize*5+(15*ratio), xTitle, 18*ratio, text_color)
-
-    xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
-    title_y = (x-(ratio*35))-xbearing-twidth
-    svg.text(title_y,y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
     try:
         cdp = ConfDistPlot(
-                graph_width,    #width
-                graph_height,   #height
-                0,              #Xpadding
-                0,              #Ypadding
-                x,              #Xoffset
-                y,              #Yoffset
+                width,    #width
+                height,   #height
                 xStart,         #Xstart
                 xEnd,           #Xend
                 yStart,         #Ystart
@@ -164,10 +67,14 @@ def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd
                 residue_xproperty,
                 residue_yproperty,
                 request.session['search'].querySet(),
-                hue
+                hue,
+                background_color,
+                graph_color,
+                text_color,
+                hash_color
         )
 
-        boxes = cdp.Plot()
+        svg = cdp.Plot()
     except Exception, e:
         print 'exception', e
         import traceback, sys
@@ -176,36 +83,9 @@ def drawGraph(request, height=470, width=560, xStart=-180.0, yStart=-180.0, xEnd
         traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
         raise e
-    return (svg,boxes)
+    return (svg, xStart, xEnd, xBin, yStart, yEnd, yBin)
 
-def RGBTuple(rgbString):
-    sub = rgbString[-6:]
-    red = int(sub[:2],16)/255.0
-    green = int(sub[2:4],16)/255.0
-    blue = int(sub[4:], 16)/255.0
-    return (red,green,blue)
 
-def line(input, context):
-    context.move_to(input.x+.5, input.y+.5)
-    context.line_to(input.x1+.5, input.y1+.5)
-    context.set_line_width(input.stroke)
-    r,g,b = RGBTuple(input.color)
-    context.set_source_rgba(r,g,b,1)
-    context.stroke()
-
-def rect(input, context):
-    context.rectangle(input.x+.5, input.y+.5, input.width, input.height)
-
-    if input.color and input.color <> 'None':
-        red, green, blue = RGBTuple(input.color)
-        context.set_source_rgba(red,green,blue,1)
-        context.set_line_width(input.stroke)
-        context.stroke_preserve()
-
-    if input.fill and input.fill <> 'None':
-        r,g,b = RGBTuple(input.fill)
-        context.set_source_rgba(r,g,b,1)
-        context.fill()
 
 
 """
@@ -219,7 +99,7 @@ def renderToPNG(request):
             data = form.cleaned_data
             width = data['width']
             height = data['height']
-            svg, bins = drawGraph(
+            svg, x,x1,xBin,y,y1,yBin = drawGraph(
                         request,
                         height,
                         width,
@@ -245,36 +125,15 @@ def renderToPNG(request):
 
     else:
         form = PlotForm() # An unbound form
-        svg,bins = drawGraph(request)
+        svg,x,x1,xBin,y,y1,yBin = drawGraph(request)
         width = 560
         height = 480
 
     response = HttpResponse(mimetype="image/png")
     response['Content-Disposition'] = 'attachment; filename="plot.png"'
-    surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height+30)
-    ctx = cairo.Context (surface)
-
-    for rec in svg.rects:
-        rect(rec, ctx)
-
-    for action in svg.lines:
-        line(action, ctx)
-
-    for bin in bins:
-        svgrec = Rect(bin[0], bin[1], bin[3], bin[2], 1, bin[4], bin[4])
-        rect(svgrec, ctx)
-
-    for text in svg.texts:
-        red, green, blue = RGBTuple(text.color)
-        ctx.set_source_rgba(red,green,blue,1)
-        ctx.set_font_size (text.size);
-        ctx.move_to (text.x, text.y);
-        ctx.show_text (text.text);
-
-    surface.write_to_png(response)
+    svg.render_png(response, width, height+30)
 
     return response
-
 
 
 def plot(request):
@@ -301,35 +160,36 @@ def renderToSVG(request):
     """
     render conf dist plot using jquery.svg
     """
-
     form = PlotForm(request.POST) # A form bound to the POST data
     if form.is_valid(): # All validation rules pass
         data = form.cleaned_data
-        svg, boxes = drawGraph(
-                    request,
-                    int(data['height']),
-                    int(data['width']),
-                    data['x'],
-                    data['y'],
-                    data['x1'],
-                    data['y1'],
-                    data['attribute'],
-                    data['xProperty'],
-                    data['yProperty'],
-                    data['reference'],
-                    int(data['sigmaVal']),
-                    int(data['residue_attribute']),
-                    int(data['residue_xproperty']),
-                    int(data['residue_yproperty']),
-                    data['xBin'],
-                    data['yBin'],
-                    data['background_color'],
-                    data['graph_color'],
-                    data['text_color'],
-                    data['plot_hue'],
-                    data['hash_color'])
+        svg,x,x1,xBin,y,y1,yBin = drawGraph(
+                                            request,
+                                            int(data['height']),
+                                            int(data['width']),
+                                            data['x'],
+                                            data['y'],
+                                            data['x1'],
+                                            data['y1'],
+                                            data['attribute'],
+                                            data['xProperty'],
+                                            data['yProperty'],
+                                            data['reference'],
+                                            int(data['sigmaVal']),
+                                            int(data['residue_attribute']),
+                                            int(data['residue_xproperty']),
+                                            int(data['residue_yproperty']),
+                                            data['xBin'],
+                                            data['yBin'],
+                                            data['background_color'],
+                                            data['graph_color'],
+                                            data['text_color'],
+                                            data['plot_hue'],
+                                            data['hash_color'])
 
-        json = simplejson.dumps({'background':svg.to_dict(), 'boxes':boxes})
+        json = simplejson.dumps({'svg':svg.to_dict(), \
+                                    'x':x, 'x1':x1, 'xBin':xBin, \
+                                    'y':y, 'y1':y1, 'yBin':yBin})
         return HttpResponse(json)
 
     else:
@@ -345,6 +205,9 @@ def renderToSVG(request):
 
         return HttpResponse(simplejson.dumps({'errors':errors}))
 
+
+
+
 """
 render the results of the search as a TSV (tab separated file)
 and return it to the user as a download
@@ -358,10 +221,6 @@ def plotDump(request):
             cdp = ConfDistPlot(
                 360.0,            #height
                 360.0,            #width
-                0,              #Xpadding
-                0,              #Ypadding
-                55.0,              #Xoffset
-                55.0,              #Yoffset
                 data['x'],      #Xstart
                 data['x1'],           #Xend
                 data['y'],         #Ystart

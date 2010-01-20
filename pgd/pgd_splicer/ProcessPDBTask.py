@@ -38,7 +38,16 @@ from pgd_splicer.chi import CHI_MAP
 #import logging
 #logger = logging.getLogger('root')
 
-NO_VALUE = 999.9
+
+def NO_VALUE(field):
+    """
+    Helper function for determining the value to use when the field is an
+    invalid value.
+    """
+    if field in ('bm','bg','bs'):
+        return 0
+    else:
+        return None
 
 AA3to1 =  {
     'ALA' : 'a',
@@ -190,11 +199,12 @@ class ProcessPDBTask(Task):
 
 
                 # 4) iterate through residue data creating residues
-                for id, residue_props in residues.items():
+                comparison = lambda x,y: cmp(x['chainIndex'], y['chainIndex'])
+                for residue_props in sorted(residues.values(), comparison):
 
                     # 4a) find the residue object so it can be updated or create a new one
                     try:
-                        residue = chain.residues.get(oldID=id)
+                        residue = chain.residues.get(oldID=residue_props['oldID'])
                     except ResidueModel.DoesNotExist:
                         #not found, create new residue
                         #print 'New Residue'
@@ -202,16 +212,27 @@ class ProcessPDBTask(Task):
                         residue.protein = protein
                         residue.chain   = chain
                         residue.chainID = chain.id[4]
-                        residue.chainIndex = id
-                        residue.oldID = id
 
                     # 4b) copy properties into a residue object
                     #     property keys should match property name in object
                     for key, value in residue_props.items():
                         residue.__dict__[key] = value
-                    # 4c) save
+
+                    # 4c) set previous
+                    if residue_props.has_key('prev'):
+                        residue.prev = old_residue
+
+                    # 4d) save
                     residue.save()
                     chain.residues.add(residue)
+                    
+                    # 4e) Update old_residue.next
+                    if residue_props.has_key('prev'):
+                        old_residue.next = residue
+                        old_residue.save()
+
+                    old_residue = residue
+
                 print '    %s proteins' % len(residues)
 
         except Exception, e:
@@ -255,8 +276,8 @@ def uncompress(file, src_dir, dest_dir):
         if not os.path.exists(dest):
             raise Exception('File was not uncompressed')
 
-    except:
-        print 'Exception while uncompressing file: %s' % tempfile
+    except Exception, e:
+        print 'Exception while uncompressing file: %s - %s' % (tempfile, e)
         #clean up resulting file on errors
         if os.path.exists(dest):
             os.remove(dest)
@@ -366,7 +387,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                         initialize_geometry(res_dict, angles_list, 'angle')
                         initialize_geometry(res_dict, dihedral_list, 'angle')
 
-
                         """
                         Get Properties from DSSP and other per residue properties
                         """
@@ -403,10 +423,12 @@ def parseWithBioPython(file, props, chains_filter=None):
 
                             if L1 < 2.5:
                                 # properties that span residues
-                                res_dict['a6'] = calc_angle(oldCA,oldC,N)
-                                res_dict['a7'] = calc_angle(oldO,oldC,N)
+                                residues[res_old_id]['a6'] = calc_angle(oldCA,oldC,N)
+                                residues[res_old_id]['a7'] = calc_angle(oldO,oldC,N)
                                 residues[res_old_id]['psi'] = calc_dihedral(oldN,oldCA,oldC,N)
                                 residues[res_old_id]['ome'] = calc_dihedral(oldCA,oldC,N,CA)
+                                residues[res_old_id]['next'] = newID
+                                res_dict['prev'] = residues[res_old_id]['chainIndex']
                                 res_dict['a1']     = calc_angle(oldC,N,CA)
                                 res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
                                 res_dict['L1'] = L1
@@ -437,8 +459,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                             res_dict['a4'] = calc_angle(CB,CA,C)
                             res_dict['L3'] = calc_distance(CA,CB)
                             res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
-                            if res_id == 247:
-                                print res_id, icode, res['CB'].get_coord(), res_dict['a2']
 
                         """
                         Calculate Bg - bfactor of the 4th atom in Chi1.
@@ -525,9 +545,9 @@ def initialize_geometry(residue, geometry_list, type):
     for item in geometry_list:
         if not residue.has_key(item) or residue[item] is None:
             if type == 'angle':
-                residue[item] = math.degrees(math.radians(NO_VALUE))
+                residue[item] = NO_VALUE(item)
             elif type == 'length':
-                residue[item] = NO_VALUE
+                residue[item] = NO_VALUE(item)
             else:
                 print "Don't know how to deal with type", type
 

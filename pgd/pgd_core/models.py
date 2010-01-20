@@ -1,3 +1,5 @@
+import math
+
 from django.db import models
 from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 
@@ -57,6 +59,8 @@ class Residue(models.Model):
 
     protein         = models.ForeignKey(Protein, related_name='residues')
     chain           = models.ForeignKey(Chain, related_name='residues')
+    prev            = models.ForeignKey('self', related_name='prev_next')
+    next            = models.ForeignKey('self', related_name='next_prev')
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1) # integer id
     oldID           = models.CharField(max_length=5, null=True)# id[icode] from pdb file
@@ -89,13 +93,75 @@ class Residue(models.Model):
     terminal_flag   = models.BooleanField(default=False)#indicates this residue is next to a chain break
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
+    def __init__(self, *args, **kwargs):
+        self.segment = Segmenter(self)
+        models.Model.__init__(self, *args, **kwargs)
+
     #def __str__(self):
     #    return '%d' % self.chainIndex
 
     def __getattribute__(self,name):
         if name == 'aa_full':
             return AA_CHOICES_DICT[self.aa]
-    
         # normal attribute
         else:
             return object.__getattribute__(self, name)
+
+
+class Segmenter():
+    """
+    Helper Class for walking a protein chain through prev/next properties
+    of Residue
+    """
+    def __init__(self, residue):
+        self.residue = residue
+
+    def __getitem__(self, index):
+        if not type(index) == int:
+            raise IndexError
+        if index == 0:
+            return self.residue
+        residue = self.residue
+        try:
+            if index < 0:
+                while index != 0 and residue:
+                    residue = residue.prev
+                    index += 1
+            else:
+                while index != 0 and residue:
+                    residue = residue.next
+                    index -= 1
+        except Residue.DoesNotExist:
+            return None
+        return residue
+
+
+def determine_alias(query, index):
+        """
+        determines the table alias used for a given residue index.
+        
+        XXX This takes into account django internal structure as of 12/29/2009
+        this may change with future releases.
+        
+        query.join_map is a dict mapping a tuple of (table1, table2, fk, key)
+        mapped to a list of aliases the table is joined on.  multiple aliases
+        means the table was joined on itself multiple times.
+        
+        we must walk the list of joins to find the index number we want.
+        
+        @returns alias if table is joined, otherwise None
+        """
+        query = query.query
+        if index == 0:
+            return 'pgd_core_residue'
+        if index > 0:
+            k = ('pgd_core_residue','pgd_core_residue','next_id','id')
+        else:
+            k = ('pgd_core_residue','pgd_core_residue','prev_id','id')
+            
+        if not query.join_map.has_key(k):
+            return None
+        try:
+            return query.join_map[k][int(math.fabs(index))-1]
+        except IndexError:
+            return None

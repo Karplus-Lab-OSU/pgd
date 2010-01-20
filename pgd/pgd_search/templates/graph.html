@@ -214,48 +214,33 @@
              }
         </style>
 
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/pgd.svg.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jqbrowser.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.stylish-select.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
         <script type="text/javascript">
+            var bins = {};
+            var selected_bin = undefined;
             var stats = {};
-            var aafix = 0.5;
-            var rects_width_fix = 1;
-            var rects_height_fix = 1;
-            var line_x_aafix = 0;
-            var line_y_aafix = 0.5;
-            var rects_x_aafix = -.5
-            var rects_y_aafix = 0;
-            var is_IE = false;
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
-            var xBin = {{xBin}};
-            var yBin = {{yBin}};
+            var xBin = {{xBin|default:'""'}};
+            var yBin = {{yBin|default:'""'}};
+            var xMin = -180;
+            var xMax = 180;
+            var yMin = -180;
+            var yMax = 180;
             var xProperty = "{{xProperty}}";
             var yProperty = "{{yProperty}}";
-
-            // IE checks - check different things not supported by IE to detect them
-            if($.jqbrowser.msie()){
-                is_IE = true;
-                rects_width_fix = 0;
-                rects_height_fix = 0;
-                line_x_aafix = 2
-                line_y_aafix = 2
-                rects_x_aafix = 0.5;
-                rects_y_aafix = 0.5;
-            } else if ($.jqbrowser.win()) {
-                aafix = 0;
-                rects_x_aafix = -1
-                rects_y_aafix = -.5
-                line_x_aafix = -.5;
-                line_y_aafix = 0;
-                rects_width_fix = 1.5
-            }
-
             var stat_field = false;
-
+            var is_IE = false;
             $(document).ready(function(){
+                // IE checks - check different things not supported by IE to detect them
+                if($.jqbrowser.msie()){
+                    is_IE = true;
+                }
+
                 $('div#binDetails').hide();
                 $('#canvas_container').qtip({
                         position:{
@@ -313,19 +298,19 @@
 
                 $('#id_xProperty').change(function (){
                         $('#id_xProperty option:selected').each(function () {
-                            //_default = DEFAULTS[$(this).val()];
-                            //$('#id_x').val(_default['min']);
-                            //$('#id_x1').val(_default['max']);
-                            //$('#id_xBin').val(_default['stepsize']);
+                            _default = DEFAULTS[$(this).val()];
+                            $('#id_x').val(_default['min']);
+                            $('#id_x1').val(_default['max']);
+                            $('#id_xBin').val(_default['stepsize']);
                         });
                 });
 
                 $('#id_yProperty').change(function (){
                         $('#id_yProperty option:selected').each(function () {
-                            //_default = DEFAULTS[$(this).val()];
-                            //$('#id_y').val(_default['min']);
-                            //$('#id_y1').val(_default['max']);
-                            //$('#id_yBin').val(_default['stepsize']);
+                            _default = DEFAULTS[$(this).val()];
+                            $('#id_y').val(_default['min']);
+                            $('#id_y1').val(_default['max']);
+                            $('#id_yBin').val(_default['stepsize']);
                         });
                 });
 
@@ -425,74 +410,69 @@
                 // deactivate spinner
                 $('#ajax_progress').hide();
                 $('#canvas').show();
+                selected_bin = undefined;
+
+                xBin = data['xBin'];
+                yBin = data['yBin'];
+                xMin = data['x'];
+                xMax = data['x1'];
+                yMin = data['y'];
+                yMax = data['y1'];
+
+                $('#id_x').val(data['x']);
+                $('#id_x1').val(data['x1']);
+                $('#id_xBin').val(xBin);
+                $('#id_y').val(data['y']);
+                $('#id_y1').val(data['y1']);
+                $('#id_yBin').val(yBin);
 
                 // process graph
-                var paper = Raphael("canvas", 700, 472);
-
-                rects = data['background']['rects']
-                for (i=0; i<rects.length; i++) {
-                    rect = rects[i]
-                    r = paper.rect(rect['x']+aafix,
-                        rect['y']+aafix,
-                        rect['width']-.5,
-                        rect['height']);
-                    r.attr({fill: rect['fill'], stroke:rect['color']});
-                    r.attr('stroke-width',rect['stroke']);
-                }
-
-                texts = data['background']['texts'];
-                font = paper.getFont("DejaVu");
-                //font = paper.getFont("DoulosSIL");
-
-                for (i in texts) {
-                    text = texts[i]
-                    paper.print(text['x'],text['y'],text['text'], font, text['size']);
-                }
-
                 stats = {};
-                boxes = data['boxes'];
-                for (i=0; i<boxes.length; i++) {
-                    rect = boxes[i];
-                    r = paper.rect(rect[0]+rects_x_aafix,
-                        rect[1]+rects_y_aafix,
-                        rect[2]+rects_width_fix,
-                        rect[3]+rects_height_fix);
-                    r.attr({fill: "#" +rect[4], stroke:"#" +rect[4]});
-                    r.attr('stroke-width',0);
+                bins = {};
+                var paper = Raphael("canvas", 700, 472);
+                font = paper.getFont("DejaVu");
+                svg = data['svg'];
+                render_svg(svg, paper, font, process_bin_data);
+            }
 
-                    r[0].onmouseover = function(){
-                        if (is_IE) {
-                            bin_mouseover(this.id);
-                        } else {
-                            bin_mouseover(this.getAttribute('x')+'-'+this.getAttribute('y'));
-                        }
-                    };
-
-                    //add static fields
-                    if (is_IE){
-                        key = rect[0]+'-'+rect[1];
-                        r[0].id = key;
+            function process_bin_data(rect, svg_rect) {
+                /*
+                 processes additional data passed along with bins.  The data
+                 includes avg, stddev, count.
+                 @param rect - Raphael rectangle object
+                 @param data - additional data
+                */
+                data = svg_rect['data'];
+                 rect[0].onmouseover = function(){
+                    if (is_IE) {
+                        bin_mouseover(this.id);
                     } else {
-                        key = r[0].getAttribute('x')+'-'+r[0].getAttribute('y');
+                        bin_mouseover(this.getAttribute('x')+'-'+this.getAttribute('y'));
                     }
+                };
 
-                    stats[key] = {
-                        'observations':rect[6],
-                        'bin': [rect[7][0],rect[7][1]],
-                        'avg': rect[8].toFixed(3),
-                        'dev': rect[9].toFixed(3)
-                    };
+                rect[0].onclick = function(){
+                    if (is_IE) {
+                        bin_click(this.id);
+                    } else {
+                        bin_click(this.getAttribute('x')+'-'+this.getAttribute('y'));
+                    }
+                };
+
+                //add static fields
+                if (is_IE){
+                    key = svg_rect[0]+'-'+svg_rect[1];
+                    rect[0].id = key;
+                } else {
+                    key = rect[0].getAttribute('x')+'-'+rect[0].getAttribute('y');
                 }
-
-                lines = data['background']['lines']
-                for (i in lines) {
-                    line = lines[i];
-                    l = paper
-                        .path({stroke: line['color']})
-                        .moveTo(line['x']+line_x_aafix, line['y']+line_y_aafix)
-                        .lineTo(line['x1']+line_x_aafix, line['y1']+line_y_aafix);
-                }
-
+                stats[key] = {
+                    'observations':data[0],
+                    'bin': [data[1][0],data[1][1]],
+                    'avg': data[2].toFixed(3),
+                    'dev': data[3].toFixed(3)
+                };
+                bins[key] = rect;
             }
 
             function process_form_errors(errors) {
@@ -508,14 +488,48 @@
                 }
             }
 
-            function bin_mouseover(val){
-                field_stats = stats[val];
+            function bin_click(key) {
+                /*
+                 handler for clicked bins.  This selects a bin allowing actions
+                 such as displaying a histogram.  this locks the bin in place
+                 preventing mouseover actions
+                */
+                old_selected = selected_bin;
+                // show new bin only if it wasn't the same bin
+                if (key != selected_bin) {
+                    bin = bins[key];
+                    bin.attr({'stroke-width':1, stroke:'#FF0000'});
+                    selected_bin = key;
 
+                    update_stats(key)
+                } else {
+                    selected_bin = undefined;
+                }
+
+                // deselect old bin if there was one
+                if (old_selected != undefined) {
+                    bins[old_selected].attr({'stroke-width':0, stroke:'#000000'});
+                }
+            }
+
+            function bin_mouseover(key){
+                if (selected_bin == undefined) {
+                    update_stats(key);
+                }
+            }
+
+            function update_stats(key) {
+                field_stats = stats[key];
                 // set static properties
-                $('#stat_xattribute td.x').html(""+precision(field_stats['bin'][0]*xBin, xProperty));
-                $('#stat_xattribute td.y').html(""+precision(field_stats['bin'][0]*xBin+xBin, xProperty));
-                $('#stat_yattribute td.x').html(""+precision(field_stats['bin'][1]*yBin, yProperty));
-                $('#stat_yattribute td.y').html(""+precision(field_stats['bin'][1]*yBin+yBin, yProperty));
+                $('#stat_xattribute td.x').html(""+precision(xMin+field_stats['bin'][0]*xBin, xProperty));
+                Xm = xMin+field_stats['bin'][0]*xBin+xBin;
+                if (Xm > xMax){Xm = xMax;} //adjust if it overruns max value
+                $('#stat_xattribute td.y').html(""+precision(Xm, xProperty));
+                Ym = yMax-(field_stats['bin'][1]+1)*yBin;
+                if (Ym < yMin){Ym = yMin;} //adjust if it overruns max value
+                $('#stat_yattribute td.x').html(""+precision(Ym, yProperty));
+
+                $('#stat_yattribute td.y').html(""+precision(yMax-(field_stats['bin'][1]+1)*yBin+yBin, yProperty));
                 $('#stat_observations').html(field_stats['observations']);
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);

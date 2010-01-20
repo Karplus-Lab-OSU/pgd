@@ -26,10 +26,10 @@
             margin-right: auto;
         }
 
-        .borderRight {
+        .a7, .l5{
             border-right:1px solid black;
         }
-        .borderLeft {
+        .a1 {
             border-left:1px solid black;
         }
 
@@ -47,14 +47,22 @@
             border: 1px solid black;
         }
 
-        tr.spacer-top {
-            height:10px;
+        tr.index{{start}} td {
+            border-top: 1px solid black;
+        }
+
+        tr.index{{stop}} td {
             border-bottom:1px solid black;
         }
 
-        tr.spacer-bottom{
+        tr.spacer-top td{
+            border:0;
             height:20px;
-            border-top: 1px solid black;
+        }
+
+        tr.spacer-bottom td{
+            border:0;
+            height:10px;
         }
 
         {% for color in indexColors %}
@@ -88,7 +96,7 @@
         td.selected {
             background-color:#3a76f1;
             color:white;
-            border-bottom: 1px solid black;
+            border:1px solid black;
         }
 
         tr.fields {
@@ -231,32 +239,34 @@
                     <th class='zeta'>&zeta;</th>
                 </tr>
             {% else %}
-                <tr class="spacer-top"/>
+                <tr class="spacer-top"><td></td></tr>
             {% endif %}
-            {% for r in segment.residueProxies|slice:segmentSlice %}
-                <tr class="data index{{r.chainIndex|add:segment.offset}} {%if forloop.first %}first{%endif%}{%if forloop.last %}last{%endif%}">
+
+            {% for i in indexes %}
+                {% with segment.segment|index_lookup:i as r %}
+                <tr class="data index{{i}}">
                     <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                     <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
                     <td>
                     <a href="http://www.ebi.ac.uk/thornton-srv/databases/cgi-bin/pdbsum/GetPage.pl?pdbcode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdbsum.ico"></a>
                     <a href="http://www.pdb.org/pdb/explore.do?structureId={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdb.ico"></a>
                     <a href="http://eds.bmc.uu.se/cgi-bin/eds/uusfs?pdbCode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/eds.ico"></a></td>
-                    <td>{% if not r.chainIndex|add:segment.offset %}i{% else %}i{{r.chainIndex|add:segment.offset|stringformat:"+d"}}{% endif %}</td>
+                    <td>{% ifequal i 0 %}i{% else %}i{{i|stringformat:"+d"}}{% endifequal %}</td>
                     <td>{{r.oldID}}</td>
                     <td>{{segment.chainID}}</td>
                     <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
-                    <td nowrap id="data_a1_{{forloop.counter}}" class="data a1 borderLeft" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|invalid:1}}</td>
+                    <td nowrap id="data_a1_{{forloop.counter}}" class="data a1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|invalid:1}}</td>
                     <td nowrap id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|invalid:1}}</td>
                     <td nowrap id="data_a3_{{forloop.counter}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|invalid:1}}</td>
                     <td nowrap id="data_a4_{{forloop.counter}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|invalid:1}}</td>
                     <td nowrap id="data_a5_{{forloop.counter}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|invalid:1}}</td>
                     <td nowrap id="data_a6_{{forloop.counter}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|invalid:1}}</td>
-                    <td nowrap id="data_a7_{{forloop.counter}}" class="data a7 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|invalid:1}}</td>
+                    <td nowrap id="data_a7_{{forloop.counter}}" class="data a7" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|invalid:1}}</td>
                     <td nowrap id="data_l1_{{forloop.counter}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|invalid:3}}</td>
                     <td nowrap id="data_l2_{{forloop.counter}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|invalid:3}}</td>
                     <td nowrap id="data_l3_{{forloop.counter}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|invalid:3}}</td>
                     <td nowrap id="data_l4_{{forloop.counter}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|invalid:3}}</td>
-                    <td nowrap id="data_l5_{{forloop.counter}}" class="data l5 borderRight" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|invalid:3}}</td>
+                    <td nowrap id="data_l5_{{forloop.counter}}" class="data l5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|invalid:3}}</td>
                     <td nowrap id="data_ss_{{forloop.counter}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
                     <td nowrap id="data_phi_{{forloop.counter}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|invalid:2}}</td>
                     <td nowrap id="data_psi_{{forloop.counter}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|invalid:2}}</td>
@@ -268,9 +278,9 @@
                     <td nowrap id="data_hbond_{{forloop.counter}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|invalid:2}}</td>
                     <td nowrap id="data_zeta_{{forloop.counter}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|invalid:2}}</td>
                 </tr>
-
+                {% endwith %}
             {% endfor %}
-            <tr class="spacer-bottom"/>
+            <tr class="spacer-bottom"><td></td></tr>
         <!--/tbody>
         <tbody><tr class="spacer"/></tbody-->
         {% endfor %}
