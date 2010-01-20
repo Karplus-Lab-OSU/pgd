@@ -525,11 +525,10 @@
                 Xm = xMin+field_stats['bin'][0]*xBin+xBin;
                 if (Xm > xMax){Xm = xMax;} //adjust if it overruns max value
                 $('#stat_xattribute td.y').html(""+precision(Xm, xProperty));
-                Ym = yMax-(field_stats['bin'][1]+1)*yBin;
-                if (Ym < yMin){Ym = yMin;} //adjust if it overruns max value
-                $('#stat_yattribute td.x').html(""+precision(Ym, yProperty));
-
-                $('#stat_yattribute td.y').html(""+precision(yMax-(field_stats['bin'][1]+1)*yBin+yBin, yProperty));
+                Ym = yMin+field_stats['bin'][1]*yBin+yBin;
+                if (Ym > yMax){Ym = yMax;} //adjust if it overruns max value
+                $('#stat_yattribute td.x').html(""+precision(yMin+field_stats['bin'][1]*yBin, yProperty));
+                $('#stat_yattribute td.y').html(""+precision(Ym, yProperty));
                 $('#stat_observations').html(field_stats['observations']);
                 $('#stat_field td.avg').html(field_stats['avg']);
                 $('#stat_field td.dev').html(field_stats['dev']);

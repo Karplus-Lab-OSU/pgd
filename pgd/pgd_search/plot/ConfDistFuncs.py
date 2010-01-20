@@ -454,7 +454,7 @@ class ConfDistPlot():
 
         #draw data area (bins)
         self.query_bins()
-        self.render_bins(svg, graph_x, graph_y, binWidth, binHeight)
+        self.render_bins(svg, graph_x, graph_height+graph_y, binWidth, binHeight)
 
         #axis
         if x < 0 and x1 > 0:
@@ -641,7 +641,7 @@ class ConfDistPlot():
             # create rect object.  positions are based on bin_index
             svg.rect(
                     bin['pixCoords'][0]*(binWidth+1)+xOffset+1,
-                    bin['pixCoords'][1]*(binHeight+1)+yOffset+1,
+                    yOffset-(bin['pixCoords'][1]+1)*(binHeight+1)+1,
                     binHeight,
                     binWidth,
                     0,
