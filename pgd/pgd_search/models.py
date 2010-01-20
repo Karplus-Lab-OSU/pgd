@@ -153,7 +153,7 @@ class Search(models.Model):
                 (
                     'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                     'L1',   'L2',   'L3',   'L4',   'L5',
-                    'phi',  'psi',  'ome',  'chi',
+                    'phi',  'psi',  'ome',  'chi1', 'chi2', 'chi3', 'chi4',
                     'bm',   'bs',   'bg',
                     'h_bond_energy',
                     'zeta',
@@ -254,7 +254,10 @@ class Search_residue(models.Model):
     phi             = models.CharField(max_length=30, null=True)
     psi             = models.CharField(max_length=30, null=True)
     ome             = models.CharField(max_length=30, null=True)
-    chi             = models.CharField(max_length=30, null=True)
+    chi1             = models.CharField(max_length=30, null=True)
+    chi2             = models.CharField(max_length=30, null=True)
+    chi3             = models.CharField(max_length=30, null=True)
+    chi4             = models.CharField(max_length=30, null=True)
     bm              = models.CharField(max_length=30, null=True)
     bs              = models.CharField(max_length=30, null=True)
     bg              = models.CharField(max_length=30, null=True)
@@ -283,7 +286,10 @@ class Search_residue(models.Model):
     phi_include             = models.NullBooleanField(null=True)
     psi_include             = models.NullBooleanField(null=True)
     ome_include             = models.NullBooleanField(null=True)
-    chi_include             = models.NullBooleanField(null=True)
+    chi1_include             = models.NullBooleanField(null=True)
+    chi2_include             = models.NullBooleanField(null=True)
+    chi3_include             = models.NullBooleanField(null=True)
+    chi4_include             = models.NullBooleanField(null=True)
     bm_include              = models.NullBooleanField(null=True)
     bs_include              = models.NullBooleanField(null=True)
     bg_include              = models.NullBooleanField(null=True)
