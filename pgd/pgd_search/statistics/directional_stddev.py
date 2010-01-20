@@ -29,7 +29,7 @@ class DirectionalStatisticsQuery():
             outer_parts.append('MAX(%s)' % field)
             outer_parts.append('avg_%s' % field)
             outer_parts.append(
-                'SQRT(IF (((%(f)s+360)%%%%360 - avgs.avg_%(f)s) < 180,SUM(POW((%(f)s+360)%%%%360-avgs.avg_%(f)s, 2)),SUM(POW(360-((%(f)s+360)%%%%360-avgs.avg_%(f)s),2)))/(COUNT(%(f)s)-1))AS stddev_%(f)s' % {'f':field}
+                'SQRT(IF (((%(f)s+360)MOD 360 - avgs.avg_%(f)s) < 180,SUM(POW((%(f)s+360) MOD 360-avgs.avg_%(f)s, 2)),SUM(POW(360-((%(f)s+360) MOD 360-avgs.avg_%(f)s),2)))/(COUNT(%(f)s)-1))AS stddev_%(f)s' % {'f':field}
             )
 
         for f in self.fields:
@@ -42,16 +42,23 @@ class DirectionalStatisticsQuery():
         inner = ','.join(inner_parts)
         outer = ','.join(outer_parts)
 
-        params = {
-            'base': self.queryset.query.__str__(),
+        base_sql, base_params = self.queryset.query.as_sql()
+
+        sql_params = {
+            'base': base_sql,
             'inner': inner,
             'outer': outer
         }
 
-        return 'SELECT residues.aa, %(outer)s FROM (%(base)s) AS residues, \
+        sql =  'SELECT residues.aa, %(outer)s FROM (%(base)s) AS residues, \
             (SELECT aa, %(inner)s FROM (%(base)s) AS residues GROUP BY aa) \
             AS avgs WHERE residues.aa = avgs.aa GROUP BY residues.aa \
-            WITH ROLLUP' % params
+            WITH ROLLUP' % sql_params
+
+        # query is executed twice as an inner query.
+        params = base_params + base_params
+
+        return sql, params
 
     def __str__(self):
         if not self.results:
@@ -73,7 +80,7 @@ class DirectionalStatisticsQuery():
         """
         from django.db import connection, transaction
         cursor = connection.cursor()
-        cursor.execute(self.as_sql())
+        cursor.execute(*self.as_sql())
         results = []
 
         # iterate results and process results into a dictionary
