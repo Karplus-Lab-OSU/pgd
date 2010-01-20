@@ -61,7 +61,10 @@ LABEL_REPLACEMENTS = {
             "a6":u'C\u1D45CN\u207A\u00B9',
             "a7":u'OCN\u207A\u00B9',
             "ome":u'\u03C9',
-            "chi":u'\u03C7',
+            "chi1":u'\u03C7\u00B9',
+            "chi2":u'\u03C7\u00B2',
+            "chi3":u'\u03C7\u00B3',
+            "chi4":u'\u03C7\u2084',
             "phi":u'\u03D5',
             "psi":u'\u03A8',
             'zeta':u'\u03B6',
@@ -871,7 +874,19 @@ def RefDefaults():
                         'min':-180,
                         'max':180,
                         'stepsize':10},
-                'chi':{
+                'chi1':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10},
+                'chi2':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10},
+                'chi3':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10},
+                'chi4':{
                         'min':-180,
                         'max':180,
                         'stepsize':10},
