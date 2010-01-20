@@ -123,7 +123,7 @@ def editSearch(request, search_id=None):
         ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES]) 
 
         dict = {}
-        for prefix in ("aa", "ss", "phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in ("aa", "ss", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i
@@ -305,7 +305,7 @@ def processSearchObject(search):
             data['aa_i_%i' % i] = residue.aa_int_include
 
         #process all other fields
-        for prefix in ("phi", "psi", "ome", "chi", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in ("phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
             data['%s_%i' % (prefix, i)] = residue.__dict__[prefix]
             data['%s_i_%i' % (prefix, i)] = residue.__dict__['%s_include' % prefix]
 
