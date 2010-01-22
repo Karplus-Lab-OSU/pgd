@@ -18,7 +18,7 @@ from django.core.paginator import Paginator
 
 
 # A list of values that should not be printed out
-FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi1','chi2','chi3','chi4', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
+FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
 FIELD_LABEL_REPLACEMENTS = {
     'h_bond_energy':'H Bond', 
     'aa':'AA',
@@ -48,10 +48,7 @@ FIELD_LABEL_REPLACEMENTS = {
     'L5_include':'C-O include',
     'phi_include':'phi include',
     'ome_include':'ome include',
-    'chi1_include':'chi(1) include',
-    'chi2_include':'chi(2) include',
-    'chi3_include':'chi(3) include',
-    'chi4_include':'chi(4) include',
+    'chi_include':'chi include',
     'bm_include':'bm include',
     'bs_include':'bs include',
     'bg_include':'bg include',
@@ -61,7 +58,7 @@ FIELD_LABEL_REPLACEMENTS = {
 FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
 RESIDUE_FIELDS =    ['index','chainID','a1','a1_include','a2','a2_include','a3','a3_include','a4','a4_include','a5','a5_include','a6','a6_include','a7',
                     'a7_include','L1','L1_include','L2','L2_include','L3','L3_include','L4','L4_include','L5','L5_include','ss','phi', 'psi','phi_include', 'ome',
-                    'ome_include','chi1','chi1_include','chi2','chi2_include','chi3','chi3_include','chi4','chi4_include', 'bm','bm_include','bs','bs_include','bg','bg_include', 'h_bond_energy','h_bond_energy_include', 'zeta','zeta_include']
+                    'ome_include','chi','chi_include', 'bm','bm_include','bs','bs_include','bg','bg_include', 'h_bond_energy','h_bond_energy_include', 'zeta','zeta_include']
 SS_KEY_LIST = ['&alpha; helix','3<sub>10</sub> helix','&beta; sheet','Turn','Bend','&beta;-bridge','&pi; helix']
 SS_HEADER = [u'Alpha Helix',u'3_10 Helix',u'Beta Sheet',u'Turn',u'Bend','Beta-Bridge','Pi Helix']
 
@@ -76,6 +73,7 @@ class BufferThread(Thread):
     """
 
     def __init__(self, parent):
+        print 'bufferthread created'
         self.parent = parent
         Thread.__init__(self)
 
@@ -90,35 +88,26 @@ class BufferThread(Thread):
             self.parent.count += 1
             first = True
             for offset, string in self.parent.iValues:
-                residue = segment
-                if offset < 0:
-                    while offset != 0:
-                        residue = residue.prev
-                        offset += 1
-                elif offset > 0:
-                    while offset != 0:
-                        residue = residue.next
-                        offset -= 1
-                
+
                 parts = [
                     str(self.parent.count) if first else ' ',
                     segment.protein_id,
                     string,
-                    residue.oldID,
+                    segment.__dict__['r%i_oldID' % (self.parent.iIndex+offset) ],
                     segment.chainID,
                 ]
                 #field values
                 for field in FIELDS:
                     # replace field with display value if needed
                     if field in FIELD_VALUE_REPLACEMENTS:
-                        code = segment.__dict__[field]
+                        code = segment.__dict__['r%i_%s' % (iIndex+offset, field)]
                         if code:
                             for k,v in FIELD_VALUE_REPLACEMENTS[field]:
                                 if k == code:
                                     parts.append(str(v))
                     # just write value
                     else:
-                        parts.append(str(segment.__dict__[field]))
+                        parts.append(str(segment.__dict__['r%i_%s' % (iIndex+offset, field)]))
 
                 s = '\t'.join(parts)
                 string = '%s\n' % s
