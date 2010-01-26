@@ -17,7 +17,7 @@ if __name__ == '__main__':
 
 
 import math
-from pgd_core.models import *
+from pgd.pgd_core.models import *
 import simplejson
 
 def dump_protein(code, preserve_precision):

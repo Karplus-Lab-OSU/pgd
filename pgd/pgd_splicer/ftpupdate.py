@@ -15,8 +15,8 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from pydra_server.cluster.tasks.tasks import *
-from pgd_splicer.models import *
+from pydra.cluster.tasks.tasks import *
+from pgd.pgd_splicer.models import *
 
 import os
 

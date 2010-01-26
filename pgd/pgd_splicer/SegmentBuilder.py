@@ -19,9 +19,9 @@ import math
 
 from django.db import transaction
 
-from pydra_server.cluster.tasks import Task
-from pgd_core.models import *
-from pgd_search.models import *
+from pydra.cluster.tasks import Task
+from pgd.pgd_core.models import *
+from pgd.pgd_search.models import *
 
 """
 Task that processes protein chains to create or update segment objects
@@ -35,9 +35,6 @@ class SegmentBuilderTask(Task):
 
     def work(self, pdbs):
         worker = self.get_worker()
-
-        print 'SegmentBuilder - starting: >>>>>>>>>>>>>>>', pdbs, worker
-
 
         length = searchSettings.segmentSize
         self.proteinCount = 0

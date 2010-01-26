@@ -14,6 +14,10 @@ if __name__ == '__main__':
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
+    from pydra.config import load_settings
+    pydra_settings = load_settings()
+
+
 
 from datetime import datetime
 import math
@@ -29,11 +33,11 @@ from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
 from pydra.cluster.tasks.tasks import Task
 
-from pgd_core.models import Protein as ProteinModel
-from pgd_core.models import Chain as ChainModel
-from pgd_core.models import Residue as ResidueModel
-from pgd_splicer.models import *
-from pgd_splicer.chi import CHI_MAP
+from pgd.pgd_core.models import Protein as ProteinModel
+from pgd.pgd_core.models import Chain as ChainModel
+from pgd.pgd_core.models import Residue as ResidueModel
+from pgd.pgd_splicer.models import *
+from pgd.pgd_splicer.chi import CHI_MAP
 
 #import logging
 #logger = logging.getLogger('root')
@@ -239,6 +243,7 @@ class ProcessPDBTask(Task):
             import traceback
             exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
             print "*** print_tb:"
+            print residue_props
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
             print 'EXCEPTION in Residue', code, e.__class__, e
