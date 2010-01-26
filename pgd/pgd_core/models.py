@@ -1,7 +1,7 @@
 import math
 
 from django.db import models
-from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
+from pgd.pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 
 # Protein model
 # (was 'protein_info')
@@ -59,28 +59,28 @@ class Residue(models.Model):
 
     protein         = models.ForeignKey(Protein, related_name='residues')
     chain           = models.ForeignKey(Chain, related_name='residues')
-    prev            = models.ForeignKey('self', related_name='prev_next')
-    next            = models.ForeignKey('self', related_name='next_prev')
+    prev            = models.ForeignKey('self', related_name='prev_next', null=True)
+    next            = models.ForeignKey('self', related_name='next_prev', null=True)
     aa              = models.CharField(max_length=1, choices=AA_CHOICES) # new type
     chainID         = models.CharField(max_length=1) # integer id
     oldID           = models.CharField(max_length=5, null=True)# id[icode] from pdb file
     chainIndex      = models.PositiveIntegerField()
     a1              = models.FloatField(null=True)
-    a2              = models.FloatField()
+    a2              = models.FloatField(null=True)
     a3              = models.FloatField()
-    a4              = models.FloatField()
+    a4              = models.FloatField(null=True)
     a5              = models.FloatField()
     a6              = models.FloatField(null=True)
     a7              = models.FloatField(null=True)
     L1              = models.FloatField(null=True)
     L2              = models.FloatField()
-    L3              = models.FloatField()
+    L3              = models.FloatField(null=True)
     L4              = models.FloatField()
     L5              = models.FloatField()
     ss              = models.CharField(max_length=1, choices=SS_CHOICES) # new type (was blob, but all entries 1 char)
-    phi             = models.FloatField()
-    psi             = models.FloatField()
-    ome             = models.FloatField()
+    phi             = models.FloatField(null=True)
+    psi             = models.FloatField(null=True)
+    ome             = models.FloatField(null=True)
     chi1            = models.FloatField(null=True)
     chi2            = models.FloatField(null=True)
     chi3            = models.FloatField(null=True)
@@ -89,7 +89,7 @@ class Residue(models.Model):
     bs              = models.FloatField()
     bg              = models.FloatField(null=True)
     h_bond_energy   = models.FloatField()
-    zeta            = models.FloatField()
+    zeta            = models.FloatField(null=True)
     terminal_flag   = models.BooleanField(default=False)#indicates this residue is next to a chain break
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
