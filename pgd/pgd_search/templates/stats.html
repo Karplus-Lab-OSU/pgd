@@ -237,7 +237,7 @@
 
         /* converts a field to the required precision */
         function precision(value, field) {
-            if (value || value != 0){
+            if (value != null && (value || value != 0)){
                 if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5') {
                     return value.toFixed(3);
                 }
@@ -298,7 +298,8 @@
             }
 
             $row.children('.aa_total').html(data['total']);
-            $('#stats').qtip('hide');
+            //XXX calling with setTimeout fixes issue where show/hide calls overlap and its never hidden
+            setTimeout("$('#stats').qtip('hide')", 0);
         }
 
         function showStats(key) {
