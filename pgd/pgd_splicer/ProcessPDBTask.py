@@ -92,6 +92,14 @@ class ProcessPDBTask(Task):
     geometry data from the files.  The data is stored in Protein, Chain and
     Residue models and commited to the database.
     """
+    total_proteins = 0
+    finished_proteins = 0
+
+    def progress(self):
+        if not self.total_proteins:
+            return 0
+        return int((self.finished_proteins/float(self.total_proteins))*100)
+            
 
     def work(self, **kwargs):
         """
@@ -103,6 +111,7 @@ class ProcessPDBTask(Task):
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
         print 'PDBS TO PROCESS:', pdbs
+        self.total_proteins = len(pdbs)
 
         for data in pdbs:
             # only update pdbs if they are newer
@@ -110,6 +119,7 @@ class ProcessPDBTask(Task):
                 self.process_pdb(data)
             else:
                 print 'INFO: Skipping up-to-date PDB: %s' % data['code']
+            self.finished_proteins += 1
 
         print 'ProcessPDBTask - Processing Complete'
 
@@ -154,6 +164,7 @@ class ProcessPDBTask(Task):
         Process an individual pdb file
         """
         try:
+            residue_props = None
             code = data['code']
             chains_filter = data['chains'] if data.has_key('chains') else None
             print 'DATA', data
@@ -245,8 +256,8 @@ class ProcessPDBTask(Task):
             print "*** print_tb:"
             print residue_props
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
-
             print 'EXCEPTION in Residue', code, e.__class__, e
+            self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
             transaction.rollback()
             return
 
