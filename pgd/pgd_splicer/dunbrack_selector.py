@@ -14,6 +14,8 @@ if __name__ == '__main__':
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
+    from pydra.config import load_settings
+    pydra_settings = load_settings()
 
 from datetime import datetime
 import gzip
@@ -22,9 +24,9 @@ import re
 import urllib
 
 from dbsettings.loading import set_setting_value
-from pydra_server.cluster.tasks import Task
+from pydra.cluster.tasks import Task
 
-from pgd_splicer.models import *
+from pgd.pgd_splicer.models import *
 
 
 class DunbrackPDBSelectorTask(Task):
@@ -94,10 +96,11 @@ class DunbrackPDBSelectorTask(Task):
         # it is still in progress
         date = files[0][0][26:32]
         version = '20%s-%s-%s' % (date[:2], date[2:4], date[4:])
-        set_setting_value('pgd_splicer.models','','DATA_VERSION','%s (import in progress)' % version)
+        #set_setting_value('pgd_splicer.models','','DATA_VERSION','%s (import in progress)' % version)
 
         self.progressValue = 100
 
+        print 'VERSION: %s' % version
         return {'version':version, 'data':[v for k,v in proteins.items()]}
 
 
