@@ -381,7 +381,7 @@ def saveSearch(request,search_id=None):
                     editedsearch.title = data['title']
                     editedsearch.description = data['description']
                     editedsearch.user=request.user
-                    editedsearch.timestamp=datetime.now().strftime("%d/%m/%y")
+                    editedsearch.timestamp=datetime.now()
                     editedsearch.isPublic = data['isPublic']
                     editedsearch.save()
                     return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)     
