@@ -219,7 +219,7 @@ class ProcessPDBTask(Task):
 
                     # 4a) find the residue object so it can be updated or create a new one
                     try:
-                        residue = chain.residues.get(oldID=residue_props['oldID'])
+                        residue = chain.residues.get(oldID=str(residue_props['oldID']))
                     except ResidueModel.DoesNotExist:
                         #not found, create new residue
                         #print 'New Residue'
