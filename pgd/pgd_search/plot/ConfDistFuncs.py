@@ -18,7 +18,7 @@ from pgd_search.models import *
 from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev
 from svg import *
 
-ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta')
+ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
 NON_FIELDS = ('Observations', 'all')
 
 """
@@ -673,7 +673,7 @@ class ConfDistPlot():
         residueY = self.residue_yproperty
 
         #fields to include, order in this list is important
-        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi','zeta')
+        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi1','chi2','chi3','chi4','zeta')
         avgString = 'r%i_%s_avg'
         stdString = 'r%i_%s_stddev'
 
