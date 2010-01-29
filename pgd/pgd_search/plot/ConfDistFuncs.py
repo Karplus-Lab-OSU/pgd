@@ -123,6 +123,7 @@ def getLinearStats(values,size):
     """
 
     # Average
+    values = filter(lambda x: x!=None, values)
     avg = sum(values)/size
 
     # Standard Deviation
