@@ -891,7 +891,11 @@ def RefDefaults():
                         'min':-180,
                         'max':180,
                         'stepsize':10},
-                'zeta':{
+                'psi':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10}, 
+               'zeta':{
                         'min':-180,
                         'max':180,
                         'stepsize':10}
