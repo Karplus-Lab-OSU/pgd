@@ -320,7 +320,6 @@ class ConfDistPlot():
         # way of making this work
         annotated_query.query.group_by = []
 
-        
 
         for entry in annotated_query:
             key = (int(entry['x']), int(entry['y']))
@@ -349,7 +348,7 @@ class ConfDistPlot():
                 # out nulls for just that field
                 for field in self.stats_fields:
                     if field[0] in ANGLES:
-                        if avg:
+                        if avg and bin[avg]:
                             torsion_avgs[field[0]]["'%s:%s'" % key] = bin[avg]
 
             else:
@@ -375,21 +374,23 @@ class ConfDistPlot():
         for field in self.stats_fields:
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
-                cases = ' '.join(['WHEN %s THEN %s' % (k,v) if v else '' for k,v in torsion_avgs[field[0]].items()])
-                avgs = "CASE CONCAT(FLOOR((%s-%s)/%s),':',FLOOR((%s-%s)/%s)) %s END" % (x_field, x, xbin, y_field, y, ybin, cases)
-                annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
-                bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
-                stddev_query = querySet \
+ 
+                
+                cases = ' '.join(['WHEN %s THEN %s' % (k,v) for k,v in filter(lambda x:x[1], torsion_avgs[field[0]].items())])
+                if cases:
+                    avgs = "CASE CONCAT(FLOOR((%s-%s)/%s),':',FLOOR((%s-%s)/%s)) %s END" % (x_field, x, xbin, y_field, y, ybin, cases)
+                    annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
+                    bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
+                    stddev_query = querySet \
                                     .extra(select={'x':x_aggregate, 'y':y_aggregate}) \
                                     .extra(where=bin_where_clause) \
                                     .annotate(**annotations) \
                                     .values(*annotations.keys()+['x','y']) \
                                     .order_by('x','y')
-                stddev_query.query.group_by = []
-
-                for r in stddev_query:
-                    value = r[stddev] if r[stddev] else 0
-                    self.bins[(r['x'],r['y'])][stddev] = value
+                    stddev_query.query.group_by = []
+                    for r in stddev_query:
+                        value = r[stddev] if r[stddev] else 0
+                        self.bins[(r['x'],r['y'])][stddev] = value
 
 
     def create_res_string(self, index, property):
@@ -551,13 +552,21 @@ class ConfDistPlot():
 
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
-            if self.ref in ANGLES:
-                meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
-                stdPropAvgXSigma = 180 if stdPropAvg > 60 else sig*stdPropAvg
+            key = '%s_avg'%self.refString
+            values = [bin[key] for bin in filter(lambda x:x[key], self.bins.values())]
+            if len(values):
+                if self.ref in ANGLES:
+                    meanPropAvg,stdPropAvg = getCircularStats(values, len(values))
+                    stdPropAvgXSigma = 180 if stdPropAvg > 60 else sig*stdPropAvg
+                else:
+                    meanPropAvg,stdPropAvg = getLinearStats(values, len(values))
+                    minPropAvg = meanPropAvg - sig*stdPropAvg
+                    maxPropAvg = meanPropAvg + sig*stdPropAvg
             else:
-                meanPropAvg,stdPropAvg = getLinearStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
-                minPropAvg = meanPropAvg - sig*stdPropAvg
-                maxPropAvg = meanPropAvg + sig*stdPropAvg
+                # no values, sigma is meaningless but set a value anyways the
+                # remainder of the code will run.
+                stdPropAvgXSigma = 0
+                
 
         colors, adjust = COLOR_RANGES[self.color]
         # Color the bins
