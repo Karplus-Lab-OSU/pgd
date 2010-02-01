@@ -201,16 +201,6 @@ class ConfDistPlot():
         # Difference between the possible min and max axes values
         xLimit = xMax - xMin
         yLimit = yMax - yMin
-        #   Adjustments for circular quantities
-        if xText in ANGLES:
-            xModder = int(360/xbin)
-            if xMax < xMin:
-                xLimit = xLimit%360
-        if yText in ANGLES:
-            yModder = int(360/ybin)
-            if yMax < yMin:
-                yLimit = yLimit%360
-
         # Index of the residue of interest in the segment
         self.residue_attribute = residue_attribute
         self.residue_xproperty = residue_xproperty
@@ -230,6 +220,28 @@ class ConfDistPlot():
         xbin = self.xbin
         ybin = self.ybin
 
+        # if this is a circular spanning 180/-180 we must adjust the bins
+        # so that the range falls between -180 and 180
+        xlinear = True
+        if x1 > 180:
+            x = x1-360
+            x1 = 180-self.x
+            xlinear = False
+        elif x1 < 0 and x > 0:
+            x = x1
+            x1 = self.x
+            xlinear = False
+
+        ylinear = True
+        if y1 > 180:
+            y = y1-360
+            y1 = 180-self.y
+            ylinear = False
+        elif y1 < 0 and y > 0:
+            y = y1
+            y1 = self.y
+            ylinear = False
+            
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
         self.bins = {}
@@ -247,15 +259,15 @@ class ConfDistPlot():
             (Q(**{
                 '%s__gte'%self.xTextString: x,
                 '%s__lt'%self.xTextString: x1,
-            }) if (x <= x1) else ( # Altered logic for circular values
-                Q(**{'%s__gte'%self.xTextString: x}) |
-                Q(**{'%s__lt'%self.xTextString: x1})
+            }) if (xlinear) else ( # Altered logic for circular values
+                Q(**{'%s__gte'%self.xTextString: self.x}) |
+                Q(**{'%s__lt'%self.xTextString: x})
             )) & (Q(**{
                 '%s__gte'%self.yTextString: y,
                 '%s__lt'%self.yTextString: y1,
-            }) if (y <= y1) else ( # altered logic for circular values
-                Q(**{'%s__gte'%self.yTextString: y}) |
-                Q(**{'%s__lt'%self.yTextString: y1})
+            }) if (ylinear) else ( # altered logic for circular values
+                Q(**{'%s__gte'%self.yTextString: self.y}) |
+                Q(**{'%s__lt'%self.yTextString: y})
             ))
         )
 
@@ -279,7 +291,7 @@ class ConfDistPlot():
         # create set of annotations to include in the query
         annotations = {'count':Count('id')}
         torsion_avgs = {}
-        for field in self.fields:
+        for field in self.stats_fields:
             avg = '%s_avg' % field[1]
             stddev = '%s_stddev' % field[1]
             if field[0] in ANGLES:
@@ -303,8 +315,17 @@ class ConfDistPlot():
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
-        y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
+        if xlinear:
+            x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
+        else:
+            x_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(rx)s)/%(b)s)' \
+                          % {'f':x_field, 'b':xbin, 'rx':self.x}
+        if ylinear:
+            y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
+        else:
+            y_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(ry)s)/%(b)s)' \
+                          % {'f':y_field, 'b':ybin, 'ry':self.y}
+        
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -320,13 +341,8 @@ class ConfDistPlot():
         # way of making this work
         annotated_query.query.group_by = []
 
-
         for entry in annotated_query:
             key = (int(entry['x']), int(entry['y']))
-
-            #if xText in ANGLES: xDex = xDex%xModder
-            #if yText in ANGLES: yDex = yDex%yModder
-
             # add  entry to the bins dict
             bin = {
                 'count' : entry['count'],
@@ -370,15 +386,12 @@ class ConfDistPlot():
         # This query uses a large case statement to select the average matching
         # the bin the result is grouped into.  This isn't the cleanest way
         # of doing this but it does work
-        
         for field in self.stats_fields:
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
- 
-                
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) for k,v in filter(lambda x:x[1], torsion_avgs[field[0]].items())])
                 if cases:
-                    avgs = "CASE CONCAT(FLOOR((%s-%s)/%s),':',FLOOR((%s-%s)/%s)) %s END" % (x_field, x, xbin, y_field, y, ybin, cases)
+                    avgs = "CASE CONCAT(%s,':',%s) %s END" % (x_aggregate, y_aggregate, cases)
                     annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
                     bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
                     stddev_query = querySet \
@@ -443,13 +456,20 @@ class ConfDistPlot():
         hashsize = 10*ratio
         
         # calculate bin count and sizes.
-        xBinCount = math.ceil((float(x1)-x)/xbin)
-        yBinCount = math.ceil((float(y1)-y)/ybin)
+        if x>0 and x1<0:
+            # account for circular coordinates
+            xBinCount = math.ceil((360.0+x1-x)/xbin)
+        else:
+            xBinCount = math.ceil((float(x1)-x)/xbin)
+        if y>0 and y1<0:
+            # account for circular coordinates
+            yBinCount = math.ceil((360.0+y1-y)/ybin)
+        else:
+            yBinCount = math.ceil((float(y1)-y)/ybin)
         binWidth = math.floor((graph_width-xBinCount+1)/xBinCount)
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
         graph_width_used = (binWidth+1)*xBinCount
-        
         #image background
         svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
         #graph background
