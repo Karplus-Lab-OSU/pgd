@@ -325,7 +325,6 @@ class ConfDistPlot():
         else:
             y_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(ry)s)/%(b)s)' \
                           % {'f':y_field, 'b':ybin, 'ry':self.y}
-        
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
 
         # add all the names of the aggregates and x,y properties to the list 
@@ -470,25 +469,33 @@ class ConfDistPlot():
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
         graph_width_used = (binWidth+1)*xBinCount
+        
         #image background
         svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
         #graph background
-        svg.rect(graph_x, graph_y, graph_height, graph_width, 0, self.graph_color, self.graph_color);
+        svg.rect(graph_x, graph_y, graph_height_used, graph_width_used, 0, self.graph_color, self.graph_color);
         #border
-        svg.rect(graph_x+0.5, graph_y+0.5, graph_height, graph_width, 1, hash_color);
+        svg.rect(graph_x+0.5, graph_y+0.5, graph_height_used, graph_width_used, 1, hash_color);
 
         #draw data area (bins)
         self.query_bins()
         self.render_bins(svg, graph_x, graph_height+graph_y, binWidth, binHeight)
 
-        #axis
+        #y axis
         if x < 0 and x1 > 0:
             xZero = (graph_width_used/(x1-x)) * abs (x)
-            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height, 1, hash_color);
-    
-        if y < 0 and x1 > 0:
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
+            print xZero
+        elif x > x1 :
+            xZero = (graph_width_used/(360-abs(x1)-x)) * (180-x)
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
+        #x axis
+        if y < 0 and y1 > 0:
             yZero = graph_height_used+graph_y - (graph_height_used/(y1-y)) * abs (y)
-            svg.line( graph_x, yZero, graph_x+graph_width, yZero, 1, hash_color);
+            svg.line( graph_x, yZero, graph_x+graph_width_used, yZero, 1, hash_color);
+        elif y > y1:
+            yZero = (graph_height_used/(360-abs(y1)-y)) * (180-y)
+            svg.line( graph_x, yZero, graph_x+graph_width_used, yZero, 1, hash_color);
 
         #hashes
         for i in range(9):
@@ -513,7 +520,7 @@ class ConfDistPlot():
         xlabel_y = graph_y+graph_height+hashsize*3+(5*ratio)
         for i in range(5):
             #text value
-            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES else (x + xstep*i)
+            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES and x1 <= 180 else (x + xstep*i)
             #drop decimal if value is an integer
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             #get X coordinate of hash, offsetting for length of text
@@ -524,7 +531,7 @@ class ConfDistPlot():
     
             #text value
             #ytext = self.y1 - ystep*i
-            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES else (y + ystep*i)
+            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES and y1 <= 180 else (y + ystep*i)
             #drop decimal if value is an integer
             ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
             #get Y coordinate offsetting for height of text
