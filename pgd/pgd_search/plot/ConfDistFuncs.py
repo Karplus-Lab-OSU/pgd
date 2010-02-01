@@ -270,7 +270,6 @@ class ConfDistPlot():
                 Q(**{'%s__lt'%self.yTextString: y})
             ))
         )
-
         # Total # of observations
         self.numObs = querySet.count()
 
@@ -326,7 +325,6 @@ class ConfDistPlot():
             y_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(ry)s)/%(b)s)' \
                           % {'f':y_field, 'b':ybin, 'ry':self.y}
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
-
         # add all the names of the aggregates and x,y properties to the list 
         # of fields to display.  This is required for the annotation to be
         # applied with a group_by.
@@ -469,13 +467,14 @@ class ConfDistPlot():
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
         graph_width_used = (binWidth+1)*xBinCount
+        unused = graph_height - graph_height_used;
         
         #image background
         svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
         #graph background
-        svg.rect(graph_x, graph_y, graph_height_used, graph_width_used, 0, self.graph_color, self.graph_color);
+        svg.rect(graph_x, graph_y+unused, graph_height_used, graph_width_used, 0, self.graph_color, self.graph_color);
         #border
-        svg.rect(graph_x+0.5, graph_y+0.5, graph_height_used, graph_width_used, 1, hash_color);
+        svg.rect(graph_x+0.5, graph_y+0.5+unused, graph_height_used, graph_width_used, 1, hash_color);
 
         #draw data area (bins)
         self.query_bins()
@@ -491,17 +490,17 @@ class ConfDistPlot():
         #x axis
         if y < 0 and y1 > 0:
             yZero = graph_height_used+graph_y - (graph_height_used/(y1-y)) * abs (y)
-            svg.line( graph_x, yZero, graph_x+graph_width_used, yZero, 1, hash_color);
+            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color);
         elif y > y1:
             yZero = graph_height_used+graph_y - (graph_height_used/(360-abs(y1)-y)) * (180-y)
-            svg.line( graph_x, yZero, graph_x+graph_width_used, yZero, 1, hash_color);
+            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color);
 
         #hashes
         for i in range(9):
             hashx = graph_x+(graph_width_used/8.0)*i
             hashy = graph_y+(graph_height_used/8.0)*i
             svg.line( hashx, graph_y+graph_height, hashx, graph_y+graph_height+hashsize, 1, hash_color);
-            svg.line( graph_x, hashy, graph_x-hashsize, hashy, 1, self.hash_color);
+            svg.line( graph_x, hashy+unused, graph_x-hashsize, hashy+unused, 1, self.hash_color);
     
         #create a cairo surface to calculate text sizes
         surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
