@@ -485,7 +485,6 @@ class ConfDistPlot():
         if x < 0 and x1 > 0:
             xZero = (graph_width_used/(x1-x)) * abs (x)
             svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
-            print xZero
         elif x > x1 :
             xZero = (graph_width_used/(360-abs(x1)-x)) * (180-x)
             svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
@@ -494,7 +493,7 @@ class ConfDistPlot():
             yZero = graph_height_used+graph_y - (graph_height_used/(y1-y)) * abs (y)
             svg.line( graph_x, yZero, graph_x+graph_width_used, yZero, 1, hash_color);
         elif y > y1:
-            yZero = (graph_height_used/(360-abs(y1)-y)) * (180-y)
+            yZero = graph_height_used+graph_y - (graph_height_used/(360-abs(y1)-y)) * (180-y)
             svg.line( graph_x, yZero, graph_x+graph_width_used, yZero, 1, hash_color);
 
         #hashes
@@ -565,7 +564,7 @@ class ConfDistPlot():
     
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
         title_y = (graph_x-(ratio*35))-xbearing-twidth
-        svg.text(title_y,graph_y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
+        svg.text(title_y,graph_y+(graph_height/2)-ybearing-theight/2-20, yTitle, 18*ratio, text_color)
 
         return svg
 
