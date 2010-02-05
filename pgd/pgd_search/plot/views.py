@@ -160,50 +160,53 @@ def renderToSVG(request):
     """
     render conf dist plot using jquery.svg
     """
-    form = PlotForm(request.POST) # A form bound to the POST data
-    if form.is_valid(): # All validation rules pass
-        data = form.cleaned_data
-        svg,x,x1,xBin,y,y1,yBin = drawGraph(
-                                            request,
-                                            int(data['height']),
-                                            int(data['width']),
-                                            data['x'],
-                                            data['y'],
-                                            data['x1'],
-                                            data['y1'],
-                                            data['attribute'],
-                                            data['xProperty'],
-                                            data['yProperty'],
-                                            data['reference'],
-                                            int(data['sigmaVal']),
-                                            int(data['residue_attribute']),
-                                            int(data['residue_xproperty']),
-                                            int(data['residue_yproperty']),
-                                            data['xBin'],
-                                            data['yBin'],
-                                            data['background_color'],
-                                            data['graph_color'],
-                                            data['text_color'],
-                                            data['plot_hue'],
-                                            data['hash_color'])
+    try:
+        form = PlotForm(request.POST) # A form bound to the POST data
+        if form.is_valid(): # All validation rules pass
+            data = form.cleaned_data
+            svg,x,x1,xBin,y,y1,yBin = drawGraph(
+                                                request,
+                                                int(data['height']),
+                                                int(data['width']),
+                                                data['x'],
+                                                data['y'],
+                                                data['x1'],
+                                                data['y1'],
+                                                data['attribute'],
+                                                data['xProperty'],
+                                                data['yProperty'],
+                                                data['reference'],
+                                                int(data['sigmaVal']),
+                                                int(data['residue_attribute']),
+                                                int(data['residue_xproperty']),
+                                                int(data['residue_yproperty']),
+                                                data['xBin'],
+                                                data['yBin'],
+                                                data['background_color'],
+                                                data['graph_color'],
+                                                data['text_color'],
+                                                data['plot_hue'],
+                                                data['hash_color'])
 
-        json = simplejson.dumps({'svg':svg.to_dict(), \
-                                    'x':x, 'x1':x1, 'xBin':xBin, \
-                                    'y':y, 'y1':y1, 'yBin':yBin})
-        return HttpResponse(json)
+            json = simplejson.dumps({'svg':svg.to_dict(), \
+                                        'x':x, 'x1':x1, 'xBin':xBin, \
+                                        'y':y, 'y1':y1, 'yBin':yBin})
+            return HttpResponse(json)
 
-    else:
-        """
-        Errors in the form - repackage the error list as a list of errors
-        This list can then be json serialized and processed by the javascript
-        on the plot page
-        """
-        errors = []
-        for k, v in form.errors.items():
-            for error in v:
-                errors.append([k, error._proxy____args[0]])
+        else:
+            """
+            Errors in the form - repackage the error list as a list of errors
+            This list can then be json serialized and processed by the javascript
+            on the plot page
+            """
+            errors = []
+            for k, v in form.errors.items():
+                for error in v:
+                    errors.append([k, error._proxy____args[0]])
 
-        return HttpResponse(simplejson.dumps({'errors':errors}))
+            return HttpResponse(simplejson.dumps({'errors':errors}))
+    except:
+        return HttpResponse("-1")
 
 
 
