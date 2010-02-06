@@ -38,6 +38,7 @@ from pgd.pgd_core.models import Chain as ChainModel
 from pgd.pgd_core.models import Residue as ResidueModel
 from pgd.pgd_splicer.models import *
 from pgd.pgd_splicer.chi import CHI_MAP
+from pgd.pgd_splider.sidechain import *
 
 #import logging
 #logger = logging.getLogger('root')
@@ -616,6 +617,48 @@ def calc_chi(residue, residue_dict):
 
     except KeyError:
         # this residue type does not have chi
+        pass
+
+def calc_sidechain_lengths(residue, residue_dict):""" NEEDS TESTING AND A GOOD LOOKING OVER"""
+    """
+    Calculates Values for sidechain bond lengths. Uses a predefined list
+    from sidechain.py, specifically bond_lengths.
+    """
+    try:
+        mapping = bond_lengths[residue.resname]
+        for i in range(len(mapping)):
+            sidechain_atom_names= mapping[i]
+            try:
+                sidechain_atoms = [residue[n].get_vector() for n in sidechain_atom_names]
+                sidechain_length = calc_distance(*sidechain_atoms)
+                residue_dict['sidechain_length%i'%(i+1)] = sidechain_length
+            except KeyError:
+                #missing an atom
+                continue
+
+    except KeyError:
+        # this residue type does not have sidechain lengths
+        pass
+
+def calc_sidechain_angles(residue, residue_dict):""" NEEDS TESTING AND A GOOD LOOKING OVER"""
+    """
+    Calculates Values for sidechain bond angles. Uses a predefined list
+    from sidechain.py, specifically bond_angles.
+    """
+    try:
+        mapping = bond_lengths[residue.resname]
+        for i in range(len(mapping)):
+            sidechain_atom_names= mapping[i]
+            try:
+                sidechain_atoms = [residue[n].get_vector() for n in sidechain_atom_names]
+                sidechain_angle = calc_angle(*sidechain_atoms)
+                residue_dict['sidechain_angle%i'%(i+1)] = sidechain_angle
+            except KeyError:
+                #missing an atom
+                continue
+
+    except KeyError:
+        # this residue type does not have sidechain angles
         pass
 
 
