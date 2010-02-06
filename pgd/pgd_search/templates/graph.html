@@ -25,6 +25,12 @@
                 height: 100%;
             }
 
+            div #error_list {
+                margin-left:auto;
+                margin-right:auto;
+                width: 440px;
+            }
+
             #ajax_progress {
                 padding-top:10%;
                 width: 100%;
@@ -595,8 +601,9 @@
         </div>
         <div id="canvas"></div>
     </div>
-
-    <ul id="errors"></ul>
+    <div id="error_list">
+        <ul id="errors"></ul>
+    </div>
     <div id="buttons">
         <button id="button-plot">Re-Plot</button>
         <button id="button-save">Save Plot Image</button>
