@@ -38,7 +38,7 @@ from pgd.pgd_core.models import Chain as ChainModel
 from pgd.pgd_core.models import Residue as ResidueModel
 from pgd.pgd_splicer.models import *
 from pgd.pgd_splicer.chi import CHI_MAP
-from pgd.pgd_splider.sidechain import *
+from pgd.pgd_splicer.sidechain import *
 
 #import logging
 #logger = logging.getLogger('root')
@@ -619,7 +619,8 @@ def calc_chi(residue, residue_dict):
         # this residue type does not have chi
         pass
 
-def calc_sidechain_lengths(residue, residue_dict):""" NEEDS TESTING AND A GOOD LOOKING OVER"""
+def calc_sidechain_lengths(residue, residue_dict):
+    """ NEEDS TESTING AND A GOOD LOOKING OVER"""
     """
     Calculates Values for sidechain bond lengths. Uses a predefined list
     from sidechain.py, specifically bond_lengths.
@@ -640,7 +641,8 @@ def calc_sidechain_lengths(residue, residue_dict):""" NEEDS TESTING AND A GOOD L
         # this residue type does not have sidechain lengths
         pass
 
-def calc_sidechain_angles(residue, residue_dict):""" NEEDS TESTING AND A GOOD LOOKING OVER"""
+def calc_sidechain_angles(residue, residue_dict):
+    """ NEEDS TESTING AND A GOOD LOOKING OVER"""
     """
     Calculates Values for sidechain bond angles. Uses a predefined list
     from sidechain.py, specifically bond_angles.
