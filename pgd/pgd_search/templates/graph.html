@@ -554,13 +554,28 @@
             function update_stats(key) {
                 field_stats = stats[key];
                 // set static properties
-                $('#stat_xattribute td.x').html(""+precision(xMin+field_stats['bin'][0]*xBin, xProperty));
+                X = xMin+field_stats['bin'][0]*xBin
                 Xm = xMin+field_stats['bin'][0]*xBin+xBin;
-                if (Xm > xMax){Xm = xMax;} //adjust if it overruns max value
+                if (xMin < xMax) {
+                    if (Xm > xMax){Xm = xMax;} //adjust if it overruns max value
+                } else if (Xm > 180) {
+                    Xm = Xm - 360;
+                    X = X - 360
+                } 
+                $('#stat_xattribute td.x').html(""+precision(X, xProperty));
                 $('#stat_xattribute td.y').html(""+precision(Xm, xProperty));
+                
+                // y
+                Y = yMin+field_stats['bin'][1]*yBin
                 Ym = yMin+field_stats['bin'][1]*yBin+yBin;
-                if (Ym > yMax){Ym = yMax;} //adjust if it overruns max value
-                $('#stat_yattribute td.x').html(""+precision(yMin+field_stats['bin'][1]*yBin, yProperty));
+                if (yMin < yMax) {
+                    if (Ym > yMax){Ym = yMax;} //adjust if it overruns max value
+                } else if (Ym > 180) {
+                    Ym = Ym - 360;
+                    Y = Y - 360
+                }
+            
+                $('#stat_yattribute td.x').html(""+precision(Y, yProperty));
                 $('#stat_yattribute td.y').html(""+precision(Ym, yProperty));
                 $('#stat_observations').html(field_stats['observations']);
                 $('#stat_field td.avg').html(field_stats['avg']);

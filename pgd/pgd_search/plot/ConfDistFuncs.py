@@ -201,16 +201,6 @@ class ConfDistPlot():
         # Difference between the possible min and max axes values
         xLimit = xMax - xMin
         yLimit = yMax - yMin
-        #   Adjustments for circular quantities
-        if xText in ANGLES:
-            xModder = int(360/xbin)
-            if xMax < xMin:
-                xLimit = xLimit%360
-        if yText in ANGLES:
-            yModder = int(360/ybin)
-            if yMax < yMin:
-                yLimit = yLimit%360
-
         # Index of the residue of interest in the segment
         self.residue_attribute = residue_attribute
         self.residue_xproperty = residue_xproperty
@@ -230,6 +220,28 @@ class ConfDistPlot():
         xbin = self.xbin
         ybin = self.ybin
 
+        # if this is a circular spanning 180/-180 we must adjust the bins
+        # so that the range falls between -180 and 180
+        xlinear = True
+        if x1 > 180:
+            x = x1-360
+            x1 = 180-self.x
+            xlinear = False
+        elif x1 < 0 and x > 0:
+            x = x1
+            x1 = self.x
+            xlinear = False
+
+        ylinear = True
+        if y1 > 180:
+            y = y1-360
+            y1 = 180-self.y
+            ylinear = False
+        elif y1 < 0 and y > 0:
+            y = y1
+            y1 = self.y
+            ylinear = False
+            
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
         self.bins = {}
@@ -247,18 +259,17 @@ class ConfDistPlot():
             (Q(**{
                 '%s__gte'%self.xTextString: x,
                 '%s__lt'%self.xTextString: x1,
-            }) if (x <= x1) else ( # Altered logic for circular values
-                Q(**{'%s__gte'%self.xTextString: x}) |
-                Q(**{'%s__lt'%self.xTextString: x1})
+            }) if (xlinear) else ( # Altered logic for circular values
+                Q(**{'%s__gte'%self.xTextString: self.x}) |
+                Q(**{'%s__lt'%self.xTextString: x})
             )) & (Q(**{
                 '%s__gte'%self.yTextString: y,
                 '%s__lt'%self.yTextString: y1,
-            }) if (y <= y1) else ( # altered logic for circular values
-                Q(**{'%s__gte'%self.yTextString: y}) |
-                Q(**{'%s__lt'%self.yTextString: y1})
+            }) if (ylinear) else ( # altered logic for circular values
+                Q(**{'%s__gte'%self.yTextString: self.y}) |
+                Q(**{'%s__lt'%self.yTextString: y})
             ))
         )
-
         # Total # of observations
         self.numObs = querySet.count()
 
@@ -279,7 +290,7 @@ class ConfDistPlot():
         # create set of annotations to include in the query
         annotations = {'count':Count('id')}
         torsion_avgs = {}
-        for field in self.fields:
+        for field in self.stats_fields:
             avg = '%s_avg' % field[1]
             stddev = '%s_stddev' % field[1]
             if field[0] in ANGLES:
@@ -303,10 +314,17 @@ class ConfDistPlot():
         # calculating x,y bin numbers for every row.  This allows us
         # to group on the bin numbers automagically sorting them into bins
         # and applying the aggregate functions on them.
-        x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
-        y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
+        if xlinear:
+            x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
+        else:
+            x_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(rx)s)/%(b)s)' \
+                          % {'f':x_field, 'b':xbin, 'rx':self.x}
+        if ylinear:
+            y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
+        else:
+            y_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(ry)s)/%(b)s)' \
+                          % {'f':y_field, 'b':ybin, 'ry':self.y}
         annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
-
         # add all the names of the aggregates and x,y properties to the list 
         # of fields to display.  This is required for the annotation to be
         # applied with a group_by.
@@ -320,14 +338,8 @@ class ConfDistPlot():
         # way of making this work
         annotated_query.query.group_by = []
 
-        
-
         for entry in annotated_query:
             key = (int(entry['x']), int(entry['y']))
-
-            #if xText in ANGLES: xDex = xDex%xModder
-            #if yText in ANGLES: yDex = yDex%yModder
-
             # add  entry to the bins dict
             bin = {
                 'count' : entry['count'],
@@ -349,7 +361,7 @@ class ConfDistPlot():
                 # out nulls for just that field
                 for field in self.stats_fields:
                     if field[0] in ANGLES:
-                        if avg:
+                        if avg and bin[avg]:
                             torsion_avgs[field[0]]["'%s:%s'" % key] = bin[avg]
 
             else:
@@ -371,25 +383,24 @@ class ConfDistPlot():
         # This query uses a large case statement to select the average matching
         # the bin the result is grouped into.  This isn't the cleanest way
         # of doing this but it does work
-        
         for field in self.stats_fields:
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
-                cases = ' '.join(['WHEN %s THEN %s' % (k,v) if v else '' for k,v in torsion_avgs[field[0]].items()])
-                avgs = "CASE CONCAT(FLOOR((%s-%s)/%s),':',FLOOR((%s-%s)/%s)) %s END" % (x_field, x, xbin, y_field, y, ybin, cases)
-                annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
-                bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
-                stddev_query = querySet \
+                cases = ' '.join(['WHEN %s THEN %s' % (k,v) for k,v in filter(lambda x:x[1], torsion_avgs[field[0]].items())])
+                if cases:
+                    avgs = "CASE CONCAT(%s,':',%s) %s END" % (x_aggregate, y_aggregate, cases)
+                    annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
+                    bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
+                    stddev_query = querySet \
                                     .extra(select={'x':x_aggregate, 'y':y_aggregate}) \
                                     .extra(where=bin_where_clause) \
                                     .annotate(**annotations) \
                                     .values(*annotations.keys()+['x','y']) \
                                     .order_by('x','y')
-                stddev_query.query.group_by = []
-
-                for r in stddev_query:
-                    value = r[stddev] if r[stddev] else 0
-                    self.bins[(r['x'],r['y'])][stddev] = value
+                    stddev_query.query.group_by = []
+                    for r in stddev_query:
+                        value = r[stddev] if r[stddev] else 0
+                        self.bins[(r['x'],r['y'])][stddev] = value
 
 
     def create_res_string(self, index, property):
@@ -442,39 +453,54 @@ class ConfDistPlot():
         hashsize = 10*ratio
         
         # calculate bin count and sizes.
-        xBinCount = math.ceil((float(x1)-x)/xbin)
-        yBinCount = math.ceil((float(y1)-y)/ybin)
+        if x>0 and x1<0:
+            # account for circular coordinates
+            xBinCount = math.ceil((360.0+x1-x)/xbin)
+        else:
+            xBinCount = math.ceil((float(x1)-x)/xbin)
+        if y>0 and y1<0:
+            # account for circular coordinates
+            yBinCount = math.ceil((360.0+y1-y)/ybin)
+        else:
+            yBinCount = math.ceil((float(y1)-y)/ybin)
         binWidth = math.floor((graph_width-xBinCount+1)/xBinCount)
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
         graph_width_used = (binWidth+1)*xBinCount
+        unused = graph_height - graph_height_used;
         
         #image background
         svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
         #graph background
-        svg.rect(graph_x, graph_y, graph_height, graph_width, 0, self.graph_color, self.graph_color);
+        svg.rect(graph_x, graph_y+unused, graph_height_used, graph_width_used, 0, self.graph_color, self.graph_color);
         #border
-        svg.rect(graph_x+0.5, graph_y+0.5, graph_height, graph_width, 1, hash_color);
+        svg.rect(graph_x+0.5, graph_y+0.5+unused, graph_height_used, graph_width_used, 1, hash_color);
 
         #draw data area (bins)
         self.query_bins()
         self.render_bins(svg, graph_x, graph_height+graph_y, binWidth, binHeight)
 
-        #axis
+        #y axis
         if x < 0 and x1 > 0:
             xZero = (graph_width_used/(x1-x)) * abs (x)
-            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height, 1, hash_color);
-    
-        if y < 0 and x1 > 0:
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
+        elif x > x1 :
+            xZero = (graph_width_used/(360-abs(x1)-x)) * (180-x)
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
+        #x axis
+        if y < 0 and y1 > 0:
             yZero = graph_height_used+graph_y - (graph_height_used/(y1-y)) * abs (y)
-            svg.line( graph_x, yZero, graph_x+graph_width, yZero, 1, hash_color);
+            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color);
+        elif y > y1:
+            yZero = graph_height_used+graph_y - (graph_height_used/(360-abs(y1)-y)) * (180-y)
+            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color);
 
         #hashes
         for i in range(9):
             hashx = graph_x+(graph_width_used/8.0)*i
             hashy = graph_y+(graph_height_used/8.0)*i
             svg.line( hashx, graph_y+graph_height, hashx, graph_y+graph_height+hashsize, 1, hash_color);
-            svg.line( graph_x, hashy, graph_x-hashsize, hashy, 1, self.hash_color);
+            svg.line( graph_x, hashy+unused, graph_x-hashsize, hashy+unused, 1, self.hash_color);
     
         #create a cairo surface to calculate text sizes
         surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
@@ -492,7 +518,7 @@ class ConfDistPlot():
         xlabel_y = graph_y+graph_height+hashsize*3+(5*ratio)
         for i in range(5):
             #text value
-            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES else (x + xstep*i)
+            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES and x1 <= 180 else (x + xstep*i)
             #drop decimal if value is an integer
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             #get X coordinate of hash, offsetting for length of text
@@ -503,7 +529,7 @@ class ConfDistPlot():
     
             #text value
             #ytext = self.y1 - ystep*i
-            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES else (y + ystep*i)
+            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES and y1 <= 180 else (y + ystep*i)
             #drop decimal if value is an integer
             ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
             #get Y coordinate offsetting for height of text
@@ -537,7 +563,7 @@ class ConfDistPlot():
     
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
         title_y = (graph_x-(ratio*35))-xbearing-twidth
-        svg.text(title_y,graph_y+(graph_height/2)-ybearing-theight/2, yTitle, 18*ratio, text_color)
+        svg.text(title_y,graph_y+(graph_height/2)-ybearing-theight/2-20, yTitle, 18*ratio, text_color)
 
         return svg
 
@@ -551,13 +577,21 @@ class ConfDistPlot():
 
         # Calculate stats regarding the distribution of averages in cells
         if self.ref not in NON_FIELDS and len(self.bins):
-            if self.ref in ANGLES:
-                meanPropAvg,stdPropAvg = getCircularStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
-                stdPropAvgXSigma = 180 if stdPropAvg > 60 else sig*stdPropAvg
+            key = '%s_avg'%self.refString
+            values = [bin[key] for bin in filter(lambda x:x[key], self.bins.values())]
+            if len(values):
+                if self.ref in ANGLES:
+                    meanPropAvg,stdPropAvg = getCircularStats(values, len(values))
+                    stdPropAvgXSigma = 180 if stdPropAvg > 60 else sig*stdPropAvg
+                else:
+                    meanPropAvg,stdPropAvg = getLinearStats(values, len(values))
+                    minPropAvg = meanPropAvg - sig*stdPropAvg
+                    maxPropAvg = meanPropAvg + sig*stdPropAvg
             else:
-                meanPropAvg,stdPropAvg = getLinearStats([bin['%s_avg'%self.refString] for bin in self.bins.values()], len(self.bins))
-                minPropAvg = meanPropAvg - sig*stdPropAvg
-                maxPropAvg = meanPropAvg + sig*stdPropAvg
+                # no values, sigma is meaningless but set a value anyways the
+                # remainder of the code will run.
+                stdPropAvgXSigma = 0
+                
 
         colors, adjust = COLOR_RANGES[self.color]
         # Color the bins
@@ -891,7 +925,11 @@ def RefDefaults():
                         'min':-180,
                         'max':180,
                         'stepsize':10},
-                'zeta':{
+                'psi':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10}, 
+               'zeta':{
                         'min':-180,
                         'max':180,
                         'stepsize':10}
