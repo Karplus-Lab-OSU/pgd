@@ -257,8 +257,9 @@ class ProcessPDBTask(Task):
             print residue_props
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
             print 'EXCEPTION in Residue', code, e.__class__, e
-            self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
-            transaction.rollback()
+            #self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
+            print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
+            #transaction.rollback()
             return
 
         # 5) entire protein has been processed, commit transaction
@@ -399,12 +400,9 @@ def parseWithBioPython(file, props, chains_filter=None):
                         length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
                         angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
                         dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
-                        #sidechain_angle and length lists are defined in sidechain.py, to save space.
                         initialize_geometry(res_dict, length_list, 'length')
                         initialize_geometry(res_dict, angles_list, 'angle')
                         initialize_geometry(res_dict, dihedral_list, 'angle')
-                        initialize_geometry(res_dict, sidechain_angle_list, 'angle')
-                        initialize_geometry(res_dict, sidechain_length_list, 'length')
 
                         """
                         Get Properties from DSSP and other per residue properties
@@ -519,8 +517,8 @@ def parseWithBioPython(file, props, chains_filter=None):
                         chi mappings.
                         """
                         calc_chi(res, res_dict)
-
-
+                        calc_sidechain_lengths(res, res_dict)
+                        calc_sidechain_angles(res, res_dict)
                         """
                         Reset for next pass.  We save some relationships which span two atoms.
                         """
@@ -634,7 +632,7 @@ def calc_sidechain_lengths(residue, residue_dict):
             try:
                 sidechain_atoms = [residue[n].get_vector() for n in sidechain_atom_names]
                 sidechain_length = calc_distance(*sidechain_atoms)
-                residue_dict['%s_%s'% (sidechain_atoms[0],sidechain_atoms[1])] = sidechain_length
+                residue_dict['%s_%s'% (sidechain_atom_names[0],sidechain_atom_names[1])] = sidechain_length
             except KeyError:
                 #missing an atom
                 continue
@@ -650,13 +648,13 @@ def calc_sidechain_angles(residue, residue_dict):
     from sidechain.py, specifically bond_angles.
     """
     try:
-        mapping = bond_lengths[residue.resname]
+        mapping = bond_angles[residue.resname]
         for i in range(len(mapping)):
             sidechain_atom_names= mapping[i]
             try:
                 sidechain_atoms = [residue[n].get_vector() for n in sidechain_atom_names]
                 sidechain_angle = calc_angle(*sidechain_atoms)
-                residue_dict['%s_%s_%s'% (sidechain_atoms[0],sidechain_atoms[1],sidechain_atoms[2])] = sidechain_angle
+                residue_dict['%s_%s_%s'% (sidechain_atom_names[0],sidechain_atom_names[1],sidechain_atom_names[2])] = sidechain_angle
             except KeyError:
                 #missing an atom
                 continue
