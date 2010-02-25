@@ -50,7 +50,7 @@ class DirectionalStatisticsQuery():
             'outer': outer
         }
 
-        sql =  'SELECT residues.aa, %(outer)s FROM (%(base)s) AS residues, \
+        sql =  'SELECT residues.aa, %(outer)s FROM (%(base)s  ORDER BY aa) AS residues, \
             (SELECT aa, %(inner)s FROM (%(base)s) AS residues GROUP BY aa) \
             AS avgs WHERE residues.aa = avgs.aa GROUP BY residues.aa \
             WITH ROLLUP' % sql_params

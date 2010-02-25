@@ -101,7 +101,7 @@ def calculate_statistics(queryset, iIndex=0):
     # ss/aa counts and totals
     ss_counts_thread = ListQueryThread(queryset.values(aa_field, ss_field).annotate(ss_count=Count(ss_field)))
     ss_totals_thread = ListQueryThread(queryset.values(ss_field).annotate(ss_count=Count(ss_field)))
-    aa_totals_thread = ListQueryThread(queryset.values(aa_field).annotate(aa_count=Count(aa_field)))
+    aa_totals_thread = ListQueryThread(queryset.values(aa_field).order_by(aa_field).annotate(aa_count=Count(aa_field)))
 
     # start all remtaining threads
     ss_counts_thread.start()
