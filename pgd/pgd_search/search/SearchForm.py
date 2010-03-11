@@ -6,7 +6,7 @@ from pgd_core.models import Protein
 from pgd_search.models import searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from pgd_constants import AA_CHOICES, SS_CHOICES
-from pgd.pgd_splicer.sidechain import sidechain_angle_list, sidechain_length_list
+from pgd_splicer.sidechain import sidechain_angle_list, sidechain_length_list
 
 """
 Custom Field for fields that support query syntax parsing
