@@ -47,5 +47,5 @@ def variable_dict_lookup(dict,key):
     if key in dict:
         return dict[key]
     else:
-        return key + " Not Found"
+        return None
 register.filter('variable_dict_lookup', variable_dict_lookup)

@@ -14,6 +14,7 @@ from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import saveSearchForm
 from pgd_splicer.chi import CHI_MAP, PROTEIN_ORDER
+from pgd_splicer.sidechain import *
 
 #This might be a big faux pas
 from pgd_splicer.models import pdb_select_settings
@@ -66,9 +67,12 @@ def search(request):
 
     #order the residue properties in way that django template can handle it better
     residueFields = []
+    fields = ["ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5']
+    fields += sidechain_length_list
+    fields += sidechain_angle_list
     for i in RESIDUE_INDEXES:
         dict = {}
-        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in fields:
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i
@@ -80,7 +84,9 @@ def search(request):
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices,
-        'ss_choices':ss_choices
+        'ss_choices':ss_choices,
+        'bond_lengths':bond_lengths_string_dict,
+        'bond_angles':bond_angles_string_dict
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
