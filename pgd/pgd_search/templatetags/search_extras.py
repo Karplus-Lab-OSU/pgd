@@ -38,3 +38,14 @@ def invalid(value, precision):
         return floatformat(value, precision)
     return '--'
 register.filter('invalid', invalid)
+
+@register.filter(name='variable_dict_lookup')
+def variable_dict_lookup(dict,key):
+    """
+    Allows using a variable for the dictionary and the key
+    """
+    if key in dict:
+        return dict[key]
+    else:
+        return key + " Not Found"
+register.filter('variable_dict_lookup', variable_dict_lookup)
