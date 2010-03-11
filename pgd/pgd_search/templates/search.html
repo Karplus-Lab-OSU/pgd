@@ -556,6 +556,30 @@
                     }
                 });
                 $('tr.chi_row').toggle();
+                
+                $('#sidechain_angle_header').click(function(evt){
+                    $('tr.sidechain_angle_row').toggle();
+
+                    var header = document.getElementById('sidechain_angle_header');
+                    if (header.innerHTML == 'Sidechain Angles →'){
+                        header.innerHTML = 'Sidechain Angles ↓';
+                    } else {
+                        header.innerHTML = 'Sidechain Angles →';
+                    }
+                });
+                $('tr.sidechain_angle_row').toggle();
+
+                $('#sidechain_angle_header').click(function(evt){
+                    $('tr.sidechain_angle_row').toggle();
+
+                    var header = document.getElementById('sidechain_angle_header');
+                    if (header.innerHTML == 'Sidechain Angles →'){
+                        header.innerHTML = 'Sidechain Angles ↓';
+                    } else {
+                        header.innerHTML = 'Sidechain Angles →';
+                    }
+                });
+                $('tr.sidechain_angle_row').toggle();
 
                 $('#peptide_header').click(function(evt){
                     $('tr.peptide_row').toggle();
@@ -953,6 +977,26 @@
                 {% endfor %}
             </tr>
 
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="sidechain_angle_header">Sidechain Angles →</td></tr>
+            {% for aa, atoms in bond_angles.items %}
+            <tr class="sidechain_angle_row">
+                <td class="label">SCA {{aa}}</td>
+                {% for vector in atoms %}
+                    <tr class="vector_list_cell">
+                    <td></td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                            {{vector}}--{{ r|variable_dict_lookup:vector }}
+
+                        </td>
+                    {% endfor %}
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+                </td>
+            </tr>
             <tr class="spacer"/>
             <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit">
             </tbody>
