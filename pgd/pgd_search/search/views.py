@@ -85,6 +85,7 @@ def search(request):
         'residueFields':residueFields,
         'aa_choices':aa_choices,
         'ss_choices':ss_choices,
+        'sidechain_angle_list':sidechain_angle_list,
         'bond_lengths':bond_lengths_string_dict,
         'bond_angles':bond_angles_string_dict
     }, context_instance=RequestContext(request, processors=[settings_processor]))
