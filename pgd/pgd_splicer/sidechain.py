@@ -532,3 +532,24 @@ sidechain_length_list = [
     'CZ3_CE3',
     'CB_OG1'
     ]
+
+aa_list = [
+    'ARG',
+    'ASN',
+    'ASP',
+    'CYS',
+    'GLN',
+    'GLU',
+    'HIS',
+    'ILE',
+    'LEU',
+    'LYS',
+    'MET',
+    'PHE',
+    'PRO',
+    'SER',
+    'THR',
+    'TRP',
+    'TYR',
+    'VAL'
+    ]
