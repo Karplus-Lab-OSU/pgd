@@ -13,14 +13,6 @@
                 padding: 10px;
             }
 
-            /*tr.hidden {
-                visibility:hidden;
-            }
-
-            td.hidden {
-                visibility:hidden;
-            }*/
-
             .label {
                 padding-left:20px;
                 padding-right:0px;
@@ -184,6 +176,8 @@
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
         <script type="text/javascript">
+            var sidechain_angle_lookup = new Array();
+            sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
             qtipsOn=false;
             qtipState = '';
             qtipTotal = 0;
@@ -556,89 +550,106 @@
                         $this = $(this);
                         aa = $this.html().substring(0,3).toUpperCase();
                         console.log(aa);
+                        console.log(sidechain_angle_lookup[aa]);
+                        angles_list = sidechain_angle_lookup[aa];
+                        if ($this.hasClass('selected')){
+                            for (angle in angles_list){
+                                $('tr#'+angles_list[angle]+'_row').show();
+                                console.log("Tried to show: "+'tr#'+angles_list[angle]+'_row');
+                            }
+                        }else{
+                            for (angle in angles_list){
+                                $('tr#'+angles_list[angle]+'_row').hide();
+                                console.log("Tried to hide: "+'tr#'+angles_list[angle]+'_row');
+                            }
+                        }
                     })
                 
 
                 $('tr.peptide_row .multiselect, tr.conf_row .multiselect').updateInclusionSelect();
 
-
+                $('tr.chi_row').hide();
                 $('#chi_header').click(function(evt){
-                    $('tr.chi_row').toggle();
-
                     var header = document.getElementById('chi_header');
-                    if (header.innerHTML == '&chi; Angles →'){
-                        header.innerHTML = '&chi; Angles ↓';
+                    if (header.innerHTML == 'χ Angles →'){//Must be χ, it won't match &chi;
+                        header.innerHTML = 'χ Angles ↓';
+                        $('tr.chi_row').show();
                     } else {
-                        header.innerHTML = '&chi; Angles →';
+                        header.innerHTML = 'χ Angles →';
+                        $('tr.chi_row').hide();
                     }
                 });
-                $('tr.chi_row').toggle();
 
-                $('#sidechain_angle_header').click(function(evt){
-                    $('tr.sidechain_angle_row').toggle();
-
+                $('tr.sidechain_angle_row').hide();
+                $('#sidechain_angle_header').click(function(evt){;
                     var header = document.getElementById('sidechain_angle_header');
                     if (header.innerHTML == 'Sidechain Angles →'){
                         header.innerHTML = 'Sidechain Angles ↓';
+                        $('tr.sidechain_angle_row').show()
                     } else {
                         header.innerHTML = 'Sidechain Angles →';
+                        $('tr.sidechain_angle_row').hide()
                     }
                 });
-                $('tr.sidechain_angle_row').toggle();
 
                 $('#peptide_header').click(function(evt){
-                    $('tr.peptide_row').toggle();
-
                     var header = document.getElementById('peptide_header');
                     if (header.innerHTML == 'Composition →'){
                         header.innerHTML = 'Composition ↓';
+                        $('tr.peptide_row').show();
                     } else {
                         header.innerHTML = 'Composition →';
+                        $('tr.peptide_row').hide();
                     }
                 });
+                
                 $('#conf_header').click(function(evt){
-                    $('tr.conf_row').toggle();
                     var header = document.getElementById('conf_header');
                     if (header.innerHTML == 'Conformation →'){
                         header.innerHTML = 'Conformation ↓';
+                        $('tr.conf_row').show();
                     } else {
                         header.innerHTML = 'Conformation →';
+                        $('tr.conf_row').hide();
                     }
                 });
 
-                $('tr.mobility_row').toggle();
+                $('tr.mobility_row').hide();
                 $('#mobility_header').click(function(evt){
-                    $('tr.mobility_row').toggle();
                     var header = document.getElementById('mobility_header');
                     if (header.innerHTML == 'Mobility →'){
                         header.innerHTML = 'Mobility ↓';
+                        $('tr.mobility_row').show();
                     } else {
                         header.innerHTML = 'Mobility →';
+                        $('tr.mobility_row').hide();
                     }
                 });
 
-                $('tr.angles_row').toggle();
+                $('tr.angles_row').hide();
                 $('#angles_header').click(function(evt){
-                    $('tr.angles_row').toggle();
                     var header = document.getElementById('angles_header');
                     if (header.innerHTML == 'Angles →'){
                         header.innerHTML = 'Angles ↓';
+                        $('tr.angles_row').show();
                     } else {
                         header.innerHTML = 'Angles →';
+                        $('tr.angles_row').hide();
                     }
                 });
 
-                $('tr.lengths_row').toggle();
-                        $('#lengths_header').click(function(evt){
-                            $('tr.lengths_row').toggle();
+                $('tr.lengths_row').hide();
+                $('#lengths_header').click(function(evt){
                     var header = document.getElementById('lengths_header');
                     if (header.innerHTML == 'Lengths →'){
-                    header.innerHTML = 'Lengths ↓';
+                        header.innerHTML = 'Lengths ↓';
+                        $('tr.lengths_row').show();
                     }
                     else{
-                    header.innerHTML = 'Lengths →';
+                        header.innerHTML = 'Lengths →';
+                        $('tr.lengths_row').hide();
                     }
-                        });
+                });
 
                 if(qtipsOn){
                     createQtips();
@@ -987,7 +998,7 @@
             <tr><td colspan="100%" class="sectionheader" id="sidechain_angle_header">Sidechain Angles →</td></tr>
             <tr class="sidechain_angle_row">
             {% for angle in sidechain_angle_list %}
-                <tr class="sidechain_angle_row hidden" id="{{angle}}_row">
+                <tr class="sidechain_angle_row" id="{{angle}}_row">
                 <td class="label">{{angle}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
