@@ -178,9 +178,10 @@
         <script type="text/javascript">
             var sidechain_angle_lookup = new Array();
             sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
-            qtipsOn=false;
-            qtipState = '';
-            qtipTotal = 0;
+            var selected_aa = [];
+            var qtipsOn=false;
+            var qtipState = '';
+            var qtipTotal = 0;
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
             for (i=0; i<n; i++) {
@@ -475,9 +476,39 @@
                     $('.qtipToggle').attr('value','Turn Help Off');
                 }
 
-            }
+            };
+
+            function set( list ){ //Returns a list with only unique elements
+                seen = [];
+                set_list = [];
+                for (item in list){
+                    seen[list[item]] = true;
+                }
+                for (item in seen){
+                    set_list.push(item);
+                }
+                return set_list.slice(); //Return the value of the array, not the address
+            };
+            
+            function listComplement( filter, unfiltered ){//Returns the elements of filter not in unfiltered.
+                complement = [];
+                in_list = false;
+                for (item in filter){
+                    for(comp_item in unfiltered){
+                        if(filter[item] == unfiltered[comp_item]){
+                            in_list = true;
+                        }
+                    }
+                    if(!in_list){
+                        complement.push(filter[item]);
+                    }
+                    in_list = false;
+                }
+                return complement.slice();//Return the value of the array, not the address
+            };
+
             $(document).ready(function() {
-                $('#helpPage').hide();	
+                $('#helpPage').hide();
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
                     if ( tar.hasClass('toggle_Include')) {
@@ -549,18 +580,33 @@
                     .click(function(){
                         $this = $(this);
                         aa = $this.html().substring(0,3).toUpperCase();
-                        console.log(aa);
-                        console.log(sidechain_angle_lookup[aa]);
-                        angles_list = sidechain_angle_lookup[aa];
                         if ($this.hasClass('selected')){
-                            for (angle in angles_list){
-                                $('tr#'+angles_list[angle]+'_row').show();
-                                console.log("Tried to show: "+'tr#'+angles_list[angle]+'_row');
+                            selected_aa.push(aa);
+                        }
+                        else{
+                            aa_to_remove = selected_aa.indexOf(aa)
+                            selected_aa.splice(aa_to_remove,1);
+                        }
+                        console.log(selected_aa);
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){
+                            sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(sidechains[sidechain]);
+                            }
+                        }
+                        to_be_filtered_sidechains = sidechain_angle_lookup[aa];
+                        active_sidechains = set(active_sidechains);
+                        filtered_sidechains = listComplement(active_sidechains,to_be_filtered_sidechains);
+
+                        var header = document.getElementById('sidechain_angle_header');
+                        if ($this.hasClass('selected') && header == 'Sidechain Angles ↓'){
+                            for (angle in filtered_sidechains){
+                                $('tr#'+filtered_sidechains[angle]+'_row').show();
                             }
                         }else{
-                            for (angle in angles_list){
-                                $('tr#'+angles_list[angle]+'_row').hide();
-                                console.log("Tried to hide: "+'tr#'+angles_list[angle]+'_row');
+                            for (angle in filtered_sidechains){
+                                $('tr#'+filtered_sidechains[angle]+'_row').hide();
                             }
                         }
                     })
@@ -585,10 +631,17 @@
                     var header = document.getElementById('sidechain_angle_header');
                     if (header.innerHTML == 'Sidechain Angles →'){
                         header.innerHTML = 'Sidechain Angles ↓';
-                        $('tr.sidechain_angle_row').show()
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){
+                            sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                $('tr#'+sidechains[sidechain]+'_row').show();
+                            }
+                        }
                     } else {
                         header.innerHTML = 'Sidechain Angles →';
                         $('tr.sidechain_angle_row').hide()
+                        
                     }
                 });
 
