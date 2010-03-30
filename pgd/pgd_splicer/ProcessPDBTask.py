@@ -153,9 +153,8 @@ class ProcessPDBTask(Task):
             data['pdb_date'] = pdb_date
             return True
 
-        if protein.pdb_date < pdb_date:
-            data['pdb_date'] = pdb_date
-            return True
+        data['pdb_date'] = pdb_date
+        return protein.pdb_date < pdb_date
 
 
     @transaction.commit_manually
@@ -176,7 +175,6 @@ class ProcessPDBTask(Task):
 
             # 1) parse with bioPython
             data = parseWithBioPython(filename, data, chains_filter)
-            #print 'props: %s' % data
 
             # 2) Create/Get Protein and save values
             try:
@@ -248,7 +246,7 @@ class ProcessPDBTask(Task):
 
                     old_residue = residue
 
-                print '    %s proteins' % len(residues)
+                print '    %s residues' % len(residues)
 
         except Exception, e:
             import traceback
@@ -368,7 +366,18 @@ def parseWithBioPython(file, props, chains_filter=None):
                         newID += 1
                         terminal = False
                         hetflag, res_id, icode = res.get_id()
-                        #print hetflag, res_id, icode
+                        
+                        """
+                        XXX Get the dictionary of atoms in the Main conformation.
+                        BioPython should do this automatically, but it does not
+                        always choose the main conformation.  Leading to some
+                        Interesting results
+                        """
+                        atoms = {}
+                        for atom in res.get_unpacked_list():
+                            if atom.get_altloc() in ('A', ' '):
+                                atoms[atom.name] = atom
+                        
                         """
                         Exclude water residues
                         Exclude any Residues that are missing _ANY_ of the
@@ -424,11 +433,13 @@ def parseWithBioPython(file, props, chains_filter=None):
                         Get Vectors for mainchain atoms and calculate geometric angles,
                         dihedral angles, and lengths between them.
                         """
-                        N    = res['N'].get_vector()
-                        CA   = res['CA'].get_vector()
-                        C    = res['C'].get_vector()
-                        CB   = res['CB'].get_vector() if res.has_id('CB') else None
-                        O    = res['O'].get_vector()
+                        N    = atoms['N'].get_vector()
+                        CA   = atoms['CA'].get_vector()
+                        C    = atoms['C'].get_vector()
+                        CB   = atoms['CB'].get_vector() if atoms.has_key('CB') else None
+                        O    = atoms['O'].get_vector()
+
+                        
 
                         if oldC:
                             # determine if there are missing residues by calculating
@@ -494,13 +505,13 @@ def parseWithBioPython(file, props, chains_filter=None):
                         """
                         main_chain = []
                         side_chain = []
-                        for a in res.child_list:
-                            if a.name in ('N', 'CA', 'C', 'O','OXT'):
-                                main_chain.append(a.get_bfactor())
-                            elif a.name in ('H'):
+                        for name in atoms:
+                            if name in ('N', 'CA', 'C', 'O','OXT'):
+                                main_chain.append(atoms[name].get_bfactor())
+                            elif name in ('H'):
                                 continue
                             else:
-                                side_chain.append(a.get_bfactor())
+                                side_chain.append(atoms[name].get_bfactor())
 
                         if main_chain != []:
                             res_dict['bm'] = sum(main_chain)/len(main_chain)
@@ -625,8 +636,10 @@ if __name__ == '__main__':
     """
     #from pydra.cluster.worker import WorkerProxy
     import sys
+    import logging
 
     task = ProcessPDBTask()
+    #task.logger = logging.getLogger('root')
     #task.parent = WorkerProxy()
 
     pdbs = {}
