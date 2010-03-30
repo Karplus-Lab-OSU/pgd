@@ -15,13 +15,12 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from pydra.cluster.tasks import TaskContainer
+from pydra_server.cluster.tasks import TaskContainer
 from django import forms
 
 from dunbrack_selector import DunbrackPDBSelectorTask
 from process_protein import ParallelProteinImportTask
-from ProcessPDBTask import *
-from ftpupdate import *
+
 
 class SplicerInput(forms.Form):
     """
@@ -47,6 +46,4 @@ class SplicerTask(TaskContainer):
         TaskContainer.__init__(self, msg)
 
         self.add_task(DunbrackPDBSelectorTask('Select PDBs for download'),1)
-        self.add_task(ProcessPDBTask('Process PDB into raw datastructure'))
-        #self.add_task(FTPUpdateTask('Download required PDBs'))
-        #self.add_task(ParallelProteinImportTask())
+        self.add_task(ParallelProteinImportTask())
