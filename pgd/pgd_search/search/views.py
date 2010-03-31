@@ -79,6 +79,7 @@ def search(request):
             dict['index'] = i
         residueFields.append(dict)
 
+    json_sidechain_lengths_lookup = simplejson.dumps(bond_lengths_string_dict)
     json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
     return render_to_response('search.html', {
         'form': form,
@@ -88,6 +89,8 @@ def search(request):
         'aa_choices':aa_choices,
         'ss_choices':ss_choices,
         'sidechain_angle_list':sidechain_angle_list,
+        'sidechain_length_list':sidechain_length_list,
+        'sidechain_length_lookup':json_sidechain_lengths_lookup,
         'sidechain_angle_lookup':json_sidechain_angles_lookup
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 

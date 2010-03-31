@@ -176,8 +176,8 @@
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
         <script type="text/javascript">
-            var sidechain_angle_lookup = new Array();
-            sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
+            var sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
+            var sidechain_length_lookup = {{ sidechain_length_lookup|safe }};
             var selected_aa = [];
             var qtipsOn=false;
             var qtipState = '';
@@ -587,6 +587,7 @@
                 $('tr.peptide_row .multiselect li')
                     .click(function(){
                         $this = $(this);
+                        //Strip out aa and manage list of active aa's
                         aa = $this.html().substring(0,3).toUpperCase();
                         if ($this.hasClass('selected')){
                             selected_aa.push(aa);
@@ -595,6 +596,7 @@
                             aa_to_remove = selected_aa.indexOf(aa)
                             selected_aa.splice(aa_to_remove,1);
                         }
+                        //Add or remove sidechain angles
                         active_sidechains = [];
                         for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
                             sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
@@ -613,6 +615,27 @@
                             filtered_sidechains = listComplement(unfiltered_sidechains,active_sidechains);
                             for (angle in filtered_sidechains){
                                 $('tr#'+filtered_sidechains[angle]+'_row').hide();
+                            }
+                        }
+                        //Add or remove sidechain lengths
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                            sidechains = sidechain_length_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(sidechains[sidechain]);
+                            }
+                        }
+                        unfiltered_sidechains = sidechain_length_lookup[aa];
+                        active_sidechains = set(active_sidechains);//Remove redundancies
+                        header = document.getElementById('sidechain_length_header');
+                        if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
+                            for (sclength in unfiltered_sidechains){
+                                $('tr#'+unfiltered_sidechains[sclength]+'_row').show();
+                            }
+                        }else{//Only remove those sidechains that aren't still shown by another aa
+                            filtered_sidechains = listComplement(unfiltered_sidechains,active_sidechains);
+                            for (sclength in filtered_sidechains){
+                                $('tr#'+filtered_sidechains[sclength]+'_row').hide();
                             }
                         }
                     })
@@ -651,6 +674,29 @@
                     } else {
                         header.innerHTML = 'Sidechain Angles →';
                         $('tr.sidechain_angle_row').hide()
+                        
+                    }
+                });
+
+                $('tr.sidechain_length_row').hide();
+                $('#sidechain_length_header').click(function(evt){;
+                    var header = document.getElementById('sidechain_length_header');
+                    if (header.innerHTML == 'Sidechain Lengths →'){
+                        header.innerHTML = 'Sidechain Lengths ↓';
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){
+                            sidechains = sidechain_length_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(sidechains[sidechain]);
+                            }
+                        }
+                        active_sidechains = set(active_sidechains);
+                        for (sidechain in active_sidechains){
+                            $('tr#'+active_sidechains[sidechain]+'_row').show();
+                        }
+                    } else {
+                        header.innerHTML = 'Sidechain Lengths →';
+                        $('tr.sidechain_length_row').hide()
                         
                     }
                 });
@@ -1066,6 +1112,21 @@
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         {{ r|variable_dict_lookup:angle }}
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="sidechain_length_header">Sidechain Lengths →</td></tr>
+            <tr class="sidechain_length_row">
+            {% for length in sidechain_length_list %}
+                <tr class="sidechain_length_row" id="{{length}}_row">
+                <td class="label">{{length}}</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        {{ r|variable_dict_lookup:length }}
                     </td>
                 {% endfor %}
                 </tr>
