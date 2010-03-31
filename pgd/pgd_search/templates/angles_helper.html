@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+
+{% block head %}
+    <style>
+        #outer {
+            border:2px solid #AAAAAA;
+            -moz-border-radius:5px;
+            width:185px;
+        }
+        
+        #canvas {
+            margin-left:auto;
+            margin-right:auto;
+            width:165px;
+        }
+        
+        input {
+            width:400px;
+        }
+    </style>
+
+    <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script type="text/javascript">
+    
+        var r = undefined;
+        var _angles = undefined;
+        var rad = Math.PI/180;
+        var cur = undefined;
+
+        function draw_arc(cx,cy,start,end, R) {
+            var x1 = cx - R * Math.cos(-start * rad),
+            x2 = cx - R * Math.cos(-end * rad),
+            y1 = cy - R * Math.sin(-start * rad),
+            y2 = cy - R * Math.sin(-end * rad);
+            if (-180==start && 180==end) {
+                path = ["M", 70.001, 90.001 - R, "A", R, R, 0, 1, 1, 69.99, 90.001 - R].join();
+            } else {
+                path = ["M", x1, y1, "A", R, R, 0, +(end - start > 180), 0, x2, y2].join();
+                console.log(path);
+            }
+            return r.path(path).attr({stroke: '#008800', "stroke-width": 5});
+        }
+
+        function draw_arc(cx,cy,start,end, R) {
+            var x1 = cx - R * Math.cos(-start * rad),
+            x2 = cx - R * Math.cos(-end * rad),
+            y1 = cy - R * Math.sin(-start * rad),
+            y2 = cy - R * Math.sin(-end * rad);
+            if (-180==start && 180==end) {
+                path = ["M", 70.001, 90.001 - R, "A", R, R, 0, 1, 1, 69.99, 90.001 - R].join();
+            } else {
+                path = ["M",cx,cy,"L", x1, y1, "A", R, R, 0, +(end - start > 180), 0, x2, y2, "z"].join();
+                console.log(path);
+            }
+            return r.path(path).attr({stroke: '#004400', fill:'#c2e192', "stroke-width": 1, opacity:.8});
+        }
+
+        function angles(list){
+            if (_angles != undefined) {
+                for (i in _angles){ _angles[i].remove()}
+            }
+            base = 100
+            _angles = [];
+            for (i in list) {
+                _angles.push(draw_arc(80,90,list[i][0]+180,list[i][1]+180, 40));
+            }
+        }
+    
+        function match(val){
+            m = val.match(/^(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))(,(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))))*$/)
+            if (!m){
+                return [];
+            }
+            
+            vals = val.split(',');
+            processed = [];
+            for (i in vals){
+                v = vals[i];
+                if (v.indexOf('<=')!=-1) {
+                    console.log(2);
+                    processed.push([-180, parseFloat(v.substring(2))]);
+                } else if (v.indexOf('>=')!=-1) {
+                    console.log(3);
+                    processed.push([parseFloat(v.substring(2)), 180]);
+                } else if (v.indexOf('<')!=-1) {
+                    console.log(5);
+                    processed.push([-180, parseFloat(v.substring(1))]);
+                } else if (v.indexOf('>')!=-1) {
+                    console.log(6);
+                    processed.push([parseFloat(v.substring(1)), 180]);
+                } else if (v.indexOf('-',1)!=-1) {
+                    console.log(1);
+                    z = v.indexOf('-',1);
+                    v1 = parseFloat(v.substring(0,z));
+                    v2 = parseFloat(v.substring(z+1));
+                    processed.push([v1,v2]);
+                
+                } else {
+                    console.log(4);
+                    v = parseFloat(v);
+                    processed.push([v,v+1]);
+                }
+            }
+            return processed;
+        }
+    
+        $(document).ready(function(){
+            r = Raphael("canvas", 170, 175);
+            //font = r.getFont("DejaVu");
+            param = {stroke: "#000", "stroke-width": 1, "stroke-dasharray":"- "}
+            
+            x = 80;
+            y = 90;
+            radius = 30;
+            r.circle(x,y,radius).attr({stroke: "#AAAAAA", "stroke-width": 1, "stroke-dasharray":"- "});
+            
+            r.path("M"+x+" "+(y-radius-40)+"L"+x+ " " +(y+radius+40)).attr(param);
+            r.path("M"+(x-radius-50)+" "+y+"L"+(x+radius+40)+ " " +y).attr(param);
+            r.text(x+radius+48, y, "0");
+            r.text(x, y-radius-48, "90");
+            r.text(x, y+radius+45, "-90");
+            r.text(x-radius-35, y-10, "180");
+            r.text(x-radius-35, y+12, "-180");
+            
+            $('#val').keyup(function(){
+                val = $(this).val()
+                if (cur==val){return;}
+                m = match(val);
+                angles(m);
+                cur = val;
+            });
+        });
+    </script>
+{% endblock %}
+
+
+{% block content %}
+    <div id="outer">
+        <div id="canvas"></div>
+    </div>
+    
+    <input id="val" size="80">
+{% endblock %}
