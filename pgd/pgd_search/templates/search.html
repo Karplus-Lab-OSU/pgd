@@ -575,6 +575,14 @@
                         }
                     });
 
+                
+                $('tr.peptide_row .multiselect li.selected')//Add any selected AAs left over from a previous state
+                    .each(function(){
+                        $this = $(this);
+                        aa = $this.html().substring(0,3).toUpperCase();
+                        selected_aa.push(aa);
+                    });
+
                 // setup aa multiselects to work with sidechain show/hide
                 $('tr.peptide_row .multiselect li')
                     .click(function(){
@@ -587,24 +595,22 @@
                             aa_to_remove = selected_aa.indexOf(aa)
                             selected_aa.splice(aa_to_remove,1);
                         }
-                        console.log(selected_aa);
                         active_sidechains = [];
-                        for (active_aa in selected_aa){
+                        for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
                             sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
                             for (sidechain in sidechains){
                                 active_sidechains.push(sidechains[sidechain]);
                             }
                         }
-                        to_be_filtered_sidechains = sidechain_angle_lookup[aa];
-                        active_sidechains = set(active_sidechains);
-                        filtered_sidechains = listComplement(active_sidechains,to_be_filtered_sidechains);
-
-                        var header = document.getElementById('sidechain_angle_header');
-                        if ($this.hasClass('selected') && header == 'Sidechain Angles ↓'){
-                            for (angle in filtered_sidechains){
-                                $('tr#'+filtered_sidechains[angle]+'_row').show();
+                        unfiltered_sidechains = sidechain_angle_lookup[aa];
+                        active_sidechains = set(active_sidechains);//Remove redundancies
+                        header = document.getElementById('sidechain_angle_header');
+                        if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
+                            for (angle in unfiltered_sidechains){
+                                $('tr#'+unfiltered_sidechains[angle]+'_row').show();
                             }
-                        }else{
+                        }else{//Only remove those sidechains that aren't still shown by another aa
+                            filtered_sidechains = listComplement(unfiltered_sidechains,active_sidechains);
                             for (angle in filtered_sidechains){
                                 $('tr#'+filtered_sidechains[angle]+'_row').hide();
                             }
@@ -635,8 +641,12 @@
                         for (active_aa in selected_aa){
                             sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
                             for (sidechain in sidechains){
-                                $('tr#'+sidechains[sidechain]+'_row').show();
+                                active_sidechains.push(sidechains[sidechain]);
                             }
+                        }
+                        active_sidechains = set(active_sidechains);
+                        for (sidechain in active_sidechains){
+                            $('tr#'+active_sidechains[sidechain]+'_row').show();
                         }
                     } else {
                         header.innerHTML = 'Sidechain Angles →';

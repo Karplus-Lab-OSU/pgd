@@ -6,6 +6,7 @@ from django.shortcuts import render_to_response
 from django.conf import settings
 from django.forms.util import ErrorList
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from django.utils import simplejson
 from datetime import datetime
 from pgd_core.models import Protein
 from pgd_search.models import Search, Search_residue, Search_code, searchSettings
@@ -78,6 +79,7 @@ def search(request):
             dict['index'] = i
         residueFields.append(dict)
 
+    json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
     return render_to_response('search.html', {
         'form': form,
         'maxLength' : searchSettings.segmentSize,
@@ -86,8 +88,7 @@ def search(request):
         'aa_choices':aa_choices,
         'ss_choices':ss_choices,
         'sidechain_angle_list':sidechain_angle_list,
-        'bond_lengths':bond_lengths_string_dict,
-        'bond_angles':bond_angles_string_dict
+        'sidechain_angle_lookup':json_sidechain_angles_lookup
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
