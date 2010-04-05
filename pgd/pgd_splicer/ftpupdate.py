@@ -14,6 +14,8 @@ if __name__ == '__main__':
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
+    from pydra.config import load_settings
+    pydra_settings = load_settings()
 
 from pydra.cluster.tasks.tasks import *
 from pgd.pgd_splicer.models import *
