@@ -637,26 +637,46 @@ if __name__ == '__main__':
     #from pydra.cluster.worker import WorkerProxy
     import sys
     import logging
+    import fileinput
+
+    def process_args(args):
+        return {'code':args[0],
+                'chains':[c for c in args[1]],
+                'threshold':float(args[2]),
+                'resolution':float(args[3]),
+                'rfactor':float(args[4]),
+                'rfree':float(args[5])
+                }
 
     task = ProcessPDBTask()
     #task.logger = logging.getLogger('root')
     #task.parent = WorkerProxy()
 
-    pdbs = {}
-    argv = sys.argv
     pdbs = []
-    for i in range(1,len(argv),5):
-        try:
-            pdbs.append({'code':argv[i],
-                      'threshold':float(argv[i+1]),
-                      'resolution':float(argv[i+2]),
-                      'rfactor':float(argv[i+3]),
-                      'rfree':float(argv[i+4])
-                      })
-        except IndexError:
-            print 'Usage: process_protein.py code threshold resolution rfactor rfree...'
-            sys.exit(0)
 
-    print pdbs
-    task.work(**{'data':pdbs, 'chains':None})
+    argv = sys.argv
+    if len(argv) == 1:
+        print 'Usage:'
+        print '   ProcessPDBTask code chains threshold resolution rfactor rfree [repeat]'
+        print '       chains are a string of chain ids: ABCXYZ' 
+        print ''
+        print '   <cmd> | ProcessPDBTask --pipein'
+        print '   piped protein values must be separated by newlines'
+        sys.exit(0)
+        
+    elif len(argv) == 2 and argv[1] == '--pipein':
+        for line in sys.stdin:
+            pdbs.append(process_args(line.split(' ')))
+            
+    else:
+        for i in range(1,len(argv),6):
+            try:
+                print argv[i:i+6]
+                pdbs.append(process_args(argv[i:i+6]))
+            except IndexError, e:
+                print e
+                print 'Usage: ProcessPDBTask.py code chain threshold resolution rfactor rfree...'
+                sys.exit(0)
+    
+    task.work(**{'data':pdbs})
 
