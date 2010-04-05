@@ -110,7 +110,7 @@ class ProcessPDBTask(Task):
         pdbs = kwargs['data']
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
-        print 'PDBS TO PROCESS:', pdbs
+        #print 'PDBS TO PROCESS:', pdbs
         self.total_proteins = len(pdbs)
 
         for data in pdbs:
@@ -166,7 +166,6 @@ class ProcessPDBTask(Task):
             residue_props = None
             code = data['code']
             chains_filter = data['chains'] if data.has_key('chains') else None
-            print 'DATA', data
             filename = 'pdb%s.ent.gz' % code.lower()
             print '    Processing: ', code
 
@@ -257,6 +256,8 @@ class ProcessPDBTask(Task):
             print 'EXCEPTION in Residue', code, e.__class__, e
             self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
             transaction.rollback()
+            
+            sys.exit(0)
             return
 
         # 5) entire protein has been processed, commit transaction
@@ -649,7 +650,9 @@ if __name__ == '__main__':
                 }
 
     task = ProcessPDBTask()
-    #task.logger = logging.getLogger('root')
+    
+    logging.basicConfig(filename='ProcessPDB.log',level=logging.DEBUG)
+    task.logger = logging
     #task.parent = WorkerProxy()
 
     pdbs = []
@@ -679,4 +682,3 @@ if __name__ == '__main__':
                 sys.exit(0)
     
     task.work(**{'data':pdbs})
-
