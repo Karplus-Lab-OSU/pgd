@@ -21,12 +21,19 @@ from datetime import datetime
 import gzip
 import os
 import re
+import sys
 import urllib
 
 from dbsettings.loading import set_setting_value
 from pydra.cluster.tasks import Task
 
 from pgd.pgd_splicer.models import *
+
+
+def printc(txt):
+    """ direct print statement that can be overritten to silence output """
+    sys.stdout.write(txt)
+    sys.stdout.write('\n')
 
 
 class DunbrackPDBSelectorTask(Task):
@@ -44,7 +51,8 @@ class DunbrackPDBSelectorTask(Task):
         """
         Main work function.
         """
-        print "DunbrackPDBSelectorTask: Starting"
+        
+        printc("DunbrackPDBSelectorTask: Starting")
         try:
             thresholds = kwargs['thresholds']
             if isinstance(thresholds, (str,unicode)):
@@ -65,20 +73,20 @@ class DunbrackPDBSelectorTask(Task):
         except KeyError:
             r_factor = '1.0'
 
-        print '  thresholds:     ', thresholds
-        print '  max resolution: ', resolution
-        print '  r_factor:       ', r_factor
+        printc('  thresholds:     %s' % thresholds)
+        printc('  max resolution: %s' % resolution)
+        printc('  r_factor:       %s' % r_factor)
 
-        print 'Saving pdbs in ', pdb_select_settings.PDB_TMP_DIR
+        printc('Saving pdbs in %s' % pdb_select_settings.PDB_TMP_DIR)
         if not os.path.exists(pdb_select_settings.PDB_TMP_DIR):
             os.mkdir(pdb_select_settings.PDB_TMP_DIR)
-            print '     making dir ', pdb_select_settings.PDB_TMP_DIR
+            printc('     making dir %s' % pdb_select_settings.PDB_TMP_DIR)
 
         # Download the files
         dunbrack_url = 'http://dunbrack.fccc.edu/Guoli/culledpdb/'
         files = get_files(dunbrack_url, thresholds, resolution, r_factor)
 
-        print 'files: ', dunbrack_url, thresholds, resolution, r_factor
+        printc('files: %s %s %s %s' % (dunbrack_url, thresholds, resolution, r_factor))
 
         self.progressValue = 20
 
@@ -100,7 +108,7 @@ class DunbrackPDBSelectorTask(Task):
 
         self.progressValue = 100
 
-        print 'VERSION: %s' % version
+        printc('VERSION: %s' % version)
         return {'version':version, 'data':[v for k,v in proteins.items()]}
 
 
@@ -125,8 +133,6 @@ class DunbrackPDBSelectorTask(Task):
         proteins that match the resolution criteria.
         """
 
-        print 'Processing: ',path
-
         """
             create regex pattern here so it is not done repeatedly while parsing file
 
@@ -141,6 +147,8 @@ class DunbrackPDBSelectorTask(Task):
         """
         regex_str = '(\w{4})(\w)\s+(\d+)\s+(\w+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)'
         regex_pattern = re.compile(regex_str)
+
+        printc('Processing: %s' % path)
 
         raw = None
         try:
@@ -161,7 +169,7 @@ class DunbrackPDBSelectorTask(Task):
                         protein = proteins[groups[0]]
                         if not groups[1] in protein['chains']:
                             protein['chains'].append(groups[1])
-                            print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
+                            #print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
 
                     else:
                         # protein is not in proteins dict yet create initial
@@ -177,7 +185,7 @@ class DunbrackPDBSelectorTask(Task):
                                 'threshold':threshold
                             }
 
-                        print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
+                        #print 'Selecting Protein: %s   Chain: %s   Threshold: %s' % (groups[0],groups[1], threshold)
 
         finally:
             if _file:
@@ -199,7 +207,7 @@ def get_files(url, thresholds, resolution, r_factor):
 
     output = None
     for filename,threshold in files:
-        print 'Downloading: ', filename
+        printc('Downloading: %s' % filename)
         #get file
         file =  urllib.urlopen(url +'/'+ filename )
         raw = file.read()
@@ -217,6 +225,29 @@ def get_files(url, thresholds, resolution, r_factor):
 
 
 if __name__ == '__main__':
+    import sys
+    
     task =  DunbrackPDBSelectorTask('CommandLine PDBSelector')
-    pdbs = task.work()
-    #print 'PDBS', pdbs
+    pipe = False
+    
+    argv = sys.argv
+    
+    if '--help' in argv:
+        print 'Usage:'
+        print '   dunbrack_selector.py [--file name] [--pipeout]'
+        print ''
+        print '   Options:'
+        print '      --help - this screen'
+        print '      --pipeout - output will skip header information so that it may be piped easier into other tools'  
+        sys.exit(0)
+    elif '--pipeout' in argv:
+        def null_print(txt):
+            pass
+        printc = null_print
+    
+    pdbs = task.work(clean=pipe)
+    
+    out = sys.stdout
+    for p in pdbs['data']:
+        p['chains'] = ''.join(p['chains'])
+        out.write('%(code)s %(chains)s %(rfactor)s %(rfree)s %(threshold)s %(resolution)s\n' % p)
