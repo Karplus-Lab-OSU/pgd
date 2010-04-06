@@ -39,9 +39,6 @@ from pgd.pgd_core.models import Residue as ResidueModel
 from pgd.pgd_splicer.models import *
 from pgd.pgd_splicer.chi import CHI_MAP
 
-#import logging
-#logger = logging.getLogger('root')
-
 
 def NO_VALUE(field):
     """
@@ -256,8 +253,6 @@ class ProcessPDBTask(Task):
             print 'EXCEPTION in Residue', code, e.__class__, e
             self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
             transaction.rollback()
-            
-            sys.exit(0)
             return
 
         # 5) entire protein has been processed, commit transaction
@@ -384,7 +379,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         Exclude any Residues that are missing _ANY_ of the
                             mainchain atoms.  Any atom could be missing
                         """
-                        all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
+                        all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
                         if hetflag != ' ' or not all_mainchain:
                             raise InvalidResidueException('HetCode or Missing Atom')
 
