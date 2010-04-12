@@ -250,4 +250,4 @@ if __name__ == '__main__':
     out = sys.stdout
     for p in pdbs['data']:
         p['chains'] = ''.join(p['chains'])
-        out.write('%(code)s %(chains)s %(rfactor)s %(rfree)s %(threshold)s %(resolution)s\n' % p)
+        out.write('%(code)s %(chains)s %(threshold)s %(resolution)s %(rfactor)s %(rfree)s\n' % p)
