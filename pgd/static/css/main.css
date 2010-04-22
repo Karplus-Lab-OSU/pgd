@@ -1,23 +1,27 @@
-* { 
+
+
+* {
+    padding: 0px;
+    margin: 0px;
     font-family: Helvetica, Arial, Tahoma;
-    font-size: 12px; 
     line-height: 25px;
-    padding: 0px; 
-    margin: 0px; 
+    padding: 0px;
+    margin: 0px;
 }
 
-sup {
-    font-size:80%;
-}
+P, H1, H2, H3{ margin: 15px 10px;}
 
 input {
     background-color: #ffffff;
     border: 1px solid #d4d4d4;
-    font-size: 12px;
     font-weight:normal;
-    line-height:15px;
     padding:1px;
     width:5.5em;
+    -moz-border-radius:3px;
+}
+
+input:focus {
+    border-color:#AA8C1D;
 }
 
 input.submit {
@@ -32,20 +36,8 @@ select {
     width:  5.5em;
 }
 
-body {
-    /* MSIE 5 doesn't center based on auto left/right margins, 
-        but 'text-align:center' does center top-level divs: */
-    text-align: center;
-    /* Specify a min-width for the body as wide as the 'wrapper'
-        element itself. This prevents negative (i.e. inaccessible)
-        left-margins in narrow browser windows when using 
-        Navigator 6+/Mozilla on Win32: */
-    min-width: 500px;
-}
-
 div#headerContainer {
     margin-bottom:10px;
-    padding:0px;
     text-align:center;
     width:100%;
 }
@@ -94,24 +86,8 @@ a.mainmenuitem {
     font-size:14px;
 }
 
-a:link { 
-    color:white; 
-    text-decoration:none; 
-}
-a:visited           { color:white; text-decoration:none; }
-a:hover             { color:white; text-decoration:underline; }
-a:active            { color:white; text-decoration:none;}
+a.mainmenuitem:link     { color:white; text-decoration:none; }
+a.mainmenuitem:visited  { color:white; text-decoration:none; }
+a.mainmenuitem:hover    { color:white; text-decoration:underline; }
+a.mainmenuitem:active   { color:white; text-decoration:none;}
 
-#content {
-    /* Reset alignment to compensate for 'text-align:center': */
-    text-align: left;
-    /* Specify the width of the element. This should be the same
-        as 'body min-width': */
-    width: 500px;
-    /* Set left and right margins to auto, thus centering the 
-        element in the containing (body) tag: */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-    
