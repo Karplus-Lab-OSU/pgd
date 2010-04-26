@@ -223,9 +223,25 @@ class FTPUpdateTask(Task):
 if __name__ == '__main__':
     import sys
 
+    
+    pdbs = []
+    argv = sys.argv
+    if len(argv) == 1:
+        print 'Usage:'
+        print '   ftpupdate code [code ...]'
+        print ''
+        print '   <cmd> | ftpupdate --pipein'
+        print '   piped protein codes must be separated by newlines'
+        sys.exit(0)
+        
+    elif len(argv) == 2 and argv[1] == '--pipein':
+        pdbs = [{'code':line} for line in sys.stdin]
+            
+    else:
+        pdbs = [{'code':code} for code in sys.argv[1:]]
 
     task = FTPUpdateTask('Command Line Update')
-    task.work(**{'data':[{'code':code} for code in sys.argv[1:]]})
+    task.work(**{'data':pdbs})
 
 
 

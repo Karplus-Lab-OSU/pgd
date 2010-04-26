@@ -238,7 +238,8 @@ if __name__ == '__main__':
         print ''
         print '   Options:'
         print '      --help - this screen'
-        print '      --pipeout - output will skip header information so that it may be piped easier into other tools'  
+        print '      --pipeout - output will skip header information so that it may be piped easier into other tools'
+        print '      --codes - output only protein codes (default includes chains, threshold, resolution, rfactor, rfree)'
         sys.exit(0)
     elif '--pipeout' in argv:
         def null_print(txt):
@@ -247,7 +248,12 @@ if __name__ == '__main__':
     
     pdbs = task.work(clean=pipe)
     
+    if '--codes' in argv:
+        format = '%(code)s\n'
+    else:
+        format = '%(code)s %(chains)s %(threshold)s %(resolution)s %(rfactor)s %(rfree)s\n'
+    
     out = sys.stdout
     for p in pdbs['data']:
         p['chains'] = ''.join(p['chains'])
-        out.write('%(code)s %(chains)s %(threshold)s %(resolution)s %(rfactor)s %(rfree)s\n' % p)
+        out.write(format % p)
