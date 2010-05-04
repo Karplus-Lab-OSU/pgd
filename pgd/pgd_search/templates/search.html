@@ -801,6 +801,16 @@
                         rowTarget='';
                     }
                 });
+                
+                $('#search').submit(function(){
+                    /* Disable all unused parameters so the data is not sent */
+                    $this = $(this);
+                    $this.find('input').each(function(){
+                        if ($(this).val() == '') {
+                            $(this).attr('disabled',true);
+                        }
+                    });
+                });
             });
 
     </script>
@@ -820,7 +830,7 @@
     {% endif %}
 
     <div id="formContainer">
-        <form name="search" method="POST" action="{{SITE_ROOT}}/search/">
+        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">
             <table id="protein">
             <tbody>
 
