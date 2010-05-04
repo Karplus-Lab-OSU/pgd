@@ -36,6 +36,25 @@ from pydra.cluster.tasks.tasks import Task
 from pgd.pgd_core.models import Protein as ProteinModel
 from pgd.pgd_core.models import Chain as ChainModel
 from pgd.pgd_core.models import Residue as ResidueModel
+from pgd.pgd_core.models import Sidechain_ARG
+from pgd.pgd_core.models import Sidechain_ASN
+from pgd.pgd_core.models import Sidechain_ASP
+from pgd.pgd_core.models import Sidechain_CYS
+from pgd.pgd_core.models import Sidechain_GLN
+from pgd.pgd_core.models import Sidechain_GLU
+from pgd.pgd_core.models import Sidechain_HIS
+from pgd.pgd_core.models import Sidechain_ILE
+from pgd.pgd_core.models import Sidechain_LEU
+from pgd.pgd_core.models import Sidechain_LYS
+from pgd.pgd_core.models import Sidechain_MET
+from pgd.pgd_core.models import Sidechain_PHE
+from pgd.pgd_core.models import Sidechain_PRO
+from pgd.pgd_core.models import Sidechain_SER
+from pgd.pgd_core.models import Sidechain_THR
+from pgd.pgd_core.models import Sidechain_TRP
+from pgd.pgd_core.models import Sidechain_TYR
+from pgd.pgd_core.models import Sidechain_VAL
+
 from pgd.pgd_splicer.models import *
 from pgd.pgd_splicer.chi import CHI_MAP
 from pgd.pgd_splicer.sidechain import *
@@ -75,6 +94,28 @@ AA3to1 =  {
     'TRP' : 'w',
     'TYR' : 'y',
     'VAL' : 'v',
+}
+
+
+aa_class = {
+    'r':(Sidechain_ARG,'sidechain_ARG'),
+    'n':(Sidechain_ASN,'sidechain_ASN'),
+    'd':(Sidechain_ASP,'sidechain_ASP'),
+    'c':(Sidechain_CYS,'sidechain_CYS'),
+    'q':(Sidechain_GLN,'sidechain_GLN'),
+    'e':(Sidechain_GLU,'sidechain_GLU'),
+    'h':(Sidechain_HIS,'sidechain_HIS'),
+    'i':(Sidechain_ILE,'sidechain_ILE'),
+    'l':(Sidechain_LEU,'sidechain_LEU'),
+    'k':(Sidechain_LYS,'sidechain_LYS'),
+    'm':(Sidechain_MET,'sidechain_MET'),
+    'f':(Sidechain_PHE,'sidechain_PHE'),
+    'p':(Sidechain_PRO,'sidechain_PRO'),
+    's':(Sidechain_SER,'sidechain_SER'),
+    't':(Sidechain_THR,'sidechain_THR'),
+    'w':(Sidechain_TRP,'sidechain_TRP'),
+    'y':(Sidechain_TYR,'sidechain_TYR'),
+    'v':(Sidechain_VAL,'sidechain_VAL')
 }
 
 
@@ -142,10 +183,10 @@ class ProcessPDBTask(Task):
         print path
         if os.path.exists(path):
             pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
+            
         else:
             print 'ERROR - File not found'
             return False
-
         try:
             protein = ProteinModel.objects.get(code=code)
         except ProteinModel.DoesNotExist:
@@ -230,8 +271,7 @@ class ProcessPDBTask(Task):
 
                     # 4b) copy properties into a residue object
                     #     property keys should match property name in object
-                    for key, value in residue_props.items():
-                        residue.__dict__[key] = value
+                    residue.__dict__.update(residue_props)
 
                     # 4c) set previous
                     if residue_props.has_key('prev'):
@@ -246,8 +286,17 @@ class ProcessPDBTask(Task):
                         old_residue.next = residue
                         old_residue.save()
 
+                    # 4f) find and update sidechain if needed
+                    if 'sidechain' in residue_props:
+                        klass, name = aa_class[residue_props['aa']]
+                        try:
+                            sidechain = getattr(residue, name)
+                        except:
+                            sidechain = klass()
+                            sidechain.residue_id = residue.id
+                        sidechain.__dict__.update(residue_props['sidechain'])
+                        sidechain.save()
                     old_residue = residue
-
                 print '    %s proteins' % len(residues)
 
         except Exception, e:
@@ -517,8 +566,11 @@ def parseWithBioPython(file, props, chains_filter=None):
                         chi mappings.
                         """
                         calc_chi(res, res_dict)
-                        calc_sidechain_lengths(res, res_dict)
-                        calc_sidechain_angles(res, res_dict)
+                        sidechain = {}
+                        calc_sidechain_lengths(res, sidechain)
+                        calc_sidechain_angles(res, sidechain)
+                        if sidechain:
+                            res_dict['sidechain'] = sidechain
                         """
                         Reset for next pass.  We save some relationships which span two atoms.
                         """
@@ -619,6 +671,7 @@ def calc_chi(residue, residue_dict):
         # this residue type does not have chi
         pass
 
+
 def calc_sidechain_lengths(residue, residue_dict):
     """
     Calculates Values for sidechain bond lengths. Uses a predefined list
@@ -627,11 +680,11 @@ def calc_sidechain_lengths(residue, residue_dict):
     try:
         mapping = bond_lengths[residue.resname]
         for i in range(len(mapping)):
-            sidechain_atom_names= mapping[i]
+            atom_names = mapping[i]
             try:
-                sidechain_atoms = [residue[n].get_vector() for n in sidechain_atom_names]
+                sidechain_atoms = [residue[n].get_vector() for n in atom_names]
                 sidechain_length = calc_distance(*sidechain_atoms)
-                residue_dict['%s_%s'% (sidechain_atom_names[0],sidechain_atom_names[1])] = sidechain_length
+                residue_dict['%s_%s' % (atom_names[0], atom_names[1])] = sidechain_length
             except KeyError:
                 #missing an atom
                 continue
@@ -639,6 +692,7 @@ def calc_sidechain_lengths(residue, residue_dict):
     except KeyError:
         # this residue type does not have sidechain lengths
         pass
+
 
 def calc_sidechain_angles(residue, residue_dict):
     """
@@ -648,11 +702,11 @@ def calc_sidechain_angles(residue, residue_dict):
     try:
         mapping = bond_angles[residue.resname]
         for i in range(len(mapping)):
-            sidechain_atom_names= mapping[i]
+            atom_names = mapping[i]
             try:
-                sidechain_atoms = [residue[n].get_vector() for n in sidechain_atom_names]
+                sidechain_atoms = [residue[n].get_vector() for n in atom_names]
                 sidechain_angle = calc_angle(*sidechain_atoms)
-                residue_dict['%s_%s_%s'% (sidechain_atom_names[0],sidechain_atom_names[1],sidechain_atom_names[2])] = sidechain_angle
+                residue_dict['%s_%s_%s' % (atom_names[0], atom_names[1], atom_names[2])] = sidechain_angle
             except KeyError:
                 #missing an atom
                 continue

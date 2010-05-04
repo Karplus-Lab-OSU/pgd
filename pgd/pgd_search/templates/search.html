@@ -534,7 +534,7 @@
 
 
                 $('#protein #id_proteins')
-                    .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
+                    .autocomplete('{{SITE_ROOT}}/search/protein_code/', {'multiple':true, 'autoFill':true})
                     .keyup(function(evt){
                             updateInclusionField(evt.target, false);
                         })
@@ -601,18 +601,18 @@
                         for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
                             sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
                             for (sidechain in sidechains){
-                                active_sidechains.push(sidechains[sidechain]);
+                                active_sidechains.push(selected_aa[active_aa]+'_'+sidechains[sidechain]);
                             }
                         }
-                        unfiltered_sidechains = sidechain_angle_lookup[aa];
+                        //unfiltered_sidechains = sidechain_angle_lookup[aa];
                         active_sidechains = set(active_sidechains);//Remove redundancies
                         header = document.getElementById('sidechain_angle_header');
                         if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
-                            for (angle in unfiltered_sidechains){
-                                $('tr#'+unfiltered_sidechains[angle]+'_row').show();
+                            for (angle in active_sidechains){
+                                $('tr#'+active_sidechains[angle]+'_row').show();
                             }
                         }else{//Only remove those sidechains that aren't still shown by another aa
-                            filtered_sidechains = listComplement(unfiltered_sidechains,active_sidechains);
+                            filtered_sidechains = listComplement(active_sidechains,active_sidechains);
                             for (angle in filtered_sidechains){
                                 $('tr#'+filtered_sidechains[angle]+'_row').hide();
                             }
@@ -622,18 +622,18 @@
                         for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
                             sidechains = sidechain_length_lookup[selected_aa[active_aa]];
                             for (sidechain in sidechains){
-                                active_sidechains.push(sidechains[sidechain]);
+                                active_sidechains.push(selected_aa[active_aa]+'_'+sidechains[sidechain]);
                             }
                         }
-                        unfiltered_sidechains = sidechain_length_lookup[aa];
+                        //unfiltered_sidechains = sidechain_length_lookup[aa];
                         active_sidechains = set(active_sidechains);//Remove redundancies
                         header = document.getElementById('sidechain_length_header');
                         if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
-                            for (sclength in unfiltered_sidechains){
-                                $('tr#'+unfiltered_sidechains[sclength]+'_row').show();
+                            for (sclength in active_sidechains){
+                                $('tr#'+active_sidechains[sclength]+'_row').show();
                             }
                         }else{//Only remove those sidechains that aren't still shown by another aa
-                            filtered_sidechains = listComplement(unfiltered_sidechains,active_sidechains);
+                            filtered_sidechains = listComplement(active_sidechains,active_sidechains);
                             for (sclength in filtered_sidechains){
                                 $('tr#'+filtered_sidechains[sclength]+'_row').hide();
                             }
@@ -820,7 +820,7 @@
     {% endif %}
 
     <div id="formContainer">
-        <form name="search" method="POST" action="{{SITE_ROOT}}search/">
+        <form name="search" method="POST" action="{{SITE_ROOT}}/search/">
             <table id="protein">
             <tbody>
 
@@ -1108,7 +1108,7 @@
             <tr class="sidechain_angle_row">
             {% for angle in sidechain_angle_list %}
                 <tr class="sidechain_angle_row" id="{{angle}}_row">
-                <td class="label">{{angle}}</td>
+                <td class="label">{{angle|sidechain_label}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         {{ r|variable_dict_lookup:angle }}
