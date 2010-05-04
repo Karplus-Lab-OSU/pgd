@@ -140,7 +140,7 @@
                 .change(function(){
                     val = $(this).val();
                     $('table').qtip('show');
-                    $.getJSON('{{SITE_ROOT}}search/statistics/data/',{'i':val},process_data)
+                    $.getJSON('{{SITE_ROOT}}/search/statistics/data/',{'i':val},process_data)
                 });
 
             $('#stats').qtip({
@@ -171,7 +171,7 @@
                     });
             $('#stats').qtip('show');
 
-            $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
+            $.getJSON('{{SITE_ROOT}}/search/statistics/data/',process_data);
 
             $('#content').qtip({
                 position:{

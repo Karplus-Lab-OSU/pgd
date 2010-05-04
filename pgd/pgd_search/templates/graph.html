@@ -315,11 +315,11 @@
                 $('select').sSelect();
 
                 $('#button-save').click(function (evt) {
-                    $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                    $("form").attr('action','{{SITE_ROOT}}/search/plot/png/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
                 });
 
                 $('#button-data').click(function (evt) {
-                    $("form").attr('action','{{SITE_ROOT}}search/plot/dump/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                    $("form").attr('action','{{SITE_ROOT}}/search/plot/dump/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
                 });
 
                 $('#id_xProperty').change(function (){
@@ -425,7 +425,7 @@
                 $('#ajax_progress').show();
 
                 // submit
-                $.post('{{SITE_ROOT}}search/plot/svg/render/',args, process_svg_data, "json");
+                $.post('{{SITE_ROOT}}/search/plot/svg/render/',args, process_svg_data, "json");
             }
 
             function process_svg_data(data) {
