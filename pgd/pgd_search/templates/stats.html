@@ -140,7 +140,9 @@
                 .change(function(){
                     val = $(this).val();
                     $('table').qtip('show');
-                    $.getJSON('{{SITE_ROOT}}/search/statistics/data/',{'i':val},process_data)
+                    $('td.aa_total, td.sum').html('-');
+                    $('td.data').not('.sum').html('--');
+                    $.getJSON('{{SITE_ROOT}}/search/statistics/data/',{'i':val},process_data);
                 });
 
             $('#stats').qtip({

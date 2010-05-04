@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Protein Geometry Database - News{%endblock%}
+
+{% block head %}
+    <style>
+        #content {
+            margin:40px;
+        }
+        
+        li {
+            margin-bottom:20px;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<h1> News </h1>
+
+<ul>
+<li> <b>April 20, 2010</b> The model was database updated to Pisces as of Feb 13, 2010 (The latest
+available). The static web pages were overhauled - adding more options 
+and information.  A bug was fixed which caused incorrect values for bond lengths and angles
+to be calculated when a set of alturnative conformations spanned two residues.
+<li> <b>January 23, 2010</b> The geometry library was updated to match the current
+Pisces library.  In addition, the ability to filter and search for side chain &chi; angles 
+was implemented.
+</ul>
+
+{% endblock %}
+

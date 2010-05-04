@@ -59,9 +59,6 @@ from pgd.pgd_splicer.models import *
 from pgd.pgd_splicer.chi import CHI_MAP
 from pgd.pgd_splicer.sidechain import *
 
-#import logging
-#logger = logging.getLogger('root')
-
 
 def NO_VALUE(field):
     """
@@ -151,7 +148,7 @@ class ProcessPDBTask(Task):
         pdbs = kwargs['data']
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
-        print 'PDBS TO PROCESS:', pdbs
+        #print 'PDBS TO PROCESS:', pdbs
         self.total_proteins = len(pdbs)
 
         for data in pdbs:
@@ -194,9 +191,8 @@ class ProcessPDBTask(Task):
             data['pdb_date'] = pdb_date
             return True
 
-        if protein.pdb_date < pdb_date:
-            data['pdb_date'] = pdb_date
-            return True
+        data['pdb_date'] = pdb_date
+        return protein.pdb_date < pdb_date
 
 
     @transaction.commit_manually
@@ -208,7 +204,6 @@ class ProcessPDBTask(Task):
             residue_props = None
             code = data['code']
             chains_filter = data['chains'] if data.has_key('chains') else None
-            print 'DATA', data
             filename = 'pdb%s.ent.gz' % code.lower()
             print '    Processing: ', code
 
@@ -217,7 +212,6 @@ class ProcessPDBTask(Task):
 
             # 1) parse with bioPython
             data = parseWithBioPython(filename, data, chains_filter)
-            #print 'props: %s' % data
 
             # 2) Create/Get Protein and save values
             try:
@@ -298,6 +292,7 @@ class ProcessPDBTask(Task):
                         sidechain.save()
                     old_residue = residue
                 print '    %s proteins' % len(residues)
+
 
         except Exception, e:
             import traceback
@@ -418,13 +413,24 @@ def parseWithBioPython(file, props, chains_filter=None):
                         newID += 1
                         terminal = False
                         hetflag, res_id, icode = res.get_id()
-                        #print hetflag, res_id, icode
+                        
+                        """
+                        XXX Get the dictionary of atoms in the Main conformation.
+                        BioPython should do this automatically, but it does not
+                        always choose the main conformation.  Leading to some
+                        Interesting results
+                        """
+                        atoms = {}
+                        for atom in res.get_unpacked_list():
+                            if atom.get_altloc() in ('A', ' '):
+                                atoms[atom.name] = atom
+                        
                         """
                         Exclude water residues
                         Exclude any Residues that are missing _ANY_ of the
                             mainchain atoms.  Any atom could be missing
                         """
-                        all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
+                        all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
                         if hetflag != ' ' or not all_mainchain:
                             raise InvalidResidueException('HetCode or Missing Atom')
 
@@ -474,11 +480,13 @@ def parseWithBioPython(file, props, chains_filter=None):
                         Get Vectors for mainchain atoms and calculate geometric angles,
                         dihedral angles, and lengths between them.
                         """
-                        N    = res['N'].get_vector()
-                        CA   = res['CA'].get_vector()
-                        C    = res['C'].get_vector()
-                        CB   = res['CB'].get_vector() if res.has_id('CB') else None
-                        O    = res['O'].get_vector()
+                        N    = atoms['N'].get_vector()
+                        CA   = atoms['CA'].get_vector()
+                        C    = atoms['C'].get_vector()
+                        CB   = atoms['CB'].get_vector() if atoms.has_key('CB') else None
+                        O    = atoms['O'].get_vector()
+
+                        
 
                         if oldC:
                             # determine if there are missing residues by calculating
@@ -544,13 +552,13 @@ def parseWithBioPython(file, props, chains_filter=None):
                         """
                         main_chain = []
                         side_chain = []
-                        for a in res.child_list:
-                            if a.name in ('N', 'CA', 'C', 'O','OXT'):
-                                main_chain.append(a.get_bfactor())
-                            elif a.name in ('H'):
+                        for name in atoms:
+                            if name in ('N', 'CA', 'C', 'O','OXT'):
+                                main_chain.append(atoms[name].get_bfactor())
+                            elif name in ('H'):
                                 continue
                             else:
-                                side_chain.append(a.get_bfactor())
+                                side_chain.append(atoms[name].get_bfactor())
 
                         if main_chain != []:
                             res_dict['bm'] = sum(main_chain)/len(main_chain)
@@ -722,25 +730,48 @@ if __name__ == '__main__':
     """
     #from pydra.cluster.worker import WorkerProxy
     import sys
+    import logging
+    import fileinput
+
+    def process_args(args):
+        return {'code':args[0],
+                'chains':[c for c in args[1]],
+                'threshold':float(args[2]),
+                'resolution':float(args[3]),
+                'rfactor':float(args[4]),
+                'rfree':float(args[5])
+                }
 
     task = ProcessPDBTask()
+    
+    logging.basicConfig(filename='ProcessPDB.log',level=logging.DEBUG)
+    task.logger = logging
     #task.parent = WorkerProxy()
 
-    pdbs = {}
-    argv = sys.argv
     pdbs = []
-    for i in range(1,len(argv),5):
-        try:
-            pdbs.append({'code':argv[i],
-                      'threshold':float(argv[i+1]),
-                      'resolution':float(argv[i+2]),
-                      'rfactor':float(argv[i+3]),
-                      'rfree':float(argv[i+4])
-                      })
-        except IndexError:
-            print 'Usage: process_protein.py code threshold resolution rfactor rfree...'
-            sys.exit(0)
 
-    print pdbs
-    task.work(**{'data':pdbs, 'chains':None})
-
+    argv = sys.argv
+    if len(argv) == 1:
+        print 'Usage:'
+        print '   ProcessPDBTask code chains threshold resolution rfactor rfree [repeat]'
+        print '       chains are a string of chain ids: ABCXYZ' 
+        print ''
+        print '   <cmd> | ProcessPDBTask --pipein'
+        print '   piped protein values must be separated by newlines'
+        sys.exit(0)
+        
+    elif len(argv) == 2 and argv[1] == '--pipein':
+        for line in sys.stdin:
+            pdbs.append(process_args(line.split(' ')))
+            
+    else:
+        for i in range(1,len(argv),6):
+            try:
+                print argv[i:i+6]
+                pdbs.append(process_args(argv[i:i+6]))
+            except IndexError, e:
+                print e
+                print 'Usage: ProcessPDBTask.py code chain threshold resolution rfactor rfree...'
+                sys.exit(0)
+    
+    task.work(**{'data':pdbs})

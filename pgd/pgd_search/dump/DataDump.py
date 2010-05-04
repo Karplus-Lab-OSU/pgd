@@ -99,7 +99,6 @@ class BufferThread(Thread):
                     while offset != 0:
                         residue = residue.next
                         offset -= 1
-                
                 parts = [
                     str(self.parent.count) if first else ' ',
                     segment.protein_id,
@@ -111,14 +110,14 @@ class BufferThread(Thread):
                 for field in FIELDS:
                     # replace field with display value if needed
                     if field in FIELD_VALUE_REPLACEMENTS:
-                        code = segment.__dict__[field]
+                        code = residue.__dict__[field]
                         if code:
                             for k,v in FIELD_VALUE_REPLACEMENTS[field]:
                                 if k == code:
                                     parts.append(str(v))
                     # just write value
                     else:
-                        parts.append(str(segment.__dict__[field]))
+                        parts.append(str(residue.__dict__[field]))
 
                 s = '\t'.join(parts)
                 string = '%s\n' % s

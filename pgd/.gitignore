@@ -1,3 +1,4 @@
+settings.py
 *.pyc
 *.key
 *.pem
@@ -12,3 +13,4 @@
 *.patch
 *.diff
 *.swp
+*.kpf
