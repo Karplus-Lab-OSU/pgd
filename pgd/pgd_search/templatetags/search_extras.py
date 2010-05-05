@@ -62,3 +62,15 @@ def sidechain_label(value):
     parts = [value[:3],': '] + ['%s<sup>%s</sup>'%(i[0], i[1:]) for i in value[5:].split('_')]
     return mark_safe(''.join(parts))
 register.filter('sidechain_label', sidechain_label)
+
+
+@register.filter(name='sidechain_fields')
+def sidechain_fields(form, key):
+    """
+    Filter that gets both the form field and hidden toggle field for the given key
+    """
+    fields = (str(form.__getitem__(key)), str(form.__getitem__(key+'_i')))
+    return mark_safe(''.join(fields))
+register.filter('sidechain_fields', sidechain_fields)
+
+

@@ -1121,7 +1121,7 @@
                 <td class="label">{{angle|sidechain_label}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{ r|variable_dict_lookup:angle }}
+                        <span class="toggle">&nbsp;</span>{{ r|sidechain_fields:angle }}
                     </td>
                 {% endfor %}
                 </tr>
@@ -1136,7 +1136,7 @@
                 <td class="label">{{length}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                        {{ r|variable_dict_lookup:length }}
+                        <span class="toggle">&nbsp;</span>{{ r|sidechain_fields:length }}
                     </td>
                 {% endfor %}
                 </tr>

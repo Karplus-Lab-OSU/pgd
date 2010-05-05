@@ -214,9 +214,7 @@ class Search(models.Model):
                 )
             )
             query = self.filter_fields(fields, query, search_res, seg_prefix)
-            
-            print fields, seg_prefix
-            
+
             # ... handle sidechain query strings ...           
             sidechain_fields = []
             if search_res.aa:
