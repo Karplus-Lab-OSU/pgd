@@ -21,6 +21,10 @@ from pgd_splicer.sidechain import *
 #This might be a big faux pas
 from pgd_splicer.models import pdb_select_settings
 
+json_sidechain_lengths_lookup = simplejson.dumps(bond_lengths_string_dict)
+json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
+
+
 """
 Handler for search form.
 """
@@ -83,8 +87,6 @@ def search(request):
             dict['index'] = i
         residueFields.append(dict)
 
-    json_sidechain_lengths_lookup = simplejson.dumps(bond_lengths_string_dict)
-    json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
     return render_to_response('search.html', {
         'form': form,
         'maxLength' : searchSettings.segmentSize,
@@ -130,6 +132,9 @@ def editSearch(request, search_id=None):
     residueFields = []
     aa_choices = []
     ss_choices = []
+    fields = ["ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5']
+    fields += sidechain_length_relationship_list
+    fields += sidechain_angle_relationship_list
     for i in RESIDUE_INDEXES:
         valid = form.is_valid()
         aa_chosen = form.cleaned_data['aa_%i' % i]
@@ -138,19 +143,24 @@ def editSearch(request, search_id=None):
         ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES]) 
 
         dict = {}
-        for prefix in ("aa", "ss", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in fields:
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i
         residueFields.append(dict)
-
+    
+    
     return render_to_response('search.html', {
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices,
-        'ss_choices':ss_choices
+        'ss_choices':ss_choices,
+        'sidechain_angle_list':sidechain_angle_relationship_list,
+        'sidechain_length_list':sidechain_length_relationship_list,
+        'sidechain_length_lookup':json_sidechain_lengths_lookup,
+        'sidechain_angle_lookup':json_sidechain_angles_lookup
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
