@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 
 from pgd_core.models import Protein,Residue
-from pgd_constants import AA_CHOICES, SS_CHOICES, Subscripter
+from pgd_constants import AA_CHOICES, AA_CHOICES_DICT, SS_CHOICES, Subscripter
 from pgd_splicer.sidechain import bond_lengths_string_dict, bond_angles_string_dict
 from pgd_core import residue_indexes
 
@@ -151,10 +151,6 @@ class Search(models.Model):
         indexes = residue_indexes(int(data.residues))
         for index in indexes: # iterate through all search residues in self
             search_res = Segmenter(data, index)
-            #seg_prefix = "r%i_"%(
-            #    # convert from the search residue index to indexes 0...n
-            #    search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)
-            #)
 
             # get field prefix for this residue
             if index == 0:
@@ -201,12 +197,9 @@ class Search(models.Model):
                 )(
                     # check to see that the value of the segment residue is in the set of
                     # residues described in the '_int' of the search residue.
-                    **{seg_prefix+field[0:-4]+"__in": [
-                        # get the designated choice names as stored in the database.
-                        choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index
-                    ]}
+                    **{"%s%s__in" % (seg_prefix,field): search_res.__getitem__(field)}
                 )
-
+            
             # ...handle query strings...
             fields = filter(
                 # use only the fields with a '_include' value. 
@@ -220,22 +213,28 @@ class Search(models.Model):
                     'zeta',
                 )
             )
-            self.filter_fields(fields, query, search_res, seg_prefix)
+            query = self.filter_fields(fields, query, search_res, seg_prefix)
+            
+            print fields, seg_prefix
             
             # ... handle sidechain query strings ...           
             sidechain_fields = []
-            '''for aa_type in filter(lambda x: x[1],search_res.aa.items()):
-                aa_type_upper = aa_type[0].upper()
-                sidechain_filter = lambda x: search_res.__dict__['%s_%s_i' % (aa_type_upper, x)] != None
-                for field in bond_lengths_string_dict[aa_type_upper]:
-                    if sidechain_filter(field):
-                        sidechain_fields.append('sidechain_%s__%s' % (aa_type_upper, field))
-                for field in bond_angles_string_dict[aa_type_upper]:
-                    if sidechain_filter(field):
-                        sidechain_fields.append('sidechain_%s__%s' % (aa_type_upper, field))
-            '''
+            if search_res.aa:
+                for aa_type in [AA_CHOICES_DICT[aa].upper() for aa in search_res.aa]:
+                    if aa_type in bond_lengths_string_dict:
+                        field_base = '%s__%%s' % aa_type
+                        for field in bond_lengths_string_dict[aa_type]:
+                            key = field_base % field
+                            if search_res[key]:
+                                sidechain_fields.append(key)
+                        
+                        for field in bond_angles_string_dict[aa_type]:
+                            key = field_base % field
+                            if search_res[key]:
+                                sidechain_fields.append(key)
             
-            
+            seg_prefix = '%ssidechain_' % seg_prefix
+            query = self.filter_fields(sidechain_fields, query, search_res, seg_prefix)
             
         return query
 
@@ -243,6 +242,7 @@ class Search(models.Model):
         """
         Filters the fields passed in
         """
+
         for field in fields:
             # seg_field is the name of the property of the given residue in the database
             seg_field = seg_prefix+field
@@ -291,17 +291,22 @@ class Search(models.Model):
                     constraints
                 )
             )
+        return query
 
 
-class Segmenter():
+class Segmenter(object):
     """ segments form data for easier access """
     def __init__(self,dict__, i):
         self.i = i
         self.__dict = dict__
     def __getitem__(self, k):
         return self.__dict['%s_%d' % (k, self.i)]
-
-
+        
+    def __getattribute__(self, k):
+        try:
+            return super(Segmenter, self).__getattribute__(k)
+        except AttributeError:
+            return self.__dict['%s_%d' % (k, self.i)]
 
 class Search_code(models.Model):
     """

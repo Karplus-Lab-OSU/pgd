@@ -601,7 +601,7 @@
                         for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
                             sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
                             for (sidechain in sidechains){
-                                active_sidechains.push(selected_aa[active_aa]+'_'+sidechains[sidechain]);
+                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                             }
                         }
                         //unfiltered_sidechains = sidechain_angle_lookup[aa];
@@ -886,7 +886,7 @@
                         <span class="toggle">&nbsp;</span>
                         <ul id="id_aa_choices_list_col_{{r.index}}" class="multiselect field">
                             {% for choice in aa_choices|index_lookup:forloop.counter0 %}
-                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}/></li>
                             {% endfor %}
                         </ul>
                         {{r.aa_i}}
@@ -1089,8 +1089,8 @@
                 <td class="label">&chi;<sub>2</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                    <span class="toggle">&nbsp;</span>{{r.chi2}}{{r.chi2_i}}
-                </td>
+                        <span class="toggle">&nbsp;</span>{{r.chi2}}{{r.chi2_i}}
+                    </td>
                 {% endfor %}
             </tr>
 
@@ -1121,7 +1121,7 @@
                 <td class="label">{{angle|sidechain_label}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                        {{ r|variable_dict_lookup:angle }}
+                        <span class="toggle">&nbsp;</span>{{ r|variable_dict_lookup:angle }}
                     </td>
                 {% endfor %}
                 </tr>

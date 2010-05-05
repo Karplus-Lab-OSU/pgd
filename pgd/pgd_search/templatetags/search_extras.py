@@ -59,6 +59,6 @@ def sidechain_label(value):
     """
     Filter that formats sidechain labels for angles and lengths
     """
-    parts = [value[:3],': '] + ['%s<sup>%s</sup>'%(i[0], i[1:]) for i in value[4:].split('_')]
+    parts = [value[:3],': '] + ['%s<sup>%s</sup>'%(i[0], i[1:]) for i in value[5:].split('_')]
     return mark_safe(''.join(parts))
 register.filter('sidechain_label', sidechain_label)

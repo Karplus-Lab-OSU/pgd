@@ -429,6 +429,8 @@ bond_lengths_string_dict = {
 
 sidechain_angle_list = ['%s_%s'%(k,v) for k, a in bond_angles_string_dict.items() for v in a ]
 sidechain_length_list = ['%s_%s'%(k,v) for k, a in bond_lengths_string_dict.items() for v in a ]
+sidechain_angle_relationship_list = ['%s__%s'%(k,v) for k, a in bond_angles_string_dict.items() for v in a ]
+sidechain_length_relationship_list = ['%s__%s'%(k,v) for k, a in bond_lengths_string_dict.items() for v in a ]
 
 aa_list = [
     'ARG',
