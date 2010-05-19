@@ -192,7 +192,10 @@
             qtipsOn=true;
             qtipState = '';
             qtipTotal = 0;
-            lastTarget = null;
+            angle_qtip_api = null;
+            angle_target = null;
+            firstRun = true;
+            var qtip_status = [];
             angle_drawing = $('#canvas');
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
@@ -475,7 +478,7 @@
             };
 
 
-            function create_angles_helper( content, target, anch ){
+            function create_angles_helper( qcontent, qtarget, anch ){
                 $(anch).qtip({
                     position:{
                         adjust: { //Make the tooltip avoid going outside the window due to browser resizing
@@ -485,13 +488,13 @@
                                 target: 'topMiddle',
                                 tooltip: 'bottomMiddle'
                                 },
-                        target: target
+                        target: qtarget
                              },
                         style:{ //Style the qtip to look like the page
                             color: 'black',
                             textAlign: 'center',
                             title: { color: 'white', background: '#666666'},
-                            width: { min: 150, max: 430 },
+                            width: { min: 200, max: 200 },
                             border:{ 
                                     width: 6, 
                                     color: '#909090'
@@ -500,20 +503,19 @@
                                 corner: 'bottomMiddle',
                                 color: '#909090',
                                 size: { x: 20, y : 15 }
+                                },
+                            classes:{
+                                content: "angle_visualizer",
+                                tooltip: "angle_window"
                                 }
                             },
-                        /*show: { when: { event: 'click' },
-                            effect: { type: 'fade' , length:'10' } },/*
-                        hide: { when: { event: 'unfocus' }, effect: { type: 'fade' , length:'10' } },*/
-                        //show:false,
                         show:false,
                         hide:false,
                         content:{
                                 prerender: false,//This kills pageload times if enabled
-                                text: content,
+                                text: qcontent,
                                 title:  {
                                         text: "Angle Visualizer",
-                                        button: 'Close' //Enables a button that closes the qtip
                                         }
                                 }
                         })
@@ -630,12 +632,12 @@
             
             $(document).ready(function() {
                 $('#helpPage').hide();
-                $('#outer').hide();
+                
                 if(qtipsOn){
                     createQtips();
                 }
                 angles_helper_init();
-                
+                $('#canvas').hide();//Hide this after the init, qtip will grab it once the qtip is made
                 $('span.toggle').click(function(evt){
                     tar = $(evt.target);
                     if ( tar.hasClass('toggle_Include')) {
@@ -651,39 +653,37 @@
                     }
                 });
 
-                $('input.field')
+                    $('input.field')
                     .keyup(function(evt){
-                            updateInclusionField(evt.target, true);
-                            val = $(this).val()
-                            if (cur==val){return;}
-                            m = match(val);
-                            if(m.length == 0){return;}
-                            if(lastTarget != null){
-                                $("#"+lastTarget.id).qtip('destroy');
-                            }
-                            angles(m);
-                            cur = val;
-                            create_angles_helper($('#canvas'),$(evt.target),"#"+evt.target.id);
-                            $("#"+evt.target.id).qtip('show');
-                            lastTarget = evt.target;
+                        updateInclusionField(evt.target, true);
+                        //update svg
+                        val = $(this).val();
+                        m = match(val);
+                        angles(m);
                         })
+                    .focus(function(evt){
+                        //update svg
+                        val = $(this).val();
+                        m = match(val);
+                        angles(m);
+                        if(firstRun == true){//initial run needs to have target set and qtip made
+                            create_angles_helper('Text',$('#'+evt.target.id),'#'+evt.target.id)
+                            angle_qtip_api = $("#"+evt.target.id).qtip('api');
+                            angle_qtip_api.show();
+                            $('#canvas').show();//show it so the qtip can grab it
+                            $('.angle_visualizer').html($('#canvas'));
+                            firstRun = false;
+                        }
+                        angle_qtip_api.options.position.target = $('#'+evt.target.id);
+                        //Set a slight delay to prevent the hide function from stepping on the show function
+                        window.setTimeout(function(){angle_qtip_api.updatePosition($('#'+evt.target.id),false).show();}, 200);
+                    })
                     .change(function(evt){
                             updateInclusionField(evt.target, true);
                         })
-                    .click(function(evt){
-                            val = $(this).val()
-                            if (cur==val){return;}
-                            m = match(val);
-                            if(m.length == 0){return;}
-                            if(lastTarget != null){
-                                $("#"+lastTarget.id).qtip('destroy');
-                            }
-                            angles(m);
-                            cur = val;
-                            create_angles_helper($('#canvas'),$(evt.target),"#"+evt.target.id);
-                            $("#"+evt.target.id).qtip('show');
-                            lastTarget = evt.target;
-                    }).updateInclusionField();
+                    .blur(function(evt){
+                        angle_qtip_api.hide();
+                    });
 
 
                 $('#protein #id_proteins')
@@ -695,12 +695,6 @@
                             updateInclusionField(evt.target, false);
                         })
                     .each(function(){updateInclusionField(this, false);});
-
-
-                /*$('select.field').change(function(evt){
-                        updateInclusionField(evt.target, false);
-                    });*/
-
                 $('#id_residues').change(sizeChange);
 
                 //force update of segments
@@ -811,8 +805,8 @@
                         rowTarget = '#' + rowTarget + Math.ceil(parseInt($('#id_residues').val()/2));
                         rowTarget = rowTarget.replace(' ','');
                         if(rowTarget!=qtipState&&qtipsOn){
-                            $('div.qtip').qtip('hide');
-                            $(rowTarget).qtip('show');
+                            $('div.qtip').not('div.angle_window').qtip('hide');//XXX Exclude angle visualizer to avoid flickering
+                            $(rowTarget).not('div.angle_window').qtip('show');
                         }
                         qtipState=rowTarget;
                         rowTarget='';
@@ -828,8 +822,8 @@
                         rowTarget =event.target.id;
                     }
                     if(rowTarget!=''&&rowTarget!=undefined&&qtipsOn&&rowTarget!=qtipState){
-                        $('div.qtip').qtip('hide');
-                        $('#'+rowTarget).qtip('show');
+                        $('div.qtip').not('div.angle_window').qtip('hide');
+                        $('#'+rowTarget).not('div.angle_window').qtip('show');
                         qtipState=rowTarget;
                         rowTarget='';
                     }
@@ -1142,9 +1136,9 @@
             </div>
         </form>
     </div>
-    <div id="outer">
+
         <div id="canvas"></div>
-    </div>
+ 
     <div id="helpPage">
         {% include 'qtiphelp.html' %}
     </div>
