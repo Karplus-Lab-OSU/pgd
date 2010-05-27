@@ -256,7 +256,8 @@
                 if (val == '')
                     return true;
 
-                if (val.match(/^(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))(,(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))))*$/)) {
+                m = match(val)
+                if(m != ''){//Apparently empty lists are returned as empty strings
                     return true;
                 }
                 return false;
@@ -573,11 +574,32 @@
                 if (_angles != undefined) {
                     for (i in _angles){ _angles[i].remove()}
                 }
-                base = 100
+                base = 100;
                 _angles = [];
                 for (i in list) {
                     _angles.push(draw_arc(80,90,list[i][0]+180,list[i][1]+180, 40));
                 }
+            }
+            
+            //Checks the list of numbers for compliance to search ranges
+            function check_range(val){
+                vals = null;
+                for (range in val){
+                    vals = val[range]
+                    //Must go counterclockwise around the circle
+                    if((vals[0]-vals[1])>=0){
+                        return false;
+                    }
+                    //Must be in the range of -180 to 180
+                    if(vals[0]> 180 || vals[0] < -180){
+                        return false;
+                    }
+                    if(vals[1]> 180 || vals[1] < -180){
+                        return false;
+                    }
+                    
+                }
+                return true;
             }
         
             function match(val){
@@ -609,7 +631,12 @@
                         processed.push([v,v+1]);
                     }
                 }
-                return processed;
+                if(check_range(processed)){
+                    return processed;
+                }
+                else{
+                    return [];
+                }
             }
 
             function angles_helper_init(){
