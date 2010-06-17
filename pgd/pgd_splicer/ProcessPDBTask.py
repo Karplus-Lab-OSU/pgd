@@ -36,11 +36,28 @@ from pydra.cluster.tasks.tasks import Task
 from pgd.pgd_core.models import Protein as ProteinModel
 from pgd.pgd_core.models import Chain as ChainModel
 from pgd.pgd_core.models import Residue as ResidueModel
+from pgd.pgd_core.models import Sidechain_ARG
+from pgd.pgd_core.models import Sidechain_ASN
+from pgd.pgd_core.models import Sidechain_ASP
+from pgd.pgd_core.models import Sidechain_CYS
+from pgd.pgd_core.models import Sidechain_GLN
+from pgd.pgd_core.models import Sidechain_GLU
+from pgd.pgd_core.models import Sidechain_HIS
+from pgd.pgd_core.models import Sidechain_ILE
+from pgd.pgd_core.models import Sidechain_LEU
+from pgd.pgd_core.models import Sidechain_LYS
+from pgd.pgd_core.models import Sidechain_MET
+from pgd.pgd_core.models import Sidechain_PHE
+from pgd.pgd_core.models import Sidechain_PRO
+from pgd.pgd_core.models import Sidechain_SER
+from pgd.pgd_core.models import Sidechain_THR
+from pgd.pgd_core.models import Sidechain_TRP
+from pgd.pgd_core.models import Sidechain_TYR
+from pgd.pgd_core.models import Sidechain_VAL
+
 from pgd.pgd_splicer.models import *
 from pgd.pgd_splicer.chi import CHI_MAP
-
-#import logging
-#logger = logging.getLogger('root')
+from pgd.pgd_splicer.sidechain import *
 
 
 def NO_VALUE(field):
@@ -77,6 +94,28 @@ AA3to1 =  {
 }
 
 
+aa_class = {
+    'r':(Sidechain_ARG,'sidechain_ARG'),
+    'n':(Sidechain_ASN,'sidechain_ASN'),
+    'd':(Sidechain_ASP,'sidechain_ASP'),
+    'c':(Sidechain_CYS,'sidechain_CYS'),
+    'q':(Sidechain_GLN,'sidechain_GLN'),
+    'e':(Sidechain_GLU,'sidechain_GLU'),
+    'h':(Sidechain_HIS,'sidechain_HIS'),
+    'i':(Sidechain_ILE,'sidechain_ILE'),
+    'l':(Sidechain_LEU,'sidechain_LEU'),
+    'k':(Sidechain_LYS,'sidechain_LYS'),
+    'm':(Sidechain_MET,'sidechain_MET'),
+    'f':(Sidechain_PHE,'sidechain_PHE'),
+    'p':(Sidechain_PRO,'sidechain_PRO'),
+    's':(Sidechain_SER,'sidechain_SER'),
+    't':(Sidechain_THR,'sidechain_THR'),
+    'w':(Sidechain_TRP,'sidechain_TRP'),
+    'y':(Sidechain_TYR,'sidechain_TYR'),
+    'v':(Sidechain_VAL,'sidechain_VAL')
+}
+
+
 class InvalidResidueException(Exception):
     """
     Exception identifying something wrong while processing
@@ -105,12 +144,11 @@ class ProcessPDBTask(Task):
         """
         Work function - expects a list of pdb file prefixes.
         """
-
         # process a single protein dict, or a list of proteins
         pdbs = kwargs['data']
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
-        print 'PDBS TO PROCESS:', pdbs
+        #print 'PDBS TO PROCESS:', pdbs
         self.total_proteins = len(pdbs)
 
         for data in pdbs:
@@ -142,10 +180,10 @@ class ProcessPDBTask(Task):
         print path
         if os.path.exists(path):
             pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
+            
         else:
             print 'ERROR - File not found'
             return False
-
         try:
             protein = ProteinModel.objects.get(code=code)
         except ProteinModel.DoesNotExist:
@@ -166,7 +204,6 @@ class ProcessPDBTask(Task):
             residue_props = None
             code = data['code']
             chains_filter = data['chains'] if data.has_key('chains') else None
-            print 'DATA', data
             filename = 'pdb%s.ent.gz' % code.lower()
             print '    Processing: ', code
 
@@ -228,8 +265,7 @@ class ProcessPDBTask(Task):
 
                     # 4b) copy properties into a residue object
                     #     property keys should match property name in object
-                    for key, value in residue_props.items():
-                        residue.__dict__[key] = value
+                    residue.__dict__.update(residue_props)
 
                     # 4c) set previous
                     if residue_props.has_key('prev'):
@@ -244,9 +280,19 @@ class ProcessPDBTask(Task):
                         old_residue.next = residue
                         old_residue.save()
 
+                    # 4f) find and update sidechain if needed
+                    if 'sidechain' in residue_props:
+                        klass, name = aa_class[residue_props['aa']]
+                        try:
+                            sidechain = getattr(residue, name)
+                        except:
+                            sidechain = klass()
+                            sidechain.residue_id = residue.id
+                        sidechain.__dict__.update(residue_props['sidechain'])
+                        sidechain.save()
                     old_residue = residue
+                print '    %s proteins' % len(residues)
 
-                print '    %s residues' % len(residues)
 
         except Exception, e:
             import traceback
@@ -255,8 +301,9 @@ class ProcessPDBTask(Task):
             print residue_props
             traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
             print 'EXCEPTION in Residue', code, e.__class__, e
-            self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
-            transaction.rollback()
+            #self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
+            print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
+            #transaction.rollback()
             return
 
         # 5) entire protein has been processed, commit transaction
@@ -383,7 +430,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         Exclude any Residues that are missing _ANY_ of the
                             mainchain atoms.  Any atom could be missing
                         """
-                        all_mainchain = res.has_id('N') and res.has_id('CA') and res.has_id('C') and res.has_id('O')
+                        all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
                         if hetflag != ' ' or not all_mainchain:
                             raise InvalidResidueException('HetCode or Missing Atom')
 
@@ -527,8 +574,11 @@ def parseWithBioPython(file, props, chains_filter=None):
                         chi mappings.
                         """
                         calc_chi(res, res_dict)
-
-
+                        sidechain = {}
+                        calc_sidechain_lengths(res, sidechain)
+                        calc_sidechain_angles(res, sidechain)
+                        if sidechain:
+                            res_dict['sidechain'] = sidechain
                         """
                         Reset for next pass.  We save some relationships which span two atoms.
                         """
@@ -630,6 +680,50 @@ def calc_chi(residue, residue_dict):
         pass
 
 
+def calc_sidechain_lengths(residue, residue_dict):
+    """
+    Calculates Values for sidechain bond lengths. Uses a predefined list
+    from sidechain.py, specifically bond_lengths.
+    """
+    try:
+        mapping = bond_lengths[residue.resname]
+        for i in range(len(mapping)):
+            atom_names = mapping[i]
+            try:
+                sidechain_atoms = [residue[n].get_vector() for n in atom_names]
+                sidechain_length = calc_distance(*sidechain_atoms)
+                residue_dict['%s_%s' % (atom_names[0], atom_names[1])] = sidechain_length
+            except KeyError:
+                #missing an atom
+                continue
+
+    except KeyError:
+        # this residue type does not have sidechain lengths
+        pass
+
+
+def calc_sidechain_angles(residue, residue_dict):
+    """
+    Calculates Values for sidechain bond angles. Uses a predefined list
+    from sidechain.py, specifically bond_angles.
+    """
+    try:
+        mapping = bond_angles[residue.resname]
+        for i in range(len(mapping)):
+            atom_names = mapping[i]
+            try:
+                sidechain_atoms = [residue[n].get_vector() for n in atom_names]
+                sidechain_angle = calc_angle(*sidechain_atoms)
+                residue_dict['%s_%s_%s' % (atom_names[0], atom_names[1], atom_names[2])] = sidechain_angle
+            except KeyError:
+                #missing an atom
+                continue
+
+    except KeyError:
+        # this residue type does not have sidechain angles
+        pass
+
+
 if __name__ == '__main__':
     """
     Run if file is executed from the command line
@@ -637,26 +731,47 @@ if __name__ == '__main__':
     #from pydra.cluster.worker import WorkerProxy
     import sys
     import logging
+    import fileinput
+
+    def process_args(args):
+        return {'code':args[0],
+                'chains':[c for c in args[1]],
+                'threshold':float(args[2]),
+                'resolution':float(args[3]),
+                'rfactor':float(args[4]),
+                'rfree':float(args[5])
+                }
 
     task = ProcessPDBTask()
-    #task.logger = logging.getLogger('root')
+    
+    logging.basicConfig(filename='ProcessPDB.log',level=logging.DEBUG)
+    task.logger = logging
     #task.parent = WorkerProxy()
 
-    pdbs = {}
-    argv = sys.argv
     pdbs = []
-    for i in range(1,len(argv),5):
-        try:
-            pdbs.append({'code':argv[i],
-                      'threshold':float(argv[i+1]),
-                      'resolution':float(argv[i+2]),
-                      'rfactor':float(argv[i+3]),
-                      'rfree':float(argv[i+4])
-                      })
-        except IndexError:
-            print 'Usage: process_protein.py code threshold resolution rfactor rfree...'
-            sys.exit(0)
 
-    print pdbs
-    task.work(**{'data':pdbs, 'chains':None})
-
+    argv = sys.argv
+    if len(argv) == 1:
+        print 'Usage:'
+        print '   ProcessPDBTask code chains threshold resolution rfactor rfree [repeat]'
+        print '       chains are a string of chain ids: ABCXYZ' 
+        print ''
+        print '   <cmd> | ProcessPDBTask --pipein'
+        print '   piped protein values must be separated by newlines'
+        sys.exit(0)
+        
+    elif len(argv) == 2 and argv[1] == '--pipein':
+        for line in sys.stdin:
+            pdbs.append(process_args(line.split(' ')))
+            
+    else:
+        for i in range(1,len(argv),6):
+            try:
+                print argv[i:i+6]
+                pdbs.append(process_args(argv[i:i+6]))
+            except IndexError, e:
+                print e
+                print 'Usage: ProcessPDBTask.py code chain threshold resolution rfactor rfree...'
+                sys.exit(0)
+    
+    task.work(**{'data':pdbs})

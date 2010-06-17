@@ -6,6 +6,7 @@ from pgd_core.models import Protein
 from pgd_search.models import searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from pgd_constants import AA_CHOICES, SS_CHOICES
+from pgd_splicer.sidechain import sidechain_angle_relationship_list, sidechain_length_relationship_list
 
 """
 Custom Field for fields that support query syntax parsing
@@ -85,7 +86,12 @@ for i in RESIDUE_INDEXES:
     for j in ("bm", "bs", "bg"):
         form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(initial='<25', required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
-    
+    for j in sidechain_angle_relationship_list:
+        form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_i_%i" % (j, i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
+    for j in sidechain_length_relationship_list:
+        form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_i_%i" % (j, i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
 # Create the Search Form with the fields from the dict
 SearchForm = type('SearchForm', (SearchFormBase,), form_dict)

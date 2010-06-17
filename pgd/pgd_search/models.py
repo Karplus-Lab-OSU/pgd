@@ -1,18 +1,46 @@
-from django.db import models
-from django.contrib.auth.models import User
-from pgd_core.models import Protein,Residue
-from pgd_constants import AA_CHOICES, SS_CHOICES, Subscripter
 from exceptions import AttributeError
-from django import forms
-import re
 from math import ceil
+import re
+import cPickle
 
 import dbsettings
-
+from django import forms
+from django.db import models
 from django.db.models import Q
+from django.contrib.auth.models import User
+
+from pgd_core.models import Protein,Residue
+from pgd_constants import AA_CHOICES, AA_CHOICES_DICT, SS_CHOICES, Subscripter
+from pgd_splicer.sidechain import bond_lengths_string_dict, bond_angles_string_dict
+from pgd_core import residue_indexes
+
 
 range_re = re.compile("(?<=[^-<>=])-")
 comp_re  = re.compile("^([<>]=?)?")
+
+
+class RDict(dict):
+    """ Helper class for accessing a dict's properties as if they were member
+    variables.  also return None for any value not found as a member
+    """
+    def __init__(self, dict_):
+        self.update(dict_)
+        super(dict, self).__init__()
+    
+    def __getitem__(self, k):
+        try:
+            return super(RDict, self).__getitem__(k)
+        except KeyError:
+            return None
+    
+    def __getattribute__(self, k):
+        try:
+            return super(dict, self).__getattribute__(k)
+        except AttributeError:
+            try:
+                return self[k]
+            except KeyError:
+                return None
 
 
 class SearchSettings(dbsettings.Group):
@@ -35,29 +63,30 @@ class Search(models.Model):
     title            = models.CharField(max_length='300')
     description      = models.CharField(max_length='5000')
     user             = models.ForeignKey(User, null=True)
-    codes_include    = models.NullBooleanField(null=True)
-    threshold        = models.IntegerField(null=True)
-    resolution_min   = models.FloatField(null=True)
-    resolution_max   = models.FloatField(null=True)
-    rfactor_min      = models.FloatField(null=True)
-    rfactor_max      = models.FloatField(null=True)
-    rfree_min        = models.FloatField(null=True)
-    rfree_max        = models.FloatField(null=True)
+    data_internal    = models.TextField()
+    __data = None
 
-    segmentLength    = models.IntegerField()
+    def get_data(self):
+        if not self.__data and self.data_internal:
+            self.__data = cPickle.loads(str(self.data_internal))
+        return self.__data
+
+    def set_data(self, value):
+        self.__data = value
+    
+    data = property(get_data, set_data)
+
+    def save(self):
+        """ serialize parameters pre-save, object probably wont't be saved often """
+        self.data_internal = cPickle.dumps(self.__data)
+        super(Search, self).save()
+
     _querySet = None
 
     def querySet(self):
         """
         returns the query set that represents this search 
         """
-
-        #create querySet if not needed
-        #if not self._querySet:
-        #    self._querySet = self.parse_search()
-
-        #return self._querySet
-
         # for now parse query every time.  otherwise the query results will be stored in the session
         return self.parse_search()
 
@@ -66,47 +95,48 @@ class Search(models.Model):
 
         # Start with all segments...
         query = Residue.objects.all()
-
-        # ...filter by segmentLength...
-        #if self.segmentLength > 1:
-        #    query = query.filter(length__gte=self.segmentLength)
+        data = self.data
+        if not data:
+            # if no params return everything
+            return query
+        data = RDict(data)
 
         # ...filter by code lists...
-        if self.codes_include != None:
-            if self.codes_include:
-                query = query.filter(protein__in=(x.code for x in self.codes.all()))
+        if data.proteins_i != None:
+            if data.proteins_i:
+                query = query.filter(protein__in=(x.code for x in data.codes))
             else:
                 for x in self.codes.all():
                     query = query.exclude(protein=x.code)
 
         # ...filter by code lists...
-        if self.resolution_min != None:
-            query = query.filter(protein__resolution__gte=self.resolution_min)
+        if data.resolutionMin != None:
+            query = query.filter(protein__resolution__gte=data.resolutionMin)
 
         # ...filter by resolution...
-        if self.resolution_max != None:
-            query = query.filter(protein__resolution__lte=self.resolution_max)
+        if data.resolutionMax != None:
+            query = query.filter(protein__resolution__lte=data.resolutionMax)
 
         # ...filter by rfactor...
-        if self.rfactor_min != None:
-            query = query.filter(protein__rfactor__gte=self.rfactor_min)
+        if data.rfactorMin != None:
+            query = query.filter(protein__rfactor__gte=data.rfactorMin)
 
         # ...filter by rfactor...
-        if self.rfactor_max != None:
-            query = query.filter(protein__rfactor__lte=self.rfactor_max)
+        if data.rfactorMax != None:
+            query = query.filter(protein__rfactor__lte=data.rfactorMax)
 
         #...filter by rfree...
-        if self.rfree_min != None:
-            query = query.filter(protein__rfree__gte=self.rfree_min)
+        if data.rfreeMin != None:
+            query = query.filter(protein__rfree__gte=data.rfreeMin)
 
         # ...filter by rfree...
-        if self.rfree_max != None:
-            query = query.filter(protein__rfree__lte=self.rfree_max)
+        if data.rfreeMax != None:
+            query = query.filter(protein__rfree__lte=data.rfreeMax)
 
 
         # ...filter by threshold...
-        if self.threshold != None:
-            query = query.filter(protein__threshold__lte=self.threshold)
+        if data.threshold != None:
+            query = query.filter(protein__threshold__lte=data.threshold)
 
         # ...filter by query strings (for values and value ranges)...
         def compare(x,y):
@@ -115,57 +145,65 @@ class Search(models.Model):
             elif x < y:
                 return -1
             return 1
-        residues = sorted(self.residues.all(), compare, lambda x: abs(x.index) )
+        #residues = sorted(data.residues, compare, lambda x: abs(x.index) )
 
-        for search_res in residues: # iterate through all search residues in self
-            #seg_prefix = "r%i_"%(
-            #    # convert from the search residue index to indexes 0...n
-            #    search_res.index+int(ceil(searchSettings.segmentSize/2.0)-1)
-            #)
+
+        indexes = residue_indexes(int(data.residues))
+        for index in indexes: # iterate through all search residues in self
+            search_res = Segmenter(data, index)
 
             # get field prefix for this residue
-            if search_res.index == 0:
+            if index == 0:
                 seg_prefix = ''
-            elif search_res.index < 0:
-                seg_prefix = ''.join(['prev__' for i in range(search_res.index, 0)])
+            elif index < 0:
+                seg_prefix = ''.join(['prev__' for i in range(index, 0)])
             else:
-                seg_prefix = ''.join(['next__' for i in range(search_res.index)])
+                seg_prefix = ''.join(['next__' for i in range(index)])
+                
+            # get possible sidechain fields based on selected AA types
+            sidechain_fields = []
+            """for aa_type in filter(lambda x: x[1],search_res.aa.items()):
+                aa_type_upper = aa_type[0].upper()
+                for field in bond_lengths_string_dict[aa_type_upper]:
+                    sidechain_fields.append('sidechain_%s__%s' % (aa_type_upper, field))
+                for field in bond_angles_string_dict[aa_type_upper]:
+                    sidechain_fields.append('sidechain_%s__%s' % (aa_type_upper, field))
+            """
 
             # ...handle boolean values...
             #   (Filter on each binary field that is not set to NULL/None.)
-            query = query.filter(**dict((
+            # XXX there don't appear to be any of these right now, xpr isn't on the form
+            '''query = query.filter(**dict((
                     (seg_prefix+field, search_res.__dict__[field])
                     for field in (
                         'xpr',
                     ) if search_res.__dict__[field] != None
                 )))
+            '''
 
             # ...handle the '_int' values...
             #   ('_int' values are a series of booleans stored grouped in an integer.)
             for field,choices in filter(
                    # use only those (_int,_CHOICES) pairs with a '_include' value.
-                   lambda x: search_res.__dict__[x[0]+'_include'] != None,
+                   lambda x: search_res.__getitem__(x[0]+'_i') != None,
                    (
-                       ('aa_int', AA_CHOICES),
-                       ('ss_int', SS_CHOICES),
+                       ('aa', AA_CHOICES),
+                       ('ss', SS_CHOICES),
                    )
                 ):
                 query = query.__getattribute__(
                     # call either 'filter' or 'exclude', depending on the value of '_include'
-                    'filter' if search_res.__dict__[field+'_include'] else 'exclude'
+                    'filter' if search_res.__getitem__(field+'_i') else 'exclude'
                 )(
                     # check to see that the value of the segment residue is in the set of
                     # residues described in the '_int' of the search residue.
-                    **{seg_prefix+field[0:-4]+"__in": [
-                        # get the designated choice names as stored in the database.
-                        choice[0] for index,choice in enumerate(choices) if search_res.__dict__[field]&1<<index
-                    ]}
+                    **{"%s%s__in" % (seg_prefix,field): search_res.__getitem__(field)}
                 )
-
+            
             # ...handle query strings...
-            for field in filter(
+            fields = filter(
                 # use only the fields with a '_include' value. 
-                lambda x: search_res.__dict__[x+'_include'] != None,
+                lambda x: search_res.__getitem__(x+'_i') != None,
                 (
                     'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                     'L1',   'L2',   'L3',   'L4',   'L5',
@@ -174,57 +212,99 @@ class Search(models.Model):
                     'h_bond_energy',
                     'zeta',
                 )
-            ):
+            )
+            query = self.filter_fields(fields, query, search_res, seg_prefix)
 
-                # seg_field is the name of the property of the given residue in the database
-                seg_field = seg_prefix+field
-
-                constraints = []
-
-                for constraint in str(search_res.__dict__[field]).split(','):
-
-                    # The constraint may be a range...
-                    if range_re.search(constraint):
-
-                        min,max = [float(lim) for lim in range_re.split(constraint)]
-
-                        limits = (
-                            Q(**{seg_field+'__gte' : float(min)}),
-                            Q(**{seg_field+'__lte' : float(max)}),
-                        )
-
-                        constraints.append(
-                            # Apply 'or' logic for a wraparound range
-                            # or apply 'and' logic for a regular range
-                            (limits[0] & limits[1]) if (min <= max) else (limits[0] | limits[1])
-                        )
-                    # ...or the constraint may be a value comparison.
-                    else:
-
-                        constraints.append(Q(**{
-                            seg_field + {
-                                ''   : '',
-                                '>'  : '__gt',
-                                '>=' : '__gte',
-                                '<'  : '__lt',
-                                '<=' : '__lte',
-                            }[comp_re.search(constraint).group(0)] :
-                            # extract the numeric value
-                            constraint.strip('><=')
-                        }))
-
-                query = query.__getattribute__(
-                    # call either 'filter' or 'exclude', depending on the value of '_include'
-                    'filter' if search_res.__dict__[field+'_include'] else 'exclude'
-                )(
-                    # OR each of the statements in the query string together
-                    reduce(
-                        lambda x,y: x|y,
-                        constraints
-                    )
-                )
+            # ... handle sidechain query strings ...           
+            sidechain_fields = []
+            if search_res.aa:
+                for aa_type in [AA_CHOICES_DICT[aa].upper() for aa in search_res.aa]:
+                    if aa_type in bond_lengths_string_dict:
+                        field_base = '%s__%%s' % aa_type
+                        for field in bond_lengths_string_dict[aa_type]:
+                            key = field_base % field
+                            if search_res[key]:
+                                sidechain_fields.append(key)
+                        
+                        for field in bond_angles_string_dict[aa_type]:
+                            key = field_base % field
+                            if search_res[key]:
+                                sidechain_fields.append(key)
+            
+            seg_prefix = '%ssidechain_' % seg_prefix
+            query = self.filter_fields(sidechain_fields, query, search_res, seg_prefix)
+            
         return query
 
+    def filter_fields(self, fields, query, search_res, seg_prefix):
+        """
+        Filters the fields passed in
+        """
+
+        for field in fields:
+            # seg_field is the name of the property of the given residue in the database
+            seg_field = seg_prefix+field
+
+            constraints = []
+
+            for constraint in str(search_res.__getitem__(field)).split(','):
+
+                # The constraint may be a range...
+                if range_re.search(constraint):
+
+                    min,max = [float(lim) for lim in range_re.split(constraint)]
+
+                    limits = (
+                        Q(**{seg_field+'__gte' : float(min)}),
+                        Q(**{seg_field+'__lte' : float(max)}),
+                    )
+
+                    constraints.append(
+                        # Apply 'or' logic for a wraparound range
+                        # or apply 'and' logic for a regular range
+                        (limits[0] & limits[1]) if (min <= max) else (limits[0] | limits[1])
+                    )
+                # ...or the constraint may be a value comparison.
+                else:
+
+                    constraints.append(Q(**{
+                        seg_field + {
+                            ''   : '',
+                            '>'  : '__gt',
+                            '>=' : '__gte',
+                            '<'  : '__lt',
+                            '<=' : '__lte',
+                        }[comp_re.search(constraint).group(0)] :
+                        # extract the numeric value
+                        constraint.strip('><=')
+                    }))
+
+            query = query.__getattribute__(
+                # call either 'filter' or 'exclude', depending on the value of '_include'
+                'filter' if search_res.__getitem__(field+'_i') else 'exclude'
+            )(
+                # OR each of the statements in the query string together
+                reduce(
+                    lambda x,y: x|y,
+                    constraints
+                )
+            )
+        return query
+
+
+class Segmenter(object):
+    """ segments form data for easier access """
+    def __init__(self,dict__, i):
+        self.i = i
+        self.__dict = dict__
+    def __getitem__(self, k):
+        return self.__dict['%s_%d' % (k, self.i)]
+        
+    def __getattribute__(self, k):
+        try:
+            return super(Segmenter, self).__getattribute__(k)
+        except AttributeError:
+            return self.__dict['%s_%d' % (k, self.i)]
 
 class Search_code(models.Model):
     """
@@ -281,6 +361,7 @@ class Search_residue(models.Model):
     zeta            = models.CharField(max_length=30, null=True)
     xpr             = models.NullBooleanField(null=True) # this field may not be necessary; it has never been implemented
 
+
     # '<field>_include' boolean determines how its query field should be handled
     # Null  : field not included
     # True  : field included as a positive assertion
@@ -302,16 +383,28 @@ class Search_residue(models.Model):
     phi_include             = models.NullBooleanField(null=True)
     psi_include             = models.NullBooleanField(null=True)
     ome_include             = models.NullBooleanField(null=True)
-    chi1_include             = models.NullBooleanField(null=True)
-    chi2_include             = models.NullBooleanField(null=True)
-    chi3_include             = models.NullBooleanField(null=True)
-    chi4_include             = models.NullBooleanField(null=True)
+    chi1_include            = models.NullBooleanField(null=True)
+    chi2_include            = models.NullBooleanField(null=True)
+    chi3_include            = models.NullBooleanField(null=True)
+    chi4_include            = models.NullBooleanField(null=True)
     bm_include              = models.NullBooleanField(null=True)
     bs_include              = models.NullBooleanField(null=True)
     bg_include              = models.NullBooleanField(null=True)
     h_bond_energy_include   = models.NullBooleanField(null=True)
     zeta_include            = models.NullBooleanField(null=True)
 
+    sidechain_serialized = models.TextField(max_length=4096)
+    __sidechain = None
+    def get_sidechain(self):
+        if self.__sidechain:
+            return self.__sidechain
+        self.__sidechain = cPickle.loads(self.sidechain_serialized)
+        return self.__sidechain
+    
+    def set_sidechain(self, value):
+        sidechain_serialized = cPickle.dumps(value)
+        self.__sidechain = value
+    sidechain = property(get_sidechain, set_sidechain)
 
     def __init__(self, *args, **kwargs):
         models.Model.__init__(self, *args, **kwargs)
@@ -320,7 +413,6 @@ class Search_residue(models.Model):
         self.aa = dict([(aa_choice[1],1 if self.aa_int == None else 1&self.aa_int>>aa_index) for aa_index,aa_choice in enumerate(AA_CHOICES)])
         # populate 'ss' with a dictionary of allowed values from SS_CHOICES
         self.ss = dict([(ss_choice[1],1 if self.ss_int == None else 1&self.ss_int>>ss_index) for ss_index,ss_choice in enumerate(SS_CHOICES)])
-
 
 
 class ResidueProxy():

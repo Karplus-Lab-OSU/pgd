@@ -212,3 +212,246 @@ bond_angles = {
         ['CE1', 'CZ', 'OH'],
         ['CE2', 'CZ', 'OH']]
     }
+
+bond_angles_string_dict = {
+    'CYS': [
+        'CA_CB_SG'],
+    'GLN': [
+        'CA_CB_CG',
+        'CB_CG_CD',
+        'CG_CD_OE1',
+        'CG_CD_NE2',
+        'OE1_CD_NE2'],
+    'ILE': [
+        'CA_CB_CG2',
+        'CA_CB_CG1',
+        'CG1_CB_CG2',
+        'CB_CG1_CD1'],
+    'SER': [
+        'CA_CB_OG'],
+    'VAL': [
+        'CA_CB_CG1',
+        'CA_CB_CG2',
+        'CG1_CB_CG2'],
+    'LYS': [
+        'CA_CB_CG',
+        'CB_CG_CD',
+        'CG_CD_CE',
+        'CD_CE_NZ'],
+    'PRO': [
+        'CA_CB_CG',
+        'CB_CG_CD',
+        'CG_CD_N',
+        'CD_N_CA'],
+    'THR': [
+        'CA_CB_OG1',
+        'CA_CB_CG2',
+        'OG1_CB_CG2'], 
+    'PHE': [
+        'CA_CB_CG',
+        'CB_CG_CD1',
+        'CB_CG_CD2',
+        'CD1_CG_CD2',
+        'CE1_CZ_CE2',
+        'CG_CD1_CE1',
+        'CG_CD2_CE2',
+        'CZ_CE1_CD1',
+        'CZ_CE2_CD2'],
+    'GLU': [
+        'CA_CB_CG',
+        'CB_CG_CD',
+        'CG_CD_OE1',
+        'CG_CD_OE2',
+        'OE1_CD_OE2'],
+    'HIS': [
+        'CA_CB_CG',
+        'CB_CG_CD2',
+        'CB_CG_ND1',
+        'ND1_CG_CD2',
+        'CG_ND1_CE1',
+        'ND1_CE1_NE2',
+        'CE1_NE2_CD2',
+        'CG_CD2_NE2'],
+    'MET': [
+        'CA_CB_CG',
+        'CB_CG_SD',
+        'CG_SD_CE'],
+    'ASP': [
+        'CA_CB_CG',
+        'CB_CG_OD1',
+        'CB_CG_OD2',
+        'OD1_CG_OD2'],
+    'LEU': [
+        'CA_CB_CG',
+        'CB_CG_CD1',
+        'CB_CG_CD2',
+        'CD1_CG_CD2'],
+    'ARG': [
+        'CA_CB_CG',
+        'CB_CG_CD',
+        'CG_CD_NE',
+        'CD_NE_CZ',
+        'NE_CZ_NH1',
+        'NE_CZ_NH2',
+        'NH1_CZ_NH2'],
+    'TRP': [
+        'CA_CB_CG',
+        'CB_CG_CD1',
+        'CB_CG_CD2',
+        'CD2_CG_CD1',
+        'CG_CD1_NE1',
+        'CD1_NE1_CE2',
+        'NE1_CE2_CD2',
+        'CG_CD2_CE2',
+        'CE2_CD2_CE3',
+        'CD2_CE2_CZ2',
+        'CE2_CZ2_CH2',
+        'CZ2_CH2_CZ3',
+        'CE3_CZ3_CH2',
+        'CD2_CE3_CZ3',
+        'CG_CD2_CE3',
+        'NE1_CE2_CZ2'],
+    'ASN': [
+        'CA_CB_CG',
+        'CB_CG_OD1',
+        'CB_CG_ND2',
+        'OD1_CG_ND2'],
+    'TYR': [
+        'CA_CB_CG',
+        'CB_CG_CD1',
+        'CB_CG_CD2',
+        'CD1_CG_CD2',
+        'CE1_CZ_CE2',
+        'CG_CD1_CE1',
+        'CG_CD2_CE2',
+        'CZ_CE1_CD1',
+        'CZ_CE2_CD2',
+        'CE1_CZ_OH',
+        'CE2_CZ_OH']
+    }
+bond_lengths_string_dict = {
+    'CYS': [
+        'CB_SG'
+        ],
+    'GLN': [
+        'CB_CG',
+        'CG_CD',
+        'CD_OE1',
+        'CD_NE2'
+        ],
+    'ILE': [
+        'CB_CG1',
+        'CG1_CD1',
+        'CB_CG2'],
+    'SER': [
+        'CB_OG'],
+    'VAL': [
+        'CB_CG1',
+        'CB_CG2'],
+    'LYS': [
+        'CB_CG',
+        'CG_CD',
+        'CD_CE',
+        'CE_NZ'],
+    'PRO': [
+        'CB_CG',
+        'CG_CD',
+        'CD_N'],
+    'THR': [
+        'CB_OG1',
+        'CB_CG2'],
+    'PHE': [
+        'CB_CG',
+        'CG_CD1',
+        'CG_CD2',
+        'CD1_CE1',
+        'CD2_CE2',
+        'CZ_CE1',
+        'CZ_CE2'],
+    'GLU': [
+        'CB_CG',
+        'CG_CD',
+        'CD_OE1',
+        'CD_OE2'],
+    'HIS': [
+        'CB_CG',
+        'CG_ND1',
+        'ND1_CE1',
+        'CE1_NE2',
+        'NE2_CD2',
+        'CG_CD2'],
+    'MET': [
+        'CB_CG',
+        'CG_SD',
+        'SD_CE'],
+    'ASP': [
+        'CB_CG',
+        'CG_OD1',
+        'CG_OD2'],
+    'LEU': [
+        'CB_CG',
+        'CG_CD1',
+        'CG_CD2'],
+    'ARG': [
+        'CB_CG',
+        'CD_NE',
+        'CG_CD',
+        'NE_CZ',
+        'CZ_NH1',
+        'CZ_NH2'],
+    'TRP': [
+        'CB_CG',
+        'CG_CD1',
+        'CD1_NE1',
+        'NE1_CE2',
+        'CE2_CZ2',
+        'CZ2_CH2',
+        'CH2_CZ3',
+        'CZ3_CE3',
+        'CD2_CE3',
+        'CG_CD2',
+        'CD2_CE2'],
+    'ASN': [
+        'CB_CG',
+        'CG_OD1',
+        'CG_ND2'],
+    'TYR': [
+        'CB_CG',
+        'CG_CD1',
+        'CG_CD2',
+        'CD1_CE1',
+        'CD2_CE2',
+        'CZ_CE1',
+        'CZ_CE2',
+        'CZ_OH']
+    }
+
+sidechain_angle_list = ['%s_%s'%(k,v) for k, a in bond_angles_string_dict.items() for v in a ]
+sidechain_length_list = ['%s_%s'%(k,v) for k, a in bond_lengths_string_dict.items() for v in a ]
+sidechain_angle_relationship_list = ['%s__%s'%(k,v) for k, a in bond_angles_string_dict.items() for v in a ]
+sidechain_length_relationship_list = ['%s__%s'%(k,v) for k, a in bond_lengths_string_dict.items() for v in a ]
+
+aa_list = [
+    'ARG',
+    'ASN',
+    'ASP',
+    'CYS',
+    'GLN',
+    'GLU',
+    'HIS',
+    'ILE',
+    'LEU',
+    'LYS',
+    'MET',
+    'PHE',
+    'PRO',
+    'SER',
+    'THR',
+    'TRP',
+    'TYR',
+    'VAL'
+    ]
+
+if __name__ == '__main__':
+    pass
+    

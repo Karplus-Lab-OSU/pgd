@@ -184,19 +184,25 @@
                 width:165px;
             }
         </style>
-        <script type="text/javascript" src="http://github.com/DmitryBaranovskiy/raphael/blob/master/raphael-min.js?raw=true"></script>
+        
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script> 
         <script type="text/javascript">
-            qtipsOn=true;
-            qtipState = '';
-            qtipTotal = 0;
-            angle_qtip_api = null;
-            angle_target = null;
-            firstRun = true;
+
+            var qtipsOn=true;
+            var angle_qtip_api = null;
+            var angle_target = null;
+            var firstRun = true;
             var qtip_status = [];
-            angle_drawing = $('#canvas');
+            var angle_drawing = $('#canvas');
+            var sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
+            var sidechain_length_lookup = {{ sidechain_length_lookup|safe }};
+            var selected_aa = [];
+            var qtipState = '';
+            var qtipTotal = 0;
+
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
             for (i=0; i<n; i++) {
@@ -367,7 +373,9 @@
             };
 
             function createQtips(){
-                $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').each(function(){
+                $('#residuesContainer input.field,#residuesContainer td.field > .multiselect')
+                .not('.sidechain_length_input input,.sidechain_angle_input input')//Don't make qtips for sidechain angle input boxes
+                .each(function(){
                     currentID = $(this).attr('id');
                     col = currentID.substring(currentID.length-1,currentID.length);
                     sign = currentID.substring(currentID.length-2,currentID.length-1);
@@ -420,7 +428,6 @@
                                         }
                                 }
                             });
-                            
                         }
                     });
                 $('#protein td>select,#protein td>input').not('#id_proteins_i,#oldLength').each(function(){
@@ -657,6 +664,35 @@
                 r.text(x-radius-35, y+12, "-180");
             };
             
+            function set( list ){ //Returns a list with only unique elements
+                seen = [];
+                set_list = [];
+                for (item in list){
+                    seen[list[item]] = true;
+                }
+                for (item in seen){
+                    set_list.push(item);
+                }
+                return set_list.slice(); //Return the value of the array, not the address
+            };
+            
+            function listComplement( filter, unfiltered ){//Returns the elements of filter not in unfiltered.
+                complement = [];
+                in_list = false;
+                for (item in filter){
+                    for(comp_item in unfiltered){
+                        if(filter[item] == unfiltered[comp_item]){
+                            in_list = true;
+                        }
+                    }
+                    if(!in_list){
+                        complement.push(filter[item]);
+                    }
+                    in_list = false;
+                }
+                return complement.slice();//Return the value of the array, not the address
+            };
+            
             $(document).ready(function() {
                 $('#helpPage').hide();
                 
@@ -714,7 +750,7 @@
 
 
                 $('#protein #id_proteins')
-                    .autocomplete('{{SITE_ROOT}}search/protein_code/', {'multiple':true, 'autoFill':true})
+                    .autocomplete('{{SITE_ROOT}}/search/protein_code/', {'multiple':true, 'autoFill':true})
                     .keyup(function(evt){
                             updateInclusionField(evt.target, false);
                         })
@@ -749,76 +785,197 @@
                         }
                     });
 
+                
+                $('tr.peptide_row .multiselect li.selected')//Add any selected AAs left over from a previous state
+                    .each(function(){
+                        $this = $(this);
+                        aa = $this.html().substring(0,3).toUpperCase();
+                        selected_aa.push(aa);
+                    });
+
+                // setup aa multiselects to work with sidechain show/hide
+                $('tr.peptide_row .multiselect li')
+                    .click(function(){
+                        $this = $(this);
+                        //Strip out aa and manage list of active aa's
+                        aa = $this.html().substring(0,3).toUpperCase();
+                        if ($this.hasClass('selected')){
+                            selected_aa.push(aa);
+                        }
+                        else{
+                            aa_to_remove = selected_aa.indexOf(aa)
+                            selected_aa.splice(aa_to_remove,1);
+                        }
+                        /*********************************************************/
+                        //Add or remove sidechain angles
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                            sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                            }
+                        }
+                        active_sidechains = set(active_sidechains);//Remove redundancies
+                        console.log(active_sidechains);
+                        header = document.getElementById('sidechain_angle_header');
+                        if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
+                            for (angle in active_sidechains){
+                                $('tr#'+active_sidechains[angle]+'_row').show();
+                            }
+                        }
+                        if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+                            for (angle in sidechain_angle_lookup[aa]){
+                                console.log('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row');
+                                $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
+                            }
+                        }
+                        /*********************************************************/
+                        //Add or remove sidechain lengths
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                            sidechains = sidechain_length_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                            }
+                        }
+                        //unfiltered_sidechains = sidechain_length_lookup[aa];
+                        active_sidechains = set(active_sidechains);//Remove redundancies
+                        header = document.getElementById('sidechain_length_header');
+                        if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
+                            for (sclength in active_sidechains){
+                                $('tr#'+active_sidechains[sclength]+'_row').show();
+                            }
+                        }
+                        if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+                            for (sclength in sidechain_length_lookup[aa]){
+                                console.log('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row');
+                                $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
+                            }
+                        }
+                        /*********************************************************/
+                    })
+                
+
                 $('tr.peptide_row .multiselect, tr.conf_row .multiselect').updateInclusionSelect();
 
-
+                $('tr.chi_row').hide();
                 $('#chi_header').click(function(evt){
-                    $('tr.chi_row').toggle();
-
                     var header = document.getElementById('chi_header');
-                    if (header.innerHTML == '&chi; Angles →'){
-                        header.innerHTML = '&chi; Angles ↓';
+                    if (header.innerHTML == 'χ Angles →'){//Must be χ, it won't match &chi;
+                        header.innerHTML = 'χ Angles ↓';
+                        $('tr.chi_row').show();
                     } else {
-                        header.innerHTML = '&chi; Angles →';
+                        header.innerHTML = 'χ Angles →';
+                        $('tr.chi_row').hide();
                     }
                 });
-                $('tr.chi_row').toggle();
+
+                $('tr.sidechain_angle_row').hide();
+                $('#sidechain_angle_header').click(function(evt){
+                    var header = document.getElementById('sidechain_angle_header');
+                    if (header.innerHTML == 'Sidechain Angles →'){
+                        header.innerHTML = 'Sidechain Angles ↓';
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){
+                            sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                            }
+                        }
+                        active_sidechains = set(active_sidechains);
+                        for (sidechain in active_sidechains){
+                            $('tr#'+active_sidechains[sidechain]+'_row').show();
+                        }
+                    } else {
+                        header.innerHTML = 'Sidechain Angles →';
+                        $('tr.sidechain_angle_row').hide()
+                        
+                    }
+                });
+
+                $('tr.sidechain_length_row').hide();
+                $('#sidechain_length_header').click(function(evt){
+                    var header = document.getElementById('sidechain_length_header');
+                    if (header.innerHTML == 'Sidechain Lengths →'){
+                        header.innerHTML = 'Sidechain Lengths ↓';
+                        active_sidechains = [];
+                        for (active_aa in selected_aa){
+                            sidechains = sidechain_length_lookup[selected_aa[active_aa]];
+                            for (sidechain in sidechains){
+                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                            }
+                        }
+                        active_sidechains = set(active_sidechains);
+                        for (sidechain in active_sidechains){
+                            $('tr#'+active_sidechains[sidechain]+'_row').show();
+                        }
+                    } else {
+                        header.innerHTML = 'Sidechain Lengths →';
+                        $('tr.sidechain_length_row').hide()
+                        
+                    }
+                });
 
                 $('#peptide_header').click(function(evt){
-                    $('tr.peptide_row').toggle();
-
                     var header = document.getElementById('peptide_header');
                     if (header.innerHTML == 'Composition →'){
                         header.innerHTML = 'Composition ↓';
+                        $('tr.peptide_row').show();
                     } else {
                         header.innerHTML = 'Composition →';
+                        $('tr.peptide_row').hide();
                     }
                 });
+                
                 $('#conf_header').click(function(evt){
-                    $('tr.conf_row').toggle();
                     var header = document.getElementById('conf_header');
                     if (header.innerHTML == 'Conformation →'){
                         header.innerHTML = 'Conformation ↓';
+                        $('tr.conf_row').show();
                     } else {
                         header.innerHTML = 'Conformation →';
+                        $('tr.conf_row').hide();
                     }
                 });
 
-                $('tr.mobility_row').toggle();
+                $('tr.mobility_row').hide();
                 $('#mobility_header').click(function(evt){
-                    $('tr.mobility_row').toggle();
                     var header = document.getElementById('mobility_header');
                     if (header.innerHTML == 'Mobility →'){
                         header.innerHTML = 'Mobility ↓';
+                        $('tr.mobility_row').show();
                     } else {
                         header.innerHTML = 'Mobility →';
+                        $('tr.mobility_row').hide();
                     }
                 });
 
-                $('tr.angles_row').toggle();
+                $('tr.angles_row').hide();
                 $('#angles_header').click(function(evt){
-                    $('tr.angles_row').toggle();
                     var header = document.getElementById('angles_header');
                     if (header.innerHTML == 'Angles →'){
                         header.innerHTML = 'Angles ↓';
+                        $('tr.angles_row').show();
                     } else {
                         header.innerHTML = 'Angles →';
+                        $('tr.angles_row').hide();
                     }
                 });
 
-                $('tr.lengths_row').toggle();
-                        $('#lengths_header').click(function(evt){
-                            $('tr.lengths_row').toggle();
+                $('tr.lengths_row').hide();
+                $('#lengths_header').click(function(evt){
                     var header = document.getElementById('lengths_header');
                     if (header.innerHTML == 'Lengths →'){
-                    header.innerHTML = 'Lengths ↓';
+                        header.innerHTML = 'Lengths ↓';
+                        $('tr.lengths_row').show();
                     }
                     else{
-                    header.innerHTML = 'Lengths →';
+                        header.innerHTML = 'Lengths →';
+                        $('tr.lengths_row').hide();
                     }
-                        });
+                });
 
-                $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').mousedown(function(event){
+                $('#residuesContainer input.field,#residuesContainer td.field>.multiselect').not('.sidechain_length_input input,.sidechain_angle_input input').mousedown(function(event){
                         $clickedOn  = $(event.target);
                         if($clickedOn.is('input')){
                             rowTarget = event.target.id;
@@ -855,6 +1012,16 @@
                         rowTarget='';
                     }
                 });
+                
+                $('#search').submit(function(){
+                    /* Disable all unused parameters so the data is not sent */
+                    $this = $(this);
+                    $this.find('input').each(function(){
+                        if ($(this).val() == '') {
+                            $(this).attr('disabled',true);
+                        }
+                    });
+                });
             });
 
     </script>
@@ -874,7 +1041,7 @@
     {% endif %}
 
     <div id="formContainer">
-        <form name="search" method="POST" action="{{SITE_ROOT}}search/">
+        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">
             <table id="protein">
             <tbody>
 
@@ -930,7 +1097,7 @@
                         <span class="toggle">&nbsp;</span>
                         <ul id="id_aa_choices_list_col_{{r.index}}" class="multiselect field">
                             {% for choice in aa_choices|index_lookup:forloop.counter0 %}
-                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}/></li>
                             {% endfor %}
                         </ul>
                         {{r.aa_i}}
@@ -1133,8 +1300,8 @@
                 <td class="label">&chi;<sub>2</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
-                    <span class="toggle">&nbsp;</span>{{r.chi2}}{{r.chi2_i}}
-                </td>
+                        <span class="toggle">&nbsp;</span>{{r.chi2}}{{r.chi2_i}}
+                    </td>
                 {% endfor %}
             </tr>
 
@@ -1156,6 +1323,36 @@
                 {% endfor %}
             </tr>
 
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="sidechain_angle_header">Sidechain Angles →</td></tr>
+            <tr class="sidechain_angle_row">
+            {% for angle in sidechain_angle_list %}
+                <tr class="sidechain_angle_row" id="{{angle}}_row">
+                <td class="label">{{angle|sidechain_label}}</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span><span class="sidechain_angle_input">{{ r|sidechain_fields:angle }}</span>
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="sidechain_length_header">Sidechain Lengths →</td></tr>
+            <tr class="sidechain_length_row">
+            {% for length in sidechain_length_list %}
+                <tr class="sidechain_length_row" id="{{length}}_row">
+                <td class="label">{{length}}</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span><span class="sidechain_length_input">{{ r|sidechain_fields:length }}</span>
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tr>
             <tr class="spacer"/>
             <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit">
             </tbody>

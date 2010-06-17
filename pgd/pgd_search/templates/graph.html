@@ -25,6 +25,12 @@
                 height: 100%;
             }
 
+            div #error_list {
+                margin-left:auto;
+                margin-right:auto;
+                width: 440px;
+            }
+
             #ajax_progress {
                 padding-top:10%;
                 width: 100%;
@@ -42,6 +48,25 @@
 
             #ajax_progress img {
                 margin-top:40%;
+            }
+
+            #ajax_failed {
+                padding-top:10%;
+                width: 100%;
+                height: 90%;
+                text-align:center;
+            }
+
+            #ajax_failed div{
+                margin-left:auto;
+                margin-right:auto;
+                width: 350px;
+                height: 350px;
+                border:1px dotted black;
+            }
+
+            #ajax_failed img {
+                margin-top:33%;
             }
 
             #controls {
@@ -242,6 +267,7 @@
                 }
 
                 $('div#binDetails').hide();
+                $('#ajax_failed').hide();
                 $('#canvas_container').qtip({
                         position:{
                             adjust: { //Make the tooltip avoid going outside the window due to browser resizing
@@ -289,11 +315,11 @@
                 $('select').sSelect();
 
                 $('#button-save').click(function (evt) {
-                    $("form").attr('action','{{SITE_ROOT}}search/plot/png/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                    $("form").attr('action','{{SITE_ROOT}}/search/plot/png/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
                 });
 
                 $('#button-data').click(function (evt) {
-                    $("form").attr('action','{{SITE_ROOT}}search/plot/dump/').submit().attr('action','{{SITE_ROOT}}search/plot/svg/')
+                    $("form").attr('action','{{SITE_ROOT}}/search/plot/dump/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
                 });
 
                 $('#id_xProperty').change(function (){
@@ -395,13 +421,20 @@
                     .hide()
                     .empty()
                     .removeClass('hasSVG');
+                $('#ajax_failed').hide();
                 $('#ajax_progress').show();
 
                 // submit
-                $.post('{{SITE_ROOT}}search/plot/svg/render/',args, process_svg_data, "json");
+                $.post('{{SITE_ROOT}}/search/plot/svg/render/',args, process_svg_data, "json");
             }
 
             function process_svg_data(data) {
+                if (data == "-1" ){
+                    $('#ajax_progress').hide();
+                    $('#ajax_failed').show();
+                    return;
+                }
+                
                 if (data['errors'] != undefined) {
                     process_form_errors(data['errors']);
                     return;
@@ -575,10 +608,17 @@
             <h1>Generating Plot</h1>
             </div>
         </div>
+        <div id="ajax_failed">
+            <div>
+            <img src="{{MEDIA_URL}}/images/ajax-error.png"/>
+            <h1>Server Returned an Error.</h1>
+            </div>
+        </div>
         <div id="canvas"></div>
     </div>
-
-    <ul id="errors"></ul>
+    <div id="error_list">
+        <ul id="errors"></ul>
+    </div>
     <div id="buttons">
         <button id="button-plot">Re-Plot</button>
         <button id="button-save">Save Plot Image</button>
