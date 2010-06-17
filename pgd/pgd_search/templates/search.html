@@ -816,7 +816,6 @@
                             }
                         }
                         active_sidechains = set(active_sidechains);//Remove redundancies
-                        console.log(active_sidechains);
                         header = document.getElementById('sidechain_angle_header');
                         if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
                             for (angle in active_sidechains){
@@ -825,7 +824,6 @@
                         }
                         if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
                             for (angle in sidechain_angle_lookup[aa]){
-                                console.log('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row');
                                 $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
                             }
                         }
@@ -848,7 +846,6 @@
                         }
                         if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
                             for (sclength in sidechain_length_lookup[aa]){
-                                console.log('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row');
                                 $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
                             }
                         }
