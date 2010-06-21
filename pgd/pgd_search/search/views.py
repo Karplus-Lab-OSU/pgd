@@ -25,10 +25,11 @@ json_sidechain_lengths_lookup = simplejson.dumps(bond_lengths_string_dict)
 json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
 
 
-"""
-Handler for search form.
-"""
+
 def search(request):
+    """
+    Handler for search form.
+    """
     if request.method == 'POST': # If the form has been submitted
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
@@ -101,10 +102,10 @@ def search(request):
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
-"""
-Handler for editing an existing search
-"""
 def editSearch(request, search_id=None):
+    """
+    Handler for editing an existing search
+    """
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
