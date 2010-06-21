@@ -724,29 +724,31 @@
                         m = match(val);
                         angles(m);
                         })
-                    .focus(function(evt){
-                        //update svg
-                        val = $(this).val();
-                        m = match(val);
-                        angles(m);
-                        if(firstRun == true){//initial run needs to have target set and qtip made
-                            create_angles_helper('Text',$('#'+evt.target.id),'#'+evt.target.id)
-                            angle_qtip_api = $("#"+evt.target.id).qtip('api');
-                            angle_qtip_api.show();
-                            $('#canvas').show();//show it so the qtip can grab it
-                            $('.angle_visualizer').html($('#canvas'));
-                            firstRun = false;
-                        }
-                        angle_qtip_api.options.position.target = $('#'+evt.target.id);
-                        //Set a slight delay to prevent the hide function from stepping on the show function
-                        window.setTimeout(function(){angle_qtip_api.updatePosition($('#'+evt.target.id),false).show();}, 200);
-                    })
+                    
                     .change(function(evt){
                             updateInclusionField(evt.target, true);
                         })
-                    .blur(function(evt){
-                        angle_qtip_api.hide();
-                    });
+                    .not('.lengths_row input, .sidechain_angle_row input, mobility_row input')
+                        .blur(function(evt){
+                            angle_qtip_api.hide();
+                        })
+                        .focus(function(evt){
+                            //update svg
+                            val = $(this).val();
+                            m = match(val);
+                            angles(m);
+                            if(firstRun == true){//initial run needs to have target set and qtip made
+                                create_angles_helper('Text',$('#'+evt.target.id),'#'+evt.target.id)
+                                angle_qtip_api = $("#"+evt.target.id).qtip('api');
+                                angle_qtip_api.show();
+                                $('#canvas').show();//show it so the qtip can grab it
+                                $('.angle_visualizer').html($('#canvas'));
+                                firstRun = false;
+                            }
+                            angle_qtip_api.options.position.target = $('#'+evt.target.id);
+                            //Set a slight delay to prevent the hide function from stepping on the show function
+                            window.setTimeout(function(){angle_qtip_api.updatePosition($('#'+evt.target.id),false).show();}, 200);
+                        });
 
 
                 $('#protein #id_proteins')
