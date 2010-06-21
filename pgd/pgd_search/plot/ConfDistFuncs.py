@@ -15,7 +15,7 @@ from django.db.models import Count, Avg, StdDev
 from pgd_constants import *
 from pgd_core.models import *
 from pgd_search.models import *
-from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev
+from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev, BinSort
 from svg import *
 
 ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
@@ -206,8 +206,6 @@ class ConfDistPlot():
         self.residue_xproperty = residue_xproperty
         self.residue_yproperty = residue_yproperty
 
-
-
     def query_bins(self):
         """
         Runs the query to calculate the bins and their relevent data
@@ -300,31 +298,22 @@ class ConfDistPlot():
                 annotations[avg] = Avg(field[1])
                 annotations[stddev] = StdDev(field[1])
         annotated_query = querySet.annotate(**annotations)
-
-        # determine aliases used for the table joins.  This is needed because
-        # the aliases will be different depending on what fields were queried
-        # even if the query is length 10, not all residues will be joined unless
-        # each residue has a property in the where clause.
-        x_alias = determine_alias(annotated_query, self.residue_xproperty)
-        y_alias = determine_alias(annotated_query, self.residue_yproperty)
-        attr_alias = determine_alias(annotated_query, self.residue_attribute)
-        x_field = '%s.%s' % (x_alias, self.xText)
-        y_field = '%s.%s' % (y_alias, self.yText)
-
-        # calculating x,y bin numbers for every row.  This allows us
-        # to group on the bin numbers automagically sorting them into bins
-        # and applying the aggregate functions on them.
-        if xlinear:
-            x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
-        else:
-            x_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(rx)s)/%(b)s)' \
-                          % {'f':x_field, 'b':xbin, 'rx':self.x}
-        if ylinear:
-            y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
-        else:
-            y_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(ry)s)/%(b)s)' \
-                          % {'f':y_field, 'b':ybin, 'ry':self.y}
-        annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
+        
+        # sort and group by bins using an aggregate function that calculates
+        # bin index based on bin size (in field units ie. degrees) and bin count.
+        #
+        # XXX django won't add aggregates to group by so to force it add the
+        # create the aggregate functions and add them to a copy of the queryset
+        # afterwards get the SQL from the aggregate function and add it as an
+        # extra select clauses.  the select claus fields are added to the group by
+        # statement.
+        sortx = BinSort(self.xTextString, offset=x, bincount=xbin)
+        sorty = BinSort(self.yTextString, offset=y, bincount=ybin)
+        annotated_query.annotate(x=sortx)
+        annotated_query.annotate(y=sorty)
+        annotated_query = annotated_query.extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()})
+        annotated_query = annotated_query.order_by('x','y')
+        
         # add all the names of the aggregates and x,y properties to the list 
         # of fields to display.  This is required for the annotation to be
         # applied with a group_by.
