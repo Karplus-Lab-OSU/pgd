@@ -1341,7 +1341,7 @@
             <tr class="sidechain_length_row">
             {% for length in sidechain_length_list %}
                 <tr class="sidechain_length_row" id="{{length}}_row">
-                <td class="label">{{length}}</td>
+                <td class="label">{{length|sidechain_label}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span><span class="sidechain_length_input">{{ r|sidechain_fields:length }}</span>
