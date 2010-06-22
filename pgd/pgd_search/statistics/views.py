@@ -92,12 +92,14 @@ def calculate_statistics(queryset, iIndex=0):
     ss_field = '%sss' % prefix
     aa_field = '%saa' % prefix
 
-    # get all stats fields - this incldues both regular fields plus dihedral angles.  This does not include
-    # field totals yet but it will some time in the future.  Start this rthread immediately because this 
-    # query is 3x as long as the other queries
+    # get all stats fields - this includes both regular fields plus dihedral
+    # angles.  Start this thread immediately because this  query is 3x as long
+    # as the other queries
     dsq_thread = ListQueryThread(DirectionalStatisticsQuery(ANGLES_BASE, FIELDS_BASE, field_prefix, queryset))
     dsq_thread.start()
-
+    dsqt_thread = ListQueryThread(DirectionalStatisticsTotalQuery(ANGLES_BASE, FIELDS_BASE, field_prefix, queryset))
+    dsqt_thread.start()
+   
     # ss/aa counts and totals
     ss_counts_thread = ListQueryThread(queryset.values(aa_field, ss_field).annotate(ss_count=Count(ss_field)))
     ss_totals_thread = ListQueryThread(queryset.values(ss_field).annotate(ss_count=Count(ss_field)))
@@ -113,11 +115,12 @@ def calculate_statistics(queryset, iIndex=0):
     # it will return.  When all threads have returned they are all done 
     # and its safe to ask them for the results
     dsq_thread.join()
+    dsqt_thread.join()
     ss_counts_thread.join()
     ss_totals_thread.join()
     aa_totals_thread.join()
 
-    field_stats = dsq_thread.results
+    field_stats = dsq_thread.results+dsqt_thread.results
     ss_counts = ss_counts_thread.results
     ss_totals = ss_totals_thread.results
     aa_totals = aa_totals_thread.results

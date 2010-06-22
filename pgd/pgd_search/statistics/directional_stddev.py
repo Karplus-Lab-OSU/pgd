@@ -1,8 +1,15 @@
+from django.db.models import Min, Max, Avg, StdDev
+
+from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev
+
+
 class DirectionalStatisticsQuery():
     """
-    This is a specialized query that uses aggregates and subqueries to
-    efficiently calculate directional mean and directional standard deviation
-    in a single query.
+    This is a specialized query that performs two queries and merges the
+    results.  The first calculates any aggregate functions that can be completed
+    in a normal query.  min/max/avg for all fields, and stddev for linear
+    fields.  The second query calculates directional stddev for any fields that
+    require it using the avgs calculated in the first query
     """
 
     def __init__(self, angles, fields, prefix, queryset):
@@ -12,53 +19,9 @@ class DirectionalStatisticsQuery():
 
         # create set of fields to query.  these require the django style
         # prefix for the fields.
-        self.queryset = queryset.values(*([prefix % f for f in angles] + 
-                                        [prefix % f for f in fields] + 
-                                        [prefix % 'aa']))
+        self.queryset = queryset
         self.results = None
 
-    def as_sql(self):       
-        outer_parts = []
-        inner_parts = []
-        for field in self.angles:
-            inner_parts.append(
-                'ROUND(IF(DEGREES(ATAN2(-AVG(SIN(RADIANS(%(f)s))),-AVG(COS(RADIANS(%(f)s))))) < 0,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(f)s))),-AVG(COS(RADIANS(%(f)s))))) + 180,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(f)s))),-AVG(COS(RADIANS(%(f)s))))) - 180),1) AS avg_%(f)s' % {'f':field}
-            )
-
-            outer_parts.append('MIN(%s)' % field)
-            outer_parts.append('MAX(%s)' % field)
-            outer_parts.append('avg_%s' % field)
-            outer_parts.append(
-                'SQRT(IF (((%(f)s+360)MOD 360 - avgs.avg_%(f)s) < 180,SUM(POW((%(f)s+360) MOD 360-avgs.avg_%(f)s, 2)),SUM(POW(360-((%(f)s+360) MOD 360-avgs.avg_%(f)s),2)))/(COUNT(%(f)s)-1))AS stddev_%(f)s' % {'f':field}
-            )
-
-        for f in self.fields:
-            f = {'f':f}
-            outer_parts.append('MIN(%(f)s) AS min_%(f)s' % f)
-            outer_parts.append('MAX(%(f)s) as max_%(f)s' % f)
-            outer_parts.append('AVG(%(f)s) as avg_%(f)s' % f)
-            outer_parts.append('STDDEV(%(f)s) as stddev_%(f)s' % f)
-
-        inner = ','.join(inner_parts)
-        outer = ','.join(outer_parts)
-
-        base_sql, base_params = self.queryset.query.as_sql()
-
-        sql_params = {
-            'base': base_sql,
-            'inner': inner,
-            'outer': outer
-        }
-
-        sql =  'SELECT residues.aa, %(outer)s FROM (%(base)s  ORDER BY aa) AS residues, \
-            (SELECT aa, %(inner)s FROM (%(base)s) AS residues GROUP BY aa) \
-            AS avgs WHERE residues.aa = avgs.aa GROUP BY residues.aa \
-            WITH ROLLUP' % sql_params
-
-        # query is executed twice as an inner query.
-        params = base_params + base_params
-
-        return sql, params
 
     def __str__(self):
         if not self.results:
@@ -78,33 +41,90 @@ class DirectionalStatisticsQuery():
         """
         Private method for executing query, always runs query and then updates cache
         """
-        from django.db import connection, transaction
-        cursor = connection.cursor()
-        cursor.execute(*self.as_sql())
-        results = []
-
-        # iterate results and process results into a dictionary
-        row = cursor.fetchone()
-        combined = self.combined
-        while row:
-            dict_ = {'aa': row[0] if row[0] else 'total'}
-
-            for i in range(len(combined)):
-                f = combined[i]
-                dict_['min_%s' % f] = row[4*i+1]
-                dict_['max_%s' % f] = row[4*i+2]
-                dict_['avg_%s' % f] = row[4*i+3]
-                dict_['stddev_%s' % f] = row[4*i+4]
-
-            results.append(dict_)
-            row = cursor.fetchone()
-
+        annotations = {}
+        aa_rows = {}
+        
+        # main aggregate functions
+        for field in self.angles:
+            annotations['min_%s' % field] = Min(field)
+            annotations['max_%s' % field] = Max(field)
+            annotations['avg_%s' % field] = DirectionalAvg(field)
+        for field in self.fields:
+            annotations['min_%s' % field] = Min(field)
+            annotations['max_%s' % field] = Max(field)
+            annotations['avg_%s' % field] = Avg(field)
+            annotations['stddev_%s' % field] = StdDev(field)
+        
+        # query with all aggregate values that can be calculated in a standard
+        # query.  save query in a list so that its members can be modified
+        query = self.queryset
+        query = query.values('aa')
+        query = query.annotate(**annotations)
+        results = list(query)
+        
+        # construction 2nd query for DirectionStdDev calculations for each
+        # dihedral angle.
+        annotations = {}
+        for row in results:
+            aa_rows[row['aa']] = row
+            for field in self.angles:
+                annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=row['avg_%s' % field])
+        query = self.queryset
+        query = query.values('aa')
+        query = query.annotate(**annotations)
+        
+        # update the original results with the results of the 2nd query
+        for row in query:
+            outer_row = aa_rows[row['aa']]
+            for field in self.angles:
+                outer_row.update(row)
+            
         self.results = results
         return results
-
 
     def __iter__(self):
         if not self.results:
             self._execute()
 
-        return enumerate(self.results)
+        return iter(self.results)
+
+
+class DirectionalStatisticsTotalQuery(DirectionalStatisticsQuery):
+    """
+    Extension of class for doing totals
+    """
+    def _execute(self):
+        """
+        Private method for executing query, always runs query and then updates cache
+        """
+        annotations = {}
+        aa_rows = {}
+        
+        # main aggregate functions
+        for field in self.angles:
+            annotations['min_%s' % field] = Min(field)
+            annotations['max_%s' % field] = Max(field)
+            annotations['avg_%s' % field] = DirectionalAvg(field)
+        for field in self.fields:
+            annotations['min_%s' % field] = Min(field)
+            annotations['max_%s' % field] = Max(field)
+            annotations['avg_%s' % field] = Avg(field)
+            annotations['stddev_%s' % field] = StdDev(field)
+        
+        # query with all aggregate values that can be calculated in a standard
+        # query.  save query in a list so that its members can be modified
+        query = self.queryset
+        totals = query.aggregate(**annotations)
+
+        # construction 2nd query for DirectionStdDev calculations for each
+        # dihedral angle.
+        annotations = {}
+        for field in self.angles:
+            annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=totals['avg_%s' % field])
+        query = self.queryset
+        stddevs = query.aggregate(**annotations)
+        totals.update(stddevs)
+        totals['aa'] = 'total'
+
+        self.results = [totals]
+        return self.results

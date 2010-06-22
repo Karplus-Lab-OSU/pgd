@@ -257,7 +257,7 @@
             
             /* regular fields */
             for (i in data['fields']){
-                f_data = data['fields'][i][1]
+                f_data = data['fields'][i]
                 aa = f_data['aa'];
 
                 if (aa == 'total') {
@@ -278,7 +278,7 @@
 
                     details[aa+'_'+field] = [stddev, min, max];
                 }
-
+                
                 if (aa != 'total'){
                     $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
                 }
@@ -291,7 +291,6 @@
                 $td = $('tr.'+aa).children('.sum.'+ss)
                 $td.html(row['ss_count']);
             }
-
 
             for (i in data['ss_totals']) {
                 row = data['ss_totals'][i];
