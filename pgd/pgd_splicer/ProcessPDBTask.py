@@ -271,25 +271,30 @@ class ProcessPDBTask(Task):
                     if residue_props.has_key('prev'):
                         residue.prev = old_residue
 
-                    # 4d) save
-                    residue.save()
-                    chain.residues.add(residue)
-                    
-                    # 4e) Update old_residue.next
-                    if residue_props.has_key('prev'):
-                        old_residue.next = residue
-                        old_residue.save()
-
-                    # 4f) find and update sidechain if needed
+                    # 4d) find and create sidechain if needed.  set the property
+                    #     in the residue for the correct sidechain type
                     if 'sidechain' in residue_props:
                         klass, name = aa_class[residue_props['aa']]
                         try:
                             sidechain = getattr(residue, name)
+                            if not sidechain:
+                                sidechain = klass()
                         except:
                             sidechain = klass()
-                            sidechain.residue_id = residue.id
                         sidechain.__dict__.update(residue_props['sidechain'])
                         sidechain.save()
+                        residue.__setattr__(name, sidechain)
+
+                    # 4e) save
+                    residue.save()
+                    chain.residues.add(residue)
+                    
+                    # 4f) Update old_residue.next
+                    if residue_props.has_key('prev'):
+                        old_residue.next = residue
+                        old_residue.save()
+
+                    
                     old_residue = residue
                 print '    %s proteins' % len(residues)
 

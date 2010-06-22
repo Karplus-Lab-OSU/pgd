@@ -34,6 +34,230 @@ class Chain (models.Model):
         code    = models.CharField(max_length=1)
 
 
+class Sidechain_ARG(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD = models.FloatField(null=True)
+    CD_NE = models.FloatField(null=True)
+    NE_CZ = models.FloatField(null=True)
+    CZ_NH1 = models.FloatField(null=True)
+    CZ_NH2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD = models.FloatField(null=True)
+    CG_CD_NE = models.FloatField(null=True)
+    CD_NE_CZ = models.FloatField(null=True)
+    NE_CZ_NH1 = models.FloatField(null=True)
+    NE_CZ_NH2 = models.FloatField(null=True)
+    NH1_CZ_NH2 = models.FloatField(null=True)
+
+
+class Sidechain_ASN(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_OD1 = models.FloatField(null=True)
+    CG_ND2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_OD1 = models.FloatField(null=True)
+    CB_CG_ND2 = models.FloatField(null=True)
+    OD1_CG_ND2 = models.FloatField(null=True)
+
+
+class Sidechain_ASP(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_OD1 = models.FloatField(null=True)
+    CG_OD2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_OD1 = models.FloatField(null=True)
+    CB_CG_OD2 = models.FloatField(null=True)
+    OD1_CG_OD2 = models.FloatField(null=True)
+
+
+class Sidechain_CYS(models.Model):
+    CB_SG = models.FloatField(null=True)
+    CA_CB_SG = models.FloatField(null=True)
+
+
+class Sidechain_GLN(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD = models.FloatField(null=True)
+    CD_OE1 = models.FloatField(null=True)
+    CD_NE2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD = models.FloatField(null=True)
+    CG_CD_OE1 = models.FloatField(null=True)
+    CG_CD_NE2 = models.FloatField(null=True)
+    OE1_CD_NE2 = models.FloatField(null=True)
+
+
+class Sidechain_GLU(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD = models.FloatField(null=True)
+    CD_OE1 = models.FloatField(null=True)
+    CD_OE2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD = models.FloatField(null=True)
+    CG_CD_OE1 = models.FloatField(null=True)
+    CG_CD_OE2 = models.FloatField(null=True)
+    OE1_CD_OE2 = models.FloatField(null=True)
+
+
+class Sidechain_HIS(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_ND1 = models.FloatField(null=True)
+    ND1_CE1 = models.FloatField(null=True)
+    CE1_NE2 = models.FloatField(null=True)
+    NE2_CD2 = models.FloatField(null=True)
+    CG_CD2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD2 = models.FloatField(null=True)
+    CB_CG_ND1 = models.FloatField(null=True)
+    ND1_CG_CD2 = models.FloatField(null=True)
+    CG_ND1_CE1 = models.FloatField(null=True)
+    ND1_CE1_NE2 = models.FloatField(null=True)
+    CE1_NE2_CD2 = models.FloatField(null=True)
+    CG_CD2_NE2 = models.FloatField(null=True)
+
+
+class Sidechain_ILE(models.Model):
+    CB_CG1 = models.FloatField(null=True)
+    CG1_CD1 = models.FloatField(null=True)
+    CB_CG2 = models.FloatField(null=True)
+    CA_CB_CG2 = models.FloatField(null=True)
+    CA_CB_CG1 = models.FloatField(null=True)
+    CG1_CB_CG2 = models.FloatField(null=True)
+    CB_CG1_CD1 = models.FloatField(null=True)
+
+
+class Sidechain_LEU(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD1 = models.FloatField(null=True)
+    CG_CD2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD1 = models.FloatField(null=True)
+    CB_CG_CD2 = models.FloatField(null=True)
+    CD1_CG_CD2 = models.FloatField(null=True)
+
+
+class Sidechain_LYS(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD = models.FloatField(null=True)
+    CD_CE = models.FloatField(null=True)
+    CE_NZ = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD = models.FloatField(null=True)
+    CG_CD_CE = models.FloatField(null=True)
+    CD_CE_NZ = models.FloatField(null=True)
+
+
+class Sidechain_MET(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_SD = models.FloatField(null=True)
+    SD_CE = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_SD = models.FloatField(null=True)
+    CG_SD_CE = models.FloatField(null=True)
+
+
+class Sidechain_PHE(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD1 = models.FloatField(null=True)
+    CG_CD2 = models.FloatField(null=True)
+    CD1_CE1 = models.FloatField(null=True)
+    CD2_CE2 = models.FloatField(null=True)
+    CZ_CE1 = models.FloatField(null=True)
+    CZ_CE2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD1 = models.FloatField(null=True)
+    CB_CG_CD2 = models.FloatField(null=True)
+    CD1_CG_CD2 = models.FloatField(null=True)
+    CE1_CZ_CE2 = models.FloatField(null=True)
+    CG_CD1_CE1 = models.FloatField(null=True)
+    CG_CD2_CE2 = models.FloatField(null=True)
+    CZ_CE1_CD1 = models.FloatField(null=True)
+    CZ_CE2_CD2 = models.FloatField(null=True)
+
+
+class Sidechain_PRO(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD = models.FloatField(null=True)
+    CD_N = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD = models.FloatField(null=True)
+    CG_CD_N = models.FloatField(null=True)
+    CD_N_CA = models.FloatField(null=True)
+
+
+class Sidechain_SER(models.Model):
+    CB_OG = models.FloatField(null=True)
+    CA_CB_OG = models.FloatField(null=True)
+
+
+class Sidechain_THR(models.Model):
+    CB_OG1 = models.FloatField(null=True)
+    CB_CG2 = models.FloatField(null=True)
+    CA_CB_OG1 = models.FloatField(null=True)
+    CA_CB_CG2 = models.FloatField(null=True)
+    OG1_CB_CG2 = models.FloatField(null=True)
+
+
+class Sidechain_TRP(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD1 = models.FloatField(null=True)
+    CD1_NE1 = models.FloatField(null=True)
+    NE1_CE2 = models.FloatField(null=True)
+    CE2_CZ2 = models.FloatField(null=True)
+    CZ2_CH2 = models.FloatField(null=True)
+    CH2_CZ3 = models.FloatField(null=True)
+    CZ3_CE3 = models.FloatField(null=True)
+    CD2_CE3 = models.FloatField(null=True)
+    CG_CD2 = models.FloatField(null=True)
+    CD2_CE2 = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD1 = models.FloatField(null=True)
+    CB_CG_CD2 = models.FloatField(null=True)
+    CD2_CG_CD1 = models.FloatField(null=True)
+    CG_CD1_NE1 = models.FloatField(null=True)
+    CD1_NE1_CE2 = models.FloatField(null=True)
+    NE1_CE2_CD2 = models.FloatField(null=True)
+    CG_CD2_CE2 = models.FloatField(null=True)
+    CE2_CD2_CE3 = models.FloatField(null=True)
+    CD2_CE2_CZ2 = models.FloatField(null=True)
+    CE2_CZ2_CH2 = models.FloatField(null=True)
+    CZ2_CH2_CZ3 = models.FloatField(null=True)
+    CE3_CZ3_CH2 = models.FloatField(null=True)
+    CD2_CE3_CZ3 = models.FloatField(null=True)
+    CG_CD2_CE3 = models.FloatField(null=True)
+    NE1_CE2_CZ2 = models.FloatField(null=True)
+
+
+class Sidechain_TYR(models.Model):
+    CB_CG = models.FloatField(null=True)
+    CG_CD1 = models.FloatField(null=True)
+    CG_CD2 = models.FloatField(null=True)
+    CD1_CE1 = models.FloatField(null=True)
+    CD2_CE2 = models.FloatField(null=True)
+    CZ_CE1 = models.FloatField(null=True)
+    CZ_CE2 = models.FloatField(null=True)
+    CZ_OH = models.FloatField(null=True)
+    CA_CB_CG = models.FloatField(null=True)
+    CB_CG_CD1 = models.FloatField(null=True)
+    CB_CG_CD2 = models.FloatField(null=True)
+    CD1_CG_CD2 = models.FloatField(null=True)
+    CE1_CZ_CE2 = models.FloatField(null=True)
+    CG_CD1_CE1 = models.FloatField(null=True)
+    CG_CD2_CE2 = models.FloatField(null=True)
+    CZ_CE1_CD1 = models.FloatField(null=True)
+    CZ_CE2_CD2 = models.FloatField(null=True)
+    CE1_CZ_OH = models.FloatField(null=True)
+    CE2_CZ_OH = models.FloatField(null=True)
+
+
+class Sidechain_VAL(models.Model):
+    CB_CG1 = models.FloatField(null=True)
+    CB_CG2 = models.FloatField(null=True)
+    CA_CB_CG1 = models.FloatField(null=True)
+    CA_CB_CG2 = models.FloatField(null=True)
+    CG1_CB_CG2 = models.FloatField(null=True)
+
+
 # (Note: fields need to be commented)
 class Residue(models.Model):
     """
@@ -93,6 +317,24 @@ class Residue(models.Model):
     terminal_flag   = models.BooleanField(default=False)#indicates this residue is next to a chain break
     xpr             = models.BooleanField() # this field may not be necessary; it has never been implemented
 
+    sidechain_ARG = models.OneToOneField(Sidechain_ARG, related_name="residue", null=True)
+    sidechain_ASN = models.OneToOneField(Sidechain_ASN, related_name="residue", null=True)
+    sidechain_ASP = models.OneToOneField(Sidechain_ASP, related_name="residue", null=True)
+    sidechain_CYS = models.OneToOneField(Sidechain_CYS, related_name="residue", null=True)
+    sidechain_GLN = models.OneToOneField(Sidechain_GLN, related_name="residue", null=True)
+    sidechain_GLU = models.OneToOneField(Sidechain_GLU, related_name="residue", null=True)
+    sidechain_HIS = models.OneToOneField(Sidechain_HIS, related_name="residue", null=True)
+    sidechain_ILE = models.OneToOneField(Sidechain_ILE, related_name="residue", null=True)
+    sidechain_LEU = models.OneToOneField(Sidechain_LEU, related_name="residue", null=True)
+    sidechain_LYS = models.OneToOneField(Sidechain_LYS, related_name="residue", null=True)
+    sidechain_MET = models.OneToOneField(Sidechain_MET, related_name="residue", null=True)
+    sidechain_PHE = models.OneToOneField(Sidechain_PHE, related_name="residue", null=True)
+    sidechain_PRO = models.OneToOneField(Sidechain_PRO, related_name="residue", null=True)
+    sidechain_SER = models.OneToOneField(Sidechain_SER, related_name="residue", null=True)
+    sidechain_THR = models.OneToOneField(Sidechain_THR, related_name="residue", null=True)
+    sidechain_TRP = models.OneToOneField(Sidechain_TRP, related_name="residue", null=True)
+    sidechain_TYR = models.OneToOneField(Sidechain_TYR, related_name="residue", null=True)
+    sidechain_VAL = models.OneToOneField(Sidechain_VAL, related_name="residue", null=True)
 
     def __init__(self, *args, **kwargs):
         self.segment = Segmenter(self)
@@ -109,246 +351,7 @@ class Residue(models.Model):
             return object.__getattribute__(self, name)
 
 
-class Sidechain_ARG(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_ARG")
-    CB_CG = models.FloatField(null=True)
-    CG_CD = models.FloatField(null=True)
-    CD_NE = models.FloatField(null=True)
-    NE_CZ = models.FloatField(null=True)
-    CZ_NH1 = models.FloatField(null=True)
-    CZ_NH2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD = models.FloatField(null=True)
-    CG_CD_NE = models.FloatField(null=True)
-    CD_NE_CZ = models.FloatField(null=True)
-    NE_CZ_NH1 = models.FloatField(null=True)
-    NE_CZ_NH2 = models.FloatField(null=True)
-    NH1_CZ_NH2 = models.FloatField(null=True)
 
-
-class Sidechain_ASN(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_ASN")
-    CB_CG = models.FloatField(null=True)
-    CG_OD1 = models.FloatField(null=True)
-    CG_ND2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_OD1 = models.FloatField(null=True)
-    CB_CG_ND2 = models.FloatField(null=True)
-    OD1_CG_ND2 = models.FloatField(null=True)
-
-
-class Sidechain_ASP(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_ASP")
-    CB_CG = models.FloatField(null=True)
-    CG_OD1 = models.FloatField(null=True)
-    CG_OD2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_OD1 = models.FloatField(null=True)
-    CB_CG_OD2 = models.FloatField(null=True)
-    OD1_CG_OD2 = models.FloatField(null=True)
-
-
-class Sidechain_CYS(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_CYS")
-    CB_SG = models.FloatField(null=True)
-    CA_CB_SG = models.FloatField(null=True)
-
-
-class Sidechain_GLN(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_GLN")
-    CB_CG = models.FloatField(null=True)
-    CG_CD = models.FloatField(null=True)
-    CD_OE1 = models.FloatField(null=True)
-    CD_NE2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD = models.FloatField(null=True)
-    CG_CD_OE1 = models.FloatField(null=True)
-    CG_CD_NE2 = models.FloatField(null=True)
-    OE1_CD_NE2 = models.FloatField(null=True)
-
-
-class Sidechain_GLU(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_GLU")
-    CB_CG = models.FloatField(null=True)
-    CG_CD = models.FloatField(null=True)
-    CD_OE1 = models.FloatField(null=True)
-    CD_OE2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD = models.FloatField(null=True)
-    CG_CD_OE1 = models.FloatField(null=True)
-    CG_CD_OE2 = models.FloatField(null=True)
-    OE1_CD_OE2 = models.FloatField(null=True)
-
-
-class Sidechain_HIS(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_HIS")
-    CB_CG = models.FloatField(null=True)
-    CG_ND1 = models.FloatField(null=True)
-    ND1_CE1 = models.FloatField(null=True)
-    CE1_NE2 = models.FloatField(null=True)
-    NE2_CD2 = models.FloatField(null=True)
-    CG_CD2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD2 = models.FloatField(null=True)
-    CB_CG_ND1 = models.FloatField(null=True)
-    ND1_CG_CD2 = models.FloatField(null=True)
-    CG_ND1_CE1 = models.FloatField(null=True)
-    ND1_CE1_NE2 = models.FloatField(null=True)
-    CE1_NE2_CD2 = models.FloatField(null=True)
-    CG_CD2_NE2 = models.FloatField(null=True)
-
-
-class Sidechain_ILE(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_ILE")
-    CB_CG1 = models.FloatField(null=True)
-    CG1_CD1 = models.FloatField(null=True)
-    CB_CG2 = models.FloatField(null=True)
-    CA_CB_CG2 = models.FloatField(null=True)
-    CA_CB_CG1 = models.FloatField(null=True)
-    CG1_CB_CG2 = models.FloatField(null=True)
-    CB_CG1_CD1 = models.FloatField(null=True)
-
-
-class Sidechain_LEU(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_LEU")
-    CB_CG = models.FloatField(null=True)
-    CG_CD1 = models.FloatField(null=True)
-    CG_CD2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD1 = models.FloatField(null=True)
-    CB_CG_CD2 = models.FloatField(null=True)
-    CD1_CG_CD2 = models.FloatField(null=True)
-
-
-class Sidechain_LYS(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_LYS")
-    CB_CG = models.FloatField(null=True)
-    CG_CD = models.FloatField(null=True)
-    CD_CE = models.FloatField(null=True)
-    CE_NZ = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD = models.FloatField(null=True)
-    CG_CD_CE = models.FloatField(null=True)
-    CD_CE_NZ = models.FloatField(null=True)
-
-
-class Sidechain_MET(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_MET")
-    CB_CG = models.FloatField(null=True)
-    CG_SD = models.FloatField(null=True)
-    SD_CE = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_SD = models.FloatField(null=True)
-    CG_SD_CE = models.FloatField(null=True)
-
-
-class Sidechain_PHE(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_PHE")
-    CB_CG = models.FloatField(null=True)
-    CG_CD1 = models.FloatField(null=True)
-    CG_CD2 = models.FloatField(null=True)
-    CD1_CE1 = models.FloatField(null=True)
-    CD2_CE2 = models.FloatField(null=True)
-    CZ_CE1 = models.FloatField(null=True)
-    CZ_CE2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD1 = models.FloatField(null=True)
-    CB_CG_CD2 = models.FloatField(null=True)
-    CD1_CG_CD2 = models.FloatField(null=True)
-    CE1_CZ_CE2 = models.FloatField(null=True)
-    CG_CD1_CE1 = models.FloatField(null=True)
-    CG_CD2_CE2 = models.FloatField(null=True)
-    CZ_CE1_CD1 = models.FloatField(null=True)
-    CZ_CE2_CD2 = models.FloatField(null=True)
-
-
-class Sidechain_PRO(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_PRO")
-    CB_CG = models.FloatField(null=True)
-    CG_CD = models.FloatField(null=True)
-    CD_N = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD = models.FloatField(null=True)
-    CG_CD_N = models.FloatField(null=True)
-    CD_N_CA = models.FloatField(null=True)
-
-
-class Sidechain_SER(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_SER")
-    CB_OG = models.FloatField(null=True)
-    CA_CB_OG = models.FloatField(null=True)
-
-
-class Sidechain_THR(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_THR")
-    CB_OG1 = models.FloatField(null=True)
-    CB_CG2 = models.FloatField(null=True)
-    CA_CB_OG1 = models.FloatField(null=True)
-    CA_CB_CG2 = models.FloatField(null=True)
-    OG1_CB_CG2 = models.FloatField(null=True)
-
-
-class Sidechain_TRP(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_TRP")
-    CB_CG = models.FloatField(null=True)
-    CG_CD1 = models.FloatField(null=True)
-    CD1_NE1 = models.FloatField(null=True)
-    NE1_CE2 = models.FloatField(null=True)
-    CE2_CZ2 = models.FloatField(null=True)
-    CZ2_CH2 = models.FloatField(null=True)
-    CH2_CZ3 = models.FloatField(null=True)
-    CZ3_CE3 = models.FloatField(null=True)
-    CD2_CE3 = models.FloatField(null=True)
-    CG_CD2 = models.FloatField(null=True)
-    CD2_CE2 = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD1 = models.FloatField(null=True)
-    CB_CG_CD2 = models.FloatField(null=True)
-    CD2_CG_CD1 = models.FloatField(null=True)
-    CG_CD1_NE1 = models.FloatField(null=True)
-    CD1_NE1_CE2 = models.FloatField(null=True)
-    NE1_CE2_CD2 = models.FloatField(null=True)
-    CG_CD2_CE2 = models.FloatField(null=True)
-    CE2_CD2_CE3 = models.FloatField(null=True)
-    CD2_CE2_CZ2 = models.FloatField(null=True)
-    CE2_CZ2_CH2 = models.FloatField(null=True)
-    CZ2_CH2_CZ3 = models.FloatField(null=True)
-    CE3_CZ3_CH2 = models.FloatField(null=True)
-    CD2_CE3_CZ3 = models.FloatField(null=True)
-    CG_CD2_CE3 = models.FloatField(null=True)
-    NE1_CE2_CZ2 = models.FloatField(null=True)
-
-
-class Sidechain_TYR(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_TYR")
-    CB_CG = models.FloatField(null=True)
-    CG_CD1 = models.FloatField(null=True)
-    CG_CD2 = models.FloatField(null=True)
-    CD1_CE1 = models.FloatField(null=True)
-    CD2_CE2 = models.FloatField(null=True)
-    CZ_CE1 = models.FloatField(null=True)
-    CZ_CE2 = models.FloatField(null=True)
-    CZ_OH = models.FloatField(null=True)
-    CA_CB_CG = models.FloatField(null=True)
-    CB_CG_CD1 = models.FloatField(null=True)
-    CB_CG_CD2 = models.FloatField(null=True)
-    CD1_CG_CD2 = models.FloatField(null=True)
-    CE1_CZ_CE2 = models.FloatField(null=True)
-    CG_CD1_CE1 = models.FloatField(null=True)
-    CG_CD2_CE2 = models.FloatField(null=True)
-    CZ_CE1_CD1 = models.FloatField(null=True)
-    CZ_CE2_CD2 = models.FloatField(null=True)
-    CE1_CZ_OH = models.FloatField(null=True)
-    CE2_CZ_OH = models.FloatField(null=True)
-
-
-class Sidechain_VAL(models.Model):
-    residue = models.OneToOneField(Residue, related_name="sidechain_VAL")
-    CB_CG1 = models.FloatField(null=True)
-    CB_CG2 = models.FloatField(null=True)
-    CA_CB_CG1 = models.FloatField(null=True)
-    CA_CB_CG2 = models.FloatField(null=True)
-    CG1_CB_CG2 = models.FloatField(null=True)
 
 
 class Segmenter():
@@ -379,7 +382,7 @@ class Segmenter():
         return residue
 
 
-def determine_alias(query, index):
+def determine_alias(query, index, field):
         """
         determines the table alias used for a given residue index.
         
@@ -401,7 +404,7 @@ def determine_alias(query, index):
             k = ('pgd_core_residue','pgd_core_residue','next_id','id')
         else:
             k = ('pgd_core_residue','pgd_core_residue','prev_id','id')
-            
+        
         if not query.join_map.has_key(k):
             return None
         try:
