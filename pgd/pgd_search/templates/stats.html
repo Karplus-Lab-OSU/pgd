@@ -128,6 +128,21 @@
         
         #index {border-top:0;}
         
+        .aa_breakout h2 {
+            background-color:#3a76f1;
+            color:#fff;
+            padding:3px 3px 3px 8px;
+            width:900px;
+        }
+        
+        .aa_breakout table {
+            border: 1px solid black;
+            display:none;
+        }
+
+        .aa_breakout td, .aa_breakout th {
+            min-width:4em;
+        }
 
     </style>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
@@ -230,12 +245,17 @@
                     $(this).removeClass('selected');
                 })
 
-
+            $('.aa_breakout h2').click(function(){
+                $(this).nextAll().toggle();
+                aa = this.parentNode.id.substring(3);
+                $.getJSON('{{SITE_ROOT}}/search/statistics/aa/'+aa, process_aa_data);
+            });
         });
 
         var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}, {% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
         var angles = [];
         var details = {};
+        var aa_details = {};
 
         /* converts a field to the required precision */
         function precision(value, field) {
@@ -303,6 +323,37 @@
             setTimeout("$('#stats').qtip('hide')", 0);
         }
 
+        /* processes data for a single AA */
+        function process_aa_data(data) {
+            // replace details with completely new list since the new one may
+            // not have all rows/columns in it.
+            aa = data['aa'];
+            $aa = $('#aa_'+aa);
+            for (k in data) {
+                if (k=='aa') {continue};
+                property = k.substring(0,3);
+                if (property=='std') {
+                    property = 'stddev';
+                    if (k.substring(7,16)=="sidechain"){
+                        field = k.substring(22);
+                    } else {
+                        field = k.substring(7);
+                    }
+                } else {
+                    if (k.substring(4,13)=="sidechain"){
+                        field = k.substring(19);
+                    } else {
+                        field = k.substring(4);
+                    }
+                }
+                
+                value = precision(data[k], field);
+                if (property == "avg") {
+                    $aa.find('.'+field).html(value);
+                }
+            }
+        }
+
         function showStats(key) {
             details_ = details[key];
             if (details_ != undefined) {
@@ -321,7 +372,7 @@
     </script>
 {% endblock %}
 
-{% block content %}   
+{% block content %}
     <table id="stats" >
         <thead>
         <tr><td colspan=100% id="index"><label>Index: <label> {{form.index}}</td></tr>
@@ -373,6 +424,28 @@
 
       </tbody>
     </table>
+
+    {% for aa in aa_types %}
+    {% if aa.0|in:stat_fields.scl %}
+    <div id="aa_{{aa.0}}" class="aa_breakout">
+        <h2>{{aa.1}}</h2>
+        <table>
+            <tr>{% for f in stat_fields.chis %}<th>{{f.1|safe}}</th>{% endfor %}</tr>
+            <tr>{% for f in stat_fields.chis %}<td class="{{f.0}}">--</td>{% endfor %}</tr>
+        </table>
+        
+        <table>
+            <tr>{% for f in stat_fields.scl|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr>{% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+        </table>
+        <table>
+            <tr>{% for f in stat_fields.sca|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+        </table>
+    </div>
+    {% endif %}
+    {% endfor %}
+
 
     <div id="stats_fieldsDetail">
             <span class="label">Standard Deviation:</span><div id="stdev"></div>

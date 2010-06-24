@@ -63,21 +63,28 @@ class DirectionalStatisticsQuery():
         results = list(query)
         
         # construction 2nd query for DirectionStdDev calculations for each
-        # dihedral angle.
-        annotations = {}
-        for row in results:
-            aa_rows[row['aa']] = row
-            for field in self.angles:
-                annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=row['avg_%s' % field])
-        query = self.queryset
-        query = query.values('aa')
-        query = query.annotate(**annotations)
-        
-        # update the original results with the results of the 2nd query
-        for row in query:
-            outer_row = aa_rows[row['aa']]
-            for field in self.angles:
-                outer_row.update(row)
+        # dihedral angle.  only needed if there is at least one dihedral angle
+        if self.angles:
+            annotations = {}
+            for row in results:
+                aa_rows[row['aa']] = row
+                for field in self.angles:
+                    avg=row['avg_%s' % field]
+                    if avg:
+                        annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=avg)
+                    else:
+                        outer_row['stddev_%s' % field] = None
+            
+            if annotations:
+                query = self.queryset
+                query = query.values('aa')
+                query = query.annotate(**annotations)
+            
+            # update the original results with the results of the 2nd query
+            for row in query:
+                outer_row = aa_rows[row['aa']]
+                for field in self.angles:
+                    outer_row.update(row)
             
         self.results = results
         return results
@@ -118,13 +125,20 @@ class DirectionalStatisticsTotalQuery(DirectionalStatisticsQuery):
 
         # construction 2nd query for DirectionStdDev calculations for each
         # dihedral angle.
-        annotations = {}
-        for field in self.angles:
-            annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=totals['avg_%s' % field])
-        query = self.queryset
-        stddevs = query.aggregate(**annotations)
-        totals.update(stddevs)
-        totals['aa'] = 'total'
+        if self.angles:
+            annotations = {}
+            for field in self.angles:
+                avg=totals['avg_%s' % field]
+                if avg:
+                    annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=avg)
+                else:
+                    totals['stddev_%s' % field] = None
+            
+            if annotations:
+                query = self.queryset
+                stddevs = query.aggregate(**annotations)
+                totals.update(stddevs)
 
+        totals['aa'] = 'total'
         self.results = [totals]
         return self.results

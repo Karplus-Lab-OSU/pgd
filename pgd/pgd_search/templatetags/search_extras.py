@@ -22,10 +22,20 @@ def index_lookup(value, arg):
     Filter that allows you to lookup the value of a list using another variable in the page
     """
     try:
-        return value[int(arg)]
-    except IndexError:
+        return value[int(arg)] if isinstance(value, (list,tuple)) else value[arg]
+    except Exception, e:
         return None
 register.filter('index_lookup', index_lookup)
+register.filter('index', index_lookup)
+
+
+@register.filter(name='in')
+def in_(value, arg):
+    """
+    Filter that emulates "in" operator
+    """
+    return value in arg
+register.filter('in', in_)
 
 
 @register.filter(name='invalid')
@@ -64,6 +74,16 @@ def sidechain_label(value):
 register.filter('sidechain_label', sidechain_label)
 
 
+@register.filter(name='atom')
+def atom(value):
+    """
+    Filter that formats atom bond lengths and angles
+    """
+    parts = ['%s<sup>%s</sup>'%(i[0], i[1:]) for i in value.split('_')]
+    return mark_safe(''.join(parts))
+register.filter('atom', atom)
+
+
 @register.filter(name='sidechain_fields')
 def sidechain_fields(form, key):
     """
@@ -74,3 +94,10 @@ def sidechain_fields(form, key):
 register.filter('sidechain_fields', sidechain_fields)
 
 
+@register.filter(name='upper')
+def upper(str):
+    """
+    Filter that converts string to uppercase
+    """
+    return str.upper()
+register.filter('upper', upper)

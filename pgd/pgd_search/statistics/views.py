@@ -8,16 +8,15 @@ from django.db.models import Avg, Max, Min, Count, StdDev
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-
-from pgd_constants import AA_CHOICES, SS_CHOICES
+from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 from pgd_core.models import determine_alias
 from pgd_search.models import Search
 from pgd_search.statistics.aggregates import *
 from pgd_search.statistics.directional_stddev import *
 from pgd_search.statistics.form import StatsForm
 from pgd_search.views import settings_processor
-
-
+from pgd_splicer.sidechain import bond_angles_string_dict, bond_lengths_string_dict, aa_list
+from pgd_splicer.chi import CHI_MAP
 
 stat_attributes = [('L1',u'C<sup>-1</sup>N'),
                         ('L2',u'NC<sup>&alpha;</sup>'),
@@ -37,15 +36,55 @@ FIELDS_BASE = ('L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7')
 ANGLES_BASE = ('ome', ) #,'phi')#, 'psi', 'chi', 'zeta')
 
 
+LENGTHS = [('L1',u'C<sup>-1</sup>N'),
+        ('L2',u'NC<sup>&alpha;</sup>'),
+        ('L3',u'C<sup>&alpha;</sup>C<sup>&beta;</sup>'),
+        ('L4',u'C<sup>&alpha;</sup>C'),
+        ('L5','CO')]
+
+
+ANGLES = [('a1',u'C<sup>-1</sup>NC<sup>&alpha;</sup>'),
+        ('a2',u'NC<sup>&alpha;</sup>C<sup>&beta;</sup>'),
+        ('a3',u'NC<sup>&alpha;</sup>C'),
+        ('a4',u'C<sup>&beta;</sup>C<sup>&alpha;</sup>C'),
+        ('a5',u'C<sup>&alpha;</sup>CO'),
+        ('a6',u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
+        ('a7',u'OCN<sup>+1</sup>'),
+        ('ome',u'&omega;')]
+
+
+CHIS = [('chi1','&chi<sup>1</sup>'), ('chi2','&chi<sup>2</sup>'), ('chi3','&chi<sup>3</sup>'), ('chi4','&chi<sup>4</sup>')]
+
+
+# rebuild bond angle list so they work with single letter codes
+BOND_ANGLES = {}
+BOND_LENGTHS = {}
+for k, v in AA_CHOICES_DICT.items():
+    v = v.upper()
+    if v in bond_lengths_string_dict:
+        BOND_LENGTHS[k] = bond_lengths_string_dict[v]
+        BOND_ANGLES[k] = bond_angles_string_dict[v]
+
+
 def search_statistics(request):
     """
     display statistics about the search
     """
+    
+    fields = dict(
+        lengths = LENGTHS,
+        angles = ANGLES,
+        chis = CHIS,
+        sca = BOND_ANGLES,
+        scl = BOND_LENGTHS
+    )
+    
     return render_to_response('stats.html', {
         'form': StatsForm(),
         'aa_types': AA_CHOICES,
         'ss_types': SS_CHOICES,
         'fields':FIELDS_BASE,
+        'stat_fields':fields,
         'angles':ANGLES_BASE,
         'stat_attributes':stat_attributes
     }, context_instance=RequestContext(request, processors=[settings_processor]))
@@ -59,6 +98,25 @@ def search_statistics_data(request):
     try:        
         index = int(request.GET['i']) if request.GET.has_key('i') else 0
         stats = calculate_statistics(search.querySet(), index)
+    except Exception, e:
+        print 'exception', e
+        import traceback, sys
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        print "*** print_tb:"
+        traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
+
+        raise e
+    return HttpResponse(simplejson.dumps(stats))
+
+
+def search_statistics_aa_data(request, aa):
+    """
+    returns ajax'ified statistics data for a single aa in the current search
+    """
+    search = request.session['search']
+    try:        
+        index = int(request.GET['i']) if request.GET.has_key('i') else 0
+        stats = calculate_aa_statistics(search.querySet(), aa, index)
     except Exception, e:
         print 'exception', e
         import traceback, sys
@@ -142,6 +200,37 @@ def calculate_statistics(queryset, iIndex=0):
     print 'Search Statistics Data in seconds: ', end-start
 
     return stats
+
+
+def calculate_aa_statistics(queryset, aa, iIndex=0):
+    """ Calculates statistics for a single AA type """
+    # get field prefix for this residue
+    if iIndex == 0:
+        prefix = ''
+    elif iIndex < 0:
+        prefix = ''.join(['prev__' for i in range(iIndex, 0)])
+    else:
+        prefix = ''.join(['next__' for i in range(iIndex)])
+    field_prefix = '%s%%s' % prefix  
+    
+    queryset = queryset.filter(aa=aa)
+    full_aa = AA_CHOICES_DICT[aa].upper()
+    
+    angles = ['chi%d'%(i+1) for i in range(len(CHI_MAP[full_aa]))]
+    
+    if aa in BOND_LENGTHS:
+        fields = [str('sidechain_%s__%s' % (full_aa,f)) for f in BOND_ANGLES[aa]] + \
+             [str('sidechain_%s__%s' % (full_aa,f)) for f in BOND_LENGTHS[aa]]
+    else:
+        fields = []
+    
+    dsq_thread = ListQueryThread(DirectionalStatisticsTotalQuery(angles, fields, field_prefix, queryset))
+    dsq_thread.start()
+    dsq_thread.join()
+    results = dsq_thread.results[0]
+    # XXX the Total query sets aa to total, but really its just a single AA
+    results['aa'] = aa
+    return results
 
 
 class ListQueryThread(Thread):
