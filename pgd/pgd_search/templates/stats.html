@@ -79,6 +79,10 @@
             margin-right:1em;
         }
 
+        th.ss {
+            cursor:help;
+        }
+
         #stdev {
             text-align:left;
         }
@@ -222,6 +226,26 @@
                     }); 
             $('#content').qtip('show');
 
+            $('th.ss').qtip({
+                position:{
+                    corner: {
+                            target: 'bottomMiddle',
+                            tooltip: 'topMiddle'
+                            }
+                         },
+                style:{ //Style the qtip to look like the page
+                        name:'light',
+                        padding:5,
+                        textAlign: 'center',
+                        border: {
+                                radius:5,
+                                width: 5,
+                                color: '#444444'
+                                },
+                        tip:{corner: 'topMiddle'}
+                    }
+            });
+            
             $('.stats.fields').mouseout( function() {$('#stats.fieldsDetail').hide();})
 
             $('tr.data')
@@ -353,9 +377,14 @@
                 }
                 
                 value = precision(data[k], field);
-                if (property == "avg") {
-                    $aa.find('.'+field).html(value);
-                }
+                $row = $aa.find("." + property);                
+                
+                if (property == "avg" || property == "stddev") {
+                    
+                    $row = $aa.find('.'+property);
+                    console.log(property, $row);
+                    $row.find("."+field).html(value);
+                } 
             }
         }
 
@@ -386,7 +415,7 @@
             <th class="aa_total">Total</th>
             <th class="sum_na sum borderleft">N/A</th>
             {% for ss in ss_types %}
-                <th class="sum {{ss.0}}">{{ss.0}}</th>
+                <th class="sum {{ss.0}} ss" title="secondary structure: {{ss.1|safe}}">{{ss.0}}</th>
             {% endfor %}
 
             {% autoescape off %}
@@ -435,12 +464,16 @@
     <div id="aa_{{aa.0}}" class="aa_breakout">
         <h2>{{aa.1}}</h2>
         <table>
-            <tr>{% for f in stat_fields.scl|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
-            <tr>{% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr><th></th>{% for f in stat_fields.scl|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr class="avg"><th>Mean</th>                
+                {% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr class="stddev"><th>Stddev</th>
+                {% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
         </table>
         <table>
-            <tr>{% for f in stat_fields.sca|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
-            <tr>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr><th></th>{% for f in stat_fields.sca|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr class="avg"><th>Mean</th>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr class="stddev"><th>Stddev</th>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
         </table>
     </div>
     {% endif %}
