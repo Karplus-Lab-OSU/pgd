@@ -6,6 +6,17 @@ register = template.Library()
 from pgd_constants import AA_CHOICES_DICT
 
 
+ROMAN_TO_GREEK = dict(
+    A='&alpha;',
+    B='&beta;',
+    G='&gamma;',
+    D='&delta;',
+    E='&epsilon;',
+    H='&eta;',
+    Z='&zeta;'
+)
+
+
 @register.filter(name='full_aa')
 @stringfilter
 def full_aa(value):
@@ -64,12 +75,22 @@ def variable_dict_lookup(dict,key):
 register.filter('variable_dict_lookup', variable_dict_lookup)
 
 
+def format_atom(value):
+    parts = []
+    for i in value.split('_'):
+        subscript = []
+        for c in i[1:]:
+            subscript.append(ROMAN_TO_GREEK[c] if c in ROMAN_TO_GREEK else c)
+        parts.append('%s<sup>%s</sup>' % (i[0], ''.join(subscript)))
+    return ''.join(parts)
+
+
 @register.filter(name='sidechain_label')
 def sidechain_label(value):
     """
     Filter that formats sidechain labels for angles and lengths
     """
-    parts = [value[:3],': '] + ['%s<sup>%s</sup>'%(i[0], i[1:]) for i in value[5:].split('_')]
+    parts = [value[:3],': '] + [format_atom(value[5:])]
     return mark_safe(''.join(parts))
 register.filter('sidechain_label', sidechain_label)
 
@@ -79,8 +100,7 @@ def atom(value):
     """
     Filter that formats atom bond lengths and angles
     """
-    parts = ['%s<sup>%s</sup>'%(i[0], i[1:]) for i in value.split('_')]
-    return mark_safe(''.join(parts))
+    return mark_safe(format_atom(value))
 register.filter('atom', atom)
 
 
