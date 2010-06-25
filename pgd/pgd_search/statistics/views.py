@@ -53,9 +53,6 @@ ANGLES = [('a1',u'C<sup>-1</sup>NC<sup>&alpha;</sup>'),
         ('ome',u'&omega;')]
 
 
-CHIS = [('chi1','&chi<sup>1</sup>'), ('chi2','&chi<sup>2</sup>'), ('chi3','&chi<sup>3</sup>'), ('chi4','&chi<sup>4</sup>')]
-
-
 # rebuild bond angle list so they work with single letter codes
 BOND_ANGLES = {}
 BOND_LENGTHS = {}
@@ -74,7 +71,6 @@ def search_statistics(request):
     fields = dict(
         lengths = LENGTHS,
         angles = ANGLES,
-        chis = CHIS,
         sca = BOND_ANGLES,
         scl = BOND_LENGTHS
     )
@@ -216,7 +212,7 @@ def calculate_aa_statistics(queryset, aa, iIndex=0):
     queryset = queryset.filter(aa=aa)
     full_aa = AA_CHOICES_DICT[aa].upper()
     
-    angles = ['chi%d'%(i+1) for i in range(len(CHI_MAP[full_aa]))]
+    angles = []
     
     if aa in BOND_LENGTHS:
         fields = [str('sidechain_%s__%s' % (full_aa,f)) for f in BOND_ANGLES[aa]] + \

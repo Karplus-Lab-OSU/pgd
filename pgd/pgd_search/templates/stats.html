@@ -430,11 +430,6 @@
     <div id="aa_{{aa.0}}" class="aa_breakout">
         <h2>{{aa.1}}</h2>
         <table>
-            <tr>{% for f in stat_fields.chis %}<th>{{f.1|safe}}</th>{% endfor %}</tr>
-            <tr>{% for f in stat_fields.chis %}<td class="{{f.0}}">--</td>{% endfor %}</tr>
-        </table>
-        
-        <table>
             <tr>{% for f in stat_fields.scl|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
             <tr>{% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
         </table>
