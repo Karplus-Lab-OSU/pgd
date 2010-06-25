@@ -275,9 +275,18 @@
                 })
 
             $('.aa_breakout h2').click(function(){
-                $(this).nextAll().toggle();
-                aa = this.parentNode.id.substring(3);
-                $.getJSON('{{SITE_ROOT}}/search/statistics/aa/'+aa, process_aa_data);
+                $this = $(this);
+                if ($this.hasClass("open")) {
+                    $this.nextAll().hide();
+                    $this.removeClass("open");
+                } else {
+                    $this.addClass("open");
+                    $this.nextAll().show();
+                    aa = this.parentNode.id.substring(3);
+                    if (aa_details[aa]==undefined){
+                        $.getJSON('{{SITE_ROOT}}/search/statistics/aa/'+aa, process_aa_data);
+                    }
+                }
             });
         });
 
@@ -364,6 +373,9 @@
             // not have all rows/columns in it.
             aa = data['aa'];
             $aa = $('#aa_'+aa);
+            
+            aa_stats = {};
+            
             for (k in data) {
                 if (k=='aa') {continue};
                 property = k.substring(0,3);
@@ -387,8 +399,10 @@
                 if (property == "avg" || property == "stddev") {
                     $row = $aa.find('.'+property);
                     $row.find("."+field).html(value);
-                } 
+                }
+                aa_stats[property] = value;
             }
+            aa_details[aa] = aa_stats;
         }
 
         function showStats(key) {
