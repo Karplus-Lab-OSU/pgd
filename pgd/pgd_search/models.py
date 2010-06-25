@@ -76,6 +76,12 @@ class Search(models.Model):
     
     data = property(get_data, set_data)
 
+
+    def get_segmentLength(self):
+        return int(self.data['residues'])
+    segmentLength = property(get_segmentLength)
+
+
     def save(self):
         """ serialize parameters pre-save, object probably wont't be saved often """
         self.data_internal = cPickle.dumps(self.__data)

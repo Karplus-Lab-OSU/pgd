@@ -11,14 +11,21 @@ from threading import Thread, Lock
 
 
 import math
+
+from django.core.paginator import Paginator
+
 from pgd_search.models import *
 from pgd_constants import AA_CHOICES
 from pgd_search.models import searchSettings
-from django.core.paginator import Paginator
-
+from pgd_splicer.sidechain import sidechain_length_relationship_list, sidechain_angle_relationship_list
 
 # A list of values that should not be printed out
 FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi1','chi2','chi3','chi4', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
+for field in  sidechain_length_relationship_list:
+    FIELDS.append('sidechain_%s' % field)
+for field in sidechain_angle_relationship_list:
+    FIELDS.append('sidechain_%s' % field)
+
 FIELD_LABEL_REPLACEMENTS = {
     'h_bond_energy':'H Bond', 
     'aa':'AA',
@@ -117,7 +124,14 @@ class BufferThread(Thread):
                                     parts.append(str(v))
                     # just write value
                     else:
-                        parts.append(str(residue.__dict__[field]))
+                        if field[:9] == 'sidechain':
+                            sidechain = getattr(residue, field[:13])
+                            if sidechain:
+                                parts.append(str(getattr(sidechain, field[15:])))
+                            else:
+                                parts.append('')
+                        else:
+                            parts.append(str(getattr(residue, field)))
 
                 s = '\t'.join(parts)
                 string = '%s\n' % s
@@ -164,6 +178,7 @@ class Dump():
         self.nEOF = True
         self.create_meta_data(search)
         self.create_header()
+        
 
         #calculate list of iValues
         self.iValues = [
@@ -213,6 +228,8 @@ class Dump():
             self.buffer.append(string)
             parts = []
         self.buffer.append("***END_META_DATA***\n")
+    
+    
     def create_header(self):
         """
         Creates the header for the dump.  This must happen before any calls to
