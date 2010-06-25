@@ -3,6 +3,8 @@
 {% block head %}
     <style>
         #content {
+            width:1100px;
+            margin:0 auto 0 auto;
         }
 
         table {
@@ -146,6 +148,10 @@
         .aa_breakout td, .aa_breakout th {
             min-width:4em;
         }
+
+        .aa_breakout tr.avg th, .aa_breakout tr.stddev th {padding:1px; line-height:1em;}
+
+        .qtip-content {font-size:14px;}
 
     </style>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
@@ -378,11 +384,8 @@
                 
                 value = precision(data[k], field);
                 $row = $aa.find("." + property);                
-                
                 if (property == "avg" || property == "stddev") {
-                    
                     $row = $aa.find('.'+property);
-                    console.log(property, $row);
                     $row.find("."+field).html(value);
                 } 
             }
