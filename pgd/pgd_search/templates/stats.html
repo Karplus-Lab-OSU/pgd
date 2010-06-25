@@ -20,7 +20,6 @@
             text-align:center;
         }
 
-
         th {
             color:black;
             margin: 0px;
@@ -257,10 +256,16 @@
         var details = {};
         var aa_details = {};
 
-        /* converts a field to the required precision */
+        /* converts a field to the required precision - all lengths must be explictly listed*/
         function precision(value, field) {
             if (value != null && (value || value != 0)){
-                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5') {
+                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5'
+                    {%for aa, fields in stat_fields.scl.items%}
+                    {%for field in fields %}
+                        || field == '{{field}}'
+                    {%endfor%}
+                    {%endfor%}
+                    ) {
                     return value.toFixed(3);
                 }
                 return value.toFixed(1);
