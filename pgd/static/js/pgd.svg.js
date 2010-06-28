@@ -47,11 +47,13 @@ function render_svg(svg, paper, font, func) {
     for (i=0; i<svg.length; i++) {
         op = svg[i]
         if (op['type'] == 'line') {
-            l = paper
-            .path({stroke: op['color']})
-            .moveTo(op['x']+line_x_aafix, op['y']+line_y_aafix)
-            .lineTo(op['x1']+line_x_aafix, op['y1']+line_y_aafix);
-            
+            console.log(op);
+            l = paper.path("M{0},{1}L{2},{3}",
+                           op['x']+line_x_aafix,
+                           op['y']+line_x_aafix,
+                           op['x1']+line_y_aafix,
+                           op['y1']+line_y_aafix)
+                .attr({stroke: op['color']});
         } else if (op['type'] == 'text') {
             paper.print(op['x'],op['y'],op['text'], font, op['size']);
             
