@@ -47,7 +47,6 @@ function render_svg(svg, paper, font, func) {
     for (i=0; i<svg.length; i++) {
         op = svg[i]
         if (op['type'] == 'line') {
-            console.log(op);
             l = paper.path("M{0},{1}L{2},{3}",
                            op['x']+line_x_aafix,
                            op['y']+line_x_aafix,
