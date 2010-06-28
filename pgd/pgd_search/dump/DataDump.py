@@ -14,10 +14,18 @@ import math
 
 from django.core.paginator import Paginator
 
+from pgd_core import residue_indexes
 from pgd_search.models import *
 from pgd_constants import AA_CHOICES
 from pgd_search.models import searchSettings
 from pgd_splicer.sidechain import sidechain_length_relationship_list, sidechain_angle_relationship_list
+
+
+def db_to_ascii(field):
+    """ converts an db style atom name to ascii """
+    field = field.replace('_','-')
+    return field
+
 
 # A list of values that should not be printed out
 FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi1','chi2','chi3','chi4', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
@@ -41,34 +49,50 @@ FIELD_LABEL_REPLACEMENTS = {
     'a5':u'CA-C-O',
     'a6':u'CA-C-N(+1)',
     'a7':u'O-C-N(+1)',
-    'a1_include':u'C(-1)-N-CA include',
-    'a2_include':u'N-CA-CB include',
-    'a3_include':u'N-CA-C include',
-    'a4_include':u'CB-CA-C include',
-    'a5_include':u'CA-C-O include',
-    'a6_include':u'CA-C-N(+1) include',
-    'a7_include':u'O-C-N(+1) include',
-    'L1_include':u'C(-1)N include',
-    'L2_include':u'N-CA include',
-    'L3_include':u'CA-CB include',
-    'L4_include':u'CA-C include',
-    'L5_include':'C-O include',
-    'phi_include':'phi include',
-    'ome_include':'ome include',
-    'chi1_include':'chi(1) include',
-    'chi2_include':'chi(2) include',
-    'chi3_include':'chi(3) include',
-    'chi4_include':'chi(4) include',
-    'bm_include':'bm include',
-    'bs_include':'bs include',
-    'bg_include':'bg include',
-    'h_bond_energy_include':'H bond energy include',
-    'zeta_include':'zeta include'
+    'a1_i':u'C(-1)-N-CA include',
+    'a2_i':u'N-CA-CB include',
+    'a3_i':u'N-CA-C include',
+    'a4_i':u'CB-CA-C include',
+    'a5_i':u'CA-C-O include',
+    'a6_i':u'CA-C-N(+1) include',
+    'a7_i':u'O-C-N(+1) include',
+    'L1_i':u'C(-1)N include',
+    'L2_i':u'N-CA include',
+    'L3_i':u'CA-CB include',
+    'L4_i':u'CA-C include',
+    'L5_i':'C-O include',
+    'phi_i':'phi include',
+    'ome_i':'ome include',
+    'chi1_i':'chi(1) include',
+    'chi2_i':'chi(2) include',
+    'chi3_i':'chi(3) include',
+    'chi4_i':'chi(4) include',
+    'bm_i':'bm include',
+    'bs_i':'bs include',
+    'bg_i':'bg include',
+    'h_bond_energy_i':'H bond energy include',
+    'zeta_i':'zeta include'
     }
+for field in  sidechain_length_relationship_list:
+    replace = '%s:%s' % (field[:3], db_to_ascii(field[5:]))
+    FIELD_LABEL_REPLACEMENTS['sidechain_%s' % field] = '%s' % replace
+    FIELD_LABEL_REPLACEMENTS['sidechain_%s_i' % field] = '%s include' % replace
+for field in sidechain_angle_relationship_list:
+    replace = '%s:%s' % (field[:3], db_to_ascii(field[5:]))
+    FIELD_LABEL_REPLACEMENTS['sidechain_%s' % field] = '%s' % replace
+    FIELD_LABEL_REPLACEMENTS['sidechain_%s_i' % field] =  '%s include' % replace
+
+
 FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
-RESIDUE_FIELDS =    ['index','chainID','a1','a1_include','a2','a2_include','a3','a3_include','a4','a4_include','a5','a5_include','a6','a6_include','a7',
-                    'a7_include','L1','L1_include','L2','L2_include','L3','L3_include','L4','L4_include','L5','L5_include','ss','phi', 'psi','phi_include', 'ome',
-                    'ome_include','chi1','chi1_include','chi2','chi2_include','chi3','chi3_include','chi4','chi4_include', 'bm','bm_include','bs','bs_include','bg','bg_include', 'h_bond_energy','h_bond_energy_include', 'zeta','zeta_include']
+RESIDUE_FIELDS =    ['a1','a1_i','a2','a2_i','a3','a3_i','a4','a4_i','a5','a5_i','a6','a6_i','a7',
+                    'a7_i','L1','L1_i','L2','L2_i','L3','L3_i','L4','L4_i','L5','L5_i','ss','phi', 'psi','phi_i', 'ome',
+                    'ome_i','chi1','chi1_i','chi2','chi2_i','chi3','chi3_i','chi4','chi4_i', 'bm','bm_i','bs','bs_i','bg','bg_i', 'h_bond_energy','h_bond_energy_i', 'zeta','zeta_i']
+for field in  sidechain_length_relationship_list:
+    RESIDUE_FIELDS.append('sidechain_%s' % field)
+    RESIDUE_FIELDS.append('sidechain_%s_i' % field)
+for field in sidechain_angle_relationship_list:
+    RESIDUE_FIELDS.append('sidechain_%s' % field)
+    RESIDUE_FIELDS.append('sidechain_%s_i' % field)
 SS_KEY_LIST = ['&alpha; helix','3<sub>10</sub> helix','&beta; sheet','Turn','Bend','&beta;-bridge','&pi; helix']
 SS_HEADER = [u'Alpha Helix',u'3_10 Helix',u'Beta Sheet',u'Turn',u'Bend','Beta-Bridge','Pi Helix']
 
@@ -212,21 +236,32 @@ class Dump():
         string = '%s\n' % '\t'.join(parts)
         self.buffer.append(string)
         parts = []
+        indexes = residue_indexes(search.segmentLength)
+        
         #The rest of the loops fill in the data
-        search_fields = search.residues.all()
-        for residue in search_fields:
+        i=0
+        for residue in search.residues:
             parts.append(str(search.dataset_version))
+            parts.append(str(indexes[i]))
             for key in RESIDUE_FIELDS:
-                if key is 'ss':
-                    ss = residue.__dict__[key]
-                    for ss_key in SS_KEY_LIST:
-                        parts.append(str(ss[ss_key]))
+                if key[:9] == 'sidechain':
+                    key = key[10:]
+                
+                if key in residue:
+                    if key is 'ss':
+                        ss = residue[key]
+                        for ss_key in SS_KEY_LIST:
+                            parts.append(str(ss[ss_key]))
+                    else:
+                        parts.append(str(residue[key]))
                 else:
-                    parts.append(str(residue.__dict__[key]))
+                    parts.append('')
+                
             #At the end of a row, so join string and add newline
             string = '%s\n' % '\t'.join(parts)
             self.buffer.append(string)
             parts = []
+            i+=1
         self.buffer.append("***END_META_DATA***\n")
     
     

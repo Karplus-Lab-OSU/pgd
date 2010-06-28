@@ -77,9 +77,19 @@ class Search(models.Model):
     data = property(get_data, set_data)
 
 
-    def get_segmentLength(self):
+    @property
+    def segmentLength(self):
         return int(self.data['residues'])
-    segmentLength = property(get_segmentLength)
+
+
+    @property
+    def residues(self):
+        """ iterates residues found in the search.  The objects yielded are
+        self.data wrapped in a Segmenter.
+        """
+        data = self.data
+        for i in range(self.segmentLength):
+            yield Segmenter(data, i)
 
 
     def save(self):
@@ -303,6 +313,10 @@ class Segmenter(object):
     def __init__(self,dict__, i):
         self.i = i
         self.__dict = dict__
+        
+    def __contains__(self, k):
+        return '%s_%d' % (k, self.i) in self.__dict
+        
     def __getitem__(self, k):
         return self.__dict['%s_%d' % (k, self.i)]
         
@@ -312,113 +326,16 @@ class Segmenter(object):
         except AttributeError:
             return self.__dict['%s_%d' % (k, self.i)]
 
+    def __str__(self):
+        return str(self.__dict)
+
+
 class Search_code(models.Model):
     """
     Codes indicating to which proteins a Search is applied.
     """
     search  = models.ForeignKey(Search, related_name='codes')
     code    = models.CharField(max_length=4)
-
-
-class Search_residue(models.Model):
-    """
-    The per-residue properties of a Search
-    """
-    search          = models.ForeignKey(Search, related_name='residues')
-    index           = models.IntegerField()
-    chainID         = models.CharField(max_length=1, null=True)
-
-    # Performing bitwise operations on aa_int gives the set of amino acids to check against.
-    # aa_int&1<<i   AA_CHOICE[i]
-    # 0 : Not in set
-    # 1 : In set
-    aa_int          = models.IntegerField(null=True)
-
-    a1              = models.CharField(max_length=30, null=True)
-    a2              = models.CharField(max_length=30, null=True)
-    a3              = models.CharField(max_length=30, null=True)
-    a4              = models.CharField(max_length=30, null=True)
-    a5              = models.CharField(max_length=30, null=True)
-    a6              = models.CharField(max_length=30, null=True)
-    a7              = models.CharField(max_length=30, null=True)
-    L1              = models.CharField(max_length=30, null=True)
-    L2              = models.CharField(max_length=30, null=True)
-    L3              = models.CharField(max_length=30, null=True)
-    L4              = models.CharField(max_length=30, null=True)
-    L5              = models.CharField(max_length=30, null=True)
-
-    # Performing bitwise operations on ss_int gives the set of secondary structures to check against.
-    # ss_int&1<<i   AA_CHOICE[i]
-    # 0 : Not in set
-    # 1 : In set
-    ss_int          = models.IntegerField(null=True)
-
-    phi             = models.CharField(max_length=30, null=True)
-    psi             = models.CharField(max_length=30, null=True)
-    ome             = models.CharField(max_length=30, null=True)
-    chi1            = models.CharField(max_length=30, null=True)
-    chi2            = models.CharField(max_length=30, null=True)
-    chi3            = models.CharField(max_length=30, null=True)
-    chi4            = models.CharField(max_length=30, null=True)
-    bm              = models.CharField(max_length=30, null=True)
-    bs              = models.CharField(max_length=30, null=True)
-    bg              = models.CharField(max_length=30, null=True)
-    h_bond_energy   = models.CharField(max_length=30, null=True)
-    zeta            = models.CharField(max_length=30, null=True)
-    xpr             = models.NullBooleanField(null=True) # this field may not be necessary; it has never been implemented
-
-
-    # '<field>_include' boolean determines how its query field should be handled
-    # Null  : field not included
-    # True  : field included as a positive assertion
-    # False : field included as a negative assertion
-    aa_int_include          = models.NullBooleanField(null=True)
-    a1_include              = models.NullBooleanField(null=True)
-    a2_include              = models.NullBooleanField(null=True)
-    a3_include              = models.NullBooleanField(null=True)
-    a4_include              = models.NullBooleanField(null=True)
-    a5_include              = models.NullBooleanField(null=True)
-    a6_include              = models.NullBooleanField(null=True)
-    a7_include              = models.NullBooleanField(null=True)
-    L1_include              = models.NullBooleanField(null=True)
-    L2_include              = models.NullBooleanField(null=True)
-    L3_include              = models.NullBooleanField(null=True)
-    L4_include              = models.NullBooleanField(null=True)
-    L5_include              = models.NullBooleanField(null=True)
-    ss_int_include          = models.NullBooleanField(null=True)
-    phi_include             = models.NullBooleanField(null=True)
-    psi_include             = models.NullBooleanField(null=True)
-    ome_include             = models.NullBooleanField(null=True)
-    chi1_include            = models.NullBooleanField(null=True)
-    chi2_include            = models.NullBooleanField(null=True)
-    chi3_include            = models.NullBooleanField(null=True)
-    chi4_include            = models.NullBooleanField(null=True)
-    bm_include              = models.NullBooleanField(null=True)
-    bs_include              = models.NullBooleanField(null=True)
-    bg_include              = models.NullBooleanField(null=True)
-    h_bond_energy_include   = models.NullBooleanField(null=True)
-    zeta_include            = models.NullBooleanField(null=True)
-
-    sidechain_serialized = models.TextField(max_length=4096)
-    __sidechain = None
-    def get_sidechain(self):
-        if self.__sidechain:
-            return self.__sidechain
-        self.__sidechain = cPickle.loads(self.sidechain_serialized)
-        return self.__sidechain
-    
-    def set_sidechain(self, value):
-        sidechain_serialized = cPickle.dumps(value)
-        self.__sidechain = value
-    sidechain = property(get_sidechain, set_sidechain)
-
-    def __init__(self, *args, **kwargs):
-        models.Model.__init__(self, *args, **kwargs)
-
-        # populate 'aa' with a dictionary of allowed values from AA_CHOICES
-        self.aa = dict([(aa_choice[1],1 if self.aa_int == None else 1&self.aa_int>>aa_index) for aa_index,aa_choice in enumerate(AA_CHOICES)])
-        # populate 'ss' with a dictionary of allowed values from SS_CHOICES
-        self.ss = dict([(ss_choice[1],1 if self.ss_int == None else 1&self.ss_int>>ss_index) for ss_index,ss_choice in enumerate(SS_CHOICES)])
 
 
 class ResidueProxy():
