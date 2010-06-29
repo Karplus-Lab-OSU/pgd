@@ -53,6 +53,12 @@ PROPERTY_CHOICES = [
                     #('h_bond_energy','H Bond'),
                     ]
 
+
+PROPERTY_CHOICES_DICT = {}
+for prop, label in PROPERTY_CHOICES:
+    PROPERTY_CHOICES_DICT[prop] = label          
+
+
 BACKGROUND_CHOICES = [
                     ('#ffffff','White'),
                     ('#000000','Black'),
@@ -95,9 +101,9 @@ HASH_CHOICES = [
 Form used by the plotting function
 """
 class PlotForm(forms.Form):
-    attribute       = forms.ChoiceField(choices=ATTRIBUTE_CHOICES, initial='Observations')
-    xProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='phi')
-    yProperty       = forms.ChoiceField(choices=PROPERTY_CHOICES, initial='psi')
+    attribute       = forms.CharField(initial='Observations')
+    xProperty       = forms.CharField(initial='phi')
+    yProperty       = forms.CharField(initial='psi')
     reference       = forms.FloatField(required=False, widget=forms.TextInput(attrs={'size':8}))
     sigmaVal        = forms.FloatField(initial=3, min_value=0, required=False, widget=forms.TextInput(attrs={'size':8}))
     x               = forms.FloatField(required=False, initial=-180, widget=forms.TextInput(attrs={'size':4}))

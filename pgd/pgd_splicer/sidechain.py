@@ -426,10 +426,20 @@ bond_lengths_string_dict = {
         'CZ_OH']
     }
 
+# combined dictionary of angles and lengths, grouped by aa
+sidechain_string_dict = {}
+sidechain_string_dict.update(bond_angles_string_dict)
+for k,v in bond_lengths_string_dict.items():
+    sidechain_string_dict[k] = sidechain_string_dict[k] + v
+
+# list of sidechain properties without aa type
 sidechain_angle_list = ['%s_%s'%(k,v) for k, a in bond_angles_string_dict.items() for v in a ]
 sidechain_length_list = ['%s_%s'%(k,v) for k, a in bond_lengths_string_dict.items() for v in a ]
+
+# list of sidechain properties with aa type
 sidechain_angle_relationship_list = ['%s__%s'%(k,v) for k, a in bond_angles_string_dict.items() for v in a ]
 sidechain_length_relationship_list = ['%s__%s'%(k,v) for k, a in bond_lengths_string_dict.items() for v in a ]
+
 
 aa_list = [
     'ARG',

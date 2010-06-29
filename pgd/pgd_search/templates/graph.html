@@ -1,4 +1,5 @@
 {% extends 'search_base.html' %}
+{% load search_extras %}
 
 {% block head %}
         <style>
@@ -145,7 +146,7 @@
                 margin: 5px;
             }
 
-            #id_attribute, #id_xProperty, #id_yProperty, #id_residue, #id_reference, #id_background_color, #id_hash_color, #id_plot_hue, #id_graph_color, #id_text_color {
+            #id_residue, #id_reference, #id_background_color, #id_hash_color, #id_plot_hue, #id_graph_color, #id_text_color {
                 width:7.5em;
             }
 
@@ -237,6 +238,48 @@
                 width:8.75em;
                 height:100%;
              }
+             
+             
+             
+             .choices {
+                display:none;
+             }
+             
+             .choices, .choices ul {
+                text-align:left;
+                list-style:none;
+             }
+             
+             .choices li {
+                border-bottom:1px solid #909090;
+                cursor:pointer;
+                padding-left:10px;
+                font-size:12px;
+             }
+             
+             .choices li:hover {background-color:#cccccc;}
+             
+             .sidechain_properties ul {
+                float:left;
+                width:120px;
+             }
+             
+             .sidechain_properties ul li {
+                border-left:1px solid #909090;
+             }
+             
+             .choice_input {
+                border:1px solid #D4D4D4;
+                width:8em;
+                height:2.62em;
+                font-size:0.85em;
+                line-height:2.2em;
+                padding-left:3px;
+             }
+             
+             #id_attribute, #id_xProperty, #id_yProperty {
+                display:none;
+             }
         </style>
 
         <script type="text/javascript" src="{{MEDIA_URL}}/js/pgd.svg.js"></script>
@@ -288,7 +331,9 @@
                                      width: 6, 
                                      color: '#909090'
                                      }
+                                    
                                },
+                               
                         show: false,
                         hide: false,
                         content:{
@@ -322,35 +367,6 @@
                     $("form").attr('action','{{SITE_ROOT}}/search/plot/dump/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
                 });
 
-                $('#id_xProperty').change(function (){
-                        $('#id_xProperty option:selected').each(function () {
-                            _default = DEFAULTS[$(this).val()];
-                            $('#id_x').val(_default['min']);
-                            $('#id_x1').val(_default['max']);
-                            $('#id_xBin').val(_default['stepsize']);
-                        });
-                });
-
-                $('#id_yProperty').change(function (){
-                        $('#id_yProperty option:selected').each(function () {
-                            _default = DEFAULTS[$(this).val()];
-                            $('#id_y').val(_default['min']);
-                            $('#id_y1').val(_default['max']);
-                            $('#id_yBin').val(_default['stepsize']);
-                        });
-                });
-
-            if ($('#id_attribute :selected').text()=='Observations') {
-                            $('#residue_attribute').css({'visibility': 'hidden'})
-                        }
-                $('#id_attribute').change(function (){
-            if ($('#id_attribute :selected').text()=='Observations') {
-                            $('#residue_attribute').css({'visibility': 'hidden'})
-                        }else{
-                            $('#residue_attribute').css({'visibility': 'visible'})
-                        }
-                })
-
                 $('#extra').hide()
                 $('#extra_toggle').click(function(){
                     $('#extra').toggle();
@@ -371,28 +387,112 @@
                     }
                 })
 
-
-                // Explicitly select x and y defaults.  the stylish select
-                // does not work when the select box contains a special character
-                // it will instead select the first item in the list
-                $('#id_xProperty option').each(function() {
-                    if (this.value == 'phi') {
-                        this.selected = true;
-                    } else {
-                        this.selected = false;
-                    }
-                });
-
-                $(' #id_yProperty option').each(function() {
-                    if (this.value == 'psi') {
-                        this.selected = true;
-                    } else {
-                        this.selected = false;
-                    }
-                });
-
                 update_svg();
-
+                
+                // properties used by all property selection dialogs
+                choices_qtip = {
+                        position:{
+                                target:"mouse",
+                                adjust:{y:15},
+                                corner: {target: 'center', tooltip: 'bottomMiddle'}
+                            },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              padding:0,
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#666666'},
+                              width: { min: 240, max: 440 },
+                              border:{ 
+                                     width: 6, 
+                                     color: '#909090'
+                                     }
+                               },
+                        content:{text: $('#attribute_choices')},
+                        hide:{fixed:true, delay:1000},
+                        show:{delay:0, when:{event:"click"}}
+                    }
+                
+                var choice_target;
+                var choice_input;
+                
+                $('#attribute_field')
+                    .qtip(choices_qtip)
+                    .click(function(){
+                        choice_target=$(this);
+                        choice_input=$("#id_attribute");
+                        });
+                
+                choices_qtip['content']['text'] = $('#property_choices');
+                $('#xProperty')
+                    .qtip(choices_qtip)
+                    .click(function(){
+                        choice_target=$(this);
+                        choice_input=$("#id_xProperty");
+                        });
+                    
+                $('#yProperty')
+                    .qtip(choices_qtip)
+                    .click(function(){
+                        choice_target=$(this);
+                        choice_input=$("#id_yProperty");
+                        });
+                
+                    
+                // add qtip to sidechain choice in main field selection dialog
+                choices_qtip['content']['text'] = $('#aa_choices');
+                $('.choices .sidechain').qtip(choices_qtip);
+                
+                // mouseover clears all other menus.  easiest way to determine
+                // if another menu has focus
+                $('.attribute_choices').mouseover(function(){
+                   $('.qtip .sidechain, .qtip .aa_choices li').each(function(){
+                        $this = $(this);
+                        if($this.data("qtip")!=undefined){$this.qtip("hide")}
+                    });
+                });
+                $('.aa_choices').mouseover(function(){
+                    $('.qtip .aa_choices li').each(function(){
+                        $this = $(this);
+                        if($this.data("qtip")!=undefined){$this.qtip("hide")}
+                    });
+                });
+                
+                // mouseover on content
+                $('#content').mouseover(function(){
+                    $('#test, .qtip .sidechain, .qtip .aa_choices li').each(function(){
+                        $this = $(this);
+                        if($this.data("qtip")!=undefined){$this.qtip("hide")}
+                    });
+                });
+                
+                // add qtips to AA choices menu that pops up for drilling down
+                // to sidechain properties
+                {% for aa in aa_choices%}
+                    choices_qtip['content']['text'] = $("#{{aa}}");
+                    $('.aa_choices li.{{aa}}').qtip(choices_qtip);
+                {% endfor %}
+                
+                // add click handler to all fields including sidechain fields
+                // this will set the value and clear the menus
+                $('.property_choices li, .attribute_choices li').not('.sidechain').click(function(){
+                    key = $(this).attr("key");
+                    label = $(this).html();
+                    $('.qtip .sidechain, .qtip .aa_choices li').qtip("hide");
+                    choice_target
+                        .html(label)
+                        .qtip("hide");
+                    choice_input.val(key)
+                });
+                $('.sidechain_properties li').click(function(){
+                    key = $(this).attr("key");
+                    label = this.parentNode.parentNode.id + ":" + $(this).html();
+                    $('.qtip .sidechain, .qtip .aa_choices li').qtip("hide");
+                    choice_target
+                        .html(label)
+                        .qtip("hide");
+                    choice_input.val(key)
+                });
+                
             });
 
             var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
@@ -631,7 +731,7 @@
             <tr>
                 <td class="label">Plotted Attribute</td>
                 {% autoescape off %}
-                <td id="attribute">{{form.attribute}}</td>
+                <td id="attribute">{{form.attribute}}<div id="attribute_field" class="choice_input">Observations</div></td>
                 <td id="residue_attribute">{{form.residue_attribute}}</td>
                 {% endautoescape %}
                 <td class="label col2">Bin X, Y</td>
@@ -640,7 +740,7 @@
             <tr id="xaxis">
                 <td class="label">X Axis</td>
                 {% autoescape off %}
-                <td>{{form.xProperty}}</td>
+                <td>{{form.xProperty}}<div id="xProperty" class="choice_input">&phi;</div></td>
                 <td>{{form.residue_xproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
@@ -649,7 +749,7 @@
             <tr id="yaxis">
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
-                <td>{{form.yProperty}}</td>
+                <td>{{form.yProperty}}<div id="yProperty" class="choice_input">&psi;</div></td>
                 <td>{{form.residue_yproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
@@ -701,4 +801,43 @@
             <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
         </table>
     </div>
+    
+    
+    <ul id="attribute_choices" class="choices attribute_choices">
+        {% for key,display in attribute_choices%}
+            <li key="{{key}}">{{display|safe}}</li>
+        {% endfor %}
+        <li class="sidechain">Sidechain</li>
+    </ul>
+
+    <ul id="property_choices" class="choices property_choices">
+        {% for key,display in property_choices%}
+            <li key="{{key}}">{{display|safe}}</li>
+        {% endfor %}
+        <li class="sidechain">Sidechain</li>
+    </ul>
+    
+    <ul id="aa_choices" class="choices aa_choices">
+        {%for aa in aa_choices%}<li class="{{aa}}">{{aa}}</li>{%endfor%}
+    </ul>
+    
+    {% for aa in aa_choices %}
+    <div id="{{aa}}" class="sidechain_properties choices">
+        <ul>
+            {% for field in sidechain_lengths|index:aa %}
+            <li key="sidechain_{{aa}}__{{field}}">
+                {{field|atom}}
+            </li>
+            {% endfor %}
+        </ul>
+        <ul>
+            {% for field in sidechain_angles|index:aa %}
+            <li key="sidechain_{{aa}}__{{field}}">
+                {{field|atom}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+    
 {% endblock %}

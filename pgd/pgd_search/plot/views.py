@@ -7,12 +7,13 @@ from django.conf import settings
 from django.shortcuts import render_to_response
 from django.utils import simplejson
 
-from PlotForm import PlotForm
+from PlotForm import PlotForm, ATTRIBUTE_CHOICES, PROPERTY_CHOICES
 from ConfDistFuncs import *
+from pgd_constants import AA_CHOICES
 from pgd_search.views import settings_processor
+from pgd_splicer.sidechain import sidechain_string_dict
 
-#ANGLES = ('ome', 'phi', 'psi', 'chi', 'zeta', 'a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7')
-
+AA_CHOICES = [aa[1].upper() for aa in filter(lambda x: x[1].upper() in sidechain_string_dict, AA_CHOICES)]
 
 def drawGraph(request, height=470, width=560, xStart=None, yStart=None, xEnd=None, yEnd=None, attribute='Observations', xProperty='phi', yProperty='psi', reference=None, sigmaVal=3, residue_attribute=None, residue_xproperty=None, residue_yproperty=None, xBin=None, yBin=None, background_color='#ffffff',graph_color='#222222',text_color='#000000', hue='green', hash_color='666666'):
     """
@@ -150,7 +151,12 @@ def plot(request):
         'xBin': form.fields['xBin'].initial,
         'yBin': form.fields['yBin'].initial,
         'attribute': form.fields['attribute'].initial,
-        'form': form
+        'form': form,
+        'attribute_choices':ATTRIBUTE_CHOICES,
+        'property_choices':PROPERTY_CHOICES,
+        'sidechain_angles':bond_angles_string_dict,
+        'sidechain_lengths':bond_lengths_string_dict,
+        'aa_choices':AA_CHOICES
     }
 
     return render_to_response('graph.html', response_dict, context_instance=RequestContext(request, processors=[settings_processor]))

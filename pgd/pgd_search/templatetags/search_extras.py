@@ -4,6 +4,7 @@ from django import template
 register = template.Library()
 
 from pgd_constants import AA_CHOICES_DICT
+from pgd_search.plot.PlotForm import PROPERTY_CHOICES_DICT
 
 
 ROMAN_TO_GREEK = dict(
@@ -102,6 +103,20 @@ def atom(value):
     """
     return mark_safe(format_atom(value))
 register.filter('atom', atom)
+
+
+@register.filter(name='label')
+def label(value):
+    """
+    Formats any label converting from db field name to html label.
+    sidechains are formated using sidechain_label().  if there is no
+    matching label then the same value is returned
+    """
+    if value in PROPERTY_CHOICES_DICT:
+        return PROPERTY_CHOICES_DICT[value]
+    elif value[:10] == 'sidechain':
+        return sidechain_label(value[10:])
+    return value
 
 
 @register.filter(name='sidechain_fields')
