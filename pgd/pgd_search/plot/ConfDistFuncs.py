@@ -256,16 +256,16 @@ class ConfDistPlot():
         querySet = self.querySet.filter(
             (Q(**{
                 '%s__gte'%self.xTextString: x,
-                '%s__lt'%self.xTextString: x1,
+                '%s__lte'%self.xTextString: x1,
             }) if (xlinear) else ( # Altered logic for circular values
                 Q(**{'%s__gte'%self.xTextString: self.x}) |
-                Q(**{'%s__lt'%self.xTextString: x})
+                Q(**{'%s__lte'%self.xTextString: x})
             )) & (Q(**{
                 '%s__gte'%self.yTextString: y,
-                '%s__lt'%self.yTextString: y1,
+                '%s__lte'%self.yTextString: y1,
             }) if (ylinear) else ( # altered logic for circular values
                 Q(**{'%s__gte'%self.yTextString: self.y}) |
-                Q(**{'%s__lt'%self.yTextString: y})
+                Q(**{'%s__lte'%self.yTextString: y})
             ))
         )
         # Total # of observations
