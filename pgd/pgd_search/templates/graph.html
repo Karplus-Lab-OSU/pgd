@@ -348,8 +348,9 @@
                     // update details popup with new parameters
                     xBin = parseFloat($('input#id_xBin').attr('value'));
                     yBin = parseFloat($('input#id_yBin').attr('value'));
-                    xProperty = $('tr#xaxis div.selectedTxt').html();
-                    yProperty = $('tr#yaxis div.selectedTxt').html();
+                    xProperty = $('#xProperty').html();
+                    yProperty = $('#yProperty').html();
+                    console.log($('#xProperty'), xProperty);
                     $('#x_property_label').html(xProperty);
                     $('#y_property_label').html(yProperty);
                     update_svg();
@@ -420,7 +421,6 @@
                 });
                 
                 $('#id_xProperty').change(function (){
-                    console.log(123);
                     _default = get_defaults($(this).val());
                     $('#id_x').val(_default['min']);
                     $('#id_x1').val(_default['max']);
@@ -691,6 +691,7 @@
                     Xm = Xm - 360;
                     X = X - 360
                 } 
+                
                 $('#stat_xattribute td.x').html(""+precision(X, xProperty));
                 $('#stat_xattribute td.y').html(""+precision(Xm, xProperty));
                 
