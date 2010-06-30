@@ -412,14 +412,14 @@
                 
                 $('#id_xProperty').change(function (){
                     console.log(123);
-                    _default = DEFAULTS[$(this).val()];
+                    _default = get_defaults($(this).val());
                     $('#id_x').val(_default['min']);
                     $('#id_x1').val(_default['max']);
                     $('#id_xBin').val(_default['stepsize']);
                 });
 
                 $('#id_yProperty').change(function (){
-                    _default = DEFAULTS[$(this).val()];
+                    _default = get_defaults($(this).val());
                     $('#id_y').val(_default['min']);
                     $('#id_y1').val(_default['max']);
                     $('#id_yBin').val(_default['stepsize']);
@@ -509,6 +509,13 @@
             });
 
             var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
+            function get_defaults(field) {
+                _defaults = DEFAULTS[field];
+                if (_defaults == undefined) {
+                    return {"stepsize": "", "max": "", "min": ""};
+                }
+                return _defaults;
+            }
 
             /*
                process form data and submit via ajax
