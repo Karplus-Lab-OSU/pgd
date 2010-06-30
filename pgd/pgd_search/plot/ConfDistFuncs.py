@@ -302,7 +302,7 @@ class ConfDistPlot():
         )
         # Total # of observations
         self.numObs = querySet.count()
-
+        
         # index set creation
         self.index_set = set([self.resString,self.resXString,self.resYString])
         
@@ -339,8 +339,8 @@ class ConfDistPlot():
         # afterwards get the SQL from the aggregate function and add it as an
         # extra select clauses.  the select claus fields are added to the group by
         # statement.
-        sortx = BinSort(self.xTextString, offset=x, bincount=xbin)
-        sorty = BinSort(self.yTextString, offset=y, bincount=ybin)
+        sortx = BinSort(self.xTextString, offset=x, bincount=xbin, max=x1)
+        sorty = BinSort(self.yTextString, offset=y, bincount=ybin, max=y1)
         annotated_query.annotate(x=sortx)
         annotated_query.annotate(y=sorty)
         annotated_query = annotated_query.extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()})
@@ -358,7 +358,6 @@ class ConfDistPlot():
         # modifying group by and this is a big hack, but its a very simple
         # way of making this work
         annotated_query.query.group_by = []
-
         for entry in annotated_query:
             key = (int(entry['x']), int(entry['y']))
             # add  entry to the bins dict
@@ -484,6 +483,11 @@ class ConfDistPlot():
             yBinCount = math.ceil((360.0+y1-y)/ybin)
         else:
             yBinCount = math.ceil((float(y1)-y)/ybin)
+            
+        # determine graph and bin sizes.  bins should always fall within the
+        # borders of the graph, and the graph should always exactly fit the
+        # bins.  to make this work the graph height/width must be adjusted to
+        # fit the bins.  The unused portion will also be calculated
         binWidth = math.floor((graph_width-xBinCount+1)/xBinCount)
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount

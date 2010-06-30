@@ -63,4 +63,4 @@ class BinSort(PGDAggregate):
 
 class BinSortSQL(SQLAggregate):
     sql_function = ''
-    sql_template = '%(function)sFLOOR((%(field)s-%(offset).16f)/%(bincount).16f)'
+    sql_template = '%(function)sIF(%(field)s=%(max).16f,FLOOR((%(field)s-%(offset).16f)/%(bincount).16f)-1,FLOOR((%(field)s-%(offset).16f)/%(bincount).16f))'
