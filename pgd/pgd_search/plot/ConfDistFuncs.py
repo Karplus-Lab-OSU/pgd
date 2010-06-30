@@ -868,64 +868,11 @@ def RefDefaults():
                         'min':-180,
                         'max':180,
                         'stepsize':10},
-                'L1': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':'',},
-                'L2': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
-                'L3': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''
-                        },
-                'L4': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
-                'L5': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
-                'L6': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
                 'L7': {
                         'ref': 1.465,
                         'stepsize':'',
                         'min':'',
                         'max':''},
-                'a1': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a2': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a3': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a4': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a5': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a6': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a7': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
                 'ome':{
                         'min':-180,
                         'max':180,
