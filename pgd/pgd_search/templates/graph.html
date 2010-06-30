@@ -412,6 +412,21 @@
                         show:{delay:0, when:{event:"click"}}
                     }
                 
+                $('#id_xProperty').change(function (){
+                    console.log(123);
+                    _default = DEFAULTS[$(this).val()];
+                    $('#id_x').val(_default['min']);
+                    $('#id_x1').val(_default['max']);
+                    $('#id_xBin').val(_default['stepsize']);
+                });
+
+                $('#id_yProperty').change(function (){
+                    _default = DEFAULTS[$(this).val()];
+                    $('#id_y').val(_default['min']);
+                    $('#id_y1').val(_default['max']);
+                    $('#id_yBin').val(_default['stepsize']);
+                });
+                
                 var choice_target;
                 var choice_input;
                 
@@ -481,7 +496,7 @@
                     choice_target
                         .html(label)
                         .qtip("hide");
-                    choice_input.val(key)
+                    choice_input.val(key).change();
                 });
                 $('.sidechain_properties li').click(function(){
                     key = $(this).attr("key");
@@ -490,7 +505,7 @@
                     choice_target
                         .html(label)
                         .qtip("hide");
-                    choice_input.val(key)
+                    choice_input.val(key).change();
                 });
                 
             });
