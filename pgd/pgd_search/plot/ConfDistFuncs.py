@@ -16,6 +16,7 @@ from pgd_constants import *
 from pgd_core.models import *
 from pgd_search.models import *
 from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev, BinSort
+from pgd_splicer.sidechain import sidechain_length_relationship_list, sidechain_angle_relationship_list
 from svg import *
 
 ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
@@ -47,6 +48,32 @@ COLOR_RANGES = {
      )
 }
 
+
+ROMAN_TO_GREEK = {
+    'A':u'\u1D45',
+    'B':u'\u1D5D',
+    'G':u'\u03b3',
+    'D':u'\u03b4',
+    'E':u'\u03b5',
+    #'H':'e',
+    'Z':u'\u03B6',
+    #'1':u'\u00B9',
+    #'2':'\u00B2',
+    #'3':'\u00B3',
+    }
+
+
+def format_atom(value):
+    """ formats an atom bond (length or angle) using unicode characters """
+    parts = []
+    for i in value.split('_'):
+        subscript = []
+        for c in i[1:]:
+            subscript.append(ROMAN_TO_GREEK[c] if c in ROMAN_TO_GREEK else c)
+        parts.append('%s%s' % (i[0], ''.join(subscript)))
+    return '-'.join(parts)
+
+
 LABEL_REPLACEMENTS = {
             "L1":u'C\u207B\u00B9N',
             "L2":u'NC\u1D45',
@@ -71,6 +98,11 @@ LABEL_REPLACEMENTS = {
             'h_bond_energy':'H Bond'
             }
 
+for field in sidechain_angle_relationship_list:
+    LABEL_REPLACEMENTS['sidechain_%s'%field] = '%s:%s' % (field[:3], format_atom(field[5:]))
+    
+for field in sidechain_length_relationship_list:
+    LABEL_REPLACEMENTS['sidechain_%s'%field] = '%s:%s' % (field[:3], format_atom(field[5:]))
 
 
 def getCircularStats(values,size):
