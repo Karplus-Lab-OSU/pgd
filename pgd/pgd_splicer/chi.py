@@ -14,7 +14,10 @@ CHI_MAP = {
         ('N',   'CA',  'CB',   'CG1'),
         ('CA',  'CB',  'CG1',  'CD1')
         ),
-    'PRO':(('N', 'CA', 'CB', 'CG'),),
+    'PRO':(('N', 'CA', 'CB', 'CG'),
+           ('CA','CB', 'CG', 'CD'),
+           ('CB', 'CG', 'CD', 'N'),
+        ),
     'PHE':(
         ('N',   'CA',  'CB',  'CG'),
         ('CA',  'CB',  'CG',  'CD1')
@@ -46,7 +49,8 @@ CHI_MAP = {
         ),
     'HIS':(
         ('N',   'CA',  'CB',  'CG'),
-        ('CA',  'CB',  'CG',  'ND')
+        ('CA',  'CB',  'CG',  'ND'),
+        ('CA','CB','CD','ND1')
         ),
     'LYS':(
         ('N',   'CA',  'CB',  'CG'),
