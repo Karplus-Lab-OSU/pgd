@@ -26,11 +26,13 @@ class PGDAggregate(Aggregate):
         """
         klass = globals()['%sSQL' % self.name]
         aggregate = klass(col, source=source, is_summary=is_summary, **self.extra)
+        
         # Validate that the backend has a fully supported, correct
         # implementation of this aggregate
         query.connection.ops.check_aggregate_support(aggregate)
         query.aggregates[alias] = aggregate
-
+        self.aggregate = aggregate
+    
 
 class DirectionalStdDev(PGDAggregate):
     alias = 'DirectionalStdDev'
@@ -53,3 +55,12 @@ class DirectionalAvgSQL(SQLAggregate):
     sql_function = ''
     sql_template = '%(function)sIF(DEGREES(ATAN2(-AVG(SIN(RADIANS(%(field)s))),-AVG(COS(RADIANS(%(field)s))))) < 0,DEGREES(ATAN2(-AVG(SIN(RADIANS(%(field)s))),-AVG(COS(RADIANS(%(field)s))))) + 180,DEGREES(ATAN2( -AVG(SIN(RADIANS(%(field)s))),-AVG(COS(RADIANS(%(field)s))))) - 180)'
 
+
+class BinSort(PGDAggregate):
+    alias = 'BinSort'
+    name =  'BinSort'
+
+
+class BinSortSQL(SQLAggregate):
+    sql_function = ''
+    sql_template = '%(function)sIF(%(field)s=%(max).16f,FLOOR((%(field)s-%(offset).16f)/%(bincount).16f)-1,FLOOR((%(field)s-%(offset).16f)/%(bincount).16f))'

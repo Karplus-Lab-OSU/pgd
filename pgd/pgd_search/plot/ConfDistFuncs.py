@@ -15,7 +15,8 @@ from django.db.models import Count, Avg, StdDev
 from pgd_constants import *
 from pgd_core.models import *
 from pgd_search.models import *
-from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev
+from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev, BinSort
+from pgd_splicer.sidechain import sidechain_length_relationship_list, sidechain_angle_relationship_list
 from svg import *
 
 ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
@@ -47,6 +48,32 @@ COLOR_RANGES = {
      )
 }
 
+
+ROMAN_TO_GREEK = {
+    'A':u'\u1D45',
+    'B':u'\u1D5D',
+    'G':u'\u03b3',
+    'D':u'\u03b4',
+    'E':u'\u03b5',
+    #'H':'e',
+    'Z':u'\u03B6',
+    #'1':u'\u00B9',
+    #'2':'\u00B2',
+    #'3':'\u00B3',
+    }
+
+
+def format_atom(value):
+    """ formats an atom bond (length or angle) using unicode characters """
+    parts = []
+    for i in value.split('_'):
+        subscript = []
+        for c in i[1:]:
+            subscript.append(ROMAN_TO_GREEK[c] if c in ROMAN_TO_GREEK else c)
+        parts.append('%s%s' % (i[0], ''.join(subscript)))
+    return '-'.join(parts)
+
+
 LABEL_REPLACEMENTS = {
             "L1":u'C\u207B\u00B9N',
             "L2":u'NC\u1D45',
@@ -71,6 +98,11 @@ LABEL_REPLACEMENTS = {
             'h_bond_energy':'H Bond'
             }
 
+for field in sidechain_angle_relationship_list:
+    LABEL_REPLACEMENTS['sidechain_%s'%field] = '%s:%s' % (field[:3], format_atom(field[5:]))
+    
+for field in sidechain_length_relationship_list:
+    LABEL_REPLACEMENTS['sidechain_%s'%field] = '%s:%s' % (field[:3], format_atom(field[5:]))
 
 
 def getCircularStats(values,size):
@@ -206,8 +238,6 @@ class ConfDistPlot():
         self.residue_xproperty = residue_xproperty
         self.residue_yproperty = residue_yproperty
 
-
-
     def query_bins(self):
         """
         Runs the query to calculate the bins and their relevent data
@@ -258,21 +288,21 @@ class ConfDistPlot():
         querySet = self.querySet.filter(
             (Q(**{
                 '%s__gte'%self.xTextString: x,
-                '%s__lt'%self.xTextString: x1,
+                '%s__lte'%self.xTextString: x1,
             }) if (xlinear) else ( # Altered logic for circular values
                 Q(**{'%s__gte'%self.xTextString: self.x}) |
-                Q(**{'%s__lt'%self.xTextString: x})
+                Q(**{'%s__lte'%self.xTextString: x})
             )) & (Q(**{
                 '%s__gte'%self.yTextString: y,
-                '%s__lt'%self.yTextString: y1,
+                '%s__lte'%self.yTextString: y1,
             }) if (ylinear) else ( # altered logic for circular values
                 Q(**{'%s__gte'%self.yTextString: self.y}) |
-                Q(**{'%s__lt'%self.yTextString: y})
+                Q(**{'%s__lte'%self.yTextString: y})
             ))
         )
         # Total # of observations
         self.numObs = querySet.count()
-
+        
         # index set creation
         self.index_set = set([self.resString,self.resXString,self.resYString])
         
@@ -300,31 +330,22 @@ class ConfDistPlot():
                 annotations[avg] = Avg(field[1])
                 annotations[stddev] = StdDev(field[1])
         annotated_query = querySet.annotate(**annotations)
-
-        # determine aliases used for the table joins.  This is needed because
-        # the aliases will be different depending on what fields were queried
-        # even if the query is length 10, not all residues will be joined unless
-        # each residue has a property in the where clause.
-        x_alias = determine_alias(annotated_query, self.residue_xproperty)
-        y_alias = determine_alias(annotated_query, self.residue_yproperty)
-        attr_alias = determine_alias(annotated_query, self.residue_attribute)
-        x_field = '%s.%s' % (x_alias, self.xText)
-        y_field = '%s.%s' % (y_alias, self.yText)
-
-        # calculating x,y bin numbers for every row.  This allows us
-        # to group on the bin numbers automagically sorting them into bins
-        # and applying the aggregate functions on them.
-        if xlinear:
-            x_aggregate = 'FLOOR((%s-%s)/%s)' % (x_field, x, xbin)
-        else:
-            x_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(rx)s)/%(b)s)' \
-                          % {'f':x_field, 'b':xbin, 'rx':self.x}
-        if ylinear:
-            y_aggregate = 'FLOOR((%s-%s)/%s)' % (y_field, y, ybin)
-        else:
-            y_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(ry)s)/%(b)s)' \
-                          % {'f':y_field, 'b':ybin, 'ry':self.y}
-        annotated_query = annotated_query.extra(select={'x':x_aggregate, 'y':y_aggregate}).order_by('x','y')
+        
+        # sort and group by bins using an aggregate function that calculates
+        # bin index based on bin size (in field units ie. degrees) and bin count.
+        #
+        # XXX django won't add aggregates to group by so to force it add the
+        # create the aggregate functions and add them to a copy of the queryset
+        # afterwards get the SQL from the aggregate function and add it as an
+        # extra select clauses.  the select claus fields are added to the group by
+        # statement.
+        sortx = BinSort(self.xTextString, offset=x, bincount=xbin, max=x1)
+        sorty = BinSort(self.yTextString, offset=y, bincount=ybin, max=y1)
+        annotated_query.annotate(x=sortx)
+        annotated_query.annotate(y=sorty)
+        annotated_query = annotated_query.extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()})
+        annotated_query = annotated_query.order_by('x','y')
+        
         # add all the names of the aggregates and x,y properties to the list 
         # of fields to display.  This is required for the annotation to be
         # applied with a group_by.
@@ -337,7 +358,6 @@ class ConfDistPlot():
         # modifying group by and this is a big hack, but its a very simple
         # way of making this work
         annotated_query.query.group_by = []
-
         for entry in annotated_query:
             key = (int(entry['x']), int(entry['y']))
             # add  entry to the bins dict
@@ -463,6 +483,11 @@ class ConfDistPlot():
             yBinCount = math.ceil((360.0+y1-y)/ybin)
         else:
             yBinCount = math.ceil((float(y1)-y)/ybin)
+            
+        # determine graph and bin sizes.  bins should always fall within the
+        # borders of the graph, and the graph should always exactly fit the
+        # bins.  to make this work the graph height/width must be adjusted to
+        # fit the bins.  The unused portion will also be calculated
         binWidth = math.floor((graph_width-xBinCount+1)/xBinCount)
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
@@ -847,64 +872,11 @@ def RefDefaults():
                         'min':-180,
                         'max':180,
                         'stepsize':10},
-                'L1': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':'',},
-                'L2': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
-                'L3': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''
-                        },
-                'L4': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
-                'L5': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
-                'L6': {
-                        'stepsize':'',
-                        'min':'',
-                        'max':''},
                 'L7': {
                         'ref': 1.465,
                         'stepsize':'',
                         'min':'',
                         'max':''},
-                'a1': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a2': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a3': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a4': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a5': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a6': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
-                'a7': {
-                        'min':'',
-                        'max':'',
-                        'stepsize':''},
                 'ome':{
                         'min':-180,
                         'max':180,

@@ -1,50 +1,61 @@
 import math
 import re
+
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
-from django.shortcuts import render_to_response
+from django.shortcuts import render_to_response, redirect
 from django.conf import settings
 from django.forms.util import ErrorList
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
+from django.utils import simplejson
 from datetime import datetime
 from pgd_core.models import Protein
-from pgd_search.models import Search, Search_residue, Search_code, searchSettings
+from pgd_search.models import Search, Search_code, searchSettings
 from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import saveSearchForm
 from pgd_splicer.chi import CHI_MAP, PROTEIN_ORDER
+from pgd_splicer.sidechain import *
 
 #This might be a big faux pas
 from pgd_splicer.models import pdb_select_settings
 
-"""
-Handler for search form.
-"""
-def search(request):
+json_sidechain_lengths_lookup = simplejson.dumps(bond_lengths_string_dict)
+json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
 
+
+
+def search(request):
+    """
+    Handler for search form.
+    """
     if request.method == 'POST': # If the form has been submitted
         form = SearchForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass
-            #process search form into search object
-            search = processSearchForm(form)
+            #process search form into search object, remove any properties
+            #that do not have values.
+            data = form.cleaned_data
+            for key in filter(lambda x: not data[x] or data[x] == '', data):
+                del data[key]
 
+            search_object = Search()
+            search_object.data = data
+            
             #at least for now limit the size of the result set
-            count = search.querySet().count()
+            count = search_object.querySet().count()
             if count > searchSettings.query_limit:
                 form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
-
-            elif count == 0:
+            
+            elif count == 0 and False:
                 form._errors['Result Size'] = ErrorList(['Your query returned no results'])
-
+            
             else:
                 #store search in session
                 search.dataset_version = pdb_select_settings.DATA_VERSION
-                request.session['search'] = search
-
-                return HttpResponseRedirect('%ssearch/results/' % settings.SITE_ROOT) # Redirect after POST
-
-
+                request.session['search'] = search_object
+                return redirect('%s/search/results/' % settings.SITE_ROOT) # Redirect after POST
+        
         # package aa_choices and ss_choices
         aa_choices = []
         ss_choices = []
@@ -66,9 +77,12 @@ def search(request):
 
     #order the residue properties in way that django template can handle it better
     residueFields = []
+    fields = ["ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5']
+    fields += sidechain_length_relationship_list
+    fields += sidechain_angle_relationship_list
     for i in RESIDUE_INDEXES:
         dict = {}
-        for prefix in ("ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in fields:
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i
@@ -80,27 +94,31 @@ def search(request):
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices,
-        'ss_choices':ss_choices
+        'ss_choices':ss_choices,
+        'sidechain_angle_list':sidechain_angle_relationship_list,
+        'sidechain_length_list':sidechain_length_relationship_list,
+        'sidechain_length_lookup':json_sidechain_lengths_lookup,
+        'sidechain_angle_lookup':json_sidechain_angles_lookup
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
-"""
-Handler for editing an existing search
-"""
 def editSearch(request, search_id=None):
+    """
+    Handler for editing an existing search
+    """
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
         if search.user != request.user and search.isPublic == False:
             return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
-        form = processSearchObject(search)
+        form = SearchForm(search.data)
 
 
     #else use the search in the session if it exists
     else:
         try:
             search = request.session['search']
-            form = processSearchObject(search)
+            form = SearchForm(search.data)
         except KeyError:
             form = SearchForm() # An unbound form
 
@@ -115,6 +133,9 @@ def editSearch(request, search_id=None):
     residueFields = []
     aa_choices = []
     ss_choices = []
+    fields = ["ss", "aa", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5']
+    fields += sidechain_length_relationship_list
+    fields += sidechain_angle_relationship_list
     for i in RESIDUE_INDEXES:
         valid = form.is_valid()
         aa_chosen = form.cleaned_data['aa_%i' % i]
@@ -123,193 +144,25 @@ def editSearch(request, search_id=None):
         ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES]) 
 
         dict = {}
-        for prefix in ("aa", "ss", "phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
+        for prefix in fields:
             dict[prefix] =  form['%s_%i' % (prefix, i)]
             dict['%s_i' % prefix] =  form['%s_i_%i' % (prefix, i)]
             dict['index'] = i
         residueFields.append(dict)
-
+    
+    
     return render_to_response('search.html', {
         'form': form,
         'maxLength' : searchSettings.segmentSize,
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices,
-        'ss_choices':ss_choices
+        'ss_choices':ss_choices,
+        'sidechain_angle_list':sidechain_angle_relationship_list,
+        'sidechain_length_list':sidechain_length_relationship_list,
+        'sidechain_length_lookup':json_sidechain_lengths_lookup,
+        'sidechain_angle_lookup':json_sidechain_angles_lookup
     }, context_instance=RequestContext(request, processors=[settings_processor]))
-
-
-"""
-Encode a list of AA choices into an integer value
-"""
-def encodeAA(list):
-    aa = 0
-    for i in range(len(AA_CHOICES)):
-        if AA_CHOICES[i][0] in list:
-            # bitwise or to add value
-            aa = aa | (1 << i)
-    return aa
-
-
-"""
-Decode an integer into a list of AA choices
-"""
-def decodeAA(val):
-    list = []
-    for i in range(len(AA_CHOICES)):
-        # bitwise shift check value
-        if (val & (1 << i)) != 0:
-            list.append(AA_CHOICES[i][0])
-
-    return list
-
-"""
-Encode a list of AA choices into an integer value
-"""
-def encodeSS(list):
-    aa = 0
-    for i in range(len(SS_CHOICES)):
-        if SS_CHOICES[i][0] in list:
-            # bitwise or to add value
-            aa = aa | (1 << i)
-    return aa
-
-
-"""
-Decode an integer into a list of SS choices
-"""
-def decodeSS(val):
-    list = []
-    for i in range(len(SS_CHOICES)):
-        # bitwise shift check value
-        if (val & (1 << i)) != 0:
-            list.append(SS_CHOICES[i][0])
-
-    return list
-
-
-
-def processSearchForm(form):
-    """
-    Process a search form copying its data into a search object
-    """
-    data = form.cleaned_data
-    length = searchSettings.segmentSize
-
-    #create a new search object
-    search = Search()
-
-    #get protein properties
-    search.segmentLength = int(data['residues'])
-    search.resolution_min = float(data['resolutionMin']) if data['resolutionMin'] else None
-    search.resolution_max = float(data['resolutionMax']) if data['resolutionMax'] else None
-    search.threshold      = int(data['threshold']) if data['threshold'] else None
-    search.rfactor_min    = float(data['rfactorMin']) if data['rfactorMin'] else None
-    search.rfactor_max    = float(data['rfactorMax']) if data['rfactorMax'] else None
-    search.rfree_min      = float(data['rfreeMin']) if data['rfreeMin'] else None
-    search.rfree_max      = float(data['rfreeMax']) if data['rfreeMax'] else None
-
-    #save search object so its residue parameters can be added
-    search.save()
-
-    #get list of proteins to filter
-    if data['proteins_i'] != None:
-        search.codes_include = data['proteins_i']
-        for value in filter(lambda x:x!='', data['proteins'].split(',')) :
-            searchCode = Search_code()
-            searchCode.code = value.strip().upper()
-            search.codes.add(searchCode)
-
-    #process per residue properties
-    start = 0 - (search.segmentLength-1) / 2
-    stop  = int(math.ceil((search.segmentLength-1) / 2.0))+1
-    for i in range(start, stop, 1):
-        hasField = False
-        residue = Search_residue()
-        residue.index   = i
-
-        #process ss
-        if data['ss_%i' % i]:
-            residue.ss_int          = encodeSS(data['ss_%i' % i])
-            residue.ss_int_include  = data['ss_i_%i' % i]
-            hasField = True
-
-        #process aa
-        if data['aa_%i' % i]:
-            residue.aa_int          = encodeAA(data['aa_%i' % i])
-            residue.aa_int_include  = data['aa_i_%i' % i]
-            hasField = True
-
-        #process all other fields
-        for prefix in ("phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
-            if data['%s_%i' % (prefix, i)]:
-                residue.__dict__[prefix] = data['%s_%i' % (prefix, i)]
-                residue.__dict__['%s_include' % prefix] = data['%s_i_%i' % (prefix, i)]
-                hasField = True
-
-        # only add the residue if there was a value in the field
-        if hasField:
-            search.residues.add(residue)
-            residue.search = search
-            residue.save()
-
-    return search
-
-
-def processSearchObject(search):
-    """
-    Process a search object copying its values into a searchForm
-    """
-
-    data = {
-        #get protein properties
-        'residues'      :search.segmentLength,
-        'resolutionMin' :search.resolution_min,
-        'resolutionMax' :search.resolution_max,
-        'rfreeMin'      :search.rfree_min,
-        'rfreeMax'      :search.rfree_max,
-        'rfactorMin'    :search.rfactor_min,
-        'rfactorMax'    :search.rfactor_max,
-        'threshold'     :search.threshold
-    }
-
-    #get list of proteins to filter
-    if search.codes_include != None:
-        data['proteins_i'] = search.codes_include
-        codes = []
-        for code in search.codes.all():
-            codes.append(code.code)
-        data['proteins'] = ', '.join(codes)
-
-    #setup defaults - initial values are not set when passing a dict to the form constructor
-    # so any value with a default value must be initialized prior to values are pulled out
-    # of the Search object
-    for i in RESIDUE_INDEXES:
-        data['bm_%i' % i ]  = SearchForm.base_fields['bm_%i' % i].initial
-        data['bg_%i' % i ]  = SearchForm.base_fields['bg_%i' % i].initial
-        data['bs_%i' % i ]  = SearchForm.base_fields['bs_%i' % i].initial
-        data['ome_%i' % i ] = SearchForm.base_fields['ome_%i' % i].initial
-
-    #process per residue properties
-    for residue in search.residues.all():
-        i = residue.index
-
-        #process ss
-        if residue.ss_int:
-            data['ss_%i' % i]   = decodeSS(residue.ss_int)
-            data['ss_i_%i' % i] = residue.ss_int_include
-
-        #process aa
-        if residue.aa_int:
-            data['aa_%i' % i]   = decodeAA(residue.aa_int)
-            data['aa_i_%i' % i] = residue.aa_int_include
-
-        #process all other fields
-        for prefix in ("phi", "psi", "ome", "chi1", "chi2", "chi3", "chi4", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'):
-            data['%s_%i' % (prefix, i)] = residue.__dict__[prefix]
-            data['%s_i_%i' % (prefix, i)] = residue.__dict__['%s_include' % prefix]
-
-    return SearchForm(data)
 
 
 def protein_search(request):
@@ -384,7 +237,7 @@ def saveSearch(request,search_id=None):
                     editedsearch.timestamp=datetime.now()
                     editedsearch.isPublic = data['isPublic']
                     editedsearch.save()
-                    return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)     
+                    return HttpResponseRedirect('%s/search/saved/' % settings.SITE_ROOT)
                 
             else:
                 data = form.cleaned_data
@@ -394,7 +247,7 @@ def saveSearch(request,search_id=None):
                 request.session['search'].timestamp=datetime.now()
                 request.session['search'].isPublic = data['isPublic']
                 request.session['search'].save()
-                return HttpResponseRedirect('%ssearch/saved/' % settings.SITE_ROOT)
+                return HttpResponseRedirect('%s/search/saved/' % settings.SITE_ROOT)
     else:
         if search_id:
             oldsearch = Search.objects.get(id=search_id)
@@ -411,6 +264,6 @@ def deleteSearch(request,search_id=None):
         if search.user != request.user:
             return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
         search.delete()
-        return HttpResponseRedirect('%ssearch/saved' % settings.SITE_ROOT)
+        return HttpResponseRedirect('%s/search/saved' % settings.SITE_ROOT)
     else:
-        return HttpResponseRedirect('%ssearch/saved' % settings.SITE_ROOT)
+        return HttpResponseRedirect('%s/search/saved' % settings.SITE_ROOT)

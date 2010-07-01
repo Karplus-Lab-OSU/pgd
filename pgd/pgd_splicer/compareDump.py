@@ -11,9 +11,12 @@ def parseFile(file, codeIndex, residueIndex, php=False):
 
     #iterate php file building dict of values
     first = True
+    meta_end = 1000
     for line in fileinput.input(file):
 
-        if fileinput.lineno() < 2:
+        if fileinput.lineno() < meta_end:
+            if line == '***END_META_DATA***':
+                meta_end = fileinput.lineno()+1
             pass
 
         #elif fileinput.lineno() > 10:

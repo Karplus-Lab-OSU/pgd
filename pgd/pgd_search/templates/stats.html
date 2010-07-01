@@ -3,6 +3,8 @@
 {% block head %}
     <style>
         #content {
+            width:1100px;
+            margin:0 auto 0 auto;
         }
 
         table {
@@ -19,7 +21,6 @@
             padding-left:5px;
             text-align:center;
         }
-
 
         th {
             color:black;
@@ -80,6 +81,10 @@
             margin-right:1em;
         }
 
+        th.ss {
+            cursor:help;
+        }
+
         #stdev {
             text-align:left;
         }
@@ -128,6 +133,25 @@
         
         #index {border-top:0;}
         
+        .aa_breakout h2 {
+            background-color:#3a76f1;
+            color:#fff;
+            padding:3px 3px 3px 8px;
+            width:900px;
+        }
+        
+        .aa_breakout table {
+            border: 1px solid black;
+            display:none;
+        }
+
+        .aa_breakout td, .aa_breakout th {
+            min-width:4em;
+        }
+
+        .aa_breakout tr.avg th, .aa_breakout tr.stddev th {padding:1px; line-height:1em;}
+
+        .qtip-content {font-size:14px;}
 
     </style>
     <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
@@ -140,7 +164,9 @@
                 .change(function(){
                     val = $(this).val();
                     $('table').qtip('show');
-                    $.getJSON('{{SITE_ROOT}}search/statistics/data/',{'i':val},process_data)
+                    $('td.aa_total, td.sum').html('-');
+                    $('td.data').not('.sum').html('--');
+                    $.getJSON('{{SITE_ROOT}}/search/statistics/data/',{'i':val},process_data);
                 });
 
             $('#stats').qtip({
@@ -171,7 +197,7 @@
                     });
             $('#stats').qtip('show');
 
-            $.getJSON('{{SITE_ROOT}}search/statistics/data/',process_data);
+            $.getJSON('{{SITE_ROOT}}/search/statistics/data/',process_data);
 
             $('#content').qtip({
                 position:{
@@ -206,6 +232,26 @@
                     }); 
             $('#content').qtip('show');
 
+            $('th.ss').qtip({
+                position:{
+                    corner: {
+                            target: 'bottomMiddle',
+                            tooltip: 'topMiddle'
+                            }
+                         },
+                style:{ //Style the qtip to look like the page
+                        name:'light',
+                        padding:5,
+                        textAlign: 'center',
+                        border: {
+                                radius:5,
+                                width: 5,
+                                color: '#444444'
+                                },
+                        tip:{corner: 'topMiddle'}
+                    }
+            });
+            
             $('.stats.fields').mouseout( function() {$('#stats.fieldsDetail').hide();})
 
             $('tr.data')
@@ -228,17 +274,37 @@
                     $(this).removeClass('selected');
                 })
 
-
+            $('.aa_breakout h2').click(function(){
+                $this = $(this);
+                if ($this.hasClass("open")) {
+                    $this.nextAll().hide();
+                    $this.removeClass("open");
+                } else {
+                    $this.addClass("open");
+                    $this.nextAll().show();
+                    aa = this.parentNode.id.substring(3);
+                    if (aa_details[aa]==undefined){
+                        $.getJSON('{{SITE_ROOT}}/search/statistics/aa/'+aa, process_aa_data);
+                    }
+                }
+            });
         });
 
         var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}, {% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
         var angles = [];
         var details = {};
+        var aa_details = {};
 
-        /* converts a field to the required precision */
+        /* converts a field to the required precision - all lengths must be explictly listed*/
         function precision(value, field) {
             if (value != null && (value || value != 0)){
-                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5') {
+                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5'
+                    {%for aa, fields in stat_fields.scl.items%}
+                    {%for field in fields %}
+                        || field == '{{field}}'
+                    {%endfor%}
+                    {%endfor%}
+                    ) {
                     return value.toFixed(3);
                 }
                 return value.toFixed(1);
@@ -255,7 +321,7 @@
             
             /* regular fields */
             for (i in data['fields']){
-                f_data = data['fields'][i][1]
+                f_data = data['fields'][i]
                 aa = f_data['aa'];
 
                 if (aa == 'total') {
@@ -276,7 +342,7 @@
 
                     details[aa+'_'+field] = [stddev, min, max];
                 }
-
+                
                 if (aa != 'total'){
                     $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
                 }
@@ -290,7 +356,6 @@
                 $td.html(row['ss_count']);
             }
 
-
             for (i in data['ss_totals']) {
                 row = data['ss_totals'][i];
                 ss = row[prefix+'ss'];
@@ -300,6 +365,44 @@
             $row.children('.aa_total').html(data['total']);
             //XXX calling with setTimeout fixes issue where show/hide calls overlap and its never hidden
             setTimeout("$('#stats').qtip('hide')", 0);
+        }
+
+        /* processes data for a single AA */
+        function process_aa_data(data) {
+            // replace details with completely new list since the new one may
+            // not have all rows/columns in it.
+            aa = data['aa'];
+            $aa = $('#aa_'+aa);
+            
+            aa_stats = {};
+            
+            for (k in data) {
+                if (k=='aa') {continue};
+                property = k.substring(0,3);
+                if (property=='std') {
+                    property = 'stddev';
+                    if (k.substring(7,16)=="sidechain"){
+                        field = k.substring(22);
+                    } else {
+                        field = k.substring(7);
+                    }
+                } else {
+                    if (k.substring(4,13)=="sidechain"){
+                        field = k.substring(19);
+                    } else {
+                        field = k.substring(4);
+                    }
+                }
+                
+                value = precision(data[k], field);
+                $row = $aa.find("." + property);                
+                if (property == "avg" || property == "stddev") {
+                    $row = $aa.find('.'+property);
+                    $row.find("."+field).html(value);
+                }
+                aa_stats[property] = value;
+            }
+            aa_details[aa] = aa_stats;
         }
 
         function showStats(key) {
@@ -320,7 +423,7 @@
     </script>
 {% endblock %}
 
-{% block content %}   
+{% block content %}
     <table id="stats" >
         <thead>
         <tr><td colspan=100% id="index"><label>Index: <label> {{form.index}}</td></tr>
@@ -329,7 +432,7 @@
             <th class="aa_total">Total</th>
             <th class="sum_na sum borderleft">N/A</th>
             {% for ss in ss_types %}
-                <th class="sum {{ss.0}}">{{ss.0}}</th>
+                <th class="sum {{ss.0}} ss" title="secondary structure: {{ss.1|safe}}">{{ss.0}}</th>
             {% endfor %}
 
             {% autoescape off %}
@@ -372,6 +475,27 @@
 
       </tbody>
     </table>
+
+    {% for aa in aa_types %}
+    {% if aa.0|in:stat_fields.scl %}
+    <div id="aa_{{aa.0}}" class="aa_breakout">
+        <h2>{{aa.1}}</h2>
+        <table>
+            <tr><th></th>{% for f in stat_fields.scl|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr class="avg"><th>Mean</th>                
+                {% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr class="stddev"><th>Stddev</th>
+                {% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+        </table>
+        <table>
+            <tr><th></th>{% for f in stat_fields.sca|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr class="avg"><th>Mean</th>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr class="stddev"><th>Stddev</th>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+        </table>
+    </div>
+    {% endif %}
+    {% endfor %}
+
 
     <div id="stats_fieldsDetail">
             <span class="label">Standard Deviation:</span><div id="stdev"></div>
