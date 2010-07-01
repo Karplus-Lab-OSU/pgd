@@ -4,6 +4,7 @@ from pgd_search.plot.views import renderToSVG, renderToPNG, plotDump, plot
 from pgd_search.statistics.views import search_statistics, search_statistics_data
 from pgd_search.dump.views import dataDump
 from pgd_search.browse.views import browse
+from pgd_search.histogram.views import renderHist
 
 urlpatterns = patterns('',
     (r'^$', search),
@@ -17,6 +18,7 @@ urlpatterns = patterns('',
     (r'^statistics/data/$', search_statistics_data),
     (r'^dump/$', dataDump),
     (r'^browse/$', browse),
+    (r'^histogram/render/$', renderHist),
     (r'^saved/$', saved),
     (r'^help/$', help),
     (r'^chi_help/$', chi_help),

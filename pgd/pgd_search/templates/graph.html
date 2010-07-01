@@ -24,6 +24,13 @@
                 width: 560px;
                 height: 100%;
             }
+            
+            #histoCanvas {
+                margin-left:auto;
+                margin-right:auto;
+                width: 560px;
+                height: 100%;
+            }
 
             #ajax_progress {
                 padding-top:10%;
@@ -225,6 +232,7 @@
             var selected_bin = undefined;
             var stats = {};
             var contentText = 'Mouse over a bin in the plot to see the relevent data.';
+            var histoText = 'Click on a bin to see a histogram of it\'s data.';
             var xBin = {{xBin|default:'""'}};
             var yBin = {{yBin|default:'""'}};
             var xMin = -180;
@@ -242,9 +250,12 @@
                 }
 
                 $('div#binDetails').hide();
+                $('div#histoG').hide();
                 $('#canvas_container').qtip({
                         position:{
                             adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                    x: 50,
+                                    y: 12,
                                     resize: true
                                     },
                             corner: {
@@ -257,7 +268,7 @@
                               color: 'black',
                               textAlign: 'center',
                               title: { color: 'white', background: '#666666'},
-                              width: { min: 240, max: 440 },
+                              width: 314,
                               border:{ 
                                      width: 6, 
                                      color: '#909090'
@@ -272,8 +283,39 @@
                                         text: 'Bin Details'
                                         }
                                 }
+                            });
+                $('#buttons').qtip({
+                        position:{
+                            adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                        x: 90,
+                                        y: -275,
+                                        resize: true
+                                    },
+                            corner: {
+                                    target: 'leftTop',
+                                    tooltip: 'rightTop'
+                                    },
+                            target:$('#buttons')
+                                 },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#666666'},
+                              width: 314,
+                              border:{ 
+                                     width: 6, 
+                                     color: '#909090'
+                                     }
+                               },
+                        show: false,
+                        hide: false,
+                        content: {
+                            title: { text: 'Histogram'},
+                            text: histoText
+                        }
                             }); 
                 $('#canvas_container').qtip('show');
+                $('#buttons').qtip('hide');
                 $('#button-plot').click(function (evt) {
 
                     // update details popup with new parameters
@@ -366,8 +408,51 @@
                 });
 
                 update_svg();
-
-            });
+        });
+        
+        function histoQtip() {
+                if(histoZ!='Observations'){
+                    histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr);
+                    $('#buttons').qtip('show');
+                }
+                else{
+                    $('#buttons').qtip('hide');
+                }
+            }
+        
+            function histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr) {
+                $('#histoCanvas').empty();
+                dict = {'x': X,
+                        'x1': Xm,
+                        'y': Y,
+                        'y1': Ym,
+                        'xRes': histoX,
+                        'yRes': histoY,
+                        'zRes': histoZ,
+                        'xResNum': histoXr,
+                        'yResNum': histoYr,
+                        'zResNum': histoZr}
+                $.post('{{SITE_ROOT}}search/histogram/render/', dict, process_histo_svg, "json");
+            }
+        
+            function process_histo_svg(data) {
+                
+                // process graph
+                var paper = Raphael("histoCanvas", 275, 200);
+                font = paper.getFont("DejaVu");
+                svg = data['svg'];
+                render_svg(svg, paper, font, process_histo_bars);
+                
+                // update qtip
+                histoText=' ';
+                $('#buttons').qtip('api').updateContent(histoText);
+                $('#buttons').qtip('api').updateTitle('Histogram of ' + histoT);
+                $('#buttons').qtip('api').updateContent($('#histoCanvas'))
+                
+            }
+            function process_histo_bars(rect, svg_rect) {
+                //Code to deal with the data that comes from clicking on the individual bars would go here (if needed).
+            }
 
             var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
 
@@ -383,7 +468,6 @@
                         input = $inputs.get(i);
                         args[input.id.slice(3)]= $(input).val();
                     }
-
                 // update statfield so details renders correctly
                 stat_field = ($('#id_attribute').val() != 'Observations');
 
@@ -399,6 +483,13 @@
 
                 // submit
                 $.post('{{SITE_ROOT}}search/plot/svg/render/',args, process_svg_data, "json");
+                histoT = $('td#attribute div.selectedTxt').text()
+                histoX = $('#id_xProperty').val();
+                histoY = $('#id_yProperty').val();
+                histoZ = $('#id_attribute').val();
+                histoXr = $('tr#xaxis td#residue_xProperty div.selectedTxt').html();if(histoXr=='i'){histoXr = 0};
+                histoYr = $('tr#yaxis td#residue_yProperty div.selectedTxt').html();if(histoYr=='i'){histoYr = 0};
+                histoZr = $('#id_residue_attribute').val();
             }
 
             function process_svg_data(data) {
@@ -500,8 +591,9 @@
                     bin = bins[key];
                     bin.attr({'stroke-width':1, stroke:'#FF0000'});
                     selected_bin = key;
-
                     update_stats(key)
+                    histoQtip();
+                    field_stats = stats[key];
                 } else {
                     selected_bin = undefined;
                 }
@@ -565,6 +657,7 @@
             function bin_mouseout(){
                 $('div#binDetails').hide();
             }
+            
         </script>
 {% endblock %}
 {% block content %}
@@ -600,8 +693,8 @@
             <tr id="xaxis">
                 <td class="label">X Axis</td>
                 {% autoescape off %}
-                <td>{{form.xProperty}}</td>
-                <td>{{form.residue_xproperty}}</td>
+                <td id="xProperty">{{form.xProperty}}</td>
+                <td id="residue_xProperty">{{form.residue_xproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
@@ -609,8 +702,8 @@
             <tr id="yaxis">
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
-                <td>{{form.yProperty}}</td>
-                <td>{{form.residue_yproperty}}</td>
+                <td id="yProperty">{{form.yProperty}}</td>
+                <td id="residue_yProperty">{{form.residue_yproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
                 <td>{{form.y}}{{form.y1}}</td>
@@ -660,5 +753,8 @@
             <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
             <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
         </table>
+    </div>
+    <div id="histoG">
+        <div id="histoCanvas"></div>
     </div>
 {% endblock %}
