@@ -80,7 +80,7 @@ LABEL_REPLACEMENTS = {
             "L3":u'C\u1D45C\u1D5D',
             "L4":u'C\u1D45C',
             "L5":u'CO',
-            "a1":u'C\u207B\u00B9NC\u1D5D',
+            "a1":u'C\u207B\u00B9NC\u1D45',
             "a2":u'NC\u1D45C\u1D5D',
             "a3":u'NC\u1D45C',
             "a4":u'C\u1D5DC\u1D45C',
