@@ -390,7 +390,6 @@
                     yBin = parseFloat($('input#id_yBin').attr('value'));
                     xProperty = $('#xProperty').html();
                     yProperty = $('#yProperty').html();
-                    console.log($('#xProperty'), xProperty);
                     $('#x_property_label').html(xProperty);
                     $('#y_property_label').html(yProperty);
                     update_svg();
@@ -592,7 +591,7 @@
                 $('#ajax_progress').show();
 
                 // histogram
-                histoT = $('td#attribute div.selectedTxt').text()
+                histoT = $('#attribute_field').html()
                 histoX = $('#id_xProperty').val();
                 histoY = $('#id_yProperty').val();
                 histoZ = $('#id_attribute').val();
@@ -789,7 +788,10 @@
             }
         
             function process_histo_svg(data) {
-                
+                // clear canvas again just to make sure, the user
+                // may have clicked multiple times resulting many requests
+                // the last request to finish will be displayed
+                $('#histoCanvas').empty();
                 // process graph
                 var paper = Raphael("histoCanvas", 275, 210);
                 font = paper.getFont("DejaVu");
