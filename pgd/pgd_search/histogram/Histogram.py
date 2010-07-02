@@ -27,6 +27,7 @@ class HistogramPlot():
         self.Y = float(Y)          # min Y used in bin selection
         self.Ym = float(Ym)        # max Y used in bin selection
         self.zText = str(histoZ)   # name of Z property to plot
+        
         self.histoZ = self.create_ref_string(int(histoZr),str(histoZ))
         self.histoX = self.create_ref_string(int(histoXr),str(histoX))
         self.histoY = self.create_ref_string(int(histoYr),str(histoY))
@@ -94,11 +95,11 @@ class HistogramPlot():
         )
         
         # aggregate for counting residues
-        annotations = {'count':Count('id')}
+        annotations = {'count':Count(self.histoZ)}
         annotated_query = querySet.annotate(**annotations)
         
         # add clauses for sorting+grouping into bins
-        sortz = BinSort(self.zText, offset=z, bincount=self.zbin, max=z1)
+        sortz = BinSort(self.histoZ, offset=z, bincount=self.zbin, max=z1)
         annotated_query.annotate(z=sortz)
         annotated_query = annotated_query.extra(select={'z':sortz.aggregate.as_sql()})
         annotated_query = annotated_query.order_by('z')
