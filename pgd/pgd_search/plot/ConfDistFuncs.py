@@ -341,8 +341,7 @@ class ConfDistPlot():
         # statement.
         sortx = BinSort(self.xTextString, offset=x, bincount=xbin, max=x1)
         sorty = BinSort(self.yTextString, offset=y, bincount=ybin, max=y1)
-        annotated_query.annotate(x=sortx)
-        annotated_query.annotate(y=sorty)
+        annotated_query.annotate(x=sortx, y=sorty)
         annotated_query = annotated_query.extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()})
         annotated_query = annotated_query.order_by('x','y')
         
@@ -408,12 +407,11 @@ class ConfDistPlot():
                 stddev = '%s_stddev' % field[1]
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) for k,v in filter(lambda x:x[1], torsion_avgs[field[0]].items())])
                 if cases:
-                    avgs = "CASE CONCAT(%s,':',%s) %s END" % (x_aggregate, y_aggregate, cases)
+                    avgs = "CASE CONCAT(%s,':',%s) %s END" % (sortx.aggregate.as_sql(), sorty.aggregate.as_sql(), cases)
                     annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
-                    bin_where_clause = ['NOT %s.%s IS NULL' % (attr_alias, field[0])]
                     stddev_query = querySet \
-                                    .extra(select={'x':x_aggregate, 'y':y_aggregate}) \
-                                    .extra(where=bin_where_clause) \
+                                    .extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()}) \
+                                    .filter(**{'%s__isnull'%self.refString:False}) \
                                     .annotate(**annotations) \
                                     .values(*annotations.keys()+['x','y']) \
                                     .order_by('x','y')
