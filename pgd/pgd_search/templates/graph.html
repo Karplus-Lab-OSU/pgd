@@ -787,7 +787,7 @@
                         'xResNum': histoXr,
                         'yResNum': histoYr,
                         'zResNum': histoZr}
-                $.post('{{SITE_ROOT}}search/histogram/render/', dict, process_histo_svg, "json");
+                $.post('{{SITE_ROOT}}/search/histogram/render/', dict, process_histo_svg, "json");
             }
         
             function process_histo_svg(data) {
@@ -866,7 +866,7 @@
                 <td class="label">X Axis</td>
                 {% autoescape off %}
                 <td>{{form.xProperty}}<div id="xProperty" class="choice_input">&phi;</div></td>
-                <td>{{form.residue_xproperty}}</td>
+                <td id="residue_xProperty">{{form.residue_xproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
                 <td>{{form.x}}{{form.x1}}</td>
@@ -875,7 +875,7 @@
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
                 <td>{{form.yProperty}}<div id="yProperty" class="choice_input">&psi;</div></td>
-                <td>{{form.residue_yproperty}}</td>
+                <td id="residue_yProperty">{{form.residue_yproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
                 <td>{{form.y}}{{form.y1}}</td>
