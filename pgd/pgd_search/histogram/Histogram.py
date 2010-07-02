@@ -16,17 +16,17 @@ class HistogramPlot():
     
     def __init__(self, query, X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr):
         
-        self.minXPix = 35
-        self.minYPix = 9
-        self.maxXPix = 245
-        self.maxYPix = 170
+        self.minXPix = 35          # x offset of graph
+        self.minYPix = 9           # y offset of graph
+        self.maxXPix = 235.0       # width of graph
+        self.maxYPix = 170.0       # height of graph
         self.numBins = float(36)
         self.querySet = query
-        self.X = float(X)
-        self.Xm = float(Xm)
-        self.Y = float(Y)
-        self.Ym = float(Ym)
-        self.zText = str(histoZ)
+        self.X = float(X)          # min X used in bin selection
+        self.Xm = float(Xm)        # max X used in bin selection
+        self.Y = float(Y)          # min Y used in bin selection
+        self.Ym = float(Ym)        # max Y used in bin selection
+        self.zText = str(histoZ)   # name of Z property to plot
         self.histoZ = self.create_ref_string(int(histoZr),str(histoZ))
         self.histoX = self.create_ref_string(int(histoXr),str(histoX))
         self.histoY = self.create_ref_string(int(histoYr),str(histoY))
@@ -137,16 +137,18 @@ class HistogramPlot():
         """
         This code is still a work in progress and will be changed soon.
         """
-        yhash = 10
-        xLength = self.maxXPix - self.minXPix
-        yLength = self.maxYPix - self.minYPix
-        hashYPadding = 20
-        hashXPadding = 18
+        hash = 8
+        width = self.maxXPix
+        height = self.maxYPix
+        offsetX = self.minXPix
+        offsetY = self.minYPix
         
         svg = SVG()
         
+        # graph background
         svg.rect(self.minXPix, self.minYPix, self.maxYPix, self.maxXPix, 0, '#222222', '#222222')
         svg.rect(self.minXPix, self.minYPix, self.maxYPix, self.maxXPix, 1, '#000000')
+        
         surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, (self.maxXPix-self.minXPix), (self.maxYPix-self.minYPix))
         ctx = cairo.Context (surface)
         ctx.set_font_size (12);
@@ -154,23 +156,30 @@ class HistogramPlot():
         if not xstep: xstep = 45
         ystep = self.maxCount/float(8)
         
-        for i in range(10):
+        # hash labels
+        for i in range(0, 9, 2):
+            # x label
             xtext = ((self.globalMin + xstep*i + 180)%360 - 180) if self.zText in ANGLES and self.globalMax <= 180 else (self.globalMin + xstep*i)
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xtext)
-            xlabel_x = self.minXPix+((self.maxXPix-self.minXPix)/8)*i-xbearing-twidth/2+1
+            xlabel_x = offsetX + width/8*i-xbearing-twidth-2
             svg.text(xlabel_x, 200, xtext,11)
+            
+            # y labels
             ytext = ystep*i
             ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
-            ylabel_y = (self.maxYPix - ((self.maxYPix-self.minYPix)/8)*i)
-            svg.text(-1, ylabel_y, ytext,11)
-            
-        for i in range(9):
-            svg.line((xLength+hashYPadding)-205, (self.minYPix + ((self.maxYPix-self.minYPix)/8)*i), (xLength+hashYPadding)+9-205, (self.minYPix + ((self.maxYPix-self.minYPix)/8)*i), 1, '#000000')
+            ylabel_y = offsetY+height - height/8*i - theight/2 - ybearing/2
+            svg.text(12-twidth-xbearing, ylabel_y, ytext,11)
         
-        for i in range(10):
-                svg.line((self.minXPix + ((self.maxXPix-self.minXPix)/8)*i), (yLength+hashXPadding), (self.minXPix + ((self.maxXPix-self.minXPix)/8)*i), (yLength+hashXPadding)+8, 1, '#000000')
+        # y hashes
+        for i in range(9):
+            svg.line(offsetX-hash, (self.minYPix + (height/8)*i), offsetX, (self.minYPix + ((height)/8)*i), 1, '#000000')
+        
+        # x hashes
+        for i in range(9):
+                x = offsetX + (width/8)*i
+                svg.line(x, self.maxYPix+hash, x, self.maxYPix+hash*2, 1, '#000000')
 
         """
         Ends here.
@@ -191,5 +200,6 @@ class HistogramPlot():
                             (self.maxYPix*(self.bins[i].get('count')/float(self.maxCount)))-1,
                             binWidth-1,
                             1,
+                            '#000000',
                             '#2c6a22'
                 )
