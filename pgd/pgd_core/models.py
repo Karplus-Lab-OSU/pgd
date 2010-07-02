@@ -382,7 +382,7 @@ class Segmenter():
         return residue
 
 
-def determine_alias(query, index, field):
+def determine_alias(query, index):
         """
         determines the table alias used for a given residue index.
         
