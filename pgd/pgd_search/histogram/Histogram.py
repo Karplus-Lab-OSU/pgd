@@ -7,6 +7,8 @@ from pgd_constants import *
 from pgd_core.models import *
 from pgd_search.models import *
 from svg import *
+from pgd_search.statistics.aggregates import BinSort
+
 
 ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
 
@@ -35,7 +37,7 @@ class HistogramPlot():
         self.globalMax = self.querySet.aggregate(max=Max(self.histoZ))['max']
         self.zbin = math.fabs(self.globalMax-self.globalMin)/self.numBins
         self.bins = {}
-        
+    
     def query_blocks(self):
         
         x = self.X
@@ -90,23 +92,23 @@ class HistogramPlot():
                 Q(**{'%s__lt'%self.histoY: y})
             ))
         )
+        
+        # aggregate for counting residues
         annotations = {'count':Count('id')}
         annotated_query = querySet.annotate(**annotations)
-        z_alias = determine_alias(annotated_query, self.histoZr)
-        z_field = '%s.%s' % (z_alias, self.zText)
         
-        if self.zlinear:
-            z_aggregate = 'FLOOR((%s-%s)/%s)' % (z_field, self.globalMin, self.zbin)
-        else:
-            z_aggregate = 'FLOOR((IF(%(f)s<0,360+%(f)s,%(f)s)-%(rx)s)/%(b)s)' \
-                          % {'f':z_field, 'b':self.zbin, 'rx':z}
-        annotated_query = annotated_query.extra(select={'z':z_aggregate}).order_by('z')
+        # add clauses for sorting+grouping into bins
+        sortz = BinSort(self.zText, offset=z, bincount=self.zbin, max=z1)
+        annotated_query.annotate(z=sortz)
+        annotated_query = annotated_query.extra(select={'z':sortz.aggregate.as_sql()})
+        annotated_query = annotated_query.order_by('z')
+        
+        # limit results to just the counts and bin indices
         values = annotations.keys() + ['z']
         annotated_query = annotated_query.values(*values)
         annotated_query.query.group_by = []
-        
+
         self.maxCount = 0
-        
         for entry in annotated_query:
             key = (entry['z'])
             bin = {
