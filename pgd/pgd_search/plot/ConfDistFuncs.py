@@ -538,7 +538,8 @@ class ConfDistPlot():
         if not ystep: ystep = 90
     
         #get Y coordinate for xaxis hashes, this is the same for all x-labels
-        xlabel_y = graph_y+graph_height+hashsize*3+(5*ratio)
+        xlabel_y = graph_y+graph_height+hashsize*2.5
+        ctx.set_font_size (12*ratio);
         for i in range(5):
             #text value
             xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES and x1 <= 180 else (x + xstep*i)
@@ -546,7 +547,7 @@ class ConfDistPlot():
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             #get X coordinate of hash, offsetting for length of text
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xtext)
-            xlabel_x = graph_x+(graph_width_used/4)*i-xbearing-twidth/2+1
+            xlabel_x = graph_x+(graph_width_used/4)*i-xbearing-twidth
             #create label
             svg.text(xlabel_x, xlabel_y, xtext,12*ratio, text_color)
     
@@ -557,10 +558,9 @@ class ConfDistPlot():
             ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
             #get Y coordinate offsetting for height of text
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
-            #ylabel_y = y+((graph_height+8)/4)*i-ybearing-theight/2
-            ylabel_y = graph_y+(graph_height_used/4)*(4-i)+(4*ratio)-ybearing/2-theight/2
+            ylabel_y = graph_y+(graph_height_used/4)*(4-i)-ybearing/2-theight/2+unused
             #Get X coordinate offsetting for length of hash and length of text
-            ylabel_x = (graph_x-(ratio*15))-xbearing-twidth
+            ylabel_x = (graph_x-(ratio*28))-xbearing-twidth
             #create label
             svg.text(ylabel_x, ylabel_y, ytext,12*ratio, text_color)
 
@@ -569,24 +569,24 @@ class ConfDistPlot():
         yTitle = LABEL_REPLACEMENTS[yText] if yText in LABEL_REPLACEMENTS else yText
         title = 'Plot of %s vs. %s' % (xTitle,yTitle)
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
-        title_x = (width/2) - xbearing - twidth/2
+        title_x = graph_x + (graph_width_used/2) - xbearing/2 - twidth/2
         svg.text(title_x,15*ratio, title, 12*ratio, text_color)
     
         attribute_title = LABEL_REPLACEMENTS[self.ref] if self.ref in LABEL_REPLACEMENTS else self.ref
         title = 'Shading Based Off of %s' % attribute_title
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(title)
-        title_x = (width/2) - xbearing - twidth/2
+        title_x = graph_x+(graph_width_used/2) - xbearing/2 - twidth/2
         svg.text(title_x,35*ratio, title, 12*ratio, text_color)
     
         #axis labels
         ctx.set_font_size (18*ratio);
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xTitle)
-        title_x = (width/2) - xbearing - twidth/2
-        svg.text(title_x,graph_y+graph_height+hashsize*5+(15*ratio), xTitle, 18*ratio, text_color)
+        title_x = graph_x+(graph_width_used/2) - xbearing - twidth/2
+        svg.text(title_x,graph_y+graph_height+hashsize*5, xTitle, 18*ratio, text_color)
     
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
-        title_y = (graph_x-(ratio*35))-xbearing-twidth
-        svg.text(title_y,graph_y+(graph_height/2)-ybearing-theight/2-20, yTitle, 18*ratio, text_color)
+        title_y = (graph_x-(ratio*35))-xbearing-twidth+unused
+        svg.text(1,graph_y+(graph_height/2)-ybearing-theight/2-25, yTitle, 18*ratio, text_color)
 
         return svg
 
