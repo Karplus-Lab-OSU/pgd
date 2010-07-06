@@ -16,9 +16,9 @@ class HistogramPlot():
     
     def __init__(self, query, X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr):
         
-        self.minXPix = 35          # x offset of graph
+        self.minXPix = 45          # x offset of graph
         self.minYPix = 9           # y offset of graph
-        self.maxXPix = 235.0       # width of graph
+        self.maxXPix = 240.0       # width of graph
         self.maxYPix = 170.0       # height of graph
         self.numBins = float(36)
         self.querySet = query
@@ -168,10 +168,10 @@ class HistogramPlot():
             
             # y labels
             ytext = ystep*i
-            ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
+            ytext = '%i' % ytext
             xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(ytext)
             ylabel_y = offsetY+height - height/8*i - theight/2 - ybearing/2
-            svg.text(12-twidth-xbearing, ylabel_y, ytext,11)
+            svg.text(self.minXPix-hash-hash-2-twidth-xbearing, ylabel_y, ytext,11)
         
         # y hashes
         for i in range(9):

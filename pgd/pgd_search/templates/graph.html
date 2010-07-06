@@ -27,8 +27,13 @@
             }
             
             #histoCanvas {
-                width: 290px;
+                width: 300px;
                 height: 100%;
+            }
+
+            #histoCanvas svg {
+                margin:0;
+                padding:0;
             }
 
             div #error_list {
@@ -380,6 +385,7 @@
                                  },
                         style:{ //Style the qtip to look like the page
                               color: 'black',
+                              'padding-left':1,
                               textAlign: 'center',
                               title: { color: 'white', background: '#666666'},
                               width: 314,
@@ -823,7 +829,7 @@
                 // the last request to finish will be displayed
                 $('#histoCanvas').empty();
                 // process graph
-                var paper = Raphael("histoCanvas", 275, 210);
+                var paper = Raphael("histoCanvas", 290, 210);
                 font = paper.getFont("DejaVu");
                 svg = data['svg'];
                 render_svg(svg, paper, font, process_histo_bars);
