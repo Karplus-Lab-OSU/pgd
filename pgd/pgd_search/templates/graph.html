@@ -307,6 +307,20 @@
             var yProperty = "{{yProperty}}";
             var stat_field = false;
             var is_IE = false;
+            
+            /**
+             * convert a field name into a formatted label.  do this by looking
+             * up the matching option for the choice lists.  this works for
+             * everything except sidechain labels, which need a bit more formatting
+             */
+            function field_to_label(field){
+                label =  $('.choices li[key='+field+']').html();
+                if (field.substring(0,9)=='sidechain') {
+                    label = field.substring(10,13)+": " + label
+                }
+                return label;
+            }
+            
             $(document).ready(function(){
                 // IE checks - check different things not supported by IE to detect them
                 if($.jqbrowser.msie()){
@@ -425,6 +439,9 @@
                     }
                 })
 
+
+                
+
                 update_svg();
                 
                 // properties used by all property selection dialogs
@@ -456,13 +473,22 @@
                     } else {
                         $('#residue_attribute').css({'visibility': 'visible'});
                     }
+                }).each(function(){
+                        val = $(this).val();
+                        label = field_to_label(val);
+                        $('#attribute_field').html(label);
                 });
                 
                 $('#id_xProperty').change(function (){
-                    _default = get_defaults($(this).val());
-                    $('#id_x').val(_default['min']);
-                    $('#id_x1').val(_default['max']);
-                    $('#id_xBin').val(_default['stepsize']);
+                        _default = get_defaults($(this).val());
+                        $('#id_x').val(_default['min']);
+                        $('#id_x1').val(_default['max']);
+                        $('#id_xBin').val(_default['stepsize']);
+                        })
+                    .each(function(){
+                        val = $(this).val();
+                        label = field_to_label(val);
+                        $('#xProperty').html(label);
                 });
 
                 $('#id_yProperty').change(function (){
@@ -470,6 +496,10 @@
                     $('#id_y').val(_default['min']);
                     $('#id_y1').val(_default['max']);
                     $('#id_yBin').val(_default['stepsize']);
+                }).each(function(){
+                        val = $(this).val();
+                        label = field_to_label(val);
+                        $('#yProperty').html(label);
                 });
                 
                 var choice_target;
@@ -856,7 +886,7 @@
             <tr>
                 <td class="label">Plotted Attribute</td>
                 {% autoescape off %}
-                <td id="attribute">{{form.attribute}}<div id="attribute_field" class="choice_input">Observations</div></td>
+                <td id="attribute">{{form.attribute}}<div id="attribute_field" class="choice_input"></div></td>
                 <td id="residue_attribute">{{form.residue_attribute}}</td>
                 {% endautoescape %}
                 <td class="label col2">Bin X, Y</td>
@@ -865,7 +895,7 @@
             <tr id="xaxis">
                 <td class="label">X Axis</td>
                 {% autoescape off %}
-                <td>{{form.xProperty}}<div id="xProperty" class="choice_input">&phi;</div></td>
+                <td>{{form.xProperty}}<div id="xProperty" class="choice_input"></div></td>
                 <td id="residue_xProperty">{{form.residue_xproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">X Min, Max</td>
@@ -874,7 +904,7 @@
             <tr id="yaxis">
                 <td class="label">Y Axis</td>
                 {% autoescape off %}
-                <td>{{form.yProperty}}<div id="yProperty" class="choice_input">&psi;</div></td>
+                <td>{{form.yProperty}}<div id="yProperty" class="choice_input"></div></td>
                 <td id="residue_yProperty">{{form.residue_yproperty}}</td>
                 {% endautoescape %}
                 <td class="label col2">Y Min, Max</td>
