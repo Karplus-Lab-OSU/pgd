@@ -1,4 +1,7 @@
+from math import radians
+
 import cairo
+
 
 """ Set of classes for helping deal with SVG graphics """
 
@@ -19,8 +22,8 @@ class SVG():
     def rect(self, x,y,height,width,stroke=1,color='black',fill=None,data=None):
         self.operations.append(Rect(x,y,height,width,stroke,color, fill, data))
 
-    def text(self, x,y,text, size=16,fontfamily='Verdana', fill='black'):
-        self.operations.append( Text(x,y,text,size,fontfamily, fill))
+    def text(self, x,y,text, size=16,fontfamily='Verdana', fill='black', rotate=0):
+        self.operations.append( Text(x,y,text,size,fontfamily, fill, rotate))
 
     def to_dict(self):
         """
@@ -53,7 +56,9 @@ class SVG():
                 context.set_source_rgba(red,green,blue,1)
                 context.set_font_size (op.size)
                 context.move_to (op.x, op.y)
+                context.rotate(radians(op.rotate))
                 context.show_text (op.text)
+                context.rotate(0)
 
             elif op.type == 'rect':
                 context.rectangle(op.x, op.y, op.width, op.height)
@@ -98,7 +103,7 @@ class Rect():
 
 
 class Text():
-    def __init__(self, x,y,text, size,color='#000000', fontfamily='Verdana'):
+    def __init__(self, x,y,text, size,color='#000000', fontfamily='Verdana', rotate=0):
         self.type = 'text'
         self.x = x
         self.y = y
@@ -106,6 +111,7 @@ class Text():
         self.size = size
         self.fontfamily = fontfamily
         self.color = color
+        self.rotate = rotate
 
 
 def RGBTuple(rgbString):

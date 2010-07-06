@@ -586,7 +586,7 @@ class ConfDistPlot():
     
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(yTitle)
         title_y = (graph_x-(ratio*35))-xbearing-twidth+unused
-        svg.text(1,graph_y+(graph_height/2)-ybearing-theight/2-25, yTitle, 18*ratio, text_color)
+        svg.text(25,graph_y+(graph_height/2)+xbearing+twidth/2, yTitle, 18*ratio, text_color, rotate=-90)
 
         return svg
 

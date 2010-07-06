@@ -31,17 +31,17 @@ function render_svg(svg, paper, font, func) {
         is_IE = true;
         rects_width_fix = 0;
         rects_height_fix = 0;
-        line_x_aafix = 2
-        line_y_aafix = 2
+        line_x_aafix = 2;
+        line_y_aafix = 2;
         rects_x_aafix = 0.5;
         rects_y_aafix = 0.5;
     } else if ($.jqbrowser.win()) {
         aafix = 0;
-        rects_x_aafix = -1
-        rects_y_aafix = -.5
+        rects_x_aafix = -1;
+        rects_y_aafix = -.5;
         line_x_aafix = -.5;
         line_y_aafix = 0;
-        rects_width_fix = 1.5
+        rects_width_fix = 1.5;
     }
     
     for (i=0; i<svg.length; i++) {
@@ -54,8 +54,10 @@ function render_svg(svg, paper, font, func) {
                            op['y1']+line_y_aafix)
                 .attr({stroke: op['color']});
         } else if (op['type'] == 'text') {
-            paper.print(op['x'],op['y'],op['text'], font, op['size']);
-            
+            t = paper.print(op['x'],op['y'],op['text'], font, op['size']);
+            if (op['rotate'] != 0) {
+                t.rotate(op['rotate'], op['x'],op['y']);
+            }
         } else if (op['type'] == 'rect') {
             r = paper.rect(op['x']+rects_x_aafix,
             op['y']+rects_y_aafix,
