@@ -634,6 +634,7 @@
                 histoXr = $('tr#xaxis td#residue_xProperty div.selectedTxt').html();if(histoXr=='i'){histoXr = 0};
                 histoYr = $('tr#yaxis td#residue_yProperty div.selectedTxt').html();if(histoYr=='i'){histoYr = 0};
                 histoZr = $('#id_residue_attribute').val();
+                $('#buttons').qtip('hide');
                 
                 // submit
                 $.post('{{SITE_ROOT}}/search/plot/svg/render/',args, process_svg_data, "json");
