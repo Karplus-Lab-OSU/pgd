@@ -801,8 +801,10 @@
 
             function histoQtip() {
                 if(histoZ!='Observations'){
-                    histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr);
+                    $('#buttons').qtip('api').updateContent(' ')
+                    $('#buttons').qtip('api').updateContent($('#histo_progress'))
                     $('#buttons').qtip('show');
+                    histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr);
                 }
                 else{
                     $('#buttons').qtip('hide');
@@ -965,6 +967,12 @@
     </div>
     
     <div id="histoG">
+        <div id="histo_progress">
+            <div>
+            <img src="{{MEDIA_URL}}/images/ajax-loader.gif"/>
+            <h5>Loading Histogram</h5>
+            </div>
+        </div>
         <div id="histoCanvas"></div>
     </div>
     <ul id="attribute_choices" class="choices attribute_choices">
