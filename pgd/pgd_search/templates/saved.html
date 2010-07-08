@@ -183,7 +183,7 @@
                     toBeDeleted=event.target.id;
                     toBeDeleted=toBeDeleted.replace('delete_','');
                     if(confirm("Are you sure you want to delete this search?")){
-                        redirect = "{{ROOT}}search/"+toBeDeleted+"/delete/";
+                        redirect = "{{ROOT}}/search/"+toBeDeleted+"/delete/";
                         window.location.href = redirect;
                     }
                 }
@@ -194,7 +194,7 @@
                     toBeEdited=event.target.id;
                     toBeEdited=toBeEdited.replace('edit_','');
                     if(confirm("Are you sure you want to edit this search?")){
-                        redirect = "{{ROOT}}search/"+toBeEdited+"/save/";
+                        redirect = "{{ROOT}}/search/"+toBeEdited+"/save/";
                         window.location.href = redirect;
                     }
                 }
