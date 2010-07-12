@@ -11,6 +11,12 @@
         li {
             margin-bottom:20px;
         }
+        
+        ul {
+            margin-left:30px;
+        }
+        
+        ul ul li {margin-bottom:0;}
     </style>
 {% endblock %}
 
@@ -19,13 +25,27 @@
 <h1> News </h1>
 
 <ul>
+<li>   
+    <b>July 12, 2010</b> The model was database updated to Pisces as of June 28, 2010 and Version 0.9.3 has been released:
+       <ul>
+            <li>Sidechain bond angles & lengths can now be searched, plotted, dumped, and included in statistics</li>
+            <li>Histograms are now displayed for selected search bins whenever plotting an attribute other than observations</li>
+            <li>Angles input fields now have a graphical representation of the query parameter</li>
+            <li>Plot is now inclusive for both start and end ranges</li>
+            <li>Plot bins will no longer overrun borders for some plots</li>
+            <li>Plot axis line up properly for all plots</li>
+            <li>Statistics now works for large result sets</li>
+            <li>Added new chis to import - His:Chi2, Pro:Chi2, Pro:Chi3 </li>
+       </ul>
+    
+</li>
 <li> <b>April 20, 2010</b> The model was database updated to Pisces as of Feb 13, 2010 (The latest
 available). The static web pages were overhauled - adding more options 
 and information.  A bug was fixed which caused incorrect values for bond lengths and angles
-to be calculated when a set of alturnative conformations spanned two residues.
+to be calculated when a set of alturnative conformations spanned two residues.</li>
 <li> <b>January 23, 2010</b> The geometry library was updated to match the current
 Pisces library.  In addition, the ability to filter and search for side chain &chi; angles 
-was implemented.
+was implemented.</li>
 </ul>
 
 {% endblock %}
