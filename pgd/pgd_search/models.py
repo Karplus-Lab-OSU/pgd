@@ -175,7 +175,12 @@ class Search(models.Model):
                 seg_prefix = ''.join(['prev__' for i in range(index, 0)])
             else:
                 seg_prefix = ''.join(['next__' for i in range(index)])
-                
+            
+            # add isnull to ensure segment length is correct.  segments missing
+            # a residue would be too short
+            if seg_prefix != '':
+                query = query.filter(**{'%sisnull' % seg_prefix:False})
+            
             # get possible sidechain fields based on selected AA types
             sidechain_fields = []
             """for aa_type in filter(lambda x: x[1],search_res.aa.items()):
