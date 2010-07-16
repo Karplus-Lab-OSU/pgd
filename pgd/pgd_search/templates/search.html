@@ -724,7 +724,6 @@
                         m = match(val);
                         angles(m);
                         })
-                    
                     .change(function(evt){
                             updateInclusionField(evt.target, true);
                         })
@@ -748,7 +747,7 @@
                             angle_qtip_api.options.position.target = $('#'+evt.target.id);
                             //Set a slight delay to prevent the hide function from stepping on the show function
                             window.setTimeout(function(){angle_qtip_api.updatePosition($('#'+evt.target.id),false).show();}, 200);
-                        });
+                        }).updateInclusionField();
 
 
                 $('#protein #id_proteins')
