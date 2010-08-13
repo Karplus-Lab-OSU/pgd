@@ -36,9 +36,8 @@ def search(request):
             #process search form into search object, remove any properties
             #that do not have values.
             data = form.cleaned_data
-            for key in filter(lambda x: not data[x] or data[x] == '', data):
+            for key in filter(lambda x: data[x]==None or data[x] == '', data):
                 del data[key]
-
             search_object = Search()
             search_object.data = data
             
