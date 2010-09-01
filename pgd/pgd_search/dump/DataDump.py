@@ -117,9 +117,13 @@ class BufferThread(Thread):
 
         page_num = self.parent.current_page
         self.parent.current_page += 1
+
+        
+
         for segment in self.parent.pages.page(page_num).object_list:
             self.parent.count += 1
             first = True
+
             for offset, string in self.parent.iValues:
                 residue = segment
                 if offset < 0:
@@ -195,6 +199,7 @@ class Dump():
         self.buffer_thread = None
         self.buffer_lock = Lock()
         self.search = search
+
         self.pages = Paginator(search.querySet(), self.buffer_increment)
         self.page_max = self.pages.page_range[-1]
         self.current_page = 1
@@ -249,9 +254,7 @@ class Dump():
                 
                 if key in residue:
                     if key is 'ss':
-                        ss = residue[key]
-                        for ss_key in SS_KEY_LIST:
-                            parts.append(str(ss[ss_key]))
+                        parts.append(''.join(residue[key]))
                     else:
                         parts.append(str(residue[key]))
                 else:
