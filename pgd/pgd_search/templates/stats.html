@@ -343,9 +343,6 @@
                     details[aa+'_'+field] = [stddev, min, max];
                 }
                 
-                if (aa != 'total'){
-                    $row.children('.aa_total').html(data['aa_totals'][i]['aa_count']);
-                }
             }
 
             for (i in data['ss_counts']){
@@ -360,6 +357,13 @@
                 row = data['ss_totals'][i];
                 ss = row[prefix+'ss'];
                 $row.children('.sum.'+ss).html(row['ss_count']);
+            }
+
+            for (i in data['aa_totals']) {
+                row = data['aa_totals'][i];
+                aa = row['aa'];
+                $td = $('tr.'+aa).children('.aa_total')
+                $td.html(row['aa_count']);
             }
 
             $row.children('.aa_total').html(data['total']);
