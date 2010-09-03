@@ -361,8 +361,8 @@
 
             for (i in data['aa_totals']) {
                 row = data['aa_totals'][i];
-                aa = row['aa'];
-                $td = $('tr.'+aa).children('.aa_total')
+                aa = row[prefix+'aa'];
+                $td = $('tr.'+aa).children('.aa_total');
                 $td.html(row['aa_count']);
             }
 
