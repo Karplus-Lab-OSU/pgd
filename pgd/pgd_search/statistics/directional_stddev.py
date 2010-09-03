@@ -16,26 +16,21 @@ class DirectionalStatisticsQuery():
         self.angles = angles
         self.fields = fields
         self.combined = angles+fields
-
+        self.prefix = prefix
         # create set of fields to query.  these require the django style
         # prefix for the fields.
         self.queryset = queryset
         self.results = None
 
-
     def __str__(self):
         if not self.results:
             self._execute()
-
         return self.results.__str__()
-
 
     def execute(self):
         if self.results:
             return self.results
-
         return self._execute()
-
 
     def _execute(self):
         """
@@ -43,23 +38,26 @@ class DirectionalStatisticsQuery():
         """
         annotations = {}
         aa_rows = {}
+        p = self.prefix
+        aa_field = p%'aa'
         
         # main aggregate functions
         for field in self.angles:
-            annotations['min_%s' % field] = Min(field)
-            annotations['max_%s' % field] = Max(field)
-            annotations['avg_%s' % field] = DirectionalAvg(field)
+            annotations['min_%s' % field] = Min(p%field)
+            annotations['max_%s' % field] = Max(p%field)
+            annotations['avg_%s' % field] = DirectionalAvg(p%field)
         for field in self.fields:
-            annotations['min_%s' % field] = Min(field)
-            annotations['max_%s' % field] = Max(field)
-            annotations['avg_%s' % field] = Avg(field)
-            annotations['stddev_%s' % field] = StdDev(field)
+            annotations['min_%s' % field] = Min(p%field)
+            annotations['max_%s' % field] = Max(p%field)
+            annotations['avg_%s' % field] = Avg(p%field)
+            annotations['stddev_%s' % field] = StdDev(p%field)
         
         # query with all aggregate values that can be calculated in a standard
         # query.  save query in a list so that its members can be modified
         query = self.queryset
-        query = query.values('aa')
+        query = query.values(p%'aa')
         query = query.annotate(**annotations)
+        
         results = list(query)
         
         # construction 2nd query for DirectionStdDev calculations for each
@@ -67,32 +65,36 @@ class DirectionalStatisticsQuery():
         if self.angles:
             annotations = {}
             for row in results:
-                aa_rows[row['aa']] = row
+                aa_rows[row[aa_field]] = row
                 for field in self.angles:
                     avg=row['avg_%s' % field]
                     if avg:
-                        annotations['stddev_%s' % field] = DirectionalStdDev(field, avg=avg)
+                        annotations['stddev_%s' % field] = DirectionalStdDev(p%field, avg=avg)
                     else:
-                        outer_row['stddev_%s' % field] = None
+                        row['stddev_%s' % field] = None
             
             if annotations:
                 query = self.queryset
-                query = query.values('aa')
+                query = query.values(aa_field)
                 query = query.annotate(**annotations)
             
             # update the original results with the results of the 2nd query
             for row in query:
-                outer_row = aa_rows[row['aa']]
-                for field in self.angles:
-                    outer_row.update(row)
-            
+                outer_row = aa_rows[row[aa_field]]
+                outer_row.update(row)
+        
+        # rename aa columns
+        if self.prefix != '%s':
+            for row in results:
+                row['aa'] = row[aa_field]
+                del row[aa_field]
+        
         self.results = results
         return results
 
     def __iter__(self):
         if not self.results:
             self._execute()
-
         return iter(self.results)
 
 
@@ -106,23 +108,25 @@ class DirectionalStatisticsTotalQuery(DirectionalStatisticsQuery):
         """
         annotations = {}
         aa_rows = {}
+        p = self.prefix
+        aa_field = p%'aa'
         
         # main aggregate functions
         for field in self.angles:
-            annotations['min_%s' % field] = Min(field)
-            annotations['max_%s' % field] = Max(field)
-            annotations['avg_%s' % field] = DirectionalAvg(field)
+            annotations['min_%s' % field] = Min(p%field)
+            annotations['max_%s' % field] = Max(p%field)
+            annotations['avg_%s' % field] = DirectionalAvg(p%field)
         for field in self.fields:
-            annotations['min_%s' % field] = Min(field)
-            annotations['max_%s' % field] = Max(field)
-            annotations['avg_%s' % field] = Avg(field)
-            annotations['stddev_%s' % field] = StdDev(field)
+            annotations['min_%s' % field] = Min(p%field)
+            annotations['max_%s' % field] = Max(p%field)
+            annotations['avg_%s' % field] = Avg(p%field)
+            annotations['stddev_%s' % field] = StdDev(p%field)
         
         # query with all aggregate values that can be calculated in a standard
         # query.  save query in a list so that its members can be modified
         query = self.queryset
         totals = query.aggregate(**annotations)
-
+        
         # construction 2nd query for DirectionStdDev calculations for each
         # dihedral angle.
         if self.angles:
@@ -138,7 +142,8 @@ class DirectionalStatisticsTotalQuery(DirectionalStatisticsQuery):
                 query = self.queryset
                 stddevs = query.aggregate(**annotations)
                 totals.update(stddevs)
-
+        
         totals['aa'] = 'total'
         self.results = [totals]
+        
         return self.results

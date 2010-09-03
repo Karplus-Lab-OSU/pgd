@@ -116,44 +116,44 @@ class Search(models.Model):
             # if no params return everything
             return query
         data = RDict(data)
-
+        
         # ...filter by code lists...
         if data.proteins_i != None:
+            codes = data.proteins.replace(' ','').rstrip(',').split(',')
             if data.proteins_i:
-                query = query.filter(protein__in=(x.code for x in data.codes))
+                query = query.filter(protein__code__in=codes)
             else:
-                for x in self.codes.all():
-                    query = query.exclude(protein=x.code)
-
+                query = query.exclude(protein__code__in=codes)
+        
         # ...filter by code lists...
         if data.resolutionMin != None:
             query = query.filter(protein__resolution__gte=data.resolutionMin)
-
+        
         # ...filter by resolution...
         if data.resolutionMax != None:
             query = query.filter(protein__resolution__lte=data.resolutionMax)
-
+        
         # ...filter by rfactor...
         if data.rfactorMin != None:
             query = query.filter(protein__rfactor__gte=data.rfactorMin)
-
+        
         # ...filter by rfactor...
         if data.rfactorMax != None:
             query = query.filter(protein__rfactor__lte=data.rfactorMax)
-
+        
         #...filter by rfree...
         if data.rfreeMin != None:
             query = query.filter(protein__rfree__gte=data.rfreeMin)
-
+        
         # ...filter by rfree...
         if data.rfreeMax != None:
             query = query.filter(protein__rfree__lte=data.rfreeMax)
-
-
+        
+        
         # ...filter by threshold...
         if data.threshold != None:
             query = query.filter(protein__threshold__lte=data.threshold)
-
+        
         # ...filter by query strings (for values and value ranges)...
         def compare(x,y):
             if x == y:
@@ -167,7 +167,7 @@ class Search(models.Model):
         indexes = residue_indexes(int(data.residues))
         for index in indexes: # iterate through all search residues in self
             search_res = Segmenter(data, index)
-
+            
             # get field prefix for this residue
             if index == 0:
                 seg_prefix = ''
@@ -190,7 +190,7 @@ class Search(models.Model):
                 for field in bond_angles_string_dict[aa_type_upper]:
                     sidechain_fields.append('sidechain_%s__%s' % (aa_type_upper, field))
             """
-
+            
             # ...handle boolean values...
             #   (Filter on each binary field that is not set to NULL/None.)
             # XXX there don't appear to be any of these right now, xpr isn't on the form
@@ -201,7 +201,7 @@ class Search(models.Model):
                     ) if search_res.__dict__[field] != None
                 )))
             '''
-
+            
             # ...handle the '_int' values...
             #   ('_int' values are a series of booleans stored grouped in an integer.)
             for field,choices in filter(
@@ -235,7 +235,7 @@ class Search(models.Model):
                 )
             )
             query = self.filter_fields(fields, query, search_res, seg_prefix)
-
+            
             # ... handle sidechain query strings ...           
             sidechain_fields = []
             if search_res.aa:
@@ -261,25 +261,25 @@ class Search(models.Model):
         """
         Filters the fields passed in
         """
-
+        
         for field in fields:
             # seg_field is the name of the property of the given residue in the database
             seg_field = seg_prefix+field
-
+            
             constraints = []
-
+            
             for constraint in str(search_res.__getitem__(field)).split(','):
-
+                
                 # The constraint may be a range...
                 if range_re.search(constraint):
-
+                    
                     min,max = [float(lim) for lim in range_re.split(constraint)]
-
+                    
                     limits = (
                         Q(**{seg_field+'__gte' : float(min)}),
                         Q(**{seg_field+'__lte' : float(max)}),
                     )
-
+                    
                     constraints.append(
                         # Apply 'or' logic for a wraparound range
                         # or apply 'and' logic for a regular range
@@ -287,7 +287,7 @@ class Search(models.Model):
                     )
                 # ...or the constraint may be a value comparison.
                 else:
-
+                    
                     constraints.append(Q(**{
                         seg_field + {
                             ''   : '',
@@ -299,7 +299,7 @@ class Search(models.Model):
                         # extract the numeric value
                         constraint.strip('><=')
                     }))
-
+            
             query = query.__getattribute__(
                 # call either 'filter' or 'exclude', depending on the value of '_include'
                 'filter' if search_res.__getitem__(field+'_i') else 'exclude'
@@ -310,6 +310,7 @@ class Search(models.Model):
                     constraints
                 )
             )
+            
         return query
 
 
@@ -374,7 +375,7 @@ class ResidueProxy_subscripter():
         #makes defining subscriptor instance simpler because
         #you only need to specify the key once
         parent.__dict__[key] = self
-
+        
         # create a list of proxy objects for the residues in this segment
         self.proxies = []
         l_append = self.proxies.append
@@ -384,7 +385,7 @@ class ResidueProxy_subscripter():
     def __getitem__(self, i):
         try: # Get the object, if it's been instantiated...
             return self.proxies[i]
-
+        
         except TypeError: # it wasn't an int, it must be a slice
             #return the range of segments specified.  retrieve items through __getitem__() 
             #so items are initialized if needed.
@@ -416,19 +417,19 @@ class Residue_subscripter():
         try: # Get the object, if it's been instantiated...
             return self.parent.__dict__['r%i' % i]
             #return self.foo[i]
-
+        
         except KeyError: # ...otherwise, instantiate it.
             pass
             # If the object can be instantiated, return it
             if self.parent.__dict__['r%i_id' % i]:
                 self.parent.__dict__['r%i' % i] = Residue.objects.filter(id=self.parent.__dict__['r%i_id' % i])[0]
                 return self.parent.__dict__['r%i' % i]
-
+            
             # otherwise return None.  These objects are proxies to underlying properties 
             # so they must always return a values or None
             else:
                 return None
-
+        
         except TypeError: # it wasn't an int, it must be a slice
             #return the range of segments specified.  retrieve items through __getitem__() 
             #so items are initialized if needed.
@@ -524,10 +525,10 @@ class Segment_abstract(models.Model):
             residue = object.__getattribute__(self, 'residues')[index]
             if residue:
                 return residue.__dict__[attr]
-
+            
             #return none if residue is none (transitive)
             return None
-
+        
         # not a proxied attribute
         else:
             return object.__getattribute__(self, name)
