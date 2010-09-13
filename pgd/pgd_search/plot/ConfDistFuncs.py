@@ -738,7 +738,7 @@ class ConfDistPlot():
         STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi1','chi2','chi3','chi4','zeta')
         avgString = '%s%s_avg'
         stdString = '%s%s_stddev'
-
+        print residue, residueX, residueY
         index_set = set([self.get_prefix(residue),self.get_prefix(residueX),self.get_prefix(residueY)])
 
         STATS_FIELDS_STRINGS = reduce(
@@ -785,20 +785,12 @@ class ConfDistPlot():
         writer.write('%sStop' % yText)
         writer.write('\t')
         writer.write('Observations')
-
-        residue_replacements = {
-            0:u'(i-4)',
-            1:u'(i-3)',
-            2:u'(i-2)',
-            3:u'(i-1)',
-            4:u'(i)',
-            5:u'(i+1)',
-            6:u'(i+2)',
-            7:u'(i+3)',
-            8:u'(i+4)',
-            9:u'(i+5)'
-        }
-
+        
+        # convert index to label
+        residue_attribute = '' if self.residue_attribute==0 else '%+d'%self.residue_attribute
+        residue_xproperty = '' if self.residue_xproperty==0 else '%+d'%self.residue_xproperty
+        residue_yproperty = '' if self.residue_yproperty==0 else '%+d'%self.residue_yproperty
+        
         #output the generic titles
         for title in STATS_FIELDS:
             if title in field_replacements:
@@ -806,9 +798,9 @@ class ConfDistPlot():
             elif not title in lower_case_fields:
                 title = title.capitalize()
             writer.write('\t')
-            writer.write('%sAvg%s' % (title,residue_replacements[self.residue_attribute]))
+            writer.write('%sAvg(i%s)' % (title,residue_attribute))
             writer.write('\t')
-            writer.write('%sDev%s' % (title,residue_replacements[self.residue_attribute]))
+            writer.write('%sDev(i%s)' % (title,residue_attribute))
 
         #output the generic titles for x res
         for title in STATS_FIELDS:
@@ -818,9 +810,9 @@ class ConfDistPlot():
                 title = title.capitalize()
             if len(index_set) > 1:
                 writer.write('\t')
-                writer.write('%sAvg%s' % (title,residue_replacements[self.residue_xproperty]))
+                writer.write('%sAvg(i%s)' % (title,residue_xproperty))
                 writer.write('\t')
-                writer.write('%sDev%s' % (title,residue_replacements[self.residue_xproperty]))
+                writer.write('%sDev(i%s)' % (title,residue_xproperty))
 
         #output the generic titles for y res
         for title in STATS_FIELDS:
@@ -830,9 +822,9 @@ class ConfDistPlot():
                 title = title.capitalize()
             if len(index_set) == 3:
                 writer.write('\t')
-                writer.write('%sAvg%s' % (title,residue_replacements[self.residue_yproperty]))
+                writer.write('%sAvg(i%s)' % (title,residue_yproperty))
                 writer.write('\t')
-                writer.write('%sDev%s' % (title,residue_replacements[self.residue_yproperty]))
+                writer.write('%sDev(i%s)' % (title,residue_yproperty))
 
         # Cycle through the binPoints
         xbin = self.xbin
