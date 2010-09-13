@@ -202,6 +202,8 @@
             var selected_aa = [];
             var qtipState = '';
             var qtipTotal = 0;
+            var protList = new Object();
+            var negateRow = [];
 
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
@@ -329,10 +331,12 @@
                         $(node.parentNode).children(".toggle").addClass('toggle_Include');
                         $(node.parentNode).children(".include").val(1).attr('disabled',false);
                         $node.addClass('field_include').removeClass('field_exclude');
+                        negateRow[$(node.parentNode).attr('class').substring(10,12)] = true;
                     }else if (val == 0 && !$node.hasClass('field_exclude') ) {
                         $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
                         $(node.parentNode).children(".include").val(0).attr('disabled',false);
                         $node.addClass('field_exclude').removeClass('toggle_Include');
+                        negateRow[$(node.parentNode).attr('class').substring(10,12)] = false;
                     }
                 } else {
                     $node
@@ -664,6 +668,158 @@
                 r.text(x-radius-35, y+12, "-180");
             };
             
+            function redraw(){
+                //Add or remove sidechain angles
+                active_sidechains = [];
+                for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                    sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
+                    for (sidechain in sidechains){
+                        active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                    }
+                }
+                //active_sidechains = set(active_sidechains);//Remove redundancies
+                header = document.getElementById('sidechain_angle_header');
+                if (header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
+                    for (angle in active_sidechains){
+                        $('tr#'+active_sidechains[angle]+'_row').show();
+                        $('tr#'+active_sidechains[angle]+'_row').children('td').children('span').children('input').hide();
+                        if (protList[active_sidechains[angle].substring(0,3)]){
+                            $('tr#'+active_sidechains[angle]+'_row').children('td').each(
+                                function(){
+                                    //CHANGE HERE FOR NEGATION CLAUSE
+                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                        //re-enable the angles if they apply to the column.
+                                        $(this).children('span').children('input').show();
+                                    }
+                                }
+                                
+                            );
+                        }
+                    }
+                }
+                
+                if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+                    for (angle in sidechain_angle_lookup[aa]){
+                        $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
+                    }
+                }
+                /*********************************************************/
+                //Add or remove sidechain lengths
+                active_sidechains = [];
+                for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                    sidechains = sidechain_length_lookup[selected_aa[active_aa]];
+                    for (sidechain in sidechains){
+                        active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                    }
+                }
+                //unfiltered_sidechains = sidechain_length_lookup[aa];
+                //active_sidechains = set(active_sidechains);//Remove redundancies
+                header = document.getElementById('sidechain_length_header');
+                if (header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
+                    for (sclength in active_sidechains){
+                        $('tr#'+active_sidechains[sclength]+'_row').show();
+                        $('tr#'+active_sidechains[sclength]+'_row').children('td').children('span').children('input').hide();
+                        if (protList[active_sidechains[sclength].substring(0,3)]){
+                            
+                            $('tr#'+active_sidechains[sclength]+'_row').children('td').each(
+                                function(){
+                                    //access to form element via $(this)
+                                    
+                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                        //re-enable the angles if they apply to the column.
+                                        $(this).children('span').children('input').show();
+                                    }
+                                }
+                                
+                            );
+                        }
+                    }
+                }
+                if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+                    for (sclength in sidechain_length_lookup[aa]){
+                        $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
+                    }
+                }
+                /*********************************************************/
+            };
+            
+            function fullRedraw(aa, aaColumn){
+                
+                /*********************************************************/
+                //Add or remove sidechain angles
+                active_sidechains = [];
+                for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                    sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
+                    for (sidechain in sidechains){
+                        active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                    }
+                }
+                //active_sidechains = set(active_sidechains);//Remove redundancies
+                header = document.getElementById('sidechain_angle_header');
+                if (header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
+                    for (angle in active_sidechains){
+                        $('tr#'+active_sidechains[angle]+'_row').show();
+                        $('tr#'+active_sidechains[angle]+'_row').children('td').children('span').children('input').hide();
+
+                        if (protList[active_sidechains[angle].substring(0,3)]){
+                            
+                            $('tr#'+active_sidechains[angle]+'_row').children('td').each(
+                                function(){
+                                    //access to form element via $(this)
+                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                        //re-enable the angles if they apply to the column.
+                                        $(this).children('span').children('input').show();
+                                    }
+                                }
+                                
+                            );
+                        }
+                    }
+                }
+                
+                if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+                    for (angle in sidechain_angle_lookup[aa]){
+                        $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
+                    }
+                }
+                /*********************************************************/
+                //Add or remove sidechain lengths
+                active_sidechains = [];
+                for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
+                    sidechains = sidechain_length_lookup[selected_aa[active_aa]];
+                    for (sidechain in sidechains){
+                        active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                    }
+                }
+                //unfiltered_sidechains = sidechain_length_lookup[aa];
+                header = document.getElementById('sidechain_length_header');
+                if (header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
+                    for (sclength in active_sidechains){
+                        $('tr#'+active_sidechains[sclength]+'_row').show();
+                        $('tr#'+active_sidechains[sclength]+'_row').children('td').children('span').children('input').hide();
+                        if (protList[active_sidechains[sclength].substring(0,3)]){
+                            
+                            $('tr#'+active_sidechains[sclength]+'_row').children('td').each(
+                                function(){
+                                    //access to form element via $(this)
+                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                        //re-enable the angles if they apply to the column.
+                                        $(this).children('span').children('input').show();
+                                    }
+                                }
+                                
+                            );
+                        }
+                    }
+                }
+                if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+                    for (sclength in sidechain_length_lookup[aa]){
+                        $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
+                    }
+                }
+                /*********************************************************/
+            };
+                    
             function set( list ){ //Returns a list with only unique elements
                 seen = [];
                 set_list = [];
@@ -706,11 +862,15 @@
                     if ( tar.hasClass('toggle_Include')) {
                         tar.removeClass('toggle_Include');
                         tar.addClass('toggle_Exclude');
+                        negateRow[tar.parent().attr('class').substring(10,12)] = false;
+                        redraw();
                         $(evt.target.parentNode).children(".include").val(0);
                         $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_exclude').removeClass('field_include');
                     }else if (tar.hasClass('toggle_Exclude')){
                         tar.removeClass('toggle_Exclude');
                         tar.addClass('toggle_Include');
+                        negateRow[tar.parent().attr('class').substring(10,12)] = true;
+                        redraw();
                         $(evt.target.parentNode).children(".include").val(1);
                         $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_include').removeClass('field_exclude');
                     }
@@ -727,7 +887,7 @@
                     .change(function(evt){
                             updateInclusionField(evt.target, true);
                         })
-                    .not('.lengths_row input, mobility_row input')
+                    .not('.lengths_row input, mobility_row input, .sidechain_length_input input')
                         .blur(function(evt){
                             angle_qtip_api.hide();
                         })
@@ -769,12 +929,27 @@
                 $('tr.peptide_row .multiselect li, tr.conf_row .multiselect li')
                     .click(function(){
                         $this = $(this);
+                        aa = $this.html().substring(0,3).toUpperCase();
+                        aaColumn = $this.children('input').attr('name').substring(3,5);
                         if ($this.hasClass('selected')){
                             $this.removeClass('selected');
                             $this.children('input').attr('checked',false);
+                            if (protList[aa] != undefined){//If a Dict entry not exists, add new column
+                                protList[aa][aaColumn] = false;
+                                
+                            }
+                            else{//Otherwise add it to Dict and add new column
+                                protList[aa] = [];
+                                protList[aa][aaColumn] = false;
+                                
+                            }
                         }else{
                             $this.addClass('selected');
                             $this.children('input').attr('checked',true);
+                            if (protList[aa] != undefined){//If a Dict entry not exists, add new column
+                                protList[aa][aaColumn] = true;
+                                
+                            }
                         }
                         $this.parent().updateInclusionSelect()
                     })
@@ -791,67 +966,58 @@
                     .each(function(){
                         $this = $(this);
                         aa = $this.html().substring(0,3).toUpperCase();
+                        aaColumn = $this.children('input').attr('name').substring(3,5);
                         selected_aa.push(aa);
+                        if (protList[aa] != undefined){//If a Dict entry not exists, add new column
+                            protList[aa][aaColumn] = true;
+                            
+                        }
+                        else{//Otherwise add it to Dict and add new column
+                            protList[aa] = [];
+                            protList[aa][aaColumn] = true;
+                            
+                        }
+                        
                     });
 
                 // setup aa multiselects to work with sidechain show/hide
+
                 $('tr.peptide_row .multiselect li')
                     .click(function(){
                         $this = $(this);
                         //Strip out aa and manage list of active aa's
-                        aa = $this.html().substring(0,3).toUpperCase();
+                        if ($this.html() != null){
+                            aa = $this.html().substring(0,3).toUpperCase();
+                        }
+                        
+                        if ($this.children('input').attr('name') != null){
+                            aaColumn = $this.children('input').attr('name').substring(3,5);
+                        }
+                        
                         if ($this.hasClass('selected')){
                             selected_aa.push(aa);
+                            
+                            if (protList[aa] != undefined){//If a Dict entry not exists, add new column
+                                protList[aa][aaColumn] = true;
+                                
+                            }
+                            else{//Otherwise add it to Dict and add new column
+                                protList[aa] = [];
+                                protList[aa][aaColumn] = true;
+                                
+                            }
                         }
                         else{
                             aa_to_remove = selected_aa.indexOf(aa)
                             selected_aa.splice(aa_to_remove,1);
-                        }
-                        /*********************************************************/
-                        //Add or remove sidechain angles
-                        active_sidechains = [];
-                        for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
-                            sidechains = sidechain_angle_lookup[selected_aa[active_aa]];
-                            for (sidechain in sidechains){
-                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
+                            
+                            if (protList[aa]){//If a Dict entry not exists, add new column
+                                protList[aa][aaColumn] = false;
                             }
                         }
-                        active_sidechains = set(active_sidechains);//Remove redundancies
-                        header = document.getElementById('sidechain_angle_header');
-                        if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
-                            for (angle in active_sidechains){
-                                $('tr#'+active_sidechains[angle]+'_row').show();
-                            }
-                        }
-                        if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
-                            for (angle in sidechain_angle_lookup[aa]){
-                                $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
-                            }
-                        }
-                        /*********************************************************/
-                        //Add or remove sidechain lengths
-                        active_sidechains = [];
-                        for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
-                            sidechains = sidechain_length_lookup[selected_aa[active_aa]];
-                            for (sidechain in sidechains){
-                                active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
-                            }
-                        }
-                        //unfiltered_sidechains = sidechain_length_lookup[aa];
-                        active_sidechains = set(active_sidechains);//Remove redundancies
-                        header = document.getElementById('sidechain_length_header');
-                        if ($this.hasClass('selected') && header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
-                            for (sclength in active_sidechains){
-                                $('tr#'+active_sidechains[sclength]+'_row').show();
-                            }
-                        }
-                        if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
-                            for (sclength in sidechain_length_lookup[aa]){
-                                $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
-                            }
-                        }
-                        /*********************************************************/
-                    })
+                        fullRedraw(aa, aaColumn);
+                    
+                    });
                 
 
                 $('tr.peptide_row .multiselect, tr.conf_row .multiselect').updateInclusionSelect();
@@ -880,13 +1046,29 @@
                                 active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                             }
                         }
-                        active_sidechains = set(active_sidechains);
+                        //active_sidechains = set(active_sidechains);
                         for (sidechain in active_sidechains){
                             $('tr#'+active_sidechains[sidechain]+'_row').show();
+                            //set all cells to disabled as default; cells are more likely to need disabling than enabling
+                            $('tr#'+active_sidechains[sidechain]+'_row').children('td').children('span').children('input').hide();
+                            if (protList[active_sidechains[sidechain].substring(0,3)]){
+                                
+                                $('tr#'+active_sidechains[sidechain]+'_row').children('td').each(
+                                    function(){
+                                        //access to form element via $(this)
+                                        if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sidechain].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                            //re-enable the angles if they apply to the column.
+                                            $(this).children('span').children('input').show();
+                                        }
+                                    }
+                                    
+                                );
+                            }
+                            //alert(active_sidechains[sidechain]);
                         }
                     } else {
                         header.innerHTML = 'Sidechain Angles →';
-                        $('tr.sidechain_angle_row').hide()
+                        $('tr.sidechain_angle_row').hide();
                         
                     }
                 });
@@ -903,9 +1085,25 @@
                                 active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                             }
                         }
-                        active_sidechains = set(active_sidechains);
+                        //active_sidechains = set(active_sidechains);
                         for (sidechain in active_sidechains){
                             $('tr#'+active_sidechains[sidechain]+'_row').show();
+                            //set all cells to disabled as default; cells are more likely to need disabling than enabling
+                            $('tr#'+active_sidechains[sidechain]+'_row').children('td').children('span').children('input').hide();
+                            if (protList[active_sidechains[sidechain].substring(0,3)]){
+                                
+                                $('tr#'+active_sidechains[sidechain]+'_row').children('td').each(
+                                    function(){
+                                        //access to form element via $(this)
+                                        
+                                        if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sidechain].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                            //re-enable the angles if they apply to the column.
+                                            $(this).children('span').children('input').show();
+                                        }
+                                    }
+                                    
+                                );
+                            }
                         }
                     } else {
                         header.innerHTML = 'Sidechain Lengths →';
