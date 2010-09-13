@@ -402,7 +402,9 @@ class ConfDistPlot():
         # This query uses a large case statement to select the average matching
         # the bin the result is grouped into.  This isn't the cleanest way
         # of doing this but it does work
+        prefix = self.get_prefix(self.residue_attribute)
         for field in self.stats_fields:
+            
             if field[0] in ANGLES:
                 stddev = '%s_stddev' % field[1]
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) for k,v in filter(lambda x:x[1], torsion_avgs[field[0]].items())])
@@ -411,7 +413,7 @@ class ConfDistPlot():
                     annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
                     stddev_query = querySet \
                                     .extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()}) \
-                                    .filter(**{'%s__isnull'%self.refString:False}) \
+                                    .filter(**{'%s%s__isnull'%(prefix, field[1]):False}) \
                                     .annotate(**annotations) \
                                     .values(*annotations.keys()+['x','y']) \
                                     .order_by('x','y')
@@ -420,23 +422,25 @@ class ConfDistPlot():
                         value = r[stddev] if r[stddev] else 0
                         self.bins[(r['x'],r['y'])][stddev] = value
 
-
     def create_res_string(self, index, property):
         """
         helper function for creating property references
         """
+        prefix = self.get_prefix(index)
+        resString = '%s%%s' % prefix
+        refString = '%s%s' % (prefix, property)
+        return resString, refString
+
+    def get_prefix(self, index):
+        """ Helper for generating residue prefixes based on index """
         if index == 0:
             prefix = ''
         elif index < 0:
             prefix = ''.join(['prev__' for i in range(index, 0)])
         else:
             prefix = ''.join(['next__' for i in range(index)])
-        resString = '%s%%s' % prefix
-        refString = '%s%s' % (prefix, property)
-        
-        return resString, refString
+        return prefix
 
-    
     def Plot(self):
         """
         Calculates and renders the plot
@@ -732,10 +736,10 @@ class ConfDistPlot():
 
         #fields to include, order in this list is important
         STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi1','chi2','chi3','chi4','zeta')
-        avgString = 'r%i_%s_avg'
-        stdString = 'r%i_%s_stddev'
+        avgString = '%s%s_avg'
+        stdString = '%s%s_stddev'
 
-        index_set = set([residue,residueX,residueY])
+        index_set = set([self.get_prefix(residue),self.get_prefix(residueX),self.get_prefix(residueY)])
 
         STATS_FIELDS_STRINGS = reduce(
             lambda x,y:x+y,
