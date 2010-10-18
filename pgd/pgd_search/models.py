@@ -90,6 +90,7 @@ class Search(models.Model):
         data = self.data
         for i in range(self.segmentLength):
             yield Segmenter(data, i)
+            
 
 
     def save(self):
@@ -119,7 +120,9 @@ class Search(models.Model):
         
         # ...filter by code lists...
         if data.proteins_i != None:
-            codes = data.proteins.replace(' ','').rstrip(',').split(',')
+            #codes = data.proteins.replace(' ','').rstrip(',').split(',')
+            data.proteins = data.proteins.replace(' ','').replace(',', '')
+            codes = [data.proteins[i:i+4] for i in range(0, len(data.proteins), 4)]
             if data.proteins_i:
                 query = query.filter(protein__code__in=codes)
             else:
