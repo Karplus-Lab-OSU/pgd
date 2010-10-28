@@ -578,7 +578,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         based on the peptide of this residue and the lists of atoms in the
                         chi mappings.
                         """
-                        calc_chi(res, res_dict)
+                        calc_chi(res, res.prev, res_dict)
                         sidechain = {}
                         calc_sidechain_lengths(res, sidechain)
                         calc_sidechain_angles(res, sidechain)
@@ -660,7 +660,7 @@ def calc_dihedral(atom1, atom2, atom3, atom4):
     return math.degrees(pdb_calc_dihedral(atom1, atom2, atom3, atom4))
 
 
-def calc_chi(residue, residue_dict):
+def calc_chi(residue, residue_prev, residue_dict):
     """
     Calculates Values for CHI using the predefined list of CHI angles in
     the CHI_MAP.  CHI_MAP contains the list of all peptides and the atoms
@@ -673,7 +673,12 @@ def calc_chi(residue, residue_dict):
         for i in range(len(mapping)):
             chi_atom_names= mapping[i]
             try:
-                chi_atoms = [residue[n].get_vector() for n in chi_atom_names]
+                chi_atoms = []
+                for n in chi_atom_names:
+                    if (n=='C-1'):
+                        chi_atoms.append(residue_prev['C'].get_vector())
+                    else:
+                        chi_atoms.append(residue[n].get_vector())
                 chi = calc_dihedral(*chi_atoms)
                 residue_dict['chi%i'%(i+1)] = chi
             except KeyError:
