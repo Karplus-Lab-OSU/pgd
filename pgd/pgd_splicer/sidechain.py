@@ -125,7 +125,8 @@ bond_angles = {
         ['CA', 'CB', 'CG'],
         ['CB', 'CG', 'CD'],
         ['CG', 'CD', 'N'],
-        ['CD', 'N', 'CA']],
+        ['CD', 'N', 'CA']
+        ['CD', 'N', 'C-1']],
     'THR': [
         ['CA', 'CB', 'OG1'],
         ['CA', 'CB', 'CG2'],
@@ -242,7 +243,8 @@ bond_angles_string_dict = {
         'CA_CB_CG',
         'CB_CG_CD',
         'CG_CD_N',
-        'CD_N_CA'],
+        'CD_N_CA',
+        'CD_N_C-1'],
     'THR': [
         'CA_CB_OG1',
         'CA_CB_CG2',

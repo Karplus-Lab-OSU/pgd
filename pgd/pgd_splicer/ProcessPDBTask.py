@@ -581,7 +581,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         calc_chi(res, res.prev, res_dict)
                         sidechain = {}
                         calc_sidechain_lengths(res, sidechain)
-                        calc_sidechain_angles(res, sidechain)
+                        calc_sidechain_angles(res, res.prev, sidechain)
                         if sidechain:
                             res_dict['sidechain'] = sidechain
                         """
@@ -712,7 +712,7 @@ def calc_sidechain_lengths(residue, residue_dict):
         pass
 
 
-def calc_sidechain_angles(residue, residue_dict):
+def calc_sidechain_angles(residue, residue_prev, residue_dict):
     """
     Calculates Values for sidechain bond angles. Uses a predefined list
     from sidechain.py, specifically bond_angles.
@@ -722,7 +722,12 @@ def calc_sidechain_angles(residue, residue_dict):
         for i in range(len(mapping)):
             atom_names = mapping[i]
             try:
-                sidechain_atoms = [residue[n].get_vector() for n in atom_names]
+                sidechain_atoms = []
+                for n in atom_names:
+                    if(n=='C-1'):
+                        sidechain_atoms.append(residue_prev['C'].get_vector())
+                    else:
+                        sidechain_atoms.append(residue[n].get_vector())
                 sidechain_angle = calc_angle(*sidechain_atoms)
                 residue_dict['%s_%s_%s' % (atom_names[0], atom_names[1], atom_names[2])] = sidechain_angle
             except KeyError:
