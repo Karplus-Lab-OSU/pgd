@@ -17,7 +17,7 @@ CHI_MAP = {
     'PRO':(('N',  'CA', 'CB', 'CG'),
            ('CA', 'CB', 'CG', 'CD'),
            ('CB', 'CG', 'CD', 'N'),
-           ('CG', 'CD', 'N',  'C-1')
+           ('CG', 'CD', 'N',  'CA')
         ),
     'PHE':(
         ('N',   'CA',  'CB',  'CG'),
