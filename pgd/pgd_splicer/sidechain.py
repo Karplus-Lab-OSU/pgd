@@ -125,7 +125,7 @@ bond_angles = {
         ['CA', 'CB', 'CG'],
         ['CB', 'CG', 'CD'],
         ['CG', 'CD', 'N'],
-        ['CD', 'N', 'CA']
+        ['CD', 'N', 'CA'],
         ['CD', 'N', 'C-1']],
     'THR': [
         ['CA', 'CB', 'OG1'],

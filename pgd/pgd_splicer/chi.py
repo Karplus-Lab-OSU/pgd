@@ -63,7 +63,8 @@ CHI_MAP = {
         ('N',   'CA',  'CB',  'CG'),
         ('CA',  'CB',  'CG',  'CD'),
         ('CB',  'CG',  'CD',  'NE'),
-        ('CG',  'CD',  'NE',  'CZ')
+        ('CG',  'CD',  'NE',  'CZ'),
+        ('CD',  'NE',  'CZ',  'NH1')
         ),
     'ASN':(
         ('N',   'CA',  'CB',  'CG'),
