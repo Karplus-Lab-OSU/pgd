@@ -1,7 +1,7 @@
 import math
 
 from django.db import models
-from pgd.pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
+from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
 
 # Protein model
 # (was 'protein_info')
@@ -305,6 +305,7 @@ class Residue(models.Model):
     phi             = models.FloatField(null=True)
     psi             = models.FloatField(null=True)
     ome             = models.FloatField(null=True)
+    ome_p           = models.FloatField(null=True)
     chi1            = models.FloatField(null=True)
     chi2            = models.FloatField(null=True)
     chi3            = models.FloatField(null=True)
