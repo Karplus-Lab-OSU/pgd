@@ -12,12 +12,12 @@ from threading import Thread, Lock
 
 import math
 
+from django.conf import settings
 from django.core.paginator import Paginator
 
 from pgd_core import residue_indexes
 from pgd_search.models import *
 from pgd_constants import AA_CHOICES
-from pgd_search.models import searchSettings
 from pgd_splicer.sidechain import sidechain_length_relationship_list, sidechain_angle_relationship_list
 
 
@@ -221,7 +221,7 @@ class Dump():
         ] 
 
         #calculate iIndex
-        self.iIndex = int(math.ceil(searchSettings.segmentSize/2.0)-1)
+        self.iIndex = int(math.ceil(settings.SEGMENT_SIZE/2.0)-1)
 
 
     def create_meta_data(self,search):

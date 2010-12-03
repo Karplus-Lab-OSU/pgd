@@ -1,9 +1,10 @@
 import math
 import re
+
+from django.conf import settings
 from django import forms
 
 from pgd_core.models import Protein
-from pgd_search.models import searchSettings
 from pgd_search.views import RESIDUE_INDEXES
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_splicer.sidechain import sidechain_angle_relationship_list, sidechain_length_relationship_list
@@ -54,7 +55,7 @@ class SearchFormBase(forms.Form):
     rfreeMax        = forms.FloatField(required=False, min_value=0, initial=0.30, widget=forms.TextInput(attrs={'size':3}))
     proteins        = forms.CharField(required=False)
     proteins_i      = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
-    residues        = forms.ChoiceField(choices=[(i,i) for i in range(1, searchSettings.segmentSize+1)], initial=3)
+    residues        = forms.ChoiceField(choices=[(i,i) for i in range(1, settings.SEGMENT_SIZE+1)], initial=3)
 
 # Build a dict for the fields of variable number
 form_dict = {'__module__' : 'pgd_search.views'}

@@ -100,6 +100,9 @@ INSTALLED_APPS = (
     'pgd_core',
     'pgd_search',
     'pgd_splicer',
-    'tasks',
-    'dbsettings',
 )
+
+# PGD Specific settings
+QUERY_LIMIT = 50000000
+SEGMENT_SIZE = 10
+DATA_VERSION = 'testing'

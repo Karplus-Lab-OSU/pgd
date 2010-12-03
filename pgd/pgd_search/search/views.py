@@ -10,7 +10,7 @@ from django.core.paginator import Paginator, InvalidPage, EmptyPage
 from django.utils import simplejson
 from datetime import datetime
 from pgd_core.models import Protein
-from pgd_search.models import Search, Search_code, searchSettings
+from pgd_search.models import Search, Search_code
 from pgd_search.views import RESIDUE_INDEXES, settings_processor
 from SearchForm import SearchSyntaxField, SearchForm
 from pgd_constants import AA_CHOICES, SS_CHOICES
@@ -43,7 +43,7 @@ def search(request):
             
             #at least for now limit the size of the result set
             count = search_object.querySet().count()
-            if count > searchSettings.query_limit:
+            if count > settings.QUERY_LIMIT:
                 form._errors['Result Size'] = ErrorList(['Your query returned more than 20,000 records, refine your search'])
             
             elif count == 0 and False:
@@ -64,8 +64,8 @@ def search(request):
             ss_chosen = request.POST.getlist('ss_%i' % i)
             ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES])
     else:
-        aa_choices = [AA_CHOICES for i in range(searchSettings.segmentSize)]
-        ss_choices = [SS_CHOICES for i in range(searchSettings.segmentSize)]
+        aa_choices = [AA_CHOICES for i in range(settings.SEGMENT_SIZE)]
+        ss_choices = [SS_CHOICES for i in range(settings.SEGMENT_SIZE)]
         form = SearchForm() # An unbound form
 
     #construct a list of values for i
@@ -89,7 +89,7 @@ def search(request):
 
     return render_to_response('search.html', {
         'form': form,
-        'maxLength' : searchSettings.segmentSize,
+        'maxLength' : settings.SEGMENT_SIZE,
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices,
@@ -152,7 +152,7 @@ def editSearch(request, search_id=None):
     
     return render_to_response('search.html', {
         'form': form,
-        'maxLength' : searchSettings.segmentSize,
+        'maxLength' : settings.SEGMENT_SIZE,
         'iValues':iValues,
         'residueFields':residueFields,
         'aa_choices':aa_choices,

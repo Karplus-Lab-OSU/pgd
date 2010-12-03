@@ -1,9 +1,9 @@
+from django.conf import settings
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 import math
 
-from pgd_search.models import searchSettings
 from pgd_search.views import settings_processor
 
 """
@@ -20,7 +20,7 @@ def browse(request):
     #generate iValues
     start = 0 - (search.segmentLength-1) / 2
     stop  = lint(math.ceil((search.segmentLength-1) / 2.0))+1
-    iIndex = lint(math.ceil(searchSettings.segmentSize/2.0)-1)
+    iIndex = lint(math.ceil(settings.SEGMENT_SIZE/2.0)-1)
 
     #paginate
     segments = search.querySet().order_by('protein')
@@ -45,7 +45,7 @@ def browse(request):
 
     # use ranges for RGB to introduce colorful steps
     colors = [] 
-    colorstop=searchSettings.segmentSize/2
+    colorstop=settings.SEGMENT_SIZE/2
     rRange = (75,245);
     gRange = (180,245);
     bRange = (240,245);

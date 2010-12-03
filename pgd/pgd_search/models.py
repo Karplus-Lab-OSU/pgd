@@ -5,6 +5,7 @@ import cPickle
 
 import dbsettings
 from django import forms
+from django.conf import settings
 from django.db import models
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -41,16 +42,6 @@ class RDict(dict):
                 return self[k]
             except KeyError:
                 return None
-
-
-class SearchSettings(dbsettings.Group):
-    """
-    Search Settings
-    """
-    query_limit          = dbsettings.IntegerValue('Result Set Limit', 'Maximum size of results.  Due to the heavy cpu requirement for calculating statistics this option limits how many results can be returned by a search', default=50000000)
-    segmentSize          = dbsettings.IntegerValue('Current Segment Size', 'Maximum size for segment searches', default=10)
-    requestedSegmentSize = dbsettings.IntegerValue('Requested Segment Size','Requested size for segment searches.  This value is used to generate tables and data prior to a search of this size is available', default=10)
-searchSettings = SearchSettings('Search')
 
 
 class Search(models.Model):
@@ -382,7 +373,7 @@ class ResidueProxy_subscripter():
         # create a list of proxy objects for the residues in this segment
         self.proxies = []
         l_append = self.proxies.append
-        for i in range(searchSettings.segmentSize):
+        for i in range(settings.SEGMENT_SIZE):
             l_append(ResidueProxy(i, parent))
 
     def __getitem__(self, i):
@@ -457,7 +448,7 @@ class Residue_subscripter():
     def __iter__(self):
         # This function makes a generator object
         def residue_generator(outer):
-            for i in range(searchSettings.segmentSize):
+            for i in range(settings.SEGMENT_SIZE):
                 try: # Get the next object...
                     yield outer.__getitem__(i)
                 except IndexError: # ...until there are no more.
@@ -504,7 +495,7 @@ This allows the segment model to change size dynamically at runtime.
 proxyPattern = re.compile('^r([\d]+)_(?!id$)([\w]+)')
 
 
-iIndex = int(ceil(searchSettings.segmentSize/2.0)-1)
+iIndex = int(ceil(settings.SEGMENT_SIZE/2.0)-1)
 class Segment_abstract(models.Model):
 
     protein = models.ForeignKey(Protein)
@@ -541,7 +532,7 @@ class Segment_abstract(models.Model):
 
 # Build a dict for the fields of variable number
 seq_dict = {'__module__' : 'pgd_search.models'}
-for i in range(searchSettings.segmentSize):
+for i in range(settings.SEGMENT_SIZE):
 
     seq_dict["r%i_id" % i]              = models.PositiveIntegerField(null=True)
     seq_dict["r%i_oldID" % i]           = models.CharField(max_length=5, null=True)
