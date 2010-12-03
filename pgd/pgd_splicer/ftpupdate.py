@@ -18,7 +18,7 @@ if __name__ == '__main__':
     pydra_settings = load_settings()
 
 from pydra.cluster.tasks.tasks import *
-from pgd.pgd_splicer.models import *
+from pgd_splicer.models import *
 
 import os
 

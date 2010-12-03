@@ -33,31 +33,31 @@ from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
 from pydra.cluster.tasks.tasks import Task
 
-from pgd.pgd_core.models import Protein as ProteinModel
-from pgd.pgd_core.models import Chain as ChainModel
-from pgd.pgd_core.models import Residue as ResidueModel
-from pgd.pgd_core.models import Sidechain_ARG
-from pgd.pgd_core.models import Sidechain_ASN
-from pgd.pgd_core.models import Sidechain_ASP
-from pgd.pgd_core.models import Sidechain_CYS
-from pgd.pgd_core.models import Sidechain_GLN
-from pgd.pgd_core.models import Sidechain_GLU
-from pgd.pgd_core.models import Sidechain_HIS
-from pgd.pgd_core.models import Sidechain_ILE
-from pgd.pgd_core.models import Sidechain_LEU
-from pgd.pgd_core.models import Sidechain_LYS
-from pgd.pgd_core.models import Sidechain_MET
-from pgd.pgd_core.models import Sidechain_PHE
-from pgd.pgd_core.models import Sidechain_PRO
-from pgd.pgd_core.models import Sidechain_SER
-from pgd.pgd_core.models import Sidechain_THR
-from pgd.pgd_core.models import Sidechain_TRP
-from pgd.pgd_core.models import Sidechain_TYR
-from pgd.pgd_core.models import Sidechain_VAL
+from pgd_core.models import Protein as ProteinModel
+from pgd_core.models import Chain as ChainModel
+from pgd_core.models import Residue as ResidueModel
+from pgd_core.models import Sidechain_ARG
+from pgd_core.models import Sidechain_ASN
+from pgd_core.models import Sidechain_ASP
+from pgd_core.models import Sidechain_CYS
+from pgd_core.models import Sidechain_GLN
+from pgd_core.models import Sidechain_GLU
+from pgd_core.models import Sidechain_HIS
+from pgd_core.models import Sidechain_ILE
+from pgd_core.models import Sidechain_LEU
+from pgd_core.models import Sidechain_LYS
+from pgd_core.models import Sidechain_MET
+from pgd_core.models import Sidechain_PHE
+from pgd_core.models import Sidechain_PRO
+from pgd_core.models import Sidechain_SER
+from pgd_core.models import Sidechain_THR
+from pgd_core.models import Sidechain_TRP
+from pgd_core.models import Sidechain_TYR
+from pgd_core.models import Sidechain_VAL
 
-from pgd.pgd_splicer.models import *
-from pgd.pgd_splicer.chi import CHI_MAP
-from pgd.pgd_splicer.sidechain import *
+from pgd_splicer.models import *
+from pgd_splicer.chi import CHI_MAP
+from pgd_splicer.sidechain import *
 
 
 def NO_VALUE(field):
@@ -490,8 +490,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                         C    = atoms['C'].get_vector()
                         CB   = atoms['CB'].get_vector() if atoms.has_key('CB') else None
                         O    = atoms['O'].get_vector()
-
-                        
 
                         if oldC:
                             # determine if there are missing residues by calculating

@@ -27,7 +27,7 @@ import urllib
 from dbsettings.loading import set_setting_value
 from pydra.cluster.tasks import Task
 
-from pgd.pgd_splicer.models import *
+from pgd_splicer.models import *
 
 
 def printc(txt):
