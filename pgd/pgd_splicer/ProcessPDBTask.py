@@ -412,6 +412,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                 oldN       = None
                 oldCA      = None
                 oldC       = None
+                prev       = None
 
                 for res in chain:
                     try:
@@ -576,10 +577,11 @@ def parseWithBioPython(file, props, chains_filter=None):
                         based on the peptide of this residue and the lists of atoms in the
                         chi mappings.
                         """
-                        calc_chi(res, res.prev, res_dict)
+                        
+                        calc_chi(res, prev, res_dict)
                         sidechain = {}
                         calc_sidechain_lengths(res, sidechain)
-                        calc_sidechain_angles(res, res.prev, sidechain)
+                        calc_sidechain_angles(res, prev, sidechain)
                         if sidechain:
                             res_dict['sidechain'] = sidechain
                         """
@@ -590,6 +592,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         oldCA      = CA
                         oldC       = C
                         oldO       = O
+                        prev = res
 
                     except InvalidResidueException, e:
                         # something has gone wrong in the current residue
@@ -602,6 +605,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         oldN       = None
                         oldCA      = None
                         oldC       = None
+                        prev       = None
                         if residues.has_key(res_id):
                             del residues[res_id]
 
@@ -673,8 +677,8 @@ def calc_chi(residue, residue_prev, residue_dict):
             try:
                 chi_atoms = []
                 for n in chi_atom_names:
-                    if (n=='C-1'):
-                        chi_atoms.append(residue_prev['C'].get_vector())
+                    if residue_prev and n[-2:]=='-1':
+                        chi_atoms.append(residue_prev[n[:-2]].get_vector())
                     else:
                         chi_atoms.append(residue[n].get_vector())
                 chi = calc_dihedral(*chi_atoms)
@@ -722,8 +726,8 @@ def calc_sidechain_angles(residue, residue_prev, residue_dict):
             try:
                 sidechain_atoms = []
                 for n in atom_names:
-                    if(n=='C-1'):
-                        sidechain_atoms.append(residue_prev['C'].get_vector())
+                    if residue_prev and n[-2:]=='-1':
+                        sidechain_atoms.append(residue_prev[n[:-2]].get_vector())
                     else:
                         sidechain_atoms.append(residue[n].get_vector())
                 sidechain_angle = calc_angle(*sidechain_atoms)
