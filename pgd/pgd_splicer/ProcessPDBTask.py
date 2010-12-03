@@ -510,6 +510,12 @@ def parseWithBioPython(file, props, chains_filter=None):
                                 res_dict['a1']     = calc_angle(oldC,N,CA)
                                 res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
                                 res_dict['L1'] = L1
+                                
+                                # proline has omega-p property
+                                if prev and res.resname == 'PRO' and 'CD' in atoms:
+                                    CD = atoms['CD'].get_vector()
+                                    res_dict['ome_p'] = calc_dihedral(oldCA, oldC, N, CD)
+                                
                                 terminal = False
 
                         if terminal:
