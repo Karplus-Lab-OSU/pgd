@@ -29,7 +29,6 @@ class PGDAggregate(Aggregate):
         
         # Validate that the backend has a fully supported, correct
         # implementation of this aggregate
-        query.connection.ops.check_aggregate_support(aggregate)
         query.aggregates[alias] = aggregate
         self.aggregate = aggregate
     
