@@ -3,7 +3,6 @@ from math import ceil
 import re
 import cPickle
 
-import dbsettings
 from django import forms
 from django.conf import settings
 from django.db import models
