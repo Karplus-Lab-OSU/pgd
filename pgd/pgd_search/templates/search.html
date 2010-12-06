@@ -1340,7 +1340,14 @@
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
                     </td>
-
+                {% endfor %}
+            </tr>
+            <tr class="conf_row">
+                <td class="label">&omega;P</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.omep}}{{r.omep_i}}
+                    </td>
                 {% endfor %}
             </tr>
 

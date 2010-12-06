@@ -88,6 +88,7 @@ LABEL_REPLACEMENTS = {
             "a6":u'C\u1D45CN\u207A\u00B9',
             "a7":u'OCN\u207A\u00B9',
             "ome":u'\u03C9',
+            "omep":u'\u03C9P',
             "chi1":u'\u03C7\u00B9',
             "chi2":u'\u03C7\u00B2',
             "chi3":u'\u03C7\u00B3',
@@ -738,7 +739,6 @@ class ConfDistPlot():
         STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi1','chi2','chi3','chi4','zeta')
         avgString = '%s%s_avg'
         stdString = '%s%s_stddev'
-        print residue, residueX, residueY
         index_set = set([self.get_prefix(residue),self.get_prefix(residueX),self.get_prefix(residueY)])
 
         STATS_FIELDS_STRINGS = reduce(

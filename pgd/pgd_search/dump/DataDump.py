@@ -28,7 +28,7 @@ def db_to_ascii(field):
 
 
 # A list of values that should not be printed out
-FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome', 'chi1','chi2','chi3','chi4', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
+FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','ss','phi', 'psi', 'ome','omep', 'chi1','chi2','chi3','chi4', 'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
 for field in  sidechain_length_relationship_list:
     FIELDS.append('sidechain_%s' % field)
 for field in sidechain_angle_relationship_list:
@@ -63,6 +63,7 @@ FIELD_LABEL_REPLACEMENTS = {
     'L5_i':'C-O include',
     'phi_i':'phi include',
     'ome_i':'ome include',
+    'omep_i':'ome_p include',
     'chi1_i':'chi(1) include',
     'chi2_i':'chi(2) include',
     'chi3_i':'chi(3) include',
@@ -85,8 +86,8 @@ for field in sidechain_angle_relationship_list:
 
 FIELD_VALUE_REPLACEMENTS = {'aa':AA_CHOICES}
 RESIDUE_FIELDS =    ['a1','a1_i','a2','a2_i','a3','a3_i','a4','a4_i','a5','a5_i','a6','a6_i','a7',
-                    'a7_i','L1','L1_i','L2','L2_i','L3','L3_i','L4','L4_i','L5','L5_i','ss','phi', 'psi','phi_i', 'ome',
-                    'ome_i','chi1','chi1_i','chi2','chi2_i','chi3','chi3_i','chi4','chi4_i', 'bm','bm_i','bs','bs_i','bg','bg_i', 'h_bond_energy','h_bond_energy_i', 'zeta','zeta_i']
+                    'a7_i','L1','L1_i','L2','L2_i','L3','L3_i','L4','L4_i','L5','L5_i','ss','phi', 'psi','phi_i', 'ome', 
+                    'ome_i', 'omep', 'omep_i', 'chi1','chi1_i','chi2','chi2_i','chi3','chi3_i','chi4','chi4_i', 'bm','bm_i','bs','bs_i','bg','bg_i', 'h_bond_energy','h_bond_energy_i', 'zeta','zeta_i']
 for field in  sidechain_length_relationship_list:
     RESIDUE_FIELDS.append('sidechain_%s' % field)
     RESIDUE_FIELDS.append('sidechain_%s_i' % field)

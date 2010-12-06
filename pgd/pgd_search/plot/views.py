@@ -193,7 +193,6 @@ def renderToSVG(request):
                                                 data['text_color'],
                                                 data['plot_hue'],
                                                 data['hash_color'])
-
             json = simplejson.dumps({'svg':svg.to_dict(), \
                                         'x':x, 'x1':x1, 'xBin':xBin, \
                                         'y':y, 'y1':y1, 'yBin':yBin})
@@ -211,17 +210,20 @@ def renderToSVG(request):
                     errors.append([k, error._proxy____args[0]])
 
             return HttpResponse(simplejson.dumps({'errors':errors}))
-    except:
+    except Exception, e:
+        print 'exception', e
+        import traceback, sys
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        print "*** print_tb:"
+        traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
         return HttpResponse("-1")
 
 
-
-
-"""
-render the results of the search as a TSV (tab separated file)
-and return it to the user as a download
-"""
 def plotDump(request):
+    """
+    render the results of the search as a TSV (tab separated file)
+    and return it to the user as a download
+    """
     if request.method == 'POST': # If the form has been submitted
         form = PlotForm(request.POST) # A form bound to the POST data
         if form.is_valid(): # All validation rules pass

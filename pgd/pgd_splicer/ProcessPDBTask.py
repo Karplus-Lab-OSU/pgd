@@ -514,7 +514,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                                 # proline has omega-p property
                                 if prev and res.resname == 'PRO' and 'CD' in atoms:
                                     CD = atoms['CD'].get_vector()
-                                    res_dict['ome_p'] = calc_dihedral(oldCA, oldC, N, CD)
+                                    res_dict['omep'] = calc_dihedral(oldCA, oldC, N, CD)
                                 
                                 terminal = False
 

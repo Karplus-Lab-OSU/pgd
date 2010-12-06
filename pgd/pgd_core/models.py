@@ -305,7 +305,7 @@ class Residue(models.Model):
     phi             = models.FloatField(null=True)
     psi             = models.FloatField(null=True)
     ome             = models.FloatField(null=True)
-    ome_p           = models.FloatField(null=True)
+    omep           = models.FloatField(null=True)
     chi1            = models.FloatField(null=True)
     chi2            = models.FloatField(null=True)
     chi3            = models.FloatField(null=True)

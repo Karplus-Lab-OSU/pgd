@@ -30,10 +30,11 @@ stat_attributes = [('L1',u'C<sup>-1</sup>N'),
                         ('a5',u'C<sup>&alpha;</sup>CO'),
                         ('a6',u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
                         ('a7',u'OCN<sup>+1</sup>'),
-                        ('ome',u'&omega;')]
+                        ('ome',u'&omega;'),
+                        ("omep",u'&omega;P')]
 
 FIELDS_BASE = ('L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7')
-ANGLES_BASE = ('ome', ) #,'phi')#, 'psi', 'chi', 'zeta')
+ANGLES_BASE = ('ome', 'omep') #,'phi')#, 'psi', 'chi', 'zeta')
 
 
 LENGTHS = [('L1',u'C<sup>-1</sup>N'),
@@ -50,7 +51,8 @@ ANGLES = [('a1',u'C<sup>-1</sup>NC<sup>&alpha;</sup>'),
         ('a5',u'C<sup>&alpha;</sup>CO'),
         ('a6',u'C<sup>&alpha;</sup>CN<sup>+1</sup>'),
         ('a7',u'OCN<sup>+1</sup>'),
-        ('ome',u'&omega;')]
+        ('ome',u'&omega;'),
+        ("omep",u'&omega;P')]
 
 
 # rebuild bond angle list so they work with single letter codes
@@ -67,7 +69,6 @@ def search_statistics(request):
     """
     display statistics about the search
     """
-    
     fields = dict(
         lengths = LENGTHS,
         angles = ANGLES,
