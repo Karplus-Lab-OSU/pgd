@@ -156,7 +156,7 @@ class BufferThread(Thread):
                         if field[:9] == 'sidechain':
                             sidechain = getattr(residue, field[:13])
                             if sidechain:
-                                parts.append(str(getattr(sidechain, field[15:])))
+                                parts.append(str(getattr(sidechain, field[15:].replace('-','_'))))
                             else:
                                 parts.append('')
                         else:

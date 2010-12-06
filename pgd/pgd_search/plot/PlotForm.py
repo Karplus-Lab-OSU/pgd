@@ -126,3 +126,14 @@ class PlotForm(forms.Form):
     hash_color      = forms.ChoiceField(choices=HASH_CHOICES)
     height          = forms.IntegerField(initial=470, widget=forms.TextInput(attrs={'size':4}))
     width           = forms.IntegerField(initial=560, widget=forms.TextInput(attrs={'size':4}))
+
+    def clean(self):
+        data = self.cleaned_data
+        try:
+            data['xProperty'] = data['xProperty'].replace('-','_')
+            data['yProperty'] = data['yProperty'].replace('-','_')
+            data['attribute'] = data['attribute'].replace('-','_')
+            print data['xProperty']
+        except KeyError:
+            pass
+        return data

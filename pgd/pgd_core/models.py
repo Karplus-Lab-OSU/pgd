@@ -183,6 +183,7 @@ class Sidechain_PRO(models.Model):
     CB_CG_CD = models.FloatField(null=True)
     CG_CD_N = models.FloatField(null=True)
     CD_N_CA = models.FloatField(null=True)
+    CD_N_C_1 = models.FloatField(null=True)
 
 
 class Sidechain_SER(models.Model):
