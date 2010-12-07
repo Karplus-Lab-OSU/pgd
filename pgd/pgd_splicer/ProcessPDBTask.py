@@ -737,7 +737,9 @@ def calc_sidechain_angles(residue, residue_prev, residue_dict):
                     else:
                         sidechain_atoms.append(residue[n].get_vector())
                 sidechain_angle = calc_angle(*sidechain_atoms)
-                residue_dict['%s_%s_%s' % (atom_names[0], atom_names[1], atom_names[2])] = sidechain_angle
+                angle_key = '%s_%s_%s' % (atom_names[0], atom_names[1], atom_names[2])
+                angle_key = angle_key.replace('-','_')
+                residue_dict[angle_key] = sidechain_angle
             except KeyError:
                 #missing an atom
                 continue
