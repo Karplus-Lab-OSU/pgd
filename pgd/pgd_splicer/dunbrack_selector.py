@@ -24,7 +24,6 @@ import re
 import sys
 import urllib
 
-from dbsettings.loading import set_setting_value
 from pydra.cluster.tasks import Task
 
 from pgd_splicer.models import *
