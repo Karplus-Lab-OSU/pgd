@@ -204,7 +204,8 @@
             var qtipTotal = 0;
             var protList = new Object();
             var negateRow = [];
-
+            var AAs = [{% for aa in aa_choices.0 %}'{{aa.1|upper}}', {%endfor%}];
+            
             n = Math.ceil({{maxLength}} / 2);
             iArray = new Array({{maxLength}}-1);
             for (i=0; i<n; i++) {
@@ -669,6 +670,7 @@
             };
             
             function redraw(){
+                
                 //Add or remove sidechain angles
                 active_sidechains = [];
                 for (active_aa in selected_aa){//Add all of the sidechains into a list using the active aa's and the lookup table
@@ -698,11 +700,19 @@
                     }
                 }
                 
-                if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
-                    for (angle in sidechain_angle_lookup[aa]){
-                        $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
+                for (i in AAs){//Only remove those sidechains that aren't still shown by another aa
+                    aa = AAs[i];
+                    if (selected_aa.indexOf(aa) == -1) {
+                        for (angle in sidechain_angle_lookup[aa]){
+                            $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
+                        }
+                        for (sclength in sidechain_length_lookup[aa]){
+                            $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
+                        }
                     }
                 }
+
+ 
                 /*********************************************************/
                 //Add or remove sidechain lengths
                 active_sidechains = [];
@@ -730,21 +740,14 @@
                                         $(this).children('span').children('input').show();
                                     }
                                 }
-                                
                             );
                         }
                     }
                 }
-                if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
-                    for (sclength in sidechain_length_lookup[aa]){
-                        $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
-                    }
-                }
-                /*********************************************************/
+                
             };
             
             function fullRedraw(aa, aaColumn){
-                
                 /*********************************************************/
                 //Add or remove sidechain angles
                 active_sidechains = [];
@@ -1342,15 +1345,6 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="conf_row">
-                <td class="label">&omega;P</td>
-                {% for r in residueFields %}
-                    <td class="field col_{{r.index}}">
-                        <span class="toggle">&nbsp;</span>{{r.omep}}{{r.omep_i}}
-                    </td>
-                {% endfor %}
-            </tr>
-
             <tr class="spacer"/>
             <tr><td colspan="100%" class="sectionheader" id="mobility_header">Mobility →</td></tr>
             <tr class="mobility_row">
@@ -1567,7 +1561,7 @@
         <div id="canvas"></div>
  
     <div id="helpPage">
-        {% include 'qtiphelp.html' %}
+    	{% include 'qtiphelp.html' %}
     </div>
 {% endblock %}
 
