@@ -234,7 +234,7 @@ def password_reset(request, is_admin_site=False, template_name='registration/pas
         password_reset_form=PasswordResetForm, token_generator=default_token_generator,
         post_reset_redirect=None):
     if post_reset_redirect is None:
-        post_reset_redirect = reverse('django.contrib.auth.views.password_reset_done')
+        post_reset_redirect = reverse('auth_password_reset_done')
     if request.method == "POST":
         form = password_reset_form(request.POST)
         if form.is_valid():
@@ -267,7 +267,7 @@ def password_reset_confirm(request, uidb36=None, token=None, template_name='regi
     """
     assert uidb36 is not None and token is not None # checked by URLconf
     if post_reset_redirect is None:
-        post_reset_redirect = reverse('django.contrib.auth.views.password_reset_complete')
+        post_reset_redirect = reverse('auth_password_reset_complete')
     try:
         uid_int = base36_to_int(uidb36)
     except ValueError:
@@ -298,7 +298,7 @@ def password_reset_complete(request, template_name='registration/password_reset_
 def password_change(request, template_name='registration/password_change_form.html',
                     post_change_redirect=None):
     if post_change_redirect is None:
-        post_change_redirect = reverse('django.contrib.auth.views.password_change_done')
+        post_change_redirect = reverse('auth_password_change_done')
     if request.method == "POST":
         form = PasswordChangeForm(request.user, request.POST)
         if form.is_valid():
