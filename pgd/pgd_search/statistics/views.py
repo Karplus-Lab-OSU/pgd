@@ -61,8 +61,8 @@ BOND_LENGTHS = {}
 for k, v in AA_CHOICES_DICT.items():
     v = v.upper()
     if v in bond_lengths_string_dict:
-        BOND_LENGTHS[k] = bond_lengths_string_dict[v]
-        BOND_ANGLES[k] = bond_angles_string_dict[v]
+        BOND_LENGTHS[k] = [s.replace('-','_') for s in bond_lengths_string_dict[v]]
+        BOND_ANGLES[k] = [s.replace('-','_') for s in bond_angles_string_dict[v]]
 
 
 def search_statistics(request):
