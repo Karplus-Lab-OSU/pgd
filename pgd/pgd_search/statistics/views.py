@@ -210,11 +210,10 @@ def calculate_aa_statistics(queryset, aa, iIndex=0):
         prefix = ''.join(['next__' for i in range(iIndex)])
     field_prefix = '%s%%s' % prefix  
     
-    queryset = queryset.filter(aa=aa)
+    queryset = queryset.filter(**{'%saa'%prefix:aa})
     full_aa = AA_CHOICES_DICT[aa].upper()
     
     angles = []
-    
     if aa in BOND_LENGTHS:
         fields = [str('sidechain_%s__%s' % (full_aa,f)) for f in BOND_ANGLES[aa]] + \
              [str('sidechain_%s__%s' % (full_aa,f)) for f in BOND_LENGTHS[aa]]
