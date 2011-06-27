@@ -159,6 +159,10 @@ class ProcessPDBTask(Task):
                 print 'INFO: Skipping up-to-date PDB: %s' % data['code']
             self.finished_proteins += 1
 
+            percent = 1.0*self.finished_proteins/self.total_proteins * 100
+            print 'Processed Protein %s out of %s (%s%%)' % (self.finished_proteins, self.total_proteins, percent)
+            print '----------------------------------------------------------'
+
         print 'ProcessPDBTask - Processing Complete'
 
         # return only the code of proteins inserted or updated
