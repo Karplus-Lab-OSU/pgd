@@ -204,6 +204,13 @@ class ProcessPDBTask(Task):
         """
         Process an individual pdb file
         """
+
+        # create a copy of the data.  This dict will have a large amount of data
+        # added to it as the protein is processed.  This prevents memory leaks
+        # due to the original dict having a reference held outside this method.
+        # e.g. if it were looped over with a large list of PDBs
+        data = data.copy()
+
         try:
             residue_props = None
             code = data['code']
