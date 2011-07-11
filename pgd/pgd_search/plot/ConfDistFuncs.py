@@ -7,9 +7,6 @@
    # Use: Use ConfDistPlot to create a plot, other classes are used by ConfDistPlot
    #-------------------------------------------------------------------------------------------------------------------
 
-import math
-
-import cairo
 from django.db.models import Count, Avg, StdDev
 
 from pgd_constants import *
@@ -121,7 +118,7 @@ def getCircularStats(values,size):
 
     # Circular Average - use some fancy trig that takes circular values
     #   into account.  This requires all values to be converted to radians.
-    values = filter(lambda x:x!=None, values)
+    values = filter(lambda x:x is not None, values)
     size = len(values)
 
     if size == 1:
@@ -156,7 +153,7 @@ def getLinearStats(values,size):
     """
 
     # Average
-    values = filter(lambda x: x!=None, values)
+    values = filter(lambda x: x is not None, values)
     avg = sum(values)/size
 
     # Standard Deviation
@@ -290,13 +287,13 @@ class ConfDistPlot():
             (Q(**{
                 '%s__gte'%self.xTextString: x,
                 '%s__lte'%self.xTextString: x1,
-            }) if (xlinear) else ( # Altered logic for circular values
+            }) if xlinear else ( # Altered logic for circular values
                 Q(**{'%s__gte'%self.xTextString: self.x}) |
                 Q(**{'%s__lte'%self.xTextString: x})
             )) & (Q(**{
                 '%s__gte'%self.yTextString: y,
                 '%s__lte'%self.yTextString: y1,
-            }) if (ylinear) else ( # altered logic for circular values
+            }) if ylinear else ( # altered logic for circular values
                 Q(**{'%s__gte'%self.yTextString: self.y}) |
                 Q(**{'%s__lte'%self.yTextString: y})
             ))
@@ -699,7 +696,7 @@ class ConfDistPlot():
                 try:
                     bin_avg = bin['%s_avg'%self.refString]
                     bin_stddev = bin['%s_stddev'%self.refString]
-                    if bin_avg == None:
+                    if bin_avg is None:
                         continue
                 except KeyError:
                     continue
