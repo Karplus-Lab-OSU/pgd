@@ -378,6 +378,7 @@ class ConfDistPlot():
                 # out nulls for just that field
                 for field in self.stats_fields:
                     if field[0] in ANGLES:
+                        avg = '%s_avg' % field[1]
                         if avg and bin[avg]:
                             torsion_avgs[field[0]]["'%s:%s'" % key] = bin[avg]
 
