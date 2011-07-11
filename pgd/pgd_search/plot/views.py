@@ -230,16 +230,16 @@ def plotDump(request):
             data = form.cleaned_data
 
             cdp = ConfDistPlot(
-                360.0,            #height
-                360.0,            #width
-                data['x'],      #Xstart
-                data['x1'],           #Xend
+                360,               #height
+                360,               #width
+                data['x'],         #Xstart
+                data['x1'],        #Xend
                 data['y'],         #Ystart
-                data['y1'],           #Yend
-                data['xBin'],           #Xbin
-                data['yBin'],           #Ybin
-                data['xProperty'],      #X property
-                data['yProperty'],      #Y property
+                data['y1'],        #Yend
+                data['xBin'],      #Xbin
+                data['yBin'],      #Ybin
+                data['xProperty'], #X property
+                data['yProperty'], #Y property
                 #data['attribute'],#property
                 'all',#property
                 #data['reference'],
