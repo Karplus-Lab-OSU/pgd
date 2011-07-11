@@ -18,8 +18,8 @@ class HistogramPlot():
         
         self.minXPix = 45          # x offset of graph
         self.minYPix = 9           # y offset of graph
-        self.maxXPix = 240.0       # width of graph
-        self.maxYPix = 170.0       # height of graph
+        self.maxXPix = 240         # width of graph
+        self.maxYPix = 170         # height of graph
         self.numBins = float(36)
         self.querySet = query
         self.X = float(X)          # min X used in bin selection
