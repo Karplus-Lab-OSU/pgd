@@ -469,10 +469,10 @@ class ConfDistPlot():
         ratio = width/560.0
     
         # offsets setup to give 415px for the graph for a default width of 520
-        graph_x = round(width*.17857);
-        graph_y = round(height*.11702);
-        graph_height = height-2*graph_y;
-        graph_width = width-2*graph_x;
+        graph_x = round(width*.17857)
+        graph_y = round(height*.11702)
+        graph_height = height-2*graph_y
+        graph_width = width-2*graph_x
         hashsize = 10*ratio
         
         # calculate bin count and sizes.
@@ -495,14 +495,14 @@ class ConfDistPlot():
         binHeight = math.floor((graph_height-yBinCount+1)/yBinCount)
         graph_height_used = (binHeight+1)*yBinCount
         graph_width_used = (binWidth+1)*xBinCount
-        unused = graph_height - graph_height_used;
+        unused = graph_height - graph_height_used
         
         #image background
-        svg.rect(0, 0, height+30, width, 0, bg_color, bg_color);
+        svg.rect(0, 0, height+30, width, 0, bg_color, bg_color)
         #graph background
         svg.rect(graph_x, graph_y+unused, graph_height_used, graph_width_used, 0, self.graph_color, self.graph_color);
         #border
-        svg.rect(graph_x+0.5, graph_y+0.5+unused, graph_height_used, graph_width_used, 1, hash_color);
+        svg.rect(graph_x+0.5, graph_y+0.5+unused, graph_height_used, graph_width_used, 1, hash_color)
 
         #draw data area (bins)
         self.query_bins()
@@ -511,29 +511,29 @@ class ConfDistPlot():
         #y axis
         if x < 0 and x1 > 0:
             xZero = (graph_width_used/(x1-x)) * abs (x)
-            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color)
         elif x > x1 :
             xZero = (graph_width_used/(360-abs(x1)-x)) * (180-x)
-            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color);
+            svg.line( graph_x+xZero, graph_y, graph_x+xZero, graph_y+graph_height_used, 1, hash_color)
         #x axis
         if y < 0 and y1 > 0:
             yZero = graph_height_used+graph_y - (graph_height_used/(y1-y)) * abs (y)
-            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color);
+            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color)
         elif y > y1:
             yZero = graph_height_used+graph_y - (graph_height_used/(360-abs(y1)-y)) * (180-y)
-            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color);
+            svg.line( graph_x, yZero+unused, graph_x+graph_width_used, yZero+unused, 1, hash_color)
 
         #hashes
         for i in range(9):
             hashx = graph_x+(graph_width_used/8.0)*i
             hashy = graph_y+(graph_height_used/8.0)*i
-            svg.line( hashx, graph_y+graph_height, hashx, graph_y+graph_height+hashsize, 1, hash_color);
-            svg.line( graph_x, hashy+unused, graph_x-hashsize, hashy+unused, 1, self.hash_color);
+            svg.line( hashx, graph_y+graph_height, hashx, graph_y+graph_height+hashsize, 1, hash_color)
+            svg.line( graph_x, hashy+unused, graph_x-hashsize, hashy+unused, 1, self.hash_color)
     
         #create a cairo surface to calculate text sizes
         surface = cairo.ImageSurface (cairo.FORMAT_ARGB32, width, height)
         ctx = cairo.Context (surface)
-        ctx.set_font_size (12);
+        ctx.set_font_size (12)
     
         #hash labels
         xstep = ((x1 - x)%360 if xText in ANGLES else (x1 - x))/ 4
@@ -544,7 +544,7 @@ class ConfDistPlot():
     
         #get Y coordinate for xaxis hashes, this is the same for all x-labels
         xlabel_y = graph_y+graph_height+hashsize*2.5
-        ctx.set_font_size (12*ratio);
+        ctx.set_font_size (12*ratio)
         for i in range(5):
             #text value
             xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES and x1 <= 180 else (x + xstep*i)
@@ -584,7 +584,7 @@ class ConfDistPlot():
         svg.text(title_x,35*ratio, title, 12*ratio, text_color)
     
         #axis labels
-        ctx.set_font_size (18*ratio);
+        ctx.set_font_size (18*ratio)
         xbearing, ybearing, twidth, theight, xadvance, yadvance = ctx.text_extents(xTitle)
         title_x = graph_x+(graph_width_used/2) - xbearing - twidth/2
         svg.text(title_x,graph_y+graph_height+hashsize*5, xTitle, 18*ratio, text_color)
