@@ -146,21 +146,30 @@ class ProcessPDBTask(Task):
         """
         # process a single protein dict, or a list of proteins
         pdbs = kwargs['data']
+
+        print 'processing :', len(pdbs)
+        
+
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
         #print 'PDBS TO PROCESS:', pdbs
         self.total_proteins = len(pdbs)
+        skipped = 0
+        imported = 0
 
         for data in pdbs:
             # only update pdbs if they are newer
             if self.pdb_file_is_newer(data):
                 self.process_pdb(data)
+                imported += 1
             else:
+                skipped += 1
                 print 'INFO: Skipping up-to-date PDB: %s' % data['code']
             self.finished_proteins += 1
 
             percent = 1.0*self.finished_proteins/self.total_proteins * 100
-            print 'Processed Protein %s out of %s (%s%%)' % (self.finished_proteins, self.total_proteins, percent)
+            print 'Processed Protein %s out of %s (%s%%) %s imported, %s skipped' % \
+                  (self.finished_proteins, self.total_proteins, percent, imported, skipped)
             print '----------------------------------------------------------'
 
         print 'ProcessPDBTask - Processing Complete'
