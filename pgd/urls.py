@@ -25,8 +25,8 @@ urlpatterns = patterns('',
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    (r'^admin/(.*)', admin.site.root),
-    (r'^accounts/', include('registration_local.urls')),
+    #(r'^admin/(.*)', admin.site.root),
+    (r'^accounts/', include('registration.urls')),
     (r'^search/', include('pgd_search.urls')),
 
     # Static pages:
