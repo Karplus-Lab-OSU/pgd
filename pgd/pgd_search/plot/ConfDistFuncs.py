@@ -847,6 +847,9 @@ class ConfDistPlot():
         xstep = self.xbin
         ystep = self.ybin
 
+        #sort bins
+        keys = self.bins.keys()
+        keys.sort()
         for key in keys:
             bin = self.bins[key]
             x,y = key
