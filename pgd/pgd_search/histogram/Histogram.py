@@ -1,6 +1,8 @@
 import math
 
 import cairo
+from django.db import connections
+from django.db.backends.mysql.compiler import SQLCompiler
 from django.db.models import Max, Min, Count
 
 from pgd_constants import *
@@ -101,7 +103,12 @@ class HistogramPlot():
         # add clauses for sorting+grouping into bins
         sortz = BinSort(self.histoZ, offset=z, bincount=self.zbin, max=z1)
         annotated_query.annotate(z=sortz)
-        annotated_query = annotated_query.extra(select={'z':sortz.aggregate.as_sql()})
+
+        cn = connections['default']
+        qn = SQLCompiler(annotated_query.query, cn, 'default').quote_name_unless_alias
+        sortz_sql = sortz.aggregate.as_sql(qn, cn)
+
+        annotated_query = annotated_query.extra(select={'z':sortz_sql})
         annotated_query = annotated_query.order_by('z')
         
         # limit results to just the counts and bin indices

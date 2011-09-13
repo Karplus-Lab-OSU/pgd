@@ -1,11 +1,13 @@
 
-   #--------------------------------------------------------------------------------------------------------------------
-   # File: CleanDB.php
-   # Purpose: Classes and defs associated with plotting data. 
-   # Author: Mike Marr
-   # Date: 9/28/05
-   # Use: Use ConfDistPlot to create a plot, other classes are used by ConfDistPlot
-   #-------------------------------------------------------------------------------------------------------------------
+#--------------------------------------------------------------------------------------------------------------------
+# File: CleanDB.php
+# Purpose: Classes and defs associated with plotting data.
+# Author: Mike Marr
+# Date: 9/28/05
+# Use: Use ConfDistPlot to create a plot, other classes are used by ConfDistPlot
+#-------------------------------------------------------------------------------------------------------------------
+from django.db import connections
+from django.db.backends.mysql.compiler import SQLCompiler
 
 from django.db.models import Count, Avg, StdDev
 
@@ -337,10 +339,20 @@ class ConfDistPlot():
         # afterwards get the SQL from the aggregate function and add it as an
         # extra select clauses.  the select claus fields are added to the group by
         # statement.
+        #
+        # XXX in Django 1.2+ aggregates were changed to require connection and
+        # SQLCompiler objects to generate sql.  We must initialize this all
+        # manually to be able to grab the SQL for just our aggregate.
         sortx = BinSort(self.xTextString, offset=x, bincount=xbin, max=x1)
         sorty = BinSort(self.yTextString, offset=y, bincount=ybin, max=y1)
         annotated_query.annotate(x=sortx, y=sorty)
-        annotated_query = annotated_query.extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()})
+
+        cn = connections['default']
+        qn = SQLCompiler(annotated_query.query, cn, 'default').quote_name_unless_alias
+        sortx_sql = sortx.aggregate.as_sql(qn, cn)
+        sorty_sql = sorty.aggregate.as_sql(qn, cn)
+
+        annotated_query = annotated_query.extra(select={'x':sortx_sql, 'y':sorty_sql})
         annotated_query = annotated_query.order_by('x','y')
         
         # add all the names of the aggregates and x,y properties to the list 
@@ -408,10 +420,10 @@ class ConfDistPlot():
                 stddev = '%s_stddev' % field[1]
                 cases = ' '.join(['WHEN %s THEN %s' % (k,v) for k,v in filter(lambda x:x[1], torsion_avgs[field[0]].items())])
                 if cases:
-                    avgs = "CASE CONCAT(%s,':',%s) %s END" % (sortx.aggregate.as_sql(), sorty.aggregate.as_sql(), cases)
+                    avgs = "CASE CONCAT(%s,':',%s) %s END" % (sortx_sql, sorty_sql, cases)
                     annotations = {stddev:DirectionalStdDev(field[1], avg=avgs)}
                     stddev_query = querySet \
-                                    .extra(select={'x':sortx.aggregate.as_sql(), 'y':sorty.aggregate.as_sql()}) \
+                                    .extra(select={'x':sortx_sql, 'y':sorty_sql}) \
                                     .filter(**{'%s%s__isnull'%(prefix, field[1]):False}) \
                                     .annotate(**annotations) \
                                     .values(*annotations.keys()+['x','y']) \
