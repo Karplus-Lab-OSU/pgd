@@ -741,6 +741,13 @@ class ConfDistPlot():
         if not self.bins:
             self.query_bins()
 
+        xText = self.xText
+        yText = self.yText
+        xMin = self.x
+        xMax = self.x1
+        yMin = self.y
+        yMax = self.y1
+
         residue = self.residue_attribute
         residueX = self.residue_xproperty
         residueY = self.residue_yproperty
@@ -837,22 +844,26 @@ class ConfDistPlot():
                 writer.write('%sDev(i%s)' % (title,residue_yproperty))
 
         # Cycle through the binPoints
-        xbin = self.xbin
-        ybin = self.ybin
-        for key in self.bins:
+        xstep = self.xbin
+        ystep = self.ybin
+
+        for key in keys:
             bin = self.bins[key]
+            x,y = key
             writer.write('\n')
 
             # x axis range
-            writer.write(key[0]*xbin)
+            xstart = ((xMin + xstep*x + 180)%360 - 180) if xText in ANGLES and xMax <= 180 else (xMin + xstep*x)
+            writer.write(xstart)
             writer.write('\t')
-            writer.write((key[0]+1)*xbin)
+            writer.write(xstart+xstep)
 
             # y-axis range
+            ystart = ((yMin + ystep*y + 180)%360 - 180) if yText in ANGLES and yMax <= 180 else (yMin + ystep*y)
             writer.write('\t')
-            writer.write(key[1]*ybin)
+            writer.write(ystart)
             writer.write('\t')
-            writer.write((key[1]+1)*ybin)
+            writer.write(ystart+ystep)
 
             # observations
             writer.write('\t')
