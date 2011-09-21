@@ -318,7 +318,9 @@ class ConfDistPlot():
             self.stats_fields = [(self.ref,self.refString)]
 
         # create set of annotations to include in the query
-        annotations = {'count':Count('id')}
+        # XXX if this is observations include all residues in the count,
+        #     otherwise use the ref field so that the count is filters out nulls
+        annotations = {'count':Count('id' if self.ref == "Observations" else self.refString)}
         torsion_avgs = {}
         for field in self.stats_fields:
             avg = '%s_avg' % field[1]
