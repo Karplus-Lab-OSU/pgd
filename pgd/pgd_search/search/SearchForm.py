@@ -77,7 +77,7 @@ for i in RESIDUE_INDEXES:
     for j in range(1,6):
         form_dict["L%i_%i" % (j, i)]    = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["L%i_i_%i" % (j, i)]  = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
-    for j in ("phi", "psi", "ome", "chi1","chi2","chi3","chi4", "bm", "bs", "bg", "h_bond_energy", "zeta"):
+    for j in ("phi", "psi", "ome", "chi1","chi2","chi3","chi4",'chi5', "bm", "bs", "bg", "h_bond_energy", "zeta"):
         form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(required=False, widget=forms.TextInput(attrs={'class':'field', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 

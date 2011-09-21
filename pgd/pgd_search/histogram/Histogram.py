@@ -12,7 +12,7 @@ from svg import *
 from pgd_search.statistics.aggregates import BinSort
 
 
-ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
+ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4','chi5','zeta')
 
 class HistogramPlot():
     

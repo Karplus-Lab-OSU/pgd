@@ -221,7 +221,7 @@ class Search(models.Model):
                 (
                     'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                     'L1',   'L2',   'L3',   'L4',   'L5',
-                    'phi',  'psi',  'ome',  'chi1', 'chi2', 'chi3', 'chi4',
+                    'phi',  'psi',  'ome',  'chi1', 'chi2', 'chi3', 'chi4', 'chi5',
                     'bm',   'bs',   'bg',
                     'h_bond_energy',
                     'zeta',

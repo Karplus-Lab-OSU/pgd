@@ -76,6 +76,7 @@ PLOT_PROPERTY_CHOICES = [
     ("chi2","chi3"),
     ("chi3","chi3"),
     ("chi4","chi4"),
+    ("chi5","chi5"),
     ("zeta","zeta")
     #("h_bond_energy","H Bond"),
     ]

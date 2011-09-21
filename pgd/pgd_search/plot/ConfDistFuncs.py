@@ -18,7 +18,7 @@ from pgd_search.statistics.aggregates import DirectionalAvg, DirectionalStdDev, 
 from pgd_splicer.sidechain import sidechain_length_relationship_list, sidechain_angle_relationship_list
 from svg import *
 
-ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4', 'zeta')
+ANGLES = ('ome', 'phi', 'psi', 'chi1','chi2','chi3','chi4','chi5','zeta')
 NON_FIELDS = ('Observations', 'all')
 
 """
@@ -92,6 +92,7 @@ LABEL_REPLACEMENTS = {
             "chi2":u'\u03C7\u00B2',
             "chi3":u'\u03C7\u00B3',
             "chi4":u'\u03C7\u2084',
+            "chi5":u'\u03C7\u2085',
             "phi":u'\u03D5',
             "psi":u'\u03A8',
             'zeta':u'\u03B6',
@@ -320,7 +321,7 @@ class ConfDistPlot():
         # create set of annotations to include in the query
         # XXX if this is observations include all residues in the count,
         #     otherwise use the ref field so that the count is filters out nulls
-        annotations = {'count':Count('id' if self.ref == "Observations" else self.refString)}
+        annotations = {'count':Count('id' if self.ref in ("Observations","all") else self.refString)}
         torsion_avgs = {}
         for field in self.stats_fields:
             avg = '%s_avg' % field[1]
@@ -755,7 +756,7 @@ class ConfDistPlot():
         residueY = self.residue_yproperty
 
         #fields to include, order in this list is important
-        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi1','chi2','chi3','chi4','zeta')
+        STATS_FIELDS = ('phi','psi','ome','L1','L2','L3','L4','L5','a1','a2','a3','a4','a5','a6','a7','chi1','chi2','chi3','chi4','chi5','zeta')
         avgString = '%s%s_avg'
         stdString = '%s%s_stddev'
         index_set = set([self.get_prefix(residue),self.get_prefix(residueX),self.get_prefix(residueY)])
@@ -914,6 +915,10 @@ def RefDefaults():
                         'max':180,
                         'stepsize':10},
                 'chi4':{
+                        'min':-180,
+                        'max':180,
+                        'stepsize':10},
+                'chi5':{
                         'min':-180,
                         'max':180,
                         'stepsize':10},

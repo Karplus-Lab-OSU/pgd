@@ -1520,6 +1520,15 @@
                 {% endfor %}
             </tr>
 
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>5</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi5}}{{r.chi5_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
             <tr class="spacer"/>
 
             <tr><td colspan="100%" class="sectionheader" id="sidechain_angle_header">Sidechain Angles →</td></tr>

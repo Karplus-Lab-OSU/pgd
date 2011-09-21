@@ -311,6 +311,7 @@ class Residue(models.Model):
     chi2            = models.FloatField(null=True)
     chi3            = models.FloatField(null=True)
     chi4            = models.FloatField(null=True)
+    chi5            = models.FloatField(null=True)
     bm              = models.FloatField()
     bs              = models.FloatField()
     bg              = models.FloatField(null=True)
