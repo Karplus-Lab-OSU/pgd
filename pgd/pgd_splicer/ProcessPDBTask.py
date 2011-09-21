@@ -14,8 +14,7 @@ if __name__ == '__main__':
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
-    from pydra.config import load_settings
-    pydra_settings = load_settings()
+
 
 
 
@@ -25,13 +24,11 @@ from math import sqrt
 import os
 import shutil
 import sys
-import time
 
 import Bio.PDB
 from Bio.PDB import calc_angle as pdb_calc_angle
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
-from pydra.cluster.tasks.tasks import Task
 
 from pgd_core.models import Protein as ProteinModel
 from pgd_core.models import Chain as ChainModel
@@ -55,7 +52,6 @@ from pgd_core.models import Sidechain_TRP
 from pgd_core.models import Sidechain_TYR
 from pgd_core.models import Sidechain_VAL
 
-from pgd_splicer.models import *
 from pgd_splicer.chi import CHI_MAP
 from pgd_splicer.sidechain import *
 
@@ -125,7 +121,7 @@ class InvalidResidueException(Exception):
     pass
 
 
-class ProcessPDBTask(Task):
+class ProcessPDBTask():
     """
     Task that takes a list of pdbs and processes the files extracting
     geometry data from the files.  The data is stored in Protein, Chain and
@@ -773,7 +769,6 @@ if __name__ == '__main__':
     """
     Run if file is executed from the command line
     """
-    #from pydra.cluster.worker import WorkerProxy
     import sys
     import logging
     import fileinput

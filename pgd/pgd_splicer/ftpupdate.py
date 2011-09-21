@@ -14,15 +14,11 @@ if __name__ == '__main__':
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
-    from pydra.config import load_settings
-    pydra_settings = load_settings()
 
-from pydra.cluster.tasks.tasks import *
 from pgd_splicer.models import *
 
 import os
 
-from sets import Set
 from ftplib import FTP, error_perm
 import re
 import time
@@ -71,7 +67,7 @@ def processFile(str):
     pdb_remote_files[pdb] = date
 
 
-class FTPUpdateTask(Task):
+class FTPUpdateTask():
 
     pdbTotal = 0
     pdbCount = 0

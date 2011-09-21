@@ -6,7 +6,6 @@ if __name__ == '__main__':
     #python magic to add the current directory to the pythonpath
     sys.path.append(os.getcwd())
 
-from pydra.cluster.tasks import Task
 from pgd.pgd_splicer.models import *
 
 import urllib
@@ -14,7 +13,7 @@ import os
 import re
 import fileinput
 
-class PDBSelectorTask(Task):
+class PDBSelectorTask():
 
     progressValue = 0
 

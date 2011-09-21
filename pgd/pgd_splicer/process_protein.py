@@ -15,14 +15,12 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from dbsettings.loading import set_setting_value
-from pydra_server.cluster.tasks import TaskContainer, ParallelTask
 
 from ProcessPDBTask import *
 from ftpupdate import *
 from SegmentBuilder import *
 
-class ProteinImportTask(TaskContainer):
+class ProteinImportTask():
     """
     Full import process for a single protein.
     """
@@ -36,7 +34,7 @@ class ProteinImportTask(TaskContainer):
         self.add_task(SegmentBuilderTask('Process raw structures into search table'))
 
 
-class ParallelProteinImportTask(ParallelTask):
+class ParallelProteinImportTask():
     """
     Wrapper around ProteinImportTask to make it run in Parallel
     """
@@ -75,11 +73,9 @@ if __name__ == '__main__':
           chains, threshold, resolution, rfactor, rfree.  Its not currently possible to
           pass those into this file.
     """
-    from pydra_server.cluster.worker_proxy import WorkerProxy
     import sys
 
     task = ProteinImportTask()
-    task.parent = WorkerProxy()
 
     pdbs = {}
     argv = sys.argv

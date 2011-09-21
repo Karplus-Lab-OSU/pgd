@@ -14,17 +14,14 @@ if __name__ == '__main__':
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
-    from pydra.config import load_settings
-    pydra_settings = load_settings()
 
-from datetime import datetime
+
 import gzip
 import os
 import re
 import sys
 import urllib
 
-from pydra.cluster.tasks import Task
 
 from pgd_splicer.models import *
 
@@ -35,7 +32,7 @@ def printc(txt):
     sys.stdout.write('\n')
 
 
-class DunbrackPDBSelectorTask(Task):
+class DunbrackPDBSelectorTask():
     """
     DunbrackPDBSelectorTask downloads and processes PDB selection files from
     Dunbrack's PISCE service.  It pulls files from the list of pre-culled files

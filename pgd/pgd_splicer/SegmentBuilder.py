@@ -15,11 +15,9 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-import math
 
 from django.db import transaction
 
-from pydra.cluster.tasks import Task
 from pgd.pgd_core.models import *
 from pgd.pgd_search.models import *
 
@@ -28,7 +26,7 @@ Task that processes protein chains to create or update segment objects
 
 This task requires that proteins, chains, and residues have already been created
 """
-class SegmentBuilderTask(Task):
+class SegmentBuilderTask():
 
     proteinCount = None
     proteinTotal = None
@@ -188,7 +186,6 @@ class SegmentBuilderTask(Task):
 
 if __name__ == '__main__':
     import sys
-    from pydra_server.cluster.worker_proxy import WorkerProxy
 
     builder = SegmentBuilderTask('Command Line Builder')
     builder.parent = WorkerProxy()

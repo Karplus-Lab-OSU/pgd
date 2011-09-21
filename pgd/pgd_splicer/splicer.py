@@ -15,7 +15,6 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from pydra_server.cluster.tasks import TaskContainer
 from django import forms
 
 from dunbrack_selector import DunbrackPDBSelectorTask
