@@ -56,17 +56,17 @@ class Search(models.Model):
     data_internal    = models.TextField()
     __data = None
 
-    def get_data(self):
-        if not self.__data and self.data_internal:
+    @property
+    def data(self):
+        if self.__data is None and self.data_internal:
             self.__data = cPickle.loads(str(self.data_internal))
         return self.__data
 
-    def set_data(self, value):
+    @data.setter
+    def data(self, value):
         self.__data = value
+        self.data_internal = None
     
-    data = property(get_data, set_data)
-
-
     @property
     def segmentLength(self):
         return int(self.data['residues'])
@@ -85,7 +85,8 @@ class Search(models.Model):
 
     def save(self):
         """ serialize parameters pre-save, object probably wont't be saved often """
-        self.data_internal = cPickle.dumps(self.__data)
+        if self.data_internal is None and self.__data is not None:
+            self.data_internal = cPickle.dumps(self.__data)
         super(Search, self).save()
 
     _querySet = None

@@ -112,7 +112,6 @@ def editSearch(request, search_id=None):
             return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
         form = SearchForm(search.data)
 
-
     #else use the search in the session if it exists
     else:
         try:
@@ -225,28 +224,21 @@ def saveSearch(request,search_id=None):
         form = saveSearchForm(request.POST)
         if form.is_valid():
             if search_id:
-                editedsearch = Search.objects.get(id=search_id)
-                if request.user!=editedsearch.user:
+                search = Search.objects.get(id=search_id)
+                if request.user!=search.user:
                     return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
-                else:
-                    data = form.cleaned_data
-                    editedsearch.title = data['title']
-                    editedsearch.description = data['description']
-                    editedsearch.user=request.user
-                    editedsearch.timestamp=datetime.now()
-                    editedsearch.isPublic = data['isPublic']
-                    editedsearch.save()
-                    return HttpResponseRedirect('%s/search/saved/' % settings.SITE_ROOT)
-                
             else:
-                data = form.cleaned_data
-                request.session['search'].title = data['title']
-                request.session['search'].description = data['description']
-                request.session['search'].user=request.user
-                request.session['search'].timestamp=datetime.now()
-                request.session['search'].isPublic = data['isPublic']
-                request.session['search'].save()
-                return HttpResponseRedirect('%s/search/saved/' % settings.SITE_ROOT)
+                search = request.session['search']
+
+            data = form.cleaned_data
+            search.title = data['title']
+            search.description = data['description']
+            search.user=request.user
+            search.timestamp=datetime.now()
+            search.isPublic = data['isPublic']
+            search.save()
+
+            return HttpResponseRedirect('%s/search/saved/' % settings.SITE_ROOT)
     else:
         if search_id:
             oldsearch = Search.objects.get(id=search_id)
