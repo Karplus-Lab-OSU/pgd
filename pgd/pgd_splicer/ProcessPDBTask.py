@@ -52,7 +52,7 @@ from pgd_core.models import Sidechain_TRP
 from pgd_core.models import Sidechain_TYR
 from pgd_core.models import Sidechain_VAL
 
-from pgd_splicer.chi import CHI_MAP
+from pgd_splicer.chi import CHI_MAP, CHI_CORRECTIONS_TESTS, CHI_CORRECTIONS
 from pgd_splicer.sidechain import *
 
 
@@ -435,7 +435,8 @@ def parseWithBioPython(file, props, chains_filter=None):
                         newID += 1
                         terminal = False
                         hetflag, res_id, icode = res.get_id()
-                        
+                        resname = res.resname
+
                         # XXX Get the dictionary of atoms in the Main conformation.
                         # BioPython should do this automatically, but it does not
                         # always choose the main conformation.  Leading to some
@@ -451,8 +452,6 @@ def parseWithBioPython(file, props, chains_filter=None):
                         all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
                         if hetflag != ' ' or not all_mainchain:
                             raise InvalidResidueException('HetCode or Missing Atom')
-
-
 
                         # Create dictionary structure and initialize all values.  All
                         # Values are required.  Values that are not filled in will retain
@@ -489,7 +488,7 @@ def parseWithBioPython(file, props, chains_filter=None):
 
                         res_dict['chain_id'] = chain
                         res_dict['ss'] = secondary_structure
-                        res_dict['aa'] = AA3to1[res.resname]
+                        res_dict['aa'] = AA3to1[resname]
                         res_dict['h_bond_energy'] = 0.00
 
                         # Get Vectors for mainchain atoms and calculate geometric angles,
@@ -520,7 +519,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                                 res_dict['L1'] = L1
                                 
                                 # proline has omega-p property
-                                if prev and res.resname == 'PRO' and 'CD' in atoms:
+                                if prev and resname == 'PRO' and 'CD' in atoms:
                                     CD = atoms['CD'].get_vector()
                                     res_dict['omep'] = calc_dihedral(oldCA, oldC, N, CD)
                                 
@@ -581,17 +580,54 @@ def parseWithBioPython(file, props, chains_filter=None):
                             res_dict['bs'] = sum(side_chain)/len(side_chain)
 
 
-                        """
-                        Calculate CHI values.  The mappings for per peptide chi's are stored
-                        in a separate file and a function is used to calculate the chi based
-                        based on the peptide of this residue and the lists of atoms in the
-                        chi mappings.
-                        """
-                        
-                        calc_chi(res, prev, res_dict)
+                        # CHI corrections - Some atoms have symettrical values
+                        # in the sidechain that aren't guarunteed to be listed
+                        # in the correct order by within the PDB file.  The correct order can be
+                        # determined by checking for the larger of two Chi values.  If the 2nd value
+                        # listed in CHI_CORRECTIONS_TESTS is larger, then corrections are needed. There
+                        # may be multiple corrections per Residue which are listed in CHI_CORRECTIONS.
+                        # each pair of atoms will be swapped so that any future calculation will use
+                        # the correct values.
+                        #
+                        # Both angles are required to determine whether atoms are labeled correctly.
+                        # If only one angle is present then we check to see if it is less than 90
+                        # degrees.  if it is less than 90 degress then it is considered ChiN-1
+                        # See: Ticket #1545 for more details.
+                        if resname in CHI_CORRECTIONS_TESTS:
+                            values = calc_chi(atoms, prev, CHI_CORRECTIONS_TESTS[resname])
+                            correct = False
+                            if not len(values):
+                                for atom1, atom2 in CHI_CORRECTIONS[resname]:
+                                    if atom1 in atoms: del atoms[atom1]
+                                    if atom2 in atoms: del atoms[atom2]
+
+                            elif len(values) == 1:
+                                if 'chi1' in values and abs(values['chi1']) > 90:
+                                    correct = True
+                                elif 'chi2' in values and abs(values['chi2']) < 90:
+                                    correct = True
+
+                            elif abs(values['chi2']) < abs(values['chi1']):
+                                correct = True
+
+                            if correct:
+                                for atom1, atom2 in CHI_CORRECTIONS[resname]:
+                                    tmp = atoms[atom1]
+                                    atoms[atom1] = atoms[atom2]
+                                    atoms[atom2] = atoms[atom1]
+
+
+                        #Calculate CHI values.  The mappings for per peptide chi's are stored
+                        #in a separate file and a function is used to calculate the chi based
+                        #based on the peptide of this residue and the lists of atoms in the
+                        #chi mappings.
+                        if resname in CHI_MAP:
+                            res_dict.update(calc_chi(atoms, prev, CHI_MAP[resname]))
                         sidechain = {}
-                        calc_sidechain_lengths(res, sidechain)
-                        calc_sidechain_angles(res, prev, sidechain)
+                        if resname in bond_lengths:
+                            calc_sidechain_lengths(atoms, sidechain, bond_lengths[resname])
+                        if resname in bond_angles:
+                            calc_sidechain_angles(atoms, prev, sidechain, bond_angles[resname])
                         if sidechain:
                             res_dict['sidechain'] = sidechain
                             
@@ -671,16 +707,18 @@ def calc_dihedral(atom1, atom2, atom3, atom4):
     return math.degrees(pdb_calc_dihedral(atom1, atom2, atom3, atom4))
 
 
-def calc_chi(residue, residue_prev, residue_dict):
+def calc_chi(residue, residue_prev, mapping):
     """
     Calculates Values for CHI using the predefined list of CHI angles in
     the CHI_MAP.  CHI_MAP contains the list of all peptides and the atoms
     that make up their different chi values.  This function will process
     the values known to exist, it will also skip chi values if some of the
     atoms are missing
+
+    @param mapping: list of mappings to use
     """
+    residue_dict = {}
     try:
-        mapping = CHI_MAP[residue.resname]
         for i in range(len(mapping)):
             chi_atom_names= mapping[i]
             try:
@@ -699,15 +737,15 @@ def calc_chi(residue, residue_prev, residue_dict):
     except KeyError:
         # this residue type does not have chi
         pass
+    return residue_dict
 
 
-def calc_sidechain_lengths(residue, residue_dict):
+def calc_sidechain_lengths(residue, residue_dict, mapping):
     """
     Calculates Values for sidechain bond lengths. Uses a predefined list
     from sidechain.py, specifically bond_lengths.
     """
     try:
-        mapping = bond_lengths[residue.resname]
         for i in range(len(mapping)):
             atom_names = mapping[i]
             try:
@@ -723,13 +761,12 @@ def calc_sidechain_lengths(residue, residue_dict):
         pass
 
 
-def calc_sidechain_angles(residue, residue_prev, residue_dict):
+def calc_sidechain_angles(residue, residue_prev, residue_dict, mapping):
     """
     Calculates Values for sidechain bond angles. Uses a predefined list
     from sidechain.py, specifically bond_angles.
     """
     try:
-        mapping = bond_angles[residue.resname]
         for i in range(len(mapping)):
             atom_names = mapping[i]
             try:

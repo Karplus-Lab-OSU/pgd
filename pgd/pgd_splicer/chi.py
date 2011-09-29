@@ -76,3 +76,29 @@ CHI_MAP = {
         ('CB',  'CG',  'CD',  'OE1')
         )
     }
+
+
+# CHI corrections are symettrical values that aren't guarunteed to be recorded
+# in the correct order by within the PDB file.  The correct order can be
+# determined by checking for the larger of two Chi values.  If the 2nd value
+# listed in CHI_CORRECTIONS_TESTS is larger, then corrections are needed. There
+# may be multiple corrections per Residue which are listed in CHI_CORRECTIONS.
+# each pair of atoms will be swapped so that any future calculation will use
+# the correct values.
+#
+# See: Ticket #1545
+CHI_CORRECTIONS_TESTS = {
+    'ASP':[('CA',  'CB',  'CG',  'OD1'), ('CA',  'CB',  'CG',  'OD2')],
+    'GLU':[('CB',  'CG',  'CD',  'OE1'), ('CB',  'CG',  'CD',  'OE2')],
+    'ARG':[('CD',  'NE',  'CZ',  'NH1'), ('CD',  'NE',  'CZ',  'NH2')],
+    'PHE':[('CA',  'CB',  'CG',  'CD1'), ('CA',  'CB',  'CG',  'CD2')],
+    'TYR':[('CA',  'CB',  'CG',  'CD1'), ('CA',  'CB',  'CG',  'CD2')],
+}
+
+CHI_CORRECTIONS = {
+    'ASP':[('OD1','OD2')],
+    'GLU':[('OE1','OE2')],
+    'ARG':[('NH1','NH2')],
+    'PHE':[('CD1','CD2'), ('CE1','CE2')],
+    'TYR':[('CD1','CD2'), ('CE1','CE2')],
+}

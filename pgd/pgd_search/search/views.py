@@ -139,7 +139,7 @@ def editSearch(request, search_id=None):
         aa_chosen = form.cleaned_data['aa_%i' % i]
         aa_choices.append([(c[0],c[1],'checked' if c[0] in aa_chosen else '') for c in AA_CHOICES])
         ss_chosen = form.cleaned_data['ss_%i' % i]
-        ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES]) 
+        ss_choices.append([(c[0],c[1],'checked' if c[0] in ss_chosen else '') for c in SS_CHOICES])
 
         dict = {}
         for prefix in fields:
