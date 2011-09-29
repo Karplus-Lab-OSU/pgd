@@ -436,35 +436,31 @@ def parseWithBioPython(file, props, chains_filter=None):
                         terminal = False
                         hetflag, res_id, icode = res.get_id()
                         
-                        """
-                        XXX Get the dictionary of atoms in the Main conformation.
-                        BioPython should do this automatically, but it does not
-                        always choose the main conformation.  Leading to some
-                        Interesting results
-                        """
+                        # XXX Get the dictionary of atoms in the Main conformation.
+                        # BioPython should do this automatically, but it does not
+                        # always choose the main conformation.  Leading to some
+                        # Interesting results
                         atoms = {}
                         for atom in res.get_unpacked_list():
                             if atom.get_altloc() in ('A', ' '):
                                 atoms[atom.name] = atom
-                        
-                        """
-                        Exclude water residues
-                        Exclude any Residues that are missing _ANY_ of the
-                            mainchain atoms.  Any atom could be missing
-                        """
+
+                        # Exclude water residues
+                        # Exclude any Residues that are missing _ANY_ of the
+                        #     mainchain atoms.  Any atom could be missing
                         all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
                         if hetflag != ' ' or not all_mainchain:
                             raise InvalidResidueException('HetCode or Missing Atom')
 
-                        """
-                        Create dictionary structure and initialize all values.  All
-                        Values are required.  Values that are not filled in will retain
-                        the NO_VALUE value.
 
-                        Store residue properties using OLD_ID as the key to ensure it is
-                        unique.  We're including residues from all chains in the same
-                        dictionary and chainindex may have duplicates.
-                        """
+
+                        # Create dictionary structure and initialize all values.  All
+                        # Values are required.  Values that are not filled in will retain
+                        # the NO_VALUE value.
+                        #
+                        # Store residue properties using OLD_ID as the key to ensure it is
+                        # unique.  We're including residues from all chains in the same
+                        # dictionary and chainindex may have duplicates.
                         old_id = res_id if icode == ' ' else '%s%s' % (res_id, icode)
                         try:
                             res_dict = residues[old_id]
@@ -481,9 +477,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         initialize_geometry(res_dict, angles_list, 'angle')
                         initialize_geometry(res_dict, dihedral_list, 'angle')
 
-                        """
-                        Get Properties from DSSP and other per residue properties
-                        """
+                        # Get Properties from DSSP and other per residue properties
                         chain = res.get_parent().get_id()
                         try:
                             residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, (hetflag, res_id, icode)) ]
@@ -498,10 +492,8 @@ def parseWithBioPython(file, props, chains_filter=None):
                         res_dict['aa'] = AA3to1[res.resname]
                         res_dict['h_bond_energy'] = 0.00
 
-                        """
-                        Get Vectors for mainchain atoms and calculate geometric angles,
-                        dihedral angles, and lengths between them.
-                        """
+                        # Get Vectors for mainchain atoms and calculate geometric angles,
+                        # dihedral angles, and lengths between them.
                         N    = atoms['N'].get_vector()
                         CA   = atoms['CA'].get_vector()
                         C    = atoms['C'].get_vector()
@@ -560,22 +552,18 @@ def parseWithBioPython(file, props, chains_filter=None):
                             res_dict['L3'] = calc_distance(CA,CB)
                             res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
 
-                        """
-                        Calculate Bg - bfactor of the 4th atom in Chi1.
-                        """
+                        # Calculate Bg - bfactor of the 4th atom in Chi1.
                         try:
-                            atom_name = CHI_MAP[res.resname][0][3]
+                            atom_name = CHI_MAP[resname][0][3]
                             res_dict['bg'] = res[atom_name].get_bfactor()
                         except KeyError:
                             # not all residues have chi
                             pass
 
 
-                        """
-                        Other B Averages
-                            Bm - Average of bfactors in main chain.
-                            Bm - Average of bfactors in side chain.
-                        """
+                        # Other B Averages
+                        #    Bm - Average of bfactors in main chain.
+                        #    Bm - Average of bfactors in side chain.
                         main_chain = []
                         side_chain = []
                         for name in atoms:
@@ -606,9 +594,8 @@ def parseWithBioPython(file, props, chains_filter=None):
                         calc_sidechain_angles(res, prev, sidechain)
                         if sidechain:
                             res_dict['sidechain'] = sidechain
-                        """
-                        Reset for next pass.  We save some relationships which span two atoms.
-                        """
+                            
+                        # Reset for next pass.  We save some relationships which span two atoms.
                         res_old_id = old_id
                         oldN       = N
                         oldCA      = CA
