@@ -201,7 +201,7 @@ class ProcessPDBTask():
             return True
 
         data['pdb_date'] = pdb_date
-        return protein.pdb_date < pdb_date
+        return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
 
 
     @transaction.commit_manually
