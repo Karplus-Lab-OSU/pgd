@@ -236,7 +236,7 @@ if __name__ == '__main__':
     else:
         pdbs = [{'code':code} for code in sys.argv[1:]]
 
-    task = FTPUpdateTask('Command Line Update')
+    task = FTPUpdateTask()
     task.work(**{'data':pdbs})
 
 

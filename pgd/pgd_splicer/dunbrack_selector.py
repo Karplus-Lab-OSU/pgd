@@ -223,7 +223,7 @@ def get_files(url, thresholds, resolution, r_factor):
 if __name__ == '__main__':
     import sys
     
-    task =  DunbrackPDBSelectorTask('CommandLine PDBSelector')
+    task =  DunbrackPDBSelectorTask()
     pipe = False
     
     argv = sys.argv
