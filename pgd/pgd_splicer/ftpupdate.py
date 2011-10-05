@@ -113,7 +113,7 @@ class FTPUpdateTask():
 
         print "LOCAL FILES:"
         for entry in pdb_local_files:
-            if pdb_local_files[entry] == None:
+            if pdb_local_files[entry] is None:
                 print '  - %s : None' % (entry)
             else:
                 print '  - %s : %s' % (entry, time.asctime(pdb_local_files[entry]))
@@ -132,8 +132,12 @@ class FTPUpdateTask():
         ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
 
         for pdb in pdb_local_files:
+
+            if pdb_local_files[entry] is None:
+                continue
+            
             filename = 'pdb%s.ent.gz' % (pdb)
-            print '    FILE:', filename
+            print '    Checking Remote File:', filename
 
             localdate = pdb_local_files[pdb]
             try:
