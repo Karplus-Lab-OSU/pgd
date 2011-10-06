@@ -479,7 +479,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         # Get Properties from DSSP and other per residue properties
                         chain = res.get_parent().get_id()
                         try:
-                            residue_dssp, secondary_structure, accessibility, relative_accessibility = dssp[(chain, (hetflag, res_id, icode)) ]
+                            residue_dssp, secondary_structure, accessibility, relative_accessibility, phi, psi = dssp[(chain, (hetflag, res_id, icode)) ]
                         except KeyError, e:
                             import sys, traceback
                             t, v, tb = sys.exc_info()
