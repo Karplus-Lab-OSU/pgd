@@ -22,6 +22,7 @@ PIP_INSTALL = {
     'django'                    :'>=1.3',
     'django-registration'       :'',
     'south'                     :'',
+    'biopython'                 :'',
 }
 
 GIT_INSTALL =  {}
