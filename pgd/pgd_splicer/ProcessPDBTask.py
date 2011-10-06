@@ -612,9 +612,16 @@ def parseWithBioPython(file, props, chains_filter=None):
 
                             if correct:
                                 for atom1, atom2 in CHI_CORRECTIONS[resname]:
-                                    tmp = atoms[atom1]
-                                    atoms[atom1] = atoms[atom2]
-                                    atoms[atom2] = atoms[atom1]
+                                    old_atom1 = atoms.get(atom1)
+                                    old_atom2 = atoms.get(atom2)
+                                    if old_atom1:
+                                        atoms[atom2] = old_atom1
+                                    else:
+                                        del atoms[atom2]
+                                    if old_atom2:
+                                        atoms[atom1] = old_atom2
+                                    else:
+                                        del atoms[atom1]
 
 
                         #Calculate CHI values.  The mappings for per peptide chi's are stored
