@@ -610,7 +610,11 @@
                     args = {};
                     for (i=0; i<$inputs.length; i++) {
                         input = $inputs.get(i);
-                        args[input.id.slice(3)]= $(input).val();
+                        if (input.id.slice(0, 3) == 'id_') {
+                            args[input.id.slice(3)]= $(input).val();
+                        } else {
+                            args[input.id]= $(input).val();
+                        }
                     }
                 // update statfield so details renders correctly
                 stat_field = ($('#id_attribute').val() != 'Observations');
