@@ -817,6 +817,7 @@
         
             function histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr) {
                 $('#histoCanvas').empty();
+                var csrf = $('#csrfmiddlewaretoken').val();
                 dict = {'x': X,
                         'x1': Xm,
                         'y': Y,
@@ -826,7 +827,8 @@
                         'zRes': histoZ,
                         'xResNum': histoXr,
                         'yResNum': histoYr,
-                        'zResNum': histoZr}
+                        'zResNum': histoZr,
+                        'csrfmiddlewaretoken':csrf}
                 $.post('{{SITE_ROOT}}/search/histogram/render/', dict, process_histo_svg, "json");
             }
         
