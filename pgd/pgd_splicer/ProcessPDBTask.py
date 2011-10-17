@@ -486,7 +486,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                             traceback.print_tb(tb, limit=10, file=sys.stdout)
                             raise InvalidResidueException('KeyError in DSSP')
 
-                        res_dict['chain_id'] = chain
+                        res_dict['chain'] = chain
                         res_dict['ss'] = secondary_structure
                         res_dict['aa'] = AA3to1[resname]
                         res_dict['h_bond_energy'] = 0.00
@@ -612,9 +612,16 @@ def parseWithBioPython(file, props, chains_filter=None):
 
                             if correct:
                                 for atom1, atom2 in CHI_CORRECTIONS[resname]:
-                                    tmp = atoms[atom1]
-                                    atoms[atom1] = atoms[atom2]
-                                    atoms[atom2] = atoms[atom1]
+                                    old_atom1 = atoms.get(atom1)
+                                    old_atom2 = atoms.get(atom2)
+                                    if old_atom1:
+                                        atoms[atom2] = old_atom1
+                                    else:
+                                        del atoms[atom2]
+                                    if old_atom2:
+                                        atoms[atom1] = old_atom2
+                                    else:
+                                        del atoms[atom1]
 
 
                         #Calculate CHI values.  The mappings for per peptide chi's are stored
