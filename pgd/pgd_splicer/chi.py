@@ -46,7 +46,7 @@ CHI_MAP = {
     'GLU':(
         ('N',   'CA',  'CB',  'CG'),
         ('CA',  'CB',  'CG',  'CD'),
-        ('CA',  'CB',  'CG',  'OE1')
+        ('CB',  'CG',  'CD',  'OE1')
         ),
     'HIS':(
         ('N',   'CA',  'CB',  'CG'),
