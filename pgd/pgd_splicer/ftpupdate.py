@@ -68,6 +68,7 @@ def processFile(str):
 
     #file = FTPFile(m.group(1), m.group(2), m.group(3), m.group(4), m.group(5), date, m.group(9))
     #files.append(file)
+    # XXX how does it get over here?
     pdb_remote_files[pdb] = date
 
 
@@ -81,6 +82,7 @@ class FTPUpdateTask(object):
         print 'FTPUpdateTask - Starting', data, kwargs
 
         pdb_local_files = {}
+        # XXX never used?
         pdb_remote_files = {}
 
         #===============================================
@@ -168,17 +170,25 @@ class FTPUpdateTask(object):
                                                   ftp_update_settings.PDB_LOCAL_DIR)
 
         for pdb in requested_pdbs:
-            print "  [%d%%] - %s" % (self.progress(), pdb )
             filename = 'pdb%s.ent.gz' % pdb
             local_filename = '%s/%s' % (ftp_update_settings.PDB_LOCAL_DIR,filename)
+
+            # Grab size and pretty-print our progress.
+            size = ftp.size(filename)
+            if size:
+                print "  [%d%%] - %s (%.2f KiB)" % (self.progress(), pdb,
+                                                    size / 1024),
+            else:
+                print "  [%d%%] - %s" % (self.progress(), pdb),
 
             #remove file if it exists already
             if os.path.exists(local_filename):
                 os.remove(local_filename)
 
             self._incoming_file = open(local_filename,"w")
-            ftp.retrbinary('RETR %s'%filename, self.processChunk, 1024)
+            ftp.retrbinary('RETR %s' % filename, self.processChunk)
             self._incoming_file.close()
+            sys.stdout.write("\n")
 
             if pdb_local_files[pdb] is not None:
                 times = (time.mktime(pdb_local_files[pdb]),) * 2
@@ -187,15 +197,18 @@ class FTPUpdateTask(object):
             self.pdbCount += 1
 
         ftp.quit()
-        print 'progress: %d%%' % self.progress()
+        print "All finished; grabbed %d of %d (%d%%)" % (self.pdbCount,
+                                                         self.pdbTotal,
+                                                         self.progress())
         return kwargs
 
     """
     Callback for ftp transfers.  This function will be called as chunks of data are received from the ftp server
     """
     def processChunk(self, data):
+        sys.stdout.write(".")
+        sys.stdout.flush()
         self._incoming_file.write(data)
-
 
     """
     returns progress as a number between 0 and 100
