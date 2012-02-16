@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+
+from __future__ import division
+
 if __name__ == '__main__':
     import sys
     import os
@@ -203,9 +206,7 @@ class FTPUpdateTask(object):
         elif self.pdbTotal == 0:
             return 100
         else:
-            return round(self.pdbCount*1.0 / self.pdbTotal * 99)+1
-
-        return self.pdbTotal
+            return int(self.pdbCount / self.pdbTotal * 100)
 
     """
     Returns the status as a string
