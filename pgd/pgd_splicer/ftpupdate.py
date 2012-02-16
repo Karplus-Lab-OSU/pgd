@@ -78,22 +78,23 @@ class FTPUpdateTask(object):
     pdbTotal = 0
     pdbCount = 0
 
-    def __init__(self):
-        self.processing_dates = True
-
     def work(self, data, **kwargs):
         print 'FTPUpdateTask - Starting', data, kwargs
 
-        pdb_local_files = {}
-        # XXX never used?
-        pdb_remote_files = {}
+        #create local directory if needed
+        if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
+            os.mkdir(ftp_update_settings.PDB_LOCAL_DIR)
 
-        #===============================================
-        #1 get list of local files matching the pdbs and the file modification date
+        print '  FTP:', ftp_update_settings.PDB_FTP_HOST
+        print '  REMOTE_DIR:', ftp_update_settings.PDB_REMOTE_DIR
 
-        # build list of pdbs from keys
-        requested_pdbs = []
+        self.ftp = FTP(ftp_update_settings.PDB_FTP_HOST)
+        #ftp.set_debuglevel(2) #set ftp debug level so all messages are shown
+        self.ftp.login()
+        self.ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
 
+        print 'Downloading %d PDB files to %s' % (self.pdbTotal,
+                                                  ftp_update_settings.PDB_LOCAL_DIR)
 
         # accept data as either a list of proteins, or a single protein
         if isinstance(data, list):
@@ -101,75 +102,49 @@ class FTPUpdateTask(object):
         else:
             requested_pdbs = [data['code'][:4].lower()]
 
-
-        #create local directory if needed
-        if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
-            os.mkdir(ftp_update_settings.PDB_LOCAL_DIR)
+        self.pdbTotal = len(requested_pdbs)
 
         #get all the local timestamps
         for pdb in requested_pdbs:
-            path = '%s/pdb%s.ent.gz' % (ftp_update_settings.PDB_LOCAL_DIR, pdb)
+            #===============================================
+            #1 get list of local files matching the pdbs and the file modification date
+
+            filename = 'pdb%s.ent.gz' % pdb
+            path = os.path.join(ftp_update_settings.PDB_LOCAL_DIR, filename)
             if os.path.exists(path):
                 date = time.gmtime(os.path.getmtime(path))
             else:
                 date = None
 
-            pdb_local_files[pdb.lower()] = date
-
-
-        print "LOCAL FILES:"
-        for entry in pdb_local_files:
-            if pdb_local_files[entry] is None:
-                print '  - %s : None' % (entry)
+            print "Local file:"
+            if date:
+                print '  - %s : %s' % (pdb, time.asctime(date))
             else:
-                print '  - %s : %s' % (entry, time.asctime(pdb_local_files[entry]))
-
-        print "-" * 42
+                print '  - %s : None' % (pdb)
 
 
-        # ===============================================
-        #2 iterate through list and purge pdbs that are not new or newer
-        print '  FTP: ', ftp_update_settings.PDB_FTP_HOST
-        print '  REMOTE_DIR: ', ftp_update_settings.PDB_REMOTE_DIR
-        self.ftp = FTP(ftp_update_settings.PDB_FTP_HOST)
-        #ftp.set_debuglevel(2) #set ftp debug level so all messages are shown
-        self.ftp.login()
-        self.ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
+            # ===============================================
+            #2 iterate through list and purge pdbs that are not new or newer
 
-        for pdb in pdb_local_files:
-
-            if pdb_local_files[entry] is None:
-                continue
-
-            filename = 'pdb%s.ent.gz' % pdb
             print '    Checking Remote File:', filename
 
-            localdate = pdb_local_files[pdb]
             try:
                 resp = self.ftp.sendcmd('MDTM %s' % filename)
-                date = time.strptime(resp[4:], '%Y%m%d%H%M%S')
-
-                # keep only pdbs in the list that are new or newer, remove all others.
-                if localdate == None or time.mktime(date) > time.mktime(localdate):
-                    pdb_local_files[pdb] = date
-                else:
-                    requested_pdbs.remove(pdb)
-
             except error_perm:
                 # 550 error (permission error) results when a file does not
                 # exist, remove pdb from list
                 print 'File Not Found:', pdb, error_perm
-                requested_pdbs.remove(pdb)
+                continue
 
+            remote_date = time.strptime(resp[4:], '%Y%m%d%H%M%S')
 
-        # ===============================================
-        #3 download files that are in the list
-        self.pdbTotal = len(requested_pdbs)
-        self.processing_dates = False
-        print 'Downloading %d PDB files to %s' % (self.pdbTotal,
-                                                  ftp_update_settings.PDB_LOCAL_DIR)
+            # keep only pdbs in the list that are new or newer, remove all others.
+            if date and time.mktime(remote_date) <= time.mktime(date):
+                # Already up to date; continue.
+                continue
 
-        for pdb in requested_pdbs:
+            # ===============================================
+            #3 download files that are in the list
             self.download_pdb(pdb)
 
         self.ftp.quit()
@@ -215,9 +190,7 @@ class FTPUpdateTask(object):
         """
         returns progress as a number between 0 and 100
         """
-        if self.processing_dates:
-            return 1
-        elif self.pdbTotal == 0:
+        if self.pdbTotal == 0:
             return 100
         else:
             return int(self.pdbCount / self.pdbTotal * 100)
@@ -226,10 +199,8 @@ class FTPUpdateTask(object):
         """
         Returns the status as a string
         """
-        if self.processing_dates:
-            return 'Processing list of PDBS'
-        else:
-            return '%d of %d PDB Files downloaded' % (self.pdbCount, self.pdbTotal)
+
+        return '%d of %d PDB Files downloaded' % (self.pdbCount, self.pdbTotal)
 
     def _reset(self):
         """
