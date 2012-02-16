@@ -7,7 +7,7 @@ if __name__ == '__main__':
     sys.path.append(os.getcwd())
 
     # ==========================================================
-    # Setup django environment 
+    # Setup django environment
     # ==========================================================
     if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
         os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
@@ -23,7 +23,8 @@ from ftplib import FTP, error_perm
 import re
 import time
 
-class FTPFile():
+class FTPFile(object):
+
     def __init__(self, _flags, _wtf, _owner, _group, _size, _date, _name):
         self.flags = _flags
         self.wtf = _wtf
@@ -67,15 +68,14 @@ def processFile(str):
     pdb_remote_files[pdb] = date
 
 
-class FTPUpdateTask():
+class FTPUpdateTask(object):
 
     pdbTotal = 0
     pdbCount = 0
     processing_dates = None
 
-    def work(self, **kwargs):
-
-        print 'FTPUpdateTask - Starting', kwargs
+    def work(self, data, **kwargs):
+        print 'FTPUpdateTask - Starting', data, kwargs
 
         pdb_local_files = {}
         pdb_remote_files = {}
@@ -89,7 +89,6 @@ class FTPUpdateTask():
 
 
         # accept data as either a list of proteins, or a single protein
-        data = kwargs['data']
         if isinstance(data, list):
             requested_pdbs = [d['code'][:4].lower() for d in data]
         else:
@@ -118,7 +117,7 @@ class FTPUpdateTask():
             else:
                 print '  - %s : %s' % (entry, time.asctime(pdb_local_files[entry]))
 
-        print "------------------------------------------"
+        print "-" * 42
 
 
 
@@ -135,8 +134,8 @@ class FTPUpdateTask():
 
             if pdb_local_files[entry] is None:
                 continue
-            
-            filename = 'pdb%s.ent.gz' % (pdb)
+
+            filename = 'pdb%s.ent.gz' % pdb
             print '    Checking Remote File:', filename
 
             localdate = pdb_local_files[pdb]
@@ -152,7 +151,8 @@ class FTPUpdateTask():
                     requested_pdbs.remove(pdb)
 
             except error_perm:
-                #550 error (permission error) results when a file does not exist, remove pdb from list
+                # 550 error (permission error) results when a file does not
+                # exist, remove pdb from list
                 print 'File Not Found:', pdb, error_perm
                 requested_pdbs.remove(pdb)
 
@@ -161,7 +161,8 @@ class FTPUpdateTask():
         #3 download files that are in the list
         self.pdbTotal = len(requested_pdbs)
         self.processing_dates = False
-        print 'Downloading %d PDB files to %s' % (self.pdbTotal, ftp_update_settings.PDB_LOCAL_DIR)
+        print 'Downloading %d PDB files to %s' % (self.pdbTotal,
+                                                  ftp_update_settings.PDB_LOCAL_DIR)
 
         for pdb in requested_pdbs:
             print "  [%d%%] - %s" % (self.progress(), pdb )
@@ -175,7 +176,11 @@ class FTPUpdateTask():
             self._incoming_file = open(local_filename,"w")
             ftp.retrbinary('RETR %s'%filename, self.processChunk, 1024)
             self._incoming_file.close()
-            os.utime(local_filename, (time.mktime(pdb_local_files[pdb]),time.mktime(pdb_local_files[pdb])) )
+
+            if pdb_local_files[pdb] is not None:
+                times = (time.mktime(pdb_local_files[pdb]),) * 2
+                os.utime(local_filename, times)
+
             self.pdbCount += 1
 
         ftp.quit()
@@ -223,7 +228,6 @@ class FTPUpdateTask():
 if __name__ == '__main__':
     import sys
 
-    
     pdbs = []
     argv = sys.argv
     if len(argv) == 1:
@@ -233,16 +237,12 @@ if __name__ == '__main__':
         print '   <cmd> | ftpupdate --pipein'
         print '   piped protein codes must be separated by newlines'
         sys.exit(0)
-        
+
     elif len(argv) == 2 and argv[1] == '--pipein':
         pdbs = [{'code':line} for line in sys.stdin]
-            
+
     else:
         pdbs = [{'code':code} for code in sys.argv[1:]]
 
     task = FTPUpdateTask()
-    task.work(**{'data':pdbs})
-
-
-
-
+    task.work(data=pdbs)
