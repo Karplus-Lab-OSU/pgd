@@ -79,7 +79,7 @@ class FTPUpdateTask(object):
     pdbCount = 0
 
     def work(self, data, **kwargs):
-        print 'FTPUpdateTask - Starting', data, kwargs
+        print 'FTPUpdateTask - Starting' #, data, kwargs
 
         #create local directory if needed
         if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
