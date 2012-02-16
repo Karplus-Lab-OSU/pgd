@@ -18,7 +18,8 @@ if __name__ == '__main__':
     # Done setting up django environment
     # ==========================================================
 
-from pgd_splicer.models import *
+# from pgd_splicer.models import *
+from pgd_splicer.models import ftp_update_settings
 
 import os
 
@@ -76,7 +77,9 @@ class FTPUpdateTask(object):
 
     pdbTotal = 0
     pdbCount = 0
-    processing_dates = None
+
+    def __init__(self):
+        self.processing_dates = True
 
     def work(self, data, **kwargs):
         print 'FTPUpdateTask - Starting', data, kwargs
@@ -87,7 +90,6 @@ class FTPUpdateTask(object):
 
         #===============================================
         #1 get list of local files matching the pdbs and the file modification date
-        self.processing_dates = True
 
         # build list of pdbs from keys
         requested_pdbs = []
@@ -125,15 +127,14 @@ class FTPUpdateTask(object):
         print "-" * 42
 
 
-
         # ===============================================
         #2 iterate through list and purge pdbs that are not new or newer
         print '  FTP: ', ftp_update_settings.PDB_FTP_HOST
         print '  REMOTE_DIR: ', ftp_update_settings.PDB_REMOTE_DIR
-        ftp = FTP(ftp_update_settings.PDB_FTP_HOST)
+        self.ftp = FTP(ftp_update_settings.PDB_FTP_HOST)
         #ftp.set_debuglevel(2) #set ftp debug level so all messages are shown
-        ftp.login()
-        ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
+        self.ftp.login()
+        self.ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
 
         for pdb in pdb_local_files:
 
@@ -145,9 +146,8 @@ class FTPUpdateTask(object):
 
             localdate = pdb_local_files[pdb]
             try:
-                resp = ftp.sendcmd('MDTM %s' % filename)
-                #date = time.strptime('%s%s' % (resp[4:],time.tzname[0]), '%Y%m%d%H%M%S%Z' )
-                date = time.strptime(resp[4:], '%Y%m%d%H%M%S' )
+                resp = self.ftp.sendcmd('MDTM %s' % filename)
+                date = time.strptime(resp[4:], '%Y%m%d%H%M%S')
 
                 # keep only pdbs in the list that are new or newer, remove all others.
                 if localdate == None or time.mktime(date) > time.mktime(localdate):
@@ -170,50 +170,51 @@ class FTPUpdateTask(object):
                                                   ftp_update_settings.PDB_LOCAL_DIR)
 
         for pdb in requested_pdbs:
-            filename = 'pdb%s.ent.gz' % pdb
-            local_filename = '%s/%s' % (ftp_update_settings.PDB_LOCAL_DIR,filename)
+            self.download_pdb(pdb)
 
-            # Grab size and pretty-print our progress.
-            size = ftp.size(filename)
-            if size:
-                print "  [%d%%] - %s (%.2f KiB)" % (self.progress(), pdb,
-                                                    size / 1024),
-            else:
-                print "  [%d%%] - %s" % (self.progress(), pdb),
-
-            #remove file if it exists already
-            if os.path.exists(local_filename):
-                os.remove(local_filename)
-
-            self._incoming_file = open(local_filename,"w")
-            ftp.retrbinary('RETR %s' % filename, self.processChunk)
-            self._incoming_file.close()
-            sys.stdout.write("\n")
-
-            if pdb_local_files[pdb] is not None:
-                times = (time.mktime(pdb_local_files[pdb]),) * 2
-                os.utime(local_filename, times)
-
-            self.pdbCount += 1
-
-        ftp.quit()
+        self.ftp.quit()
         print "All finished; grabbed %d of %d (%d%%)" % (self.pdbCount,
                                                          self.pdbTotal,
                                                          self.progress())
         return kwargs
 
-    """
-    Callback for ftp transfers.  This function will be called as chunks of data are received from the ftp server
-    """
+    def download_pdb(self, pdb):
+        filename = 'pdb%s.ent.gz' % pdb
+        local_filename = '%s/%s' % (ftp_update_settings.PDB_LOCAL_DIR,
+                                    filename)
+
+        # Grab size and pretty-print our progress.
+        size = self.ftp.size(filename)
+        if size:
+            print "  [%d%%] - %s (%.2f KiB)" % (self.progress(), pdb,
+                                                size / 1024),
+        else:
+            print "  [%d%%] - %s" % (self.progress(), pdb),
+
+        #remove file if it exists already
+        if os.path.exists(local_filename):
+            os.remove(local_filename)
+
+        self._incoming_file = open(local_filename,"w")
+        self.ftp.retrbinary('RETR %s' % filename, self.processChunk)
+        self._incoming_file.close()
+        sys.stdout.write("\n")
+
+        self.pdbCount += 1
+
     def processChunk(self, data):
+        """
+        Callback for ftp transfers.  This function will be called as chunks of
+        data are received from the ftp server
+        """
         sys.stdout.write(".")
         sys.stdout.flush()
         self._incoming_file.write(data)
 
-    """
-    returns progress as a number between 0 and 100
-    """
     def progress(self):
+        """
+        returns progress as a number between 0 and 100
+        """
         if self.processing_dates:
             return 1
         elif self.pdbTotal == 0:
@@ -221,19 +222,19 @@ class FTPUpdateTask(object):
         else:
             return int(self.pdbCount / self.pdbTotal * 100)
 
-    """
-    Returns the status as a string
-    """
     def progressMessage(self):
+        """
+        Returns the status as a string
+        """
         if self.processing_dates:
             return 'Processing list of PDBS'
         else:
             return '%d of %d PDB Files downloaded' % (self.pdbCount, self.pdbTotal)
 
-    """
-    Reset the task
-    """
     def _reset(self):
+        """
+        Reset the task
+        """
         self.pdbCount = 0
         self.pdbTotal = 0
 
