@@ -161,10 +161,10 @@ class FTPUpdateTask(object):
         # Grab size and pretty-print our progress.
         size = self.ftp.size(filename)
         if size:
-            print "  [%d%%] - %s (%.2f KiB)" % (self.progress(), pdb,
+            print "  %s - %s (%.2f KiB)" % (self.progressMessage(), pdb,
                                                 size / 1024),
         else:
-            print "  [%d%%] - %s" % (self.progress(), pdb),
+            print "  %s - %s" % (self.progressMessage(), pdb),
 
         #remove file if it exists already
         if os.path.exists(local_filename):
@@ -200,7 +200,8 @@ class FTPUpdateTask(object):
         Returns the status as a string
         """
 
-        return '%d of %d PDB Files downloaded' % (self.pdbCount, self.pdbTotal)
+        return "[%d/%d %d%%]" % (self.pdbCount, self.pdbTotal,
+                                 self.progress())
 
     def _reset(self):
         """
