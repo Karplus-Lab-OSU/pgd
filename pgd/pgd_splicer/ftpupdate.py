@@ -93,16 +93,18 @@ class FTPUpdateTask(object):
         self.ftp.login()
         self.ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
 
-        print 'Downloading %d PDB files to %s' % (self.pdbTotal,
-                                                  ftp_update_settings.PDB_LOCAL_DIR)
-
         # accept data as either a list of proteins, or a single protein
         if isinstance(data, list):
             requested_pdbs = [d['code'][:4].lower() for d in data]
         else:
             requested_pdbs = [data['code'][:4].lower()]
 
+        requested_pdbs.sort()
+
         self.pdbTotal = len(requested_pdbs)
+
+        print 'Downloading %d PDB files to %s' % (self.pdbTotal,
+                                                  ftp_update_settings.PDB_LOCAL_DIR)
 
         #get all the local timestamps
         for pdb in requested_pdbs:
