@@ -7,16 +7,13 @@ if __name__ == '__main__':
     sys.path.append(os.getcwd())
 
     # ==========================================================
-    # Setup django environment 
+    # Setup django environment
     # ==========================================================
     if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
         os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
-
-
-
 
 from datetime import datetime
 import math
@@ -30,30 +27,17 @@ from Bio.PDB import calc_angle as pdb_calc_angle
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
 
-from pgd_core.models import Protein as ProteinModel
-from pgd_core.models import Chain as ChainModel
-from pgd_core.models import Residue as ResidueModel
-from pgd_core.models import Sidechain_ARG
-from pgd_core.models import Sidechain_ASN
-from pgd_core.models import Sidechain_ASP
-from pgd_core.models import Sidechain_CYS
-from pgd_core.models import Sidechain_GLN
-from pgd_core.models import Sidechain_GLU
-from pgd_core.models import Sidechain_HIS
-from pgd_core.models import Sidechain_ILE
-from pgd_core.models import Sidechain_LEU
-from pgd_core.models import Sidechain_LYS
-from pgd_core.models import Sidechain_MET
-from pgd_core.models import Sidechain_PHE
-from pgd_core.models import Sidechain_PRO
-from pgd_core.models import Sidechain_SER
-from pgd_core.models import Sidechain_THR
-from pgd_core.models import Sidechain_TRP
-from pgd_core.models import Sidechain_TYR
-from pgd_core.models import Sidechain_VAL
+from pgd_core.models import (Protein as ProteinModel, Chain as ChainModel,
+                             Residue as ResidueModel, Sidechain_ARG,
+                             Sidechain_ASN, Sidechain_ASP, Sidechain_CYS,
+                             Sidechain_GLN, Sidechain_GLU, Sidechain_HIS,
+                             Sidechain_ILE, Sidechain_LEU, Sidechain_LYS,
+                             Sidechain_MET, Sidechain_PHE, Sidechain_PRO,
+                             Sidechain_SER, Sidechain_THR, Sidechain_TRP,
+                             Sidechain_TYR, Sidechain_VAL)
 
 from pgd_splicer.chi import CHI_MAP, CHI_CORRECTIONS_TESTS, CHI_CORRECTIONS
-from pgd_splicer.sidechain import *
+from pgd_splicer.sidechain import bond_angles, bond_lengths
 
 
 def NO_VALUE(field):
@@ -134,7 +118,7 @@ class ProcessPDBTask():
         if not self.total_proteins:
             return 0
         return int((self.finished_proteins/float(self.total_proteins))*100)
-            
+
 
     def work(self, **kwargs):
         """
@@ -144,7 +128,7 @@ class ProcessPDBTask():
         pdbs = kwargs['data']
 
         print 'processing :', len(pdbs)
-        
+
 
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
@@ -189,7 +173,7 @@ class ProcessPDBTask():
         print path
         if os.path.exists(path):
             pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
-            
+
         else:
             print 'ERROR - File not found'
             return False
@@ -304,13 +288,13 @@ class ProcessPDBTask():
                     # 4e) save
                     residue.save()
                     chain.residues.add(residue)
-                    
+
                     # 4f) Update old_residue.next
                     if residue_props.has_key('prev'):
                         old_residue.next = residue
                         old_residue.save()
 
-                    
+
                     old_residue = residue
                 print '    %s proteins' % len(residues)
 
@@ -403,7 +387,7 @@ def parseWithBioPython(file, props, chains_filter=None):
 
             structure = Bio.PDB.PDBParser().get_structure('pdbname', decompressedFile)
 
-            # dssp can't do multiple models. if we ever need to, we'll have to 
+            # dssp can't do multiple models. if we ever need to, we'll have to
             # iterate through them
             dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressedFile, dssp='dsspcmbi')
 
@@ -481,7 +465,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         try:
                             residue_dssp, secondary_structure, accessibility, relative_accessibility, phi, psi = dssp[(chain, (hetflag, res_id, icode)) ]
                         except KeyError, e:
-                            import sys, traceback
+                            import traceback
                             t, v, tb = sys.exc_info()
                             traceback.print_tb(tb, limit=10, file=sys.stdout)
                             raise InvalidResidueException('KeyError in DSSP')
@@ -502,7 +486,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                         if oldC:
                             # determine if there are missing residues by calculating
                             # the distance between the current residue and previous
-                            # residue.  If the L1 distance is greater than 2.5 it 
+                            # residue.  If the L1 distance is greater than 2.5 it
                             # cannot possibly be the correct order of residues.
                             L1 = calc_distance(oldC,N)
 
@@ -517,20 +501,20 @@ def parseWithBioPython(file, props, chains_filter=None):
                                 res_dict['a1']     = calc_angle(oldC,N,CA)
                                 res_dict['phi']    = calc_dihedral(oldC,N,CA,C)
                                 res_dict['L1'] = L1
-                                
+
                                 # proline has omega-p property
                                 if prev and resname == 'PRO' and 'CD' in atoms:
                                     CD = atoms['CD'].get_vector()
                                     res_dict['omep'] = calc_dihedral(oldCA, oldC, N, CD)
-                                
+
                                 terminal = False
 
                         if terminal:
-                            # break in the chain, 
+                            # break in the chain,
                             # 1) add terminal flags to both ends of the break so
                             #    the break can quickly be found.
                             # 2) skip a number in the new style index.  This allows
-                            #    the break to be visible without checking the 
+                            #    the break to be visible without checking the
                             #    terminal flag
                             newID += 1
                             res_dict['terminal_flag'] = True
@@ -637,7 +621,7 @@ def parseWithBioPython(file, props, chains_filter=None):
                             calc_sidechain_angles(atoms, prev, sidechain, bond_angles[resname])
                         if sidechain:
                             res_dict['sidechain'] = sidechain
-                            
+
                         # Reset for next pass.  We save some relationships which span two atoms.
                         res_old_id = old_id
                         oldN       = N
@@ -800,9 +784,7 @@ if __name__ == '__main__':
     """
     Run if file is executed from the command line
     """
-    import sys
     import logging
-    import fileinput
 
     def process_args(args):
         return {'code':args[0],
@@ -814,7 +796,7 @@ if __name__ == '__main__':
                 }
 
     task = ProcessPDBTask()
-    
+
     logging.basicConfig(filename='ProcessPDB.log',level=logging.DEBUG)
     task.logger = logging
     #task.parent = WorkerProxy()
@@ -825,16 +807,16 @@ if __name__ == '__main__':
     if len(argv) == 1:
         print 'Usage:'
         print '   ProcessPDBTask code chains threshold resolution rfactor rfree [repeat]'
-        print '       chains are a string of chain ids: ABCXYZ' 
+        print '       chains are a string of chain ids: ABCXYZ'
         print ''
         print '   <cmd> | ProcessPDBTask --pipein'
         print '   piped protein values must be separated by newlines'
         sys.exit(0)
-        
+
     elif len(argv) == 2 and argv[1] == '--pipein':
         for line in sys.stdin:
             pdbs.append(process_args(line.split(' ')))
-            
+
     else:
         for i in range(1,len(argv),6):
             try:
@@ -844,5 +826,5 @@ if __name__ == '__main__':
                 print e
                 print 'Usage: ProcessPDBTask.py code chain threshold resolution rfactor rfree...'
                 sys.exit(0)
-    
+
     task.work(**{'data':pdbs})
