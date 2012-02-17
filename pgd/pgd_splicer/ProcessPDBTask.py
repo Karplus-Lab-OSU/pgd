@@ -20,6 +20,7 @@ import math
 from math import sqrt
 import os
 import shutil
+from subprocess import check_call
 import sys
 
 import Bio.PDB
@@ -318,10 +319,16 @@ class ProcessPDBTask():
 
 def uncompress(file, src_dir, dest_dir):
     """
-    Uncompress using the UNIX uncompress command.  PDB files are stored with
-    GZIP.  Python supports GZIP but does not detect errors with incomplete
-    files.  Its faster to just use the GZIP executable as it does not require
-    loading the file into python and then dumping it back to a file.
+    Uncompress using the UNIX gunzip command.
+
+    PDB files are stored with GZIP. Python supports GZIP but does not detect
+    errors with incomplete files. It's faster to just use the GZIP executable
+    as it does not require loading the file into python and then dumping it
+    back to a file.
+
+    The gunzip command is used instead of uncompress for forward compatibility
+    and better sanity checks, on those systems where uncompress and gunzip are
+    not the same utility.
 
     @param file: filename to decompress, does not include path
     @param src_dir: directory of file
@@ -334,13 +341,8 @@ def uncompress(file, src_dir, dest_dir):
         # copy the file to the tmp directory
         shutil.copyfile('%s/%s' % (src_dir,file), tempfile)
 
-        # decompress using unix decompress.
-        os.system('uncompress %s' % tempfile)
-
-        # errors with uncompress won't be detected so we must
-        # check for existence of the file
-        if not os.path.exists(dest):
-            raise Exception('File was not uncompressed')
+        # Decompress using gunzip. A non-zero exit status will raise here.
+        check_call(["gunzip", "-d", tempfile])
 
     except Exception, e:
         print 'Exception while uncompressing file: %s - %s' % (tempfile, e)
