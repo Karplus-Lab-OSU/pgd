@@ -309,7 +309,7 @@ class ProcessPDBTask():
             print 'EXCEPTION in Residue', code, e.__class__, e
             #self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
             print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
-            #transaction.rollback()
+            transaction.rollback()
             return
 
         # 5) entire protein has been processed, commit transaction
