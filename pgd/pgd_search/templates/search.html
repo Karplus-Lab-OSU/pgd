@@ -556,20 +556,14 @@
             var rad = Math.PI/180;
             var cur = undefined;
 
-            function draw_arc(cx,cy,start,end, R) {
-                var x1 = cx - R * Math.cos(-start * rad),
-                x2 = cx - R * Math.cos(-end * rad),
-                y1 = cy - R * Math.sin(-start * rad),
-                y2 = cy - R * Math.sin(-end * rad);
-                if (-180==start && 180==end) {
-                    path = ["M", 70.001, 90.001 - R, "A", R, R, 0, 1, 1, 69.99, 90.001 - R].join();
-                } else {
-                    path = ["M", x1, y1, "A", R, R, 0, +(end - start > 180), 0, x2, y2].join();
-                }
-                return r.path(path).attr({stroke: '#008800', "stroke-width": 5});
-            }
-
-            function draw_arc(cx,cy,start,end, R) {
+            /* Draw an arc on the canvas.
+             * cx is the X coordinate of the circle containing this arc.
+             * cy is the Y coordinate of the circle containing this arc.
+             * start is the beginning angle of the arc.
+             * end is the ending angle of the arc.
+             * R is the radius of the arc.
+             */
+            function draw_arc(cx, cy, start, end, R) {
                 var x1 = cx - R * Math.cos(-start * rad),
                 x2 = cx - R * Math.cos(-end * rad),
                 y1 = cy - R * Math.sin(-start * rad),
@@ -582,14 +576,23 @@
                 return r.path(path).attr({stroke: '#004400', fill:'#c2e192', "stroke-width": 1, opacity:.8});
             }
 
-            function angles(list){
+            /* Generate arcs for lists of angles. */
+            function angles(list) {
                 if (_angles != undefined) {
-                    for (i in _angles){ _angles[i].remove()}
+                    for (i in _angles) {
+                        _angles[i].remove();
+                    }
                 }
                 base = 100;
                 _angles = [];
-                for (i in list) {
-                    _angles.push(draw_arc(80,90,list[i][0]+180,list[i][1]+180, 40));
+                /* If the list of angles is empty, push a circle which
+                 * encompasses the entire range. */
+                if (list.length == 0) {
+                    _angles.push(r.circle(80, 90, 40).attr({stroke: '#004400', fill:'#c2e192', "stroke-width": 1, opacity:.8}));
+                } else {
+                    for (i in list) {
+                        _angles.push(draw_arc(80,90,list[i][0]+180,list[i][1]+180, 40));
+                    }
                 }
             }
             
