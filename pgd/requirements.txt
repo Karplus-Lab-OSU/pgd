@@ -1,0 +1,4 @@
+biopython
+django-registration
+south
+django>=1.3
