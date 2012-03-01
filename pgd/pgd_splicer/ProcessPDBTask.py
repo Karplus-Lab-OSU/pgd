@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+from __future__ import division
+
 if __name__ == '__main__':
     import sys
     import os
@@ -16,8 +18,7 @@ if __name__ == '__main__':
     # ==========================================================
 
 from datetime import datetime
-import math
-from math import sqrt
+from math import degrees, sqrt
 from multiprocessing import Pool
 import os
 import shutil
@@ -119,7 +120,7 @@ class ProcessPDBTask():
     def progress(self):
         if not self.total_proteins:
             return 0
-        return int((self.finished_proteins/float(self.total_proteins))*100)
+        return self.finished_proteins / self.total_proteins * 100
 
 
     def work(self, **kwargs):
@@ -149,7 +150,7 @@ class ProcessPDBTask():
                 skipped += 1
             self.finished_proteins += 1
 
-            percent = 1.0*self.finished_proteins/self.total_proteins * 100
+            percent = self.progress()
             print 'Processed Protein %s out of %s (%s%%) %s imported, %s skipped' % \
                   (self.finished_proteins, self.total_proteins, percent, imported, skipped)
             print "-" * 42
@@ -578,10 +579,10 @@ def parseWithBioPython(file, props, chains_filter=None):
                                 side_chain.append(atoms[name].get_bfactor())
 
                         if main_chain != []:
-                            res_dict['bm'] = sum(main_chain)/len(main_chain)
+                            res_dict['bm'] = sum(main_chain) // len(main_chain)
 
                         if side_chain != []:
-                            res_dict['bs'] = sum(side_chain)/len(side_chain)
+                            res_dict['bs'] = sum(side_chain) // len(side_chain)
 
 
                         # CHI corrections - Some atoms have symettrical values
@@ -708,14 +709,14 @@ def calc_angle(atom1, atom2, atom3):
     """
     overridding pdb version of function to return values converted to degress
     """
-    return math.degrees(pdb_calc_angle(atom1, atom2, atom3))
+    return degrees(pdb_calc_angle(atom1, atom2, atom3))
 
 
 def calc_dihedral(atom1, atom2, atom3, atom4):
     """
     overridding pdb version of function to return values converted to degress
     """
-    return math.degrees(pdb_calc_dihedral(atom1, atom2, atom3, atom4))
+    return degrees(pdb_calc_dihedral(atom1, atom2, atom3, atom4))
 
 
 def calc_chi(residue, residue_prev, mapping):
