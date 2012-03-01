@@ -140,9 +140,10 @@ class ProcessPDBTask():
         skipped = 0
         imported = 0
 
-        pool = Pool()
+        pool = Pool(maxtasksperchild=50)
+        started = datetime.now()
 
-        results = pool.imap(workhorse, pdbs)
+        results = pool.imap_unordered(workhorse, pdbs)
         for result in results:
             if result:
                 imported += 1
@@ -151,11 +152,21 @@ class ProcessPDBTask():
             self.finished_proteins += 1
 
             percent = self.progress()
-            print 'Processed Protein %s out of %s (%s%%) %s imported, %s skipped' % \
-                  (self.finished_proteins, self.total_proteins, percent, imported, skipped)
+            now = datetime.now()
+            elapsed = now - started
+            if int(percent):
+                remaining = elapsed * 100 // int(percent)
+            else:
+                remaining = elapsed * 100
+            print "-" * 42
+            print "Processed protein %s of %s" % (self.finished_proteins,
+                                                  self.total_proteins)
+            print "%s imported, %s skipped (%0.6f%%)" % (imported, skipped,
+                                                         percent)
+            print "%s elapsed, %s remaining" % (elapsed, remaining)
             print "-" * 42
 
-            print 'ProcessPDBTask - Processing Complete'
+        print 'ProcessPDBTask - Processing Complete'
 
         # return only the code of proteins inserted or updated
         # we no longer need to pass any data as it is contained in the database
