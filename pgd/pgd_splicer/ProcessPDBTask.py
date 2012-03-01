@@ -18,6 +18,7 @@ if __name__ == '__main__':
 from datetime import datetime
 import math
 from math import sqrt
+from multiprocessing import Pool
 import os
 import shutil
 from subprocess import check_call
@@ -138,22 +139,22 @@ class ProcessPDBTask():
         skipped = 0
         imported = 0
 
-        for data in pdbs:
-            # only update pdbs if they are newer
-            if self.pdb_file_is_newer(data):
-                self.process_pdb(data)
+        pool = Pool()
+
+        results = pool.imap(workhorse, pdbs)
+        for result in results:
+            if result:
                 imported += 1
             else:
                 skipped += 1
-                print 'INFO: Skipping up-to-date PDB: %s' % data['code']
             self.finished_proteins += 1
 
             percent = 1.0*self.finished_proteins/self.total_proteins * 100
             print 'Processed Protein %s out of %s (%s%%) %s imported, %s skipped' % \
                   (self.finished_proteins, self.total_proteins, percent, imported, skipped)
-            print '----------------------------------------------------------'
+            print "-" * 42
 
-        print 'ProcessPDBTask - Processing Complete'
+            print 'ProcessPDBTask - Processing Complete'
 
         # return only the code of proteins inserted or updated
         # we no longer need to pass any data as it is contained in the database
@@ -163,158 +164,175 @@ class ProcessPDBTask():
         return codes
 
 
-    def pdb_file_is_newer(self, data):
-        """
-        Compares if the pdb file used as an input is newer than data already
-        in the database.  This is used to prevent processing proteins
-        if they do not need to be processed
-        """
-        code =  data['code']
-        path = './pdb/pdb%s.ent.gz' % code.lower()
-        print path
-        if os.path.exists(path):
-            pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
+def workhorse(data):
+    """
+    Update a single protein entry.
 
-        else:
-            print 'ERROR - File not found'
-            return False
+    This is a viable entrypoint for parallelizing the process.
+    """
+
+    # only update pdbs if they are newer
+    if pdb_file_is_newer(data):
+        return process_pdb(data)
+    else:
+        print 'INFO: Skipping up-to-date PDB: %s' % data['code']
+        return False
+
+
+@transaction.commit_manually
+def process_pdb(data):
+    """
+    Process an individual pdb file
+    """
+
+    # create a copy of the data.  This dict will have a large amount of data
+    # added to it as the protein is processed.  This prevents memory leaks
+    # due to the original dict having a reference held outside this method.
+    # e.g. if it were looped over with a large list of PDBs
+    data = data.copy()
+
+    try:
+        residue_props = None
+        code = data['code']
+        chains_filter = data['chains'] if data.has_key('chains') else None
+        filename = 'pdb%s.ent.gz' % code.lower()
+        print '    Processing: ', code
+
+        # update datastructure
+        data['chains'] = {}
+
+        # 1) parse with bioPython
+        data = parseWithBioPython(filename, data, chains_filter)
+
+        # 2) Create/Get Protein and save values
         try:
             protein = ProteinModel.objects.get(code=code)
+            print '  Existing protein: ', code
         except ProteinModel.DoesNotExist:
-            # Protein not in database, pdb is new
-            data['pdb_date'] = pdb_date
-            return True
+            print '  Creating protein: ', code
+            protein = ProteinModel()
+        protein.code       = code
+        protein.threshold  = float(data['threshold'])
+        protein.resolution = float(data['resolution'])
+        protein.rfactor    = float(data['rfactor'])
+        protein.rfree      = float(data['rfree'])
+        protein.pdb_date   = data['pdb_date']
+        protein.save()
 
-        data['pdb_date'] = pdb_date
-        return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
-
-
-    @transaction.commit_manually
-    def process_pdb(self, data):
-        """
-        Process an individual pdb file
-        """
-
-        # create a copy of the data.  This dict will have a large amount of data
-        # added to it as the protein is processed.  This prevents memory leaks
-        # due to the original dict having a reference held outside this method.
-        # e.g. if it were looped over with a large list of PDBs
-        data = data.copy()
-
-        try:
-            residue_props = None
-            code = data['code']
-            chains_filter = data['chains'] if data.has_key('chains') else None
-            filename = 'pdb%s.ent.gz' % code.lower()
-            print '    Processing: ', code
-
-            # update datastructure
-            data['chains'] = {}
-
-            # 1) parse with bioPython
-            data = parseWithBioPython(filename, data, chains_filter)
-
-            # 2) Create/Get Protein and save values
+        # 3) Get/Create Chains and save values
+        chains = {}
+        for chaincode, residues in data['chains'].items():
+            chainId = '%s%s' % (protein.code, chaincode)
             try:
-                protein = ProteinModel.objects.get(code=code)
-                print '  Existing protein: ', code
-            except ProteinModel.DoesNotExist:
-                print '  Creating protein: ', code
-                protein = ProteinModel()
-            protein.code       = code
-            protein.threshold  = float(data['threshold'])
-            protein.resolution = float(data['resolution'])
-            protein.rfactor    = float(data['rfactor'])
-            protein.rfree      = float(data['rfree'])
-            protein.pdb_date   = data['pdb_date']
-            protein.save()
+                chain = protein.chains.get(id=chainId)
+                print '   Existing Chain: %s' % chaincode
+            except ChainModel.DoesNotExist:
+                print '   Creating Chain: %s' % chaincode
+                chain = ChainModel()
+                chain.id      = chainId
+                chain.protein = protein
+                chain.code    = chaincode
+                chain.save()
 
-            # 3) Get/Create Chains and save values
-            chains = {}
-            for chaincode, residues in data['chains'].items():
-                chainId = '%s%s' % (protein.code, chaincode)
+                protein.chains.add(chain)
+            #create dictionary of chains for quick access
+            chains[chaincode] = chain
+
+
+            # 4) iterate through residue data creating residues
+            comparison = lambda x,y: cmp(x['chainIndex'], y['chainIndex'])
+            for residue_props in sorted(residues.values(), comparison):
+
+                # 4a) find the residue object so it can be updated or create a new one
                 try:
-                    chain = protein.chains.get(id=chainId)
-                    print '   Existing Chain: %s' % chaincode
-                except ChainModel.DoesNotExist:
-                    print '   Creating Chain: %s' % chaincode
-                    chain = ChainModel()
-                    chain.id      = chainId
-                    chain.protein = protein
-                    chain.code    = chaincode
-                    chain.save()
+                    residue = chain.residues.get(oldID=str(residue_props['oldID']))
+                except ResidueModel.DoesNotExist:
+                    #not found, create new residue
+                    #print 'New Residue'
+                    residue = ResidueModel()
+                    residue.protein = protein
+                    residue.chain   = chain
+                    residue.chainID = chain.id[4]
 
-                    protein.chains.add(chain)
-                #create dictionary of chains for quick access
-                chains[chaincode] = chain
+                # 4b) copy properties into a residue object
+                #     property keys should match property name in object
+                residue.__dict__.update(residue_props)
 
+                # 4c) set previous
+                if residue_props.has_key('prev'):
+                    residue.prev = old_residue
 
-                # 4) iterate through residue data creating residues
-                comparison = lambda x,y: cmp(x['chainIndex'], y['chainIndex'])
-                for residue_props in sorted(residues.values(), comparison):
-
-                    # 4a) find the residue object so it can be updated or create a new one
+                # 4d) find and create sidechain if needed.  set the property
+                #     in the residue for the correct sidechain type
+                if 'sidechain' in residue_props:
+                    klass, name = aa_class[residue_props['aa']]
                     try:
-                        residue = chain.residues.get(oldID=str(residue_props['oldID']))
-                    except ResidueModel.DoesNotExist:
-                        #not found, create new residue
-                        #print 'New Residue'
-                        residue = ResidueModel()
-                        residue.protein = protein
-                        residue.chain   = chain
-                        residue.chainID = chain.id[4]
-
-                    # 4b) copy properties into a residue object
-                    #     property keys should match property name in object
-                    residue.__dict__.update(residue_props)
-
-                    # 4c) set previous
-                    if residue_props.has_key('prev'):
-                        residue.prev = old_residue
-
-                    # 4d) find and create sidechain if needed.  set the property
-                    #     in the residue for the correct sidechain type
-                    if 'sidechain' in residue_props:
-                        klass, name = aa_class[residue_props['aa']]
-                        try:
-                            sidechain = getattr(residue, name)
-                            if not sidechain:
-                                sidechain = klass()
-                        except:
+                        sidechain = getattr(residue, name)
+                        if not sidechain:
                             sidechain = klass()
-                        sidechain.__dict__.update(residue_props['sidechain'])
-                        sidechain.save()
-                        residue.__setattr__(name, sidechain)
+                    except:
+                        sidechain = klass()
+                    sidechain.__dict__.update(residue_props['sidechain'])
+                    sidechain.save()
+                    residue.__setattr__(name, sidechain)
 
-                    # 4e) save
-                    residue.save()
-                    chain.residues.add(residue)
+                # 4e) save
+                residue.save()
+                chain.residues.add(residue)
 
-                    # 4f) Update old_residue.next
-                    if residue_props.has_key('prev'):
-                        old_residue.next = residue
-                        old_residue.save()
-
-
-                    old_residue = residue
-                print '    %s proteins' % len(residues)
+                # 4f) Update old_residue.next
+                if residue_props.has_key('prev'):
+                    old_residue.next = residue
+                    old_residue.save()
 
 
-        except Exception, e:
-            import traceback
-            exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
-            print "*** print_tb:"
-            print residue_props
-            traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
-            print 'EXCEPTION in Residue', code, e.__class__, e
-            #self.logger.error('EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e))
-            print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
-            transaction.rollback()
-            return
+                old_residue = residue
+            print '    %s proteins' % len(residues)
 
-        # 5) entire protein has been processed, commit transaction
-        transaction.commit()
 
+    except Exception, e:
+        import traceback
+        exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
+        print "*** print_tb:"
+        print residue_props
+        traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
+        print 'EXCEPTION in Residue', code, e.__class__, e
+        print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
+        transaction.rollback()
+        return False
+
+    # 5) entire protein has been processed, commit transaction
+    transaction.commit()
+    return True
+
+
+def pdb_file_is_newer(data):
+    """
+    Compares if the pdb file used as an input is newer than data already
+    in the database.
+
+    This is used to prevent processing proteins if they do not need to be
+    processed.
+    """
+
+    code =  data['code']
+    path = './pdb/pdb%s.ent.gz' % code.lower()
+    print path
+    if os.path.exists(path):
+        pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
+
+    else:
+        print 'ERROR - File not found'
+        return False
+    try:
+        protein = ProteinModel.objects.get(code=code)
+    except ProteinModel.DoesNotExist:
+        # Protein not in database, pdb is new
+        data['pdb_date'] = pdb_date
+        return True
+
+    data['pdb_date'] = pdb_date
+    return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
 
 
 def uncompress(file, src_dir, dest_dir):
