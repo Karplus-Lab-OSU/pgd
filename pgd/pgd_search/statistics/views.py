@@ -1,22 +1,17 @@
-import math
 import simplejson
 import time
 from threading import Thread
 
-from django.conf import settings
-from django.db.models import Avg, Max, Min, Count, StdDev
+from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
-from pgd_core.models import determine_alias
-from pgd_search.models import Search
 from pgd_search.statistics.aggregates import *
 from pgd_search.statistics.directional_stddev import *
 from pgd_search.statistics.form import StatsForm
 from pgd_search.views import settings_processor
-from pgd_splicer.sidechain import bond_angles_string_dict, bond_lengths_string_dict, aa_list
-from pgd_splicer.chi import CHI_MAP
+from pgd_splicer.sidechain import bond_angles_string_dict, bond_lengths_string_dict
 
 stat_attributes = [('L1',u'C<sup>-1</sup>N'),
                         ('L2',u'NC<sup>&alpha;</sup>'),
