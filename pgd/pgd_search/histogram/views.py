@@ -1,14 +1,7 @@
-import math
-
-from django.db.models import Max, Min
 from django.http import HttpResponse
-from django.template import RequestContext
-from django.conf import settings
-from django.shortcuts import render_to_response
 from django.utils import simplejson
 
-from Histogram import *
-from pgd_search.views import settings_processor
+from Histogram import HistogramPlot
 
 def histogram(request, X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr):
     query = request.session['search'].querySet()
