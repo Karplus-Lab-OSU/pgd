@@ -205,12 +205,14 @@
             var protList = new Object();
             var negateRow = [];
             var AAs = [{% for aa in aa_choices.0 %}'{{aa.1|upper}}', {%endfor%}];
+
+            var MAX_LENGTH = {{maxLength}};
             
-            n = Math.ceil({{maxLength}} / 2);
-            iArray = new Array({{maxLength}}-1);
+            n = Math.ceil(MAX_LENGTH / 2);
+            iArray = new Array(MAX_LENGTH - 1);
             for (i=0; i<n; i++) {
                 iArray[i*2] = i+1;
-                if (i*2+1 < {{maxLength}}-1){
+                if (i*2+1 < MAX_LENGTH - 1){
                     iArray[i*2+1] = 0-i-1;
                 }
             }
@@ -227,7 +229,7 @@
 
                     //removing values
                     if (oldValue > newValue) {
-                        for(i={{maxLength}}-1; i>=newValue; i--){
+                        for (i = MAX_LENGTH - 1; i >= newValue; i--) {
                             str = '.col_' + iArray[i-1]
                             $(str).hide();
                             $(str + ' input.field').attr("disabled", true);
