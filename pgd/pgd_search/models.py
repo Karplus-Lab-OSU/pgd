@@ -10,7 +10,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 
 from pgd_core.models import Protein,Residue
-from pgd_constants import AA_CHOICES, AA_CHOICES_DICT, SS_CHOICES, Subscripter
+from pgd_constants import AA_CHOICES, AA_CHOICES_DICT, SS_CHOICES
 from pgd_splicer.sidechain import bond_lengths_string_dict, bond_angles_string_dict
 from pgd_core import residue_indexes
 
@@ -26,13 +26,13 @@ class RDict(dict):
     def __init__(self, dict_):
         self.update(dict_)
         super(dict, self).__init__()
-    
+
     def __getitem__(self, k):
         try:
             return super(RDict, self).__getitem__(k)
         except KeyError:
             return None
-    
+
     def __getattribute__(self, k):
         try:
             return super(dict, self).__getattribute__(k)
@@ -66,7 +66,7 @@ class Search(models.Model):
     def data(self, value):
         self.__data = value
         self.data_internal = None
-    
+
     @property
     def segmentLength(self):
         return int(self.data['residues'])
@@ -80,7 +80,7 @@ class Search(models.Model):
         data = self.data
         for i in range(self.segmentLength):
             yield Segmenter(data, i)
-            
+
 
 
     def save(self):
@@ -93,7 +93,7 @@ class Search(models.Model):
 
     def querySet(self):
         """
-        returns the query set that represents this search 
+        returns the query set that represents this search
         """
         # for now parse query every time.  otherwise the query results will be stored in the session
         return self.parse_search()
@@ -108,7 +108,7 @@ class Search(models.Model):
             # if no params return everything
             return query
         data = RDict(data)
-        
+
         # ...filter by code lists...
         if data.proteins_i != None:
             #codes = data.proteins.replace(' ','').rstrip(',').split(',')
@@ -118,36 +118,36 @@ class Search(models.Model):
                 query = query.filter(protein__code__in=codes)
             else:
                 query = query.exclude(protein__code__in=codes)
-        
+
         # ...filter by code lists...
         if data.resolutionMin != None:
             query = query.filter(protein__resolution__gte=data.resolutionMin)
-        
+
         # ...filter by resolution...
         if data.resolutionMax != None:
             query = query.filter(protein__resolution__lte=data.resolutionMax)
-        
+
         # ...filter by rfactor...
         if data.rfactorMin != None:
             query = query.filter(protein__rfactor__gte=data.rfactorMin)
-        
+
         # ...filter by rfactor...
         if data.rfactorMax != None:
             query = query.filter(protein__rfactor__lte=data.rfactorMax)
-        
+
         #...filter by rfree...
         if data.rfreeMin != None:
             query = query.filter(protein__rfree__gte=data.rfreeMin)
-        
+
         # ...filter by rfree...
         if data.rfreeMax != None:
             query = query.filter(protein__rfree__lte=data.rfreeMax)
-        
-        
+
+
         # ...filter by threshold...
         if data.threshold != None:
             query = query.filter(protein__threshold__lte=data.threshold)
-        
+
         # ...filter by query strings (for values and value ranges)...
         def compare(x,y):
             if x == y:
@@ -161,7 +161,7 @@ class Search(models.Model):
         indexes = residue_indexes(int(data.residues))
         for index in indexes: # iterate through all search residues in self
             search_res = Segmenter(data, index)
-            
+
             # get field prefix for this residue
             if index == 0:
                 seg_prefix = ''
@@ -169,12 +169,12 @@ class Search(models.Model):
                 seg_prefix = ''.join(['prev__' for i in range(index, 0)])
             else:
                 seg_prefix = ''.join(['next__' for i in range(index)])
-            
+
             # add isnull to ensure segment length is correct.  segments missing
             # a residue would be too short
             if seg_prefix != '':
                 query = query.filter(**{'%sisnull' % seg_prefix:False})
-            
+
             # get possible sidechain fields based on selected AA types
             sidechain_fields = []
             """for aa_type in filter(lambda x: x[1],search_res.aa.items()):
@@ -184,7 +184,7 @@ class Search(models.Model):
                 for field in bond_angles_string_dict[aa_type_upper]:
                     sidechain_fields.append('sidechain_%s__%s' % (aa_type_upper, field))
             """
-            
+
             # ...handle boolean values...
             #   (Filter on each binary field that is not set to NULL/None.)
             # XXX there don't appear to be any of these right now, xpr isn't on the form
@@ -195,7 +195,7 @@ class Search(models.Model):
                     ) if search_res.__dict__[field] != None
                 )))
             '''
-            
+
             # ...handle the '_int' values...
             #   ('_int' values are a series of booleans stored grouped in an integer.)
             for field,choices in filter(
@@ -214,10 +214,10 @@ class Search(models.Model):
                     # residues described in the '_int' of the search residue.
                     **{"%s%s__in" % (seg_prefix,field): search_res.__getitem__(field)}
                 )
-            
+
             # ...handle query strings...
             fields = filter(
-                # use only the fields with a '_include' value. 
+                # use only the fields with a '_include' value.
                 lambda x: search_res.__getitem__(x+'_i') != None,
                 (
                     'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
@@ -229,8 +229,8 @@ class Search(models.Model):
                 )
             )
             query = self.filter_fields(fields, query, search_res, seg_prefix)
-            
-            # ... handle sidechain query strings ...           
+
+            # ... handle sidechain query strings ...
             sidechain_fields = []
             if search_res.aa:
                 for aa_type in [AA_CHOICES_DICT[aa].upper() for aa in search_res.aa]:
@@ -240,40 +240,40 @@ class Search(models.Model):
                             key = field_base % field
                             if search_res[key]:
                                 sidechain_fields.append(key)
-                        
+
                         for field in bond_angles_string_dict[aa_type]:
                             key = field_base % field
                             if search_res[key]:
                                 sidechain_fields.append(key)
-            
+
             seg_prefix = '%ssidechain_' % seg_prefix
             query = self.filter_fields(sidechain_fields, query, search_res, seg_prefix)
-            
+
         return query
 
     def filter_fields(self, fields, query, search_res, seg_prefix):
         """
         Filters the fields passed in
         """
-        
+
         for field in fields:
             # seg_field is the name of the property of the given residue in the database
             seg_field = seg_prefix+field
-            
+
             constraints = []
-            
+
             for constraint in str(search_res.__getitem__(field)).split(','):
-                
+
                 # The constraint may be a range...
                 if range_re.search(constraint):
-                    
+
                     min,max = [float(lim) for lim in range_re.split(constraint)]
-                    
+
                     limits = (
                         Q(**{seg_field+'__gte' : float(min)}),
                         Q(**{seg_field+'__lte' : float(max)}),
                     )
-                    
+
                     constraints.append(
                         # Apply 'or' logic for a wraparound range
                         # or apply 'and' logic for a regular range
@@ -281,7 +281,7 @@ class Search(models.Model):
                     )
                 # ...or the constraint may be a value comparison.
                 else:
-                    
+
                     constraints.append(Q(**{
                         seg_field + {
                             ''   : '',
@@ -293,7 +293,7 @@ class Search(models.Model):
                         # extract the numeric value
                         constraint.strip('><=')
                     }))
-            
+
             query = query.__getattribute__(
                 # call either 'filter' or 'exclude', depending on the value of '_include'
                 'filter' if search_res.__getitem__(field+'_i') else 'exclude'
@@ -304,7 +304,7 @@ class Search(models.Model):
                     constraints
                 )
             )
-            
+
         return query
 
 
@@ -313,13 +313,13 @@ class Segmenter(object):
     def __init__(self,dict__, i):
         self.i = i
         self.__dict = dict__
-        
+
     def __contains__(self, k):
         return '%s_%d' % (k, self.i) in self.__dict
-        
+
     def __getitem__(self, k):
         return self.__dict['%s_%d' % (k, self.i)]
-        
+
     def __getattribute__(self, k):
         try:
             return super(Segmenter, self).__getattribute__(k)
@@ -369,7 +369,7 @@ class ResidueProxy_subscripter():
         #makes defining subscriptor instance simpler because
         #you only need to specify the key once
         parent.__dict__[key] = self
-        
+
         # create a list of proxy objects for the residues in this segment
         self.proxies = []
         l_append = self.proxies.append
@@ -379,9 +379,9 @@ class ResidueProxy_subscripter():
     def __getitem__(self, i):
         try: # Get the object, if it's been instantiated...
             return self.proxies[i]
-        
+
         except TypeError: # it wasn't an int, it must be a slice
-            #return the range of segments specified.  retrieve items through __getitem__() 
+            #return the range of segments specified.  retrieve items through __getitem__()
             #so items are initialized if needed.
             return self.proxies[i.start:i.stop:i.step if i.step else 1]
 
@@ -411,21 +411,21 @@ class Residue_subscripter():
         try: # Get the object, if it's been instantiated...
             return self.parent.__dict__['r%i' % i]
             #return self.foo[i]
-        
+
         except KeyError: # ...otherwise, instantiate it.
             pass
             # If the object can be instantiated, return it
             if self.parent.__dict__['r%i_id' % i]:
                 self.parent.__dict__['r%i' % i] = Residue.objects.filter(id=self.parent.__dict__['r%i_id' % i])[0]
                 return self.parent.__dict__['r%i' % i]
-            
-            # otherwise return None.  These objects are proxies to underlying properties 
+
+            # otherwise return None.  These objects are proxies to underlying properties
             # so they must always return a values or None
             else:
                 return None
-        
+
         except TypeError: # it wasn't an int, it must be a slice
-            #return the range of segments specified.  retrieve items through __getitem__() 
+            #return the range of segments specified.  retrieve items through __getitem__()
             #so items are initialized if needed.
             return self.foo[i.start:i.stop:i.step if i.step else 1]
 
@@ -484,7 +484,7 @@ This model consists of 2 parts:
        and function definitions
    2) a dynamically created child class that contains a set of fields
       that dynamically resize depending on maximum possible segment
-      length.  This works by defining a dictionary of fields and 
+      length.  This works by defining a dictionary of fields and
       passing it to the type() function which creates a class bound
       to the namespace of this file
 
@@ -519,10 +519,10 @@ class Segment_abstract(models.Model):
             residue = object.__getattribute__(self, 'residues')[index]
             if residue:
                 return residue.__dict__[attr]
-            
+
             #return none if residue is none (transitive)
             return None
-        
+
         # not a proxied attribute
         else:
             return object.__getattribute__(self, name)
