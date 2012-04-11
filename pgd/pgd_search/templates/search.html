@@ -240,6 +240,14 @@
                             str = '.col_' + iArray[i-2]
                             $(str + ' input.field').attr("disabled", false);
                             $(str).show();
+                            /* Hax for #1565, #1566, and #9495: Add the
+                             * initial angles here instead of on the form.
+                             * This is because the forms are super-wimpy and
+                             * don't store state very well. */
+                            $("#id_ome_" + iArray[i - 2]).val("<=-90,>=90");
+                            $("#id_bm_" + iArray[i - 2]).val("<25");
+                            $("#id_bg_" + iArray[i - 2]).val("<25");
+                            $("#id_bs_" + iArray[i - 2]).val("<25");
                         }
                     }
                     //update length
