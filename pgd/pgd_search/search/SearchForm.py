@@ -1,10 +1,8 @@
-import math
 import re
 
 from django.conf import settings
 from django import forms
 
-from pgd_core.models import Protein
 from pgd_search.views import RESIDUE_INDEXES
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_splicer.sidechain import sidechain_angle_relationship_list, sidechain_length_relationship_list
@@ -64,9 +62,6 @@ for i in RESIDUE_INDEXES:
     form_dict["aa_%i" % i]      = forms.MultipleChoiceField(choices=AA_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["aa_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
-    FORM_SS_CHOICES = [('','')]
-    for choice in SS_CHOICES:
-        FORM_SS_CHOICES.append(choice)
     form_dict["ss_%i" % i]      = forms.MultipleChoiceField(choices=SS_CHOICES, required=False, widget=forms.SelectMultiple(attrs={'class':'field'}))
     form_dict["ss_i_%i" % i]    = forms.IntegerField(required=False, widget=forms.HiddenInput(attrs={'class':'include'}))
 
