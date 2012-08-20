@@ -20,6 +20,7 @@ if __name__ == '__main__':
 from datetime import datetime
 from math import degrees, sqrt
 from multiprocessing import Pool
+from operator import itemgetter
 import os
 import shutil
 from subprocess import check_call
@@ -252,8 +253,7 @@ def process_pdb(data):
 
 
             # 4) iterate through residue data creating residues
-            comparison = lambda x,y: cmp(x['chainIndex'], y['chainIndex'])
-            for residue_props in sorted(residues.values(), comparison):
+            for residue_props in sorted(residues.values(), key=itemgetter("chainIndex")):
 
                 # 4a) find the residue object so it can be updated or create a new one
                 try:
