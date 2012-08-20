@@ -156,6 +156,7 @@ class ProcessPDBTask():
             elapsed = now - started
             if int(percent):
                 remaining = elapsed * 100 // int(percent)
+		remaining -= elapsed
             else:
                 remaining = elapsed * 100
             print "-" * 42
@@ -172,7 +173,6 @@ class ProcessPDBTask():
         # we no longer need to pass any data as it is contained in the database
         # for now assume everything was updated
         codes = {'pdbs':[p['code'] for p in pdbs]}
-        print codes
         return codes
 
 
