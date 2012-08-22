@@ -11,7 +11,7 @@ if __name__ == '__main__':
     # ==========================================================
     # Setup django environment
     # ==========================================================
-    if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
+    if not 'DJANGO_SETTINGS_MODULE' in os.environ:
         os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
     # ==========================================================
     # Done setting up django environment
@@ -23,8 +23,6 @@ from math import degrees, sqrt
 from multiprocessing import Pool
 from operator import itemgetter
 import os
-import shutil
-from subprocess import check_call
 import sys
 from tempfile import NamedTemporaryFile
 
@@ -209,7 +207,7 @@ def process_pdb(data):
     try:
         residue_props = None
         code = data['code']
-        chains_filter = data['chains'] if data.has_key('chains') else None
+        chains_filter = data.get("chains")
         filename = 'pdb%s.ent.gz' % code.lower()
         print '    Processing: ', code
 
@@ -273,7 +271,7 @@ def process_pdb(data):
                 residue.__dict__.update(residue_props)
 
                 # 4c) set previous
-                if residue_props.has_key('prev'):
+                if "prev" in residue_props:
                     residue.prev = old_residue
 
                 # 4d) find and create sidechain if needed.  set the property
@@ -295,7 +293,7 @@ def process_pdb(data):
                 chain.residues.add(residue)
 
                 # 4f) Update old_residue.next
-                if residue_props.has_key('prev'):
+                if "prev" in residue_props:
                     old_residue.next = residue
                     old_residue.save()
 
@@ -462,7 +460,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 N    = atoms['N'].get_vector()
                 CA   = atoms['CA'].get_vector()
                 C    = atoms['C'].get_vector()
-                CB   = atoms['CB'].get_vector() if atoms.has_key('CB') else None
+                CB   = atoms['CB'].get_vector() if "CB" in atoms else None
                 O    = atoms['O'].get_vector()
 
                 if oldC:
@@ -624,7 +622,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 oldCA      = None
                 oldC       = None
                 prev       = None
-                if residues.has_key(res_id):
+                if res_id in residues:
                     del residues[res_id]
 
         print 'Processed %s residues' % len(residues)
