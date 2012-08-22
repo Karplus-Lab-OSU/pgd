@@ -310,7 +310,6 @@ def process_pdb(data):
         print "*** print_tb:"
         print residue_props
         traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
-        print 'EXCEPTION in Residue', code, e.__class__, e
         print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
         transaction.rollback()
         return False
