@@ -690,18 +690,16 @@ def parseWithBioPython(file, props, chains_filter=None):
     return props
 
 
-def initialize_geometry(residue, geometry_list, type):
+def initialize_geometry(residue, geometry_list, geometry_type):
     """
     Initialize the dictionary for geometry data
     """
     for item in geometry_list:
-        if not residue.has_key(item) or residue[item] is None:
-            if type == 'angle':
-                residue[item] = NO_VALUE(item)
-            elif type == 'length':
+        if residue.get(item, None) is None:
+            if geometry_type in ("angle", "length"):
                 residue[item] = NO_VALUE(item)
             else:
-                print "Don't know how to deal with type", type
+                print "Don't know how to deal with type", geometry_type
 
 
 def calc_distance(atom1, atom2):
