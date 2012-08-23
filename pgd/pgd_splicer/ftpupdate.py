@@ -149,6 +149,8 @@ class FTPUpdateTask(object):
             #3 download files that are in the list
             self.download_pdb(pdb)
 
+            self.pdbCount += 1
+
         self.ftp.quit()
         print "All finished; grabbed %d of %d (%d%%)" % (self.pdbCount,
                                                          self.pdbTotal,
@@ -176,8 +178,6 @@ class FTPUpdateTask(object):
         self.ftp.retrbinary('RETR %s' % filename, self.processChunk)
         self._incoming_file.close()
         sys.stdout.write("\n")
-
-        self.pdbCount += 1
 
     def processChunk(self, data):
         """
