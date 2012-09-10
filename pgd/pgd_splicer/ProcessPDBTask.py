@@ -372,6 +372,9 @@ def parseWithBioPython(path, props, chains_filter=None):
     dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressed.name,
                         dssp='dsspcmbi')
 
+    if not dssp.keys():
+        raise Exception("No chains were parsed!")
+
     for chain in structure[0]:
         chain_id = chain.get_id()
 
