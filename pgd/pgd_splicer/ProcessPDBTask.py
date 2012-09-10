@@ -618,7 +618,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # something has gone wrong in the current residue
                 # indicating that it should be excluded from processing
                 # log a warning
-                print 'WARNING: Invalid residue - protein:%s  chain:%s   residue: %s  exception: %s' % (file, chain_id, res.get_id(), e)
+                print 'Invalid residue! protein: %s chain: %s residue: %s exception: %s' % (path, chain_id, res.get_id(), e)
                 if oldC:
                     residues[res_old_id]['terminal_flag'] = True
                     newID += 1
