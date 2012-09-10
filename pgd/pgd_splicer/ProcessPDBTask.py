@@ -49,7 +49,8 @@ def NO_VALUE(field):
     Helper function for determining the value to use when the field is an
     invalid value.
     """
-    if field in ('bm','bg','bs'):
+
+    if field in ('bm', 'bg', 'bs'):
         return 0
     else:
         return None
@@ -433,12 +434,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                     residues[old_id] = res_dict
                     res_dict['oldID'] = old_id
 
-                length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
-                angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
-                dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
-                initialize_geometry(res_dict, length_list, 'length')
-                initialize_geometry(res_dict, angles_list, 'angle')
-                initialize_geometry(res_dict, dihedral_list, 'angle')
+                initialize_all_geometry(res_dict)
 
                 # Get Properties from DSSP and other per residue properties
                 chain = res.get_parent().get_id()
@@ -630,16 +626,28 @@ def parseWithBioPython(path, props, chains_filter=None):
     return props
 
 
-def initialize_geometry(residue, geometry_list, geometry_type):
+def initialize_geometry(residue, geometry_list):
     """
     Initialize the dictionary for geometry data
     """
+
     for item in geometry_list:
-        if residue.get(item, None) is None:
-            if geometry_type in ("angle", "length"):
-                residue[item] = NO_VALUE(item)
-            else:
-                print "Don't know how to deal with type", geometry_type
+        if item not in residue:
+            residue[item] = NO_VALUE(item)
+
+
+def initialize_all_geometry(residue):
+    """
+    Set up a residue dictionary with all the appropriate keys for geometry
+    data.
+    """
+
+    length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'bg', 'bs', 'bm']
+    angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
+    dihedral_list = ['psi', 'ome', 'phi', 'zeta', 'chi1', 'chi2', 'chi3', 'chi4']
+    initialize_geometry(residue, length_list)
+    initialize_geometry(residue, angles_list)
+    initialize_geometry(residue, dihedral_list)
 
 
 def calc_distance(atom1, atom2):
