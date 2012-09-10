@@ -402,6 +402,11 @@ def parseWithBioPython(path, props, chains_filter=None):
                 hetflag, res_id, icode = res.get_id()
                 resname = res.resname
 
+                # We can't handle any hetflags. This is primarily to filter
+                # out water, but there can be others as well.
+                if hetflag != ' ':
+                    raise InvalidResidueException("HetCode %r" % hetflag)
+
                 # XXX Get the dictionary of atoms in the Main conformation.
                 # BioPython should do this automatically, but it does not
                 # always choose the main conformation.  Leading to some
@@ -415,8 +420,8 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # Exclude any Residues that are missing _ANY_ of the
                 #     mainchain atoms.  Any atom could be missing
                 all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
-                if hetflag != ' ' or not all_mainchain:
-                    raise InvalidResidueException('HetCode or Missing Atom')
+                if not all_mainchain:
+                    raise InvalidResidueException("Missing atom")
 
                 # Create dictionary structure and initialize all values.  All
                 # Values are required.  Values that are not filled in will retain
