@@ -403,12 +403,18 @@ def parseWithBioPython(path, props, chains_filter=None):
                 newID += 1
                 terminal = False
                 hetflag, res_id, icode = res.get_id()
-                resname = res.resname
 
                 # We can't handle any hetflags. This is primarily to filter
                 # out water, but there can be others as well.
                 if hetflag != ' ':
                     raise InvalidResidueException("HetCode %r" % hetflag)
+
+                resname = res.resname
+
+                # We can't deal with residues that aren't of amino acids.
+                if resname not in AA3to1:
+                    raise InvalidResidueException("Bad amino acid %r" %
+                                                  resname)
 
                 # XXX Get the dictionary of atoms in the Main conformation.
                 # BioPython should do this automatically, but it does not
