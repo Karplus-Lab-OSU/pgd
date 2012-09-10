@@ -431,10 +431,10 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # unique.  We're including residues from all chains in the same
                 # dictionary and chainindex may have duplicates.
                 old_id = res_id if icode == ' ' else '%s%s' % (res_id, icode)
-                try:
+                if old_id in residues:
                     res_dict = residues[old_id]
-                except KeyError:
-                    # residue didn't exist yet
+                else:
+                    # This residue doesn't exist yet.
                     res_dict = {}
                     residues[old_id] = res_dict
                     res_dict['oldID'] = old_id
@@ -443,13 +443,13 @@ def parseWithBioPython(path, props, chains_filter=None):
 
                 # Get Properties from DSSP and other per residue properties
                 chain = res.get_parent().get_id()
-                try:
-                    residue_dssp, secondary_structure, accessibility, relative_accessibility, phi, psi = dssp[(chain, (hetflag, res_id, icode)) ]
-                except KeyError, e:
-                    import traceback
-                    t, v, tb = sys.exc_info()
-                    traceback.print_tb(tb, limit=10, file=sys.stdout)
-                    raise InvalidResidueException('KeyError in DSSP')
+                key = chain, (hetflag, res_id, icode)
+                if key in dssp:
+                    (residue_dssp, secondary_structure, accessibility,
+                     relative_accessibility, phi, psi) = dssp[key]
+                else:
+                    raise InvalidResidueException("Key %r not in DSSP" %
+                                                  (key,))
 
                 res_dict['chain'] = chain
                 res_dict['ss'] = secondary_structure
