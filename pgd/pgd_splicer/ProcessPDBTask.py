@@ -49,7 +49,8 @@ def NO_VALUE(field):
     Helper function for determining the value to use when the field is an
     invalid value.
     """
-    if field in ('bm','bg','bs'):
+
+    if field in ('bm', 'bg', 'bs'):
         return 0
     else:
         return None
@@ -371,6 +372,9 @@ def parseWithBioPython(path, props, chains_filter=None):
     dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressed.name,
                         dssp='dsspcmbi')
 
+    if not dssp.keys():
+        raise Exception("No chains were parsed!")
+
     for chain in structure[0]:
         chain_id = chain.get_id()
 
@@ -399,7 +403,18 @@ def parseWithBioPython(path, props, chains_filter=None):
                 newID += 1
                 terminal = False
                 hetflag, res_id, icode = res.get_id()
+
+                # We can't handle any hetflags. This is primarily to filter
+                # out water, but there can be others as well.
+                if hetflag != ' ':
+                    raise InvalidResidueException("HetCode %r" % hetflag)
+
                 resname = res.resname
+
+                # We can't deal with residues that aren't of amino acids.
+                if resname not in AA3to1:
+                    raise InvalidResidueException("Bad amino acid %r" %
+                                                  resname)
 
                 # XXX Get the dictionary of atoms in the Main conformation.
                 # BioPython should do this automatically, but it does not
@@ -414,8 +429,8 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # Exclude any Residues that are missing _ANY_ of the
                 #     mainchain atoms.  Any atom could be missing
                 all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
-                if hetflag != ' ' or not all_mainchain:
-                    raise InvalidResidueException('HetCode or Missing Atom')
+                if not all_mainchain:
+                    raise InvalidResidueException("Missing atom")
 
                 # Create dictionary structure and initialize all values.  All
                 # Values are required.  Values that are not filled in will retain
@@ -425,30 +440,25 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # unique.  We're including residues from all chains in the same
                 # dictionary and chainindex may have duplicates.
                 old_id = res_id if icode == ' ' else '%s%s' % (res_id, icode)
-                try:
+                if old_id in residues:
                     res_dict = residues[old_id]
-                except KeyError:
-                    # residue didn't exist yet
+                else:
+                    # This residue doesn't exist yet.
                     res_dict = {}
                     residues[old_id] = res_dict
                     res_dict['oldID'] = old_id
 
-                length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7','bg','bs','bm']
-                angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
-                dihedral_list = ['psi', 'ome', 'phi', 'zeta','chi1','chi2','chi3','chi4']
-                initialize_geometry(res_dict, length_list, 'length')
-                initialize_geometry(res_dict, angles_list, 'angle')
-                initialize_geometry(res_dict, dihedral_list, 'angle')
+                initialize_all_geometry(res_dict)
 
                 # Get Properties from DSSP and other per residue properties
                 chain = res.get_parent().get_id()
-                try:
-                    residue_dssp, secondary_structure, accessibility, relative_accessibility, phi, psi = dssp[(chain, (hetflag, res_id, icode)) ]
-                except KeyError, e:
-                    import traceback
-                    t, v, tb = sys.exc_info()
-                    traceback.print_tb(tb, limit=10, file=sys.stdout)
-                    raise InvalidResidueException('KeyError in DSSP')
+                key = chain, (hetflag, res_id, icode)
+                if key in dssp:
+                    (residue_dssp, secondary_structure, accessibility,
+                     relative_accessibility, phi, psi) = dssp[key]
+                else:
+                    raise InvalidResidueException("Key %r not in DSSP" %
+                                                  (key,))
 
                 res_dict['chain'] = chain
                 res_dict['ss'] = secondary_structure
@@ -614,7 +624,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # something has gone wrong in the current residue
                 # indicating that it should be excluded from processing
                 # log a warning
-                print 'WARNING: Invalid residue - protein:%s  chain:%s   residue: %s  exception: %s' % (file, chain_id, res.get_id(), e)
+                print 'Invalid residue! protein: %s chain: %s residue: %s exception: %s' % (path, chain_id, res.get_id(), e)
                 if oldC:
                     residues[res_old_id]['terminal_flag'] = True
                     newID += 1
@@ -630,16 +640,28 @@ def parseWithBioPython(path, props, chains_filter=None):
     return props
 
 
-def initialize_geometry(residue, geometry_list, geometry_type):
+def initialize_geometry(residue, geometry_list):
     """
     Initialize the dictionary for geometry data
     """
+
     for item in geometry_list:
-        if residue.get(item, None) is None:
-            if geometry_type in ("angle", "length"):
-                residue[item] = NO_VALUE(item)
-            else:
-                print "Don't know how to deal with type", geometry_type
+        if item not in residue:
+            residue[item] = NO_VALUE(item)
+
+
+def initialize_all_geometry(residue):
+    """
+    Set up a residue dictionary with all the appropriate keys for geometry
+    data.
+    """
+
+    length_list = ['L1', 'L2', 'L3', 'L4', 'L5', 'L6', 'L7', 'bg', 'bs', 'bm']
+    angles_list = ['a1', 'a2', 'a3', 'a4', 'a5', 'a6', 'a7']
+    dihedral_list = ['psi', 'ome', 'phi', 'zeta', 'chi1', 'chi2', 'chi3', 'chi4']
+    initialize_geometry(residue, length_list)
+    initialize_geometry(residue, angles_list)
+    initialize_geometry(residue, dihedral_list)
 
 
 def calc_distance(atom1, atom2):
