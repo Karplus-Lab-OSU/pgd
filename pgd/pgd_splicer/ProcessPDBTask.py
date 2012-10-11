@@ -347,6 +347,16 @@ def pdb_file_is_newer(data):
     return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
 
 
+def hetatm_amino(s):
+    """
+    Whether a given line refers to a HETATM amino acid.
+
+    These lines are undesirable and we should discard them.
+    """
+
+    return s.startswith("HETATM") and any(amino in s for amino in AA3to1)
+
+
 def parseWithBioPython(path, props, chains_filter=None):
     """
     Parse values from file that can be parsed using BioPython library
@@ -361,7 +371,14 @@ def parseWithBioPython(path, props, chains_filter=None):
 
     decompressed = NamedTemporaryFile()
     gunzipped = GzipFile(full_path)
-    decompressed.write(gunzipped.read())
+
+    # Go through, one line at a time, and discard lines that have the bad
+    # HETATM pattern. This is largely for 2VQ1, see #8319 for details.
+    for line in gunzipped:
+        if not hetatm_amino(line):
+            decompressed.write(line)
+
+    # Be kind; rewind.
     decompressed.seek(0)
 
     structure = Bio.PDB.PDBParser().get_structure('pdbname',
