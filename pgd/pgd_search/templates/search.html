@@ -692,7 +692,6 @@
                         active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                     }
                 }
-                //active_sidechains = set(active_sidechains);//Remove redundancies
                 header = document.getElementById('sidechain_angle_header');
                 if (header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
                     for (angle in active_sidechains){
@@ -736,7 +735,6 @@
                     }
                 }
                 //unfiltered_sidechains = sidechain_length_lookup[aa];
-                //active_sidechains = set(active_sidechains);//Remove redundancies
                 header = document.getElementById('sidechain_length_header');
                 if (header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
                     for (sclength in active_sidechains){
@@ -770,7 +768,6 @@
                         active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                     }
                 }
-                //active_sidechains = set(active_sidechains);//Remove redundancies
                 header = document.getElementById('sidechain_angle_header');
                 if (header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
                     for (angle in active_sidechains){
@@ -834,35 +831,6 @@
                     }
                 }
                 /*********************************************************/
-            };
-                    
-            function set( list ){ //Returns a list with only unique elements
-                seen = [];
-                set_list = [];
-                for (item in list){
-                    seen[list[item]] = true;
-                }
-                for (item in seen){
-                    set_list.push(item);
-                }
-                return set_list.slice(); //Return the value of the array, not the address
-            };
-            
-            function listComplement( filter, unfiltered ){//Returns the elements of filter not in unfiltered.
-                complement = [];
-                in_list = false;
-                for (item in filter){
-                    for(comp_item in unfiltered){
-                        if(filter[item] == unfiltered[comp_item]){
-                            in_list = true;
-                        }
-                    }
-                    if(!in_list){
-                        complement.push(filter[item]);
-                    }
-                    in_list = false;
-                }
-                return complement.slice();//Return the value of the array, not the address
             };
             
             $(document).ready(function() {
@@ -1062,7 +1030,6 @@
                                 active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                             }
                         }
-                        //active_sidechains = set(active_sidechains);
                         for (sidechain in active_sidechains){
                             $('tr#'+active_sidechains[sidechain]+'_row').show();
                             //set all cells to disabled as default; cells are more likely to need disabling than enabling
@@ -1101,7 +1068,6 @@
                                 active_sidechains.push(selected_aa[active_aa]+'__'+sidechains[sidechain]);
                             }
                         }
-                        //active_sidechains = set(active_sidechains);
                         for (sidechain in active_sidechains){
                             $('tr#'+active_sidechains[sidechain]+'_row').show();
                             //set all cells to disabled as default; cells are more likely to need disabling than enabling
