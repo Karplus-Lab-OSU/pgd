@@ -527,10 +527,11 @@
                 header = document.getElementById('sidechain_angle_header');
                 if (header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
                     for (angle in active_sidechains){
-                        $('tr#'+active_sidechains[angle]+'_row').show();
-                        $('tr#'+active_sidechains[angle]+'_row').children('td').children('span').children('input').hide();
+                        var row = $("tr#" + active_sidechains[angle] + "_row");
+                        row.show();
+                        row.children('td').children('span').children('input').hide();
                         if (protList[active_sidechains[angle].substring(0,3)]){
-                            $('tr#'+active_sidechains[angle]+'_row').children('td').each(
+                            row.children('td').each(
                                 function(){
                                     //CHANGE HERE FOR NEGATION CLAUSE
                                     if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
@@ -570,11 +571,11 @@
                 header = document.getElementById('sidechain_length_header');
                 if (header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
                     for (sclength in active_sidechains){
-                        $('tr#'+active_sidechains[sclength]+'_row').show();
-                        $('tr#'+active_sidechains[sclength]+'_row').children('td').children('span').children('input').hide();
+                        var row = $("tr#" + active_sidechains[sclength] + "_row");
+                        row.show();
+                        row.children('td').children('span').children('input').hide();
                         if (protList[active_sidechains[sclength].substring(0,3)]){
-                            
-                            $('tr#'+active_sidechains[sclength]+'_row').children('td').each(
+                            row.children('td').each(
                                 function(){
                                     //access to form element via $(this)
                                     
@@ -603,12 +604,12 @@
                 header = document.getElementById('sidechain_angle_header');
                 if (header.innerHTML == 'Sidechain Angles ↓'){//Only show if header is open.
                     for (angle in active_sidechains){
-                        $('tr#'+active_sidechains[angle]+'_row').show();
-                        $('tr#'+active_sidechains[angle]+'_row').children('td').children('span').children('input').hide();
+                        var row = $("tr#" + active_sidechains[angle] + "_row");
+                        row.show();
+                        row.children('td').children('span').children('input').hide();
 
                         if (protList[active_sidechains[angle].substring(0,3)]){
-                            
-                            $('tr#'+active_sidechains[angle]+'_row').children('td').each(
+                            row.children('td').each(
                                 function(){
                                     //access to form element via $(this)
                                     if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
@@ -640,11 +641,11 @@
                 header = document.getElementById('sidechain_length_header');
                 if (header.innerHTML == 'Sidechain Lengths ↓'){//Only show if header is open.
                     for (sclength in active_sidechains){
-                        $('tr#'+active_sidechains[sclength]+'_row').show();
-                        $('tr#'+active_sidechains[sclength]+'_row').children('td').children('span').children('input').hide();
+                        var row = $("tr#" + active_sidechains[sclength] + "_row");
+                        row.show();
+                        row.children('td').children('span').children('input').hide();
                         if (protList[active_sidechains[sclength].substring(0,3)]){
-                            
-                            $('tr#'+active_sidechains[sclength]+'_row').children('td').each(
+                            row.children('td').each(
                                 function(){
                                     //access to form element via $(this)
                                     if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
