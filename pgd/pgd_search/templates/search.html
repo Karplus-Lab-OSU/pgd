@@ -382,16 +382,15 @@
                     $('div.qtip').qtip('hide');
                     $('div.qtip').qtip("disable");
                     qtipsOn=false;
-                    qtipState='';
                     $('.qtipToggle').attr('value','Turn Help On');
                 }
                 else{
                     $('div.qtip').qtip("enable");
                     qtipsOn=true;
-                    qtipState='';
                     $('.qtipToggle').attr('value','Turn Help Off');
                 }
 
+                qtipState = '';
             };
 
             var r = undefined;
