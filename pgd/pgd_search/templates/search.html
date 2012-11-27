@@ -36,7 +36,8 @@
             var qtipState = '';
             var qtipTotal = 0;
             var protList = new Object();
-            var negateRow = [];
+            /* List of columns which have been selected. */
+            var negateRow = {};
             var AAs = [{% for aa in aa_choices.0 %}'{{aa.1|upper}}', {%endfor%}];
 
             var MAX_LENGTH = {{maxLength}};
@@ -48,6 +49,15 @@
                 if (i*2+1 < MAX_LENGTH - 1){
                     iArray[i*2+1] = 0-i-1;
                 }
+            }
+
+            function getNegateRow(target) {
+                return negateRow[$(target.parentNode).attr('class').substring(10,12)];
+            }
+
+            function putNegateRow(target, value) {
+                negateRow[$(target.parentNode).attr('class').substring(10,12)]
+                    = value;
             }
 
             function sizeChange(evt){
@@ -175,12 +185,12 @@
                         $(node.parentNode).children(".toggle").addClass('toggle_Include');
                         $(node.parentNode).children(".include").val(1).attr('disabled',false);
                         $node.addClass('field_include').removeClass('field_exclude');
-                        negateRow[$(node.parentNode).attr('class').substring(10,12)] = true;
+                        putNegateRow(node.parentNode, true);
                     }else if (val == 0 && !$node.hasClass('field_exclude') ) {
                         $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
                         $(node.parentNode).children(".include").val(0).attr('disabled',false);
                         $node.addClass('field_exclude').removeClass('toggle_Include');
-                        negateRow[$(node.parentNode).attr('class').substring(10,12)] = false;
+                        putNegateRow(node.parentNode, false);
                     }
                 } else {
                     $node
@@ -534,7 +544,7 @@
                             row.children('td').each(
                                 function(){
                                     //CHANGE HERE FOR NEGATION CLAUSE
-                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                    if (getNegateRow(this) != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
                                         //re-enable the angles if they apply to the column.
                                         $(this).children('span').children('input').show();
                                     }
@@ -579,7 +589,7 @@
                                 function(){
                                     //access to form element via $(this)
                                     
-                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                    if (getNegateRow(this) != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
                                         //re-enable the angles if they apply to the column.
                                         $(this).children('span').children('input').show();
                                     }
@@ -612,7 +622,7 @@
                             row.children('td').each(
                                 function(){
                                     //access to form element via $(this)
-                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                    if (getNegateRow(this) != false && protList[active_sidechains[angle].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
                                         //re-enable the angles if they apply to the column.
                                         $(this).children('span').children('input').show();
                                     }
@@ -648,7 +658,7 @@
                             row.children('td').each(
                                 function(){
                                     //access to form element via $(this)
-                                    if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                    if (getNegateRow(this) != false && protList[active_sidechains[sclength].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
                                         //re-enable the angles if they apply to the column.
                                         $(this).children('span').children('input').show();
                                     }
@@ -679,14 +689,14 @@
                     if ( tar.hasClass('toggle_Include')) {
                         tar.removeClass('toggle_Include');
                         tar.addClass('toggle_Exclude');
-                        negateRow[tar.parent().attr('class').substring(10,12)] = false;
+                        putNegateRow(tar.parent(), false);
                         redraw();
                         $(evt.target.parentNode).children(".include").val(0);
                         $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_exclude').removeClass('field_include');
                     }else if (tar.hasClass('toggle_Exclude')){
                         tar.removeClass('toggle_Exclude');
                         tar.addClass('toggle_Include');
-                        negateRow[tar.parent().attr('class').substring(10,12)] = true;
+                        putNegateRow(tar.parent(), true);
                         redraw();
                         $(evt.target.parentNode).children(".include").val(1);
                         $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_include').removeClass('field_exclude');
@@ -872,7 +882,7 @@
                                 $('tr#'+active_sidechains[sidechain]+'_row').children('td').each(
                                     function(){
                                         //access to form element via $(this)
-                                        if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sidechain].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                        if (getNegateRow(this) != false && protList[active_sidechains[sidechain].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
                                             //re-enable the angles if they apply to the column.
                                             $(this).children('span').children('input').show();
                                         }
@@ -911,7 +921,7 @@
                                     function(){
                                         //access to form element via $(this)
                                         
-                                        if (negateRow[$(this).attr('class').substring(10,12)] != false && protList[active_sidechains[sidechain].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
+                                        if (getNegateRow(this) != false && protList[active_sidechains[sidechain].substring(0,3)][$(this).attr('class').substring(10,12)] == true){
                                             //re-enable the angles if they apply to the column.
                                             $(this).children('span').children('input').show();
                                         }
