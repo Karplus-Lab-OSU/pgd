@@ -109,17 +109,20 @@
             }
 
             function validateField(val) {
-                // clean up field by removing whitespace and replacing OR synonyms with comma's
-                var regExp = /\s+/g;
-                val = val.replace(regExp,'')
-                regExp = /(\|){2}|(or){1}/g
-                val = val.replace(regExp,',')
+                /* Clean up field by removing whitespace and replacing OR
+                 * synonyms with commas. */
+                var regex = /\s+/g;
+                var val = val.replace(regex, '');
+                regex = /(\|){2}|(or){1}/g;
+                val = val.replace(regex, ',');
 
-                if (val == '')
+                if (val == '') {
                     return true;
+                }
 
-                m = match(val)
-                if(m != ''){//Apparently empty lists are returned as empty strings
+                var m = match(val);
+                // Apparently empty lists are returned as empty strings
+                if (m != '') {
                     return true;
                 }
                 return false;
