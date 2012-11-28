@@ -128,42 +128,52 @@
                 return false;
             }
 
-            function updateInclusionField(node, syntax){
-                val = $(node).val()
+            function updateInclusionField(node, syntax) {
+                var $node = $(node);
+                var $parentNode = $(node.parentNode);
+                var val = $node.val();
 
                 // if field is not null check for syntax errors
                 if (syntax) {
                     if (validateField(val)) {
-                            $(node).removeClass('field_error');
+                        $node.removeClass('field_error');
                     } else {
-                            $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
-                            $(node).addClass('field_error').removeClass('field_exclude').removeClass('field_include')
+                        $parentNode.children(".toggle").removeClass('toggle_Exclude toggle_Include');
+                        $node.addClass('field_error');
+                        $node.removeClass('field_exclude field_include');
 
-                            // return immediately so only the error class is applied
-                            return;
+                        /* Return immediately so only the error class is
+                         * applied. */
+                        return;
                     }
                 }
 
                 // set field style based on if the field has the default value
-                if (isDefault(node, syntax)){
-                    $(node.parentNode).children(".toggle").removeClass('toggle_Include').removeClass('toggle_Exclude');
-                    $(node.parentNode).children(".include").val('').attr('disabled', true);
-                    $(node).removeClass('field_exclude').removeClass('field_include')
+                if (isDefault(node, syntax)) {
+                    $parentNode.children(".toggle").removeClass('toggle_Include toggle_Exclude');
+                    $parentNode.children(".include").val('');
+                    $parentNode.children(".include").attr('disabled', true);
+                    $node.removeClass('field_exclude field_include');
 
-                // non-default value, indicate if field is inclusion or exclusion filter
-                }else{
-                    val = $(node.parentNode).children(".include").val()
+                /* Non-default value. Indicate if the field is an inclusion or
+                 * exclusion filter. */
+                } else {
+                    val = $parentNode.children(".include").val();
                     if (val == '') {
-                        val = 1
+                        val = 1;
                     }
-                    if (val == 1 &&  !$(node).hasClass('field_include') ){
-                        $(node.parentNode).children(".toggle").addClass('toggle_Include');
-                        $(node.parentNode).children(".include").val(1).attr('disabled',false);
-                        $(node).addClass('field_include').removeClass('field_exclude');
-                    }else if (val == 0 && !$(node).hasClass('field_exclude') ) {
-                        $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
-                        $(node.parentNode).children(".include").val(0).attr('disabled',false);
-                        $(node).addClass('field_exclude').removeClass('toggle_Include');
+                    if (val == 1 && !$node.hasClass('field_include')) {
+                        $parentNode.children(".toggle").addClass('toggle_Include');
+                        $parentNode.children(".include").val(1);
+                        $parentNode.children(".include").attr('disabled', false);
+                        $node.addClass('field_include');
+                        $node.removeClass('field_exclude');
+                    } else if (val == 0 && !$node.hasClass('field_exclude')) {
+                        $parentNode.children(".toggle").addClass('toggle_Exclude');
+                        $parentNode.children(".include").val(0);
+                        $parentNode.children(".include").attr('disabled', false);
+                        $node.addClass('field_exclude');
+                        $node.removeClass('toggle_Include');
                     }
                 }
             };
