@@ -178,41 +178,42 @@
                 }
             };
 
-            function updateInclusionSelect(node){
-                // is anything checked?
-                $node = $(node);
+            function updateInclusionSelect(node) {
+                var $node = $(node);
+                var $parentNode = $(node.parentNode);
+                var is_checked = false;
 
-                is_checked = false;
-                $node.find('input').each(function(){
+                // Is anything checked?
+                $node.find('input').each(function() {
                     if (this.checked) {
                         is_checked = true;
                     }
                 });
 
                 if (is_checked) {
-                    val = $(node.parentNode).children(".include").val()
+                    var val = $parentNode.children(".include").val();
                     if (val == '') {
-                        val = 1
+                        val = 1;
                     }
-                    if (val == 1 &&  !$node.hasClass('field_include') ){
-                        $(node.parentNode).children(".toggle").addClass('toggle_Include');
-                        $(node.parentNode).children(".include").val(1).attr('disabled',false);
-                        $node.addClass('field_include').removeClass('field_exclude');
+                    if (val == 1 && !$node.hasClass('field_include')) {
+                        $parentNode.children(".toggle").addClass('toggle_Include');
+                        $parentNode.children(".include").val(1);
+                        $parentNode.children(".include").attr('disabled', false);
+                        $node.addClass('field_include');
+                        $node.removeClass('field_exclude');
                         putNegateRow(node.parentNode, true);
-                    }else if (val == 0 && !$node.hasClass('field_exclude') ) {
-                        $(node.parentNode).children(".toggle").addClass('toggle_Exclude');
-                        $(node.parentNode).children(".include").val(0).attr('disabled',false);
-                        $node.addClass('field_exclude').removeClass('toggle_Include');
+                    } else if (val == 0 && !$node.hasClass('field_exclude')) {
+                        $parentNode.children(".toggle").addClass('toggle_Exclude');
+                        $parentNode.children(".include").val(0);
+                        $parentNode.children(".include").attr('disabled', false);
+                        $node.addClass('field_exclude');
+                        $node.removeClass('toggle_Include');
                         putNegateRow(node.parentNode, false);
                     }
                 } else {
-                    $node
-                        .removeClass('field_exclude')
-                        .removeClass('field_include');
-                    $(node.parentNode).children(".toggle")
-                        .removeClass('toggle_Include')
-                        .removeClass('toggle_Exclude');
-                    $(node.parentNode).children(".include").val('');
+                    $node.removeClass('field_exclude field_include');
+                    $parentNode.children(".toggle").removeClass('toggle_Include toggle_Exclude');
+                    $parentNode.children(".include").val('');
                 }
             };
 
