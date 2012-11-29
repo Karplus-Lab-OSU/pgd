@@ -454,59 +454,54 @@
             }
             
             //Checks the list of numbers for compliance to search ranges
-            function check_range(val){
-                vals = null;
-                for (range in val){
-                    vals = val[range]
-                    //Must go counterclockwise around the circle
-                    if((vals[0]-vals[1])>=0){
+            function check_range(val) {
+                var vals = null;
+
+                for (range in val) {
+                    vals = val[range];
+                    // Must go counterclockwise around the circle...
+                    if ((vals[0] - vals[1]) >= 0) {
                         return false;
                     }
                     //Must be in the range of -180 to 180
-                    if(vals[0]> 180 || vals[0] < -180){
+                    if (vals[0]> 180 || vals[0] < -180) {
                         return false;
                     }
-                    if(vals[1]> 180 || vals[1] < -180){
+                    if (vals[1]> 180 || vals[1] < -180) {
                         return false;
                     }
-                    
                 }
                 return true;
             }
         
-            function match(val){
-                m = val.match(/^(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))(,(-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))(--?(([1-9]\d*|0)(\.\d+)?|(\.\d+)))?|[<>]=?-?(([1-9]\d*|0)(\.\d+)?|(\.\d+))))*$/)
-                if (!m){
-                    return [];
-                }
-                
-                vals = val.split(',');
-                processed = [];
-                for (i in vals){
+            function match(val) {
+                var vals = val.split(',');
+                var processed = [];
+
+                for (i in vals) {
                     v = vals[i];
-                    if (v.indexOf('<=')!=-1) {
+                    if (v.indexOf('<=') != -1) {
                         processed.push([-180, parseFloat(v.substring(2))]);
-                    } else if (v.indexOf('>=')!=-1) {
+                    } else if (v.indexOf('>=') != -1) {
                         processed.push([parseFloat(v.substring(2)), 180]);
-                    } else if (v.indexOf('<')!=-1) {
+                    } else if (v.indexOf('<') != -1) {
                         processed.push([-180, parseFloat(v.substring(1))]);
-                    } else if (v.indexOf('>')!=-1) {
+                    } else if (v.indexOf('>') != -1) {
                         processed.push([parseFloat(v.substring(1)), 180]);
-                    } else if (v.indexOf('-',1)!=-1) {
-                        z = v.indexOf('-',1);
-                        v1 = parseFloat(v.substring(0,z));
-                        v2 = parseFloat(v.substring(z+1));
-                        processed.push([v1,v2]);
-                    
+                    } else if (v.indexOf('-',1) != -1) {
+                        z = v.indexOf('-', 1);
+                        v1 = parseFloat(v.substring(0, z));
+                        v2 = parseFloat(v.substring(z + 1));
+                        processed.push([v1, v2]);
                     } else {
                         v = parseFloat(v);
-                        processed.push([v,v+1]);
+                        processed.push([v, v + 1]);
                     }
                 }
-                if(check_range(processed)){
+
+                if (check_range(processed)) {
                     return processed;
-                }
-                else{
+                } else {
                     return [];
                 }
             }
