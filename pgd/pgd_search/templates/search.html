@@ -473,30 +473,44 @@
                 }
                 return true;
             }
+
+            /* Attempt to parse a float with parseFloat, raising an exception
+             * if the string couldn't be parsed. */
+            function parseFloatOrFail(s) {
+                var retval = parseFloat(s);
+                if (isNaN(retval)) {
+                    throw "Couldn't parse float" + s;
+                }
+                return retval;
+            }
         
             function match(val) {
                 var vals = val.split(',');
                 var processed = [];
 
-                for (i in vals) {
-                    v = vals[i];
-                    if (v.indexOf('<=') != -1) {
-                        processed.push([-180, parseFloat(v.substring(2))]);
-                    } else if (v.indexOf('>=') != -1) {
-                        processed.push([parseFloat(v.substring(2)), 180]);
-                    } else if (v.indexOf('<') != -1) {
-                        processed.push([-180, parseFloat(v.substring(1))]);
-                    } else if (v.indexOf('>') != -1) {
-                        processed.push([parseFloat(v.substring(1)), 180]);
-                    } else if (v.indexOf('-',1) != -1) {
-                        z = v.indexOf('-', 1);
-                        v1 = parseFloat(v.substring(0, z));
-                        v2 = parseFloat(v.substring(z + 1));
-                        processed.push([v1, v2]);
-                    } else {
-                        v = parseFloat(v);
-                        processed.push([v, v + 1]);
+                try {
+                    for (i in vals) {
+                        v = vals[i];
+                        if (v.indexOf('<=') != -1) {
+                            processed.push([-180, parseFloatOrFail(v.substring(2))]);
+                        } else if (v.indexOf('>=') != -1) {
+                            processed.push([parseFloatOrFail(v.substring(2)), 180]);
+                        } else if (v.indexOf('<') != -1) {
+                            processed.push([-180, parseFloatOrFail(v.substring(1))]);
+                        } else if (v.indexOf('>') != -1) {
+                            processed.push([parseFloatOrFail(v.substring(1)), 180]);
+                        } else if (v.indexOf('-',1) != -1) {
+                            z = v.indexOf('-', 1);
+                            v1 = parseFloatOrFail(v.substring(0, z));
+                            v2 = parseFloatOrFail(v.substring(z + 1));
+                            processed.push([v1, v2]);
+                        } else {
+                            v = parseFloatOrFail(v);
+                            processed.push([v, v + 1]);
+                        }
                     }
+                } catch (error) {
+                    return [];
                 }
 
                 if (check_range(processed)) {
