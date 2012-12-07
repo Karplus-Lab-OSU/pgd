@@ -52,12 +52,12 @@
             }
 
             function getNegateRow(target) {
-                return negateRow[$(target.parentNode).attr('class').substring(10,12)];
+                return negateRow[$(target).parent().attr('class').substring(10,12)];
             }
 
             function putNegateRow(target, value) {
-                negateRow[$(target.parentNode).attr('class').substring(10,12)]
-                    = value;
+                negateRow[$(target).parent().attr('class').substring(10,12)] =
+                    value;
             }
 
             function sizeChange(evt){
@@ -134,31 +134,31 @@
              * selections. */
             function frobInclusions(node) {
                 var $node = $(node);
-                var $parentNode = $(node.parentNode);
-                var val = $parentNode.children(".include").val();
+                var $parent = $node.parent();
+                var val = $parent.children(".include").val();
                 if (val == '') {
                     val = 1;
                 }
                 if (val == 1 && !$node.hasClass('field_include')) {
-                    $parentNode.children(".toggle").addClass('toggle_Include');
-                    $parentNode.children(".include").val(1);
-                    $parentNode.children(".include").attr('disabled', false);
+                    $parent.children(".toggle").addClass('toggle_Include');
+                    $parent.children(".include").val(1);
+                    $parent.children(".include").attr('disabled', false);
                     $node.addClass('field_include');
                     $node.removeClass('field_exclude');
-                    putNegateRow(node.parentNode, true);
+                    putNegateRow($parent, true);
                 } else if (val == 0 && !$node.hasClass('field_exclude')) {
                     $parentNode.children(".toggle").addClass('toggle_Exclude');
                     $parentNode.children(".include").val(0);
                     $parentNode.children(".include").attr('disabled', false);
                     $node.addClass('field_exclude');
                     $node.removeClass('toggle_Include');
-                    putNegateRow(node.parentNode, false);
+                    putNegateRow($parent, false);
                 }
             }
 
             function updateInclusionField(node, syntax) {
                 var $node = $(node);
-                var $parentNode = $(node.parentNode);
+                var $parent = $node.parent();
                 var val = $node.val();
 
                 // if field is not null check for syntax errors
@@ -166,7 +166,7 @@
                     if (validateField(val)) {
                         $node.removeClass('field_error');
                     } else {
-                        $parentNode.children(".toggle").removeClass('toggle_Exclude toggle_Include');
+                        $parent.children(".toggle").removeClass('toggle_Exclude toggle_Include');
                         $node.addClass('field_error');
                         $node.removeClass('field_exclude field_include');
 
@@ -178,9 +178,9 @@
 
                 // set field style based on if the field has the default value
                 if (isDefault(node, syntax)) {
-                    $parentNode.children(".toggle").removeClass('toggle_Include toggle_Exclude');
-                    $parentNode.children(".include").val('');
-                    $parentNode.children(".include").attr('disabled', true);
+                    $parent.children(".toggle").removeClass('toggle_Include toggle_Exclude');
+                    $parent.children(".include").val('');
+                    $parent.children(".include").attr('disabled', true);
                     $node.removeClass('field_exclude field_include');
                 } else {
                     frobInclusions(node);
@@ -189,7 +189,7 @@
 
             function updateInclusionSelect(node) {
                 var $node = $(node);
-                var $parentNode = $(node.parentNode);
+                var $parent = $node.parent();
                 var is_checked = false;
 
                 // Is anything checked?
@@ -203,8 +203,8 @@
                     frobInclusions(node);
                 } else {
                     $node.removeClass('field_exclude field_include');
-                    $parentNode.children(".toggle").removeClass('toggle_Include toggle_Exclude');
-                    $parentNode.children(".include").val('');
+                    $parent.children(".toggle").removeClass('toggle_Include toggle_Exclude');
+                    $parent.children(".include").val('');
                 }
             };
 
@@ -699,21 +699,21 @@
                 angles_helper_init();
                 $('#canvas').hide();//Hide this after the init, qtip will grab it once the qtip is made
                 $('span.toggle').click(function(evt){
-                    tar = $(evt.target);
-                    if ( tar.hasClass('toggle_Include')) {
-                        tar.removeClass('toggle_Include');
-                        tar.addClass('toggle_Exclude');
-                        putNegateRow(tar.parent(), false);
+                    var $tar = $(evt.target);
+                    if ($tar.hasClass('toggle_Include')) {
+                        $tar.removeClass('toggle_Include');
+                        $tar.addClass('toggle_Exclude');
+                        putNegateRow($tar.parent(), false);
                         redraw();
-                        $(evt.target.parentNode).children(".include").val(0);
-                        $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_exclude').removeClass('field_include');
-                    }else if (tar.hasClass('toggle_Exclude')){
-                        tar.removeClass('toggle_Exclude');
-                        tar.addClass('toggle_Include');
-                        putNegateRow(tar.parent(), true);
+                        $tar.parent().children(".include").val(0);
+                        $tar.parent().children(".field, #id_proteins").addClass('field_exclude').removeClass('field_include');
+                    }else if ($tar.hasClass('toggle_Exclude')){
+                        $tar.removeClass('toggle_Exclude');
+                        $tar.addClass('toggle_Include');
+                        putNegateRow($tar.parent(), true);
                         redraw();
-                        $(evt.target.parentNode).children(".include").val(1);
-                        $(evt.target.parentNode).children(".field, #id_proteins").addClass('field_include').removeClass('field_exclude');
+                        $tar.parent().children(".include").val(1);
+                        $tar.parent().children(".field, #id_proteins").addClass('field_include').removeClass('field_exclude');
                     }
                 });
 
