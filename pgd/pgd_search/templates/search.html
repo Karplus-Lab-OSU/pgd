@@ -81,11 +81,12 @@
                                 if (inputArray[k].type = "checkbox") {
                                     console.log("Before: " + iArray[i-1] + "  " + k + "  " + inputArray[k].checked);
                                     inputArray[k].checked = false;
+                                    inputArray[k].parentNode.className = "";
                                     console.log("After:  " + iArray[i-1] + "  " + k + "  " + inputArray[k].checked);
                                 }
                             }
 
-                            //$(str).hide();
+                            $(str).hide();
                             $(str + ' input.field').attr("disabled", true);
                         }
                     // adding values
