@@ -331,7 +331,7 @@ class ConfDistPlot():
                 torsion_avgs[field[0]] = {}
             else:
                 annotations[avg] = Avg(field[1])
-                annotations[stddev] = StdDev(field[1])
+                annotations[stddev] = StdDev(field[1], sample=True)
         annotated_query = querySet.annotate(**annotations)
         
         # sort and group by bins using an aggregate function that calculates

@@ -50,7 +50,7 @@ class DirectionalStatisticsQuery():
             annotations['min_%s' % field] = Min(p%field)
             annotations['max_%s' % field] = Max(p%field)
             annotations['avg_%s' % field] = Avg(p%field)
-            annotations['stddev_%s' % field] = StdDev(p%field)
+            annotations['stddev_%s' % field] = StdDev(p%field, sample=True)
         
         # query with all aggregate values that can be calculated in a standard
         # query.  save query in a list so that its members can be modified
@@ -120,7 +120,7 @@ class DirectionalStatisticsTotalQuery(DirectionalStatisticsQuery):
             annotations['min_%s' % field] = Min(p%field)
             annotations['max_%s' % field] = Max(p%field)
             annotations['avg_%s' % field] = Avg(p%field)
-            annotations['stddev_%s' % field] = StdDev(p%field)
+            annotations['stddev_%s' % field] = StdDev(p%field, sample=True)
         
         # query with all aggregate values that can be calculated in a standard
         # query.  save query in a list so that its members can be modified
