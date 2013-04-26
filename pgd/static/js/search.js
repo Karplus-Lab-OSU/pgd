@@ -1,21 +1,3 @@
-var qtipsOn=true;
-var angle_qtip_api = null;
-var angle_target = null;
-var firstRun = true;
-var qtip_status = [];
-var angle_drawing = $('#canvas');
-var sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
-var sidechain_length_lookup = {{ sidechain_length_lookup|safe }};
-var selected_aa = [];
-var qtipState = '';
-var qtipTotal = 0;
-var protList = new Object();
-/* List of columns which have been selected. */
-var negateRow = {};
-var AAs = [{% for aa in aa_choices.0 %}'{{aa.1|upper}}', {%endfor%}];
-
-var MAX_LENGTH = {{maxLength}};
-
 n = Math.ceil(MAX_LENGTH / 2);
 iArray = new Array(MAX_LENGTH - 1);
 for (i=0; i<n; i++) {
@@ -742,7 +724,7 @@ $(document).ready(function() {
 
 
     $('#protein #id_proteins')
-        .autocomplete('{{SITE_ROOT}}/search/protein_code/', {'multiple':true, 'autoFill':true})
+        .autocomplete(SITE_ROOT+'/search/protein_code/', {'multiple':true, 'autoFill':true})
         .keyup(function(evt){
                 updateInclusionField(evt.target, false);
             })

@@ -22,6 +22,33 @@
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
         <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
+        <script type="text/javascript">
+            var qtipsOn=true;
+            var angle_qtip_api = null;
+            var angle_target = null;
+            var firstRun = true;
+            var qtip_status = [];
+            var angle_drawing = $('#canvas');
+            var sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
+            var sidechain_length_lookup = {{ sidechain_length_lookup|safe }};
+            var selected_aa = [];
+            var qtipState = '';
+            var qtipTotal = 0;
+            var protList = new Object();
+            /* List of columns which have been selected. */
+            var negateRow = {};
+            var AAs = [{% for aa in aa_choices.0 %}'{{aa.1|upper}}', {%endfor%}];
+
+            var MAX_LENGTH = {{maxLength}};
+
+            /* TODO: Taking out this existence check breaks things. Should it? */
+            {% if SITE_ROOT %}
+                var SITE_ROOT = {{SITE_ROOT}};
+            {% else %}
+                var SITE_ROOT = null;
+            {% endif %}
+        </script>
+
         <script type="text/javascript" src="{{MEDIA_URL}}/js/search.js"></script>
 {% endblock %}
 
