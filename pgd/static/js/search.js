@@ -31,14 +31,12 @@ function sizeChange(evt){
             for (i = MAX_LENGTH - 1; i >= newValue; i--) {
                 str = '.col_' + iArray[i-1]
 
-                // Uncheck all selections in removed columns.
+                // Hack for #9495: Uncheck all selections in removed columns.
                 inputArray = document.getElementById("id_aa_choices_list_col_"+iArray[i-1]).getElementsByTagName("input");
                 for (var k=0; k<inputArray.length; k++) {
                     if (inputArray[k].type = "checkbox") {
-                        console.log("Before: " + iArray[i-1] + "  " + k + "  " + inputArray[k].checked);
-                        inputArray[k].checked = false;
-                        inputArray[k].parentNode.className = "";
-                        console.log("After:  " + iArray[i-1] + "  " + k + "  " + inputArray[k].checked);
+                        inputArray[k].checked = false;   // Uncheck checkbox
+                        inputArray[k].parentNode.className = "";   // Clear classname to properly display unchecked state.
                     }
                 }
 
