@@ -575,28 +575,38 @@ class PersistingSearchOptions(unittest.TestCase):
         conf_option = conformation.find_elements_by_tag_name('li')[0]
         conf_option.click()
 
+        conformation_phi = self.driver.find_element_by_id("id_phi_2")
+        conformation_phi.clear()
+        conformation_phi.send_keys("<=-85,>=85")
+
+        conformation_psi = self.driver.find_element_by_id("id_psi_2")
+        conformation_psi.clear()
+        conformation_psi.send_keys("<=-80,>=80")
+
+        conformation_omega = self.driver.find_element_by_id("id_ome_2")
+        conformation_omega.clear()
+        conformation_omega.send_keys("<=-75,>=75")
+
         #Mobility
         self.driver.find_element_by_id("mobility_header").click()
         mobility = self.driver.find_element_by_id("id_bm_2")
         mobility.clear()
+        mobility.send_keys("<35")
 
         #Angles
         self.driver.find_element_by_id("angles_header").click()
         angles = self.driver.find_element_by_id("id_a1_2")
-        angles.click()
         angles.send_keys("30")
 
         #Lengths
         self.driver.find_element_by_id("lengths_header").click()
         lengths = self.driver.find_element_by_id("id_L1_2")
-        lengths.click()
         lengths.send_keys("25")
 
         #XAngles
-        ele = self.driver.find_element_by_id("chi_header").click()
-        xangle = self.driver.find_element_by_id("id_chi1_2")
-        xangle.click()
-        xangle.send_keys("20")
+        self.driver.find_element_by_id("chi_header").click()
+        xangles = self.driver.find_element_by_id("id_chi1_2")
+        xangles.send_keys("20")
 
         #Hackish way to do it, but there doesn't seem to be any other
         #common ways to do it.
@@ -610,19 +620,22 @@ class PersistingSearchOptions(unittest.TestCase):
                 option.click()
 
         #Composition
-        self.assertEquals(comp_option.get_attribute("class"), "selected")
+        self.assertEquals(comp_option.get_attribute("class"), " ")
 
         #Conformation
-        self.assertEquals(conf_option.get_attribute("class"), "selected")
+        self.assertEquals(comf_option.get_attribute("class"), " ")
+        self.assertEquals(conformation_phi.get_attribute("value"), "")
+        self.assertEquals(conformation_psi.get_attribute("value"), "")
+        self.assertEquals(conformation_omega.get_attribute("value"), "<=-90,>=90")
 
         #Mobility
-        self.assertEquals(mobility.text, "<25")
+        self.assertEquals(mobility.get_attribute("value"), "<25")
 
         #Angles
-        self.assertEquals(angles.text, "")
+        self.assertEquals(angles.get_attribute("value"), "")
 
         #Lengths
-        self.assertEquals(lengths.text, "")
+        self.assertEquals(lengths.get_attribute("value"), "")
 
         #XAngles
-        self.assertEquals(xangles.text, "")
+        self.assertEquals(xangles.get_attribute("value"), "")
