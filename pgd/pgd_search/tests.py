@@ -1,7 +1,8 @@
 import unittest
 import datetime
-from pgd_search.models import * 
-from pgd_core.models import * 
+from selenium import webdriver
+from pgd_search.models import *
+from pgd_core.models import *
 #from pgd_splicer.SegmentBuilder import SegmentBuilderTask
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from math import ceil
@@ -16,7 +17,7 @@ for i in range(1, len(FIELDS)+1):
     FIELDS_DICT[FIELDS[i-1]] = i*.01
 
 class SearchParserValidation(unittest.TestCase):
-    
+
     def calculateAA(self, chainIndex):
         #aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
         return AA_CHOICES[(chainIndex-1)%len(AA_CHOICES)][0]
@@ -45,7 +46,7 @@ class SearchParserValidation(unittest.TestCase):
         protein.__dict__.update(kwargs)
         protein.save()
         return protein
-        
+
     def create_chain(self, protein):
         chain = Chain()
         chain.id = '%s%s' % (protein.code, 'A')
@@ -53,14 +54,14 @@ class SearchParserValidation(unittest.TestCase):
         chain.code = 'A'
         chain.save()
         return chain
-        
+
     def create_residue(self, i, z, protein, chain, **kwargs):
         residue = Residue()
         residue.protein = protein
         residue.chain = chain
         residue.chainID = chain.code
         residue.chainIndex = z
-        #set choice fields.  
+        #set choice fields.
         residue.aa = self.calculateAA(i)
         residue.ss = self.calculateSS(i)
         for field in FIELDS:
@@ -68,7 +69,7 @@ class SearchParserValidation(unittest.TestCase):
         residue.__dict__.update(kwargs)
         residue.save()
         return residue
-        
+
     def create_bulk_residues(self, i, numResidue, **kwargs):
         protein = self.create_protein(i, **kwargs)
         chain = self.create_chain(protein)
@@ -79,29 +80,29 @@ class SearchParserValidation(unittest.TestCase):
     #creates a set objects with predictable values so we can predict search results
     def setUp(self):
         self.tearDown()
-    
+
     def tearDown(self):
         Protein.objects.all().delete()
-    
+
     def testSearchQueryStrings(self):
-        
+
         # create protein
         protein = self.create_protein(1)
         #create chain
         chain = self.create_chain(protein)
         #create residues
         chainList = [self.create_residue(1, z, protein, chain, a1=z) for z in range(6)]
-        
+
         # create Search
         search = Search(segmentLength=5)
-        
+
         # create associated Search_residues
         data = {}
         #data['index'] = 5
         data['residues'] = 1
         data['a1_i_0'] = 1
         data['a1_0'] = "1-5"
-        
+
         #Set search data equal to search residue parameters
         search.data = data
         search.save()
@@ -112,7 +113,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Query strings search test failed on range '%s'.  Expected value was %s    Actual values were %s"%(data['a1_0'], set(chainList[1:5]), set(Search.parse_search(search)))
         )
-        
+
         data['a1_0'] = "1-3"
         search.data = data
         search.save()
@@ -122,8 +123,8 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Query strings search test failed on range '%s'"%data['a1_0']
         )
-        
-        
+
+
         data['a1_0'] = '<6'
         search.data = data
         self.assertEqual(
@@ -132,7 +133,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Query strings search test failed on range '%s'.  Expected value was %s    Actual values were %s"%(data['a1_0'], set(chainList[0:6]), set(Search.parse_search(search)))
         )
-        
+
         data['a1_0'] = '<=6'
         search.data = data
         self.assertEqual(
@@ -141,7 +142,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Query strings search test failed on range '%s'.  Expected value was %s    Actual values were %s"%(data['a1_0'], set(chainList[0:7]), set(Search.parse_search(search)))
         )
-        
+
         data['a1_0'] = '>5'
         search.data = data
         self.assertEqual(
@@ -150,7 +151,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Query strings search test failed on range '%s'.  Expected value was %s    Actual values were %s"%(data['a1_0'], set(chainList[6:7]), set(Search.parse_search(search)))
         )
-        
+
         data['a1_0'] = '>=5'
         search.data = data
         self.assertEqual(
@@ -159,31 +160,31 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Query strings search test failed on range '%s'.  Expected value was %s    Actual values were %s"%(data['a1_0'], set(chainList[5:7]), set(Search.parse_search(search)))
         )
-        
-        
+
+
     def testSearchResolution(self):
-        
+
         # create protein
         protein1 = self.create_protein(1, resolution=1.1)
         #create chain
         chain = self.create_chain(protein1)
         #create residues
         chainList = [self.create_residue(1, z, protein1, chain) for z in range(3)]
-        
+
         # create protein
         protein2 = self.create_protein(2, resolution=0.2)
         #create chain
         chain2 = self.create_chain(protein2)
         #create residues
         chainList2 = [self.create_residue(2, i, protein2, chain2) for i in range(3)]
-        
+
         #create Search and search constraints
         search = Search(segmentLength=0)
         data = {}
         data['residues'] = 0
         data['resolutionMin'] = .1
         data['resolutionMax'] = 1.2
-        
+
         #Set search data equal to search residue parameters
         search.data = data
         #search.save()
@@ -193,7 +194,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %f-%f   Expected results were %s   Returned results were %s"%(data['resolutionMin'],data['resolutionMax'],list(x.protein.resolution for x in chainList+chainList2),list(y.protein.resolution for y in Search.parse_search(search)))
         )
-        
+
         data['resolutionMin'] = 0.1
         data['resolutionMax'] = 0.3
         #Set search data equal to search residue parameters
@@ -205,7 +206,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %f-%f   Expected results were %s   Returned results were %s"%(data['resolutionMin'],data['resolutionMax'],list(x.protein.resolution for x in chainList2),list(y.protein.resolution for y in Search.parse_search(search)))
         )
-        
+
         data['resolutionMin'] = 1
         data['resolutionMax'] = 1.2
         #Set search data equal to search residue parameters
@@ -217,7 +218,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %f-%f   Expected results were %s   Returned results were %s"%(data['resolutionMin'],data['resolutionMax'],list(x.protein.resolution for x in chainList),list(y.protein.resolution for y in Search.parse_search(search)))
         )
-        
+
         data['resolutionMin'] = 1.1
         data['resolutionMax'] = 1.1
         #Set search data to exactly the second protein's resolution
@@ -229,7 +230,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %f-%f   Expected results were %s   Returned results were %s"%(data['resolutionMin'],data['resolutionMax'],list(x.protein.resolution for x in chainList),list(y.protein.resolution for y in Search.parse_search(search)))
         )
-        
+
         data['resolutionMin'] = .3
         data['resolutionMax'] = .1
         #Set search data to exactly the second protein's resolution
@@ -241,32 +242,32 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %f-%f   Expected results were %s   Returned results were %s"%(data['resolutionMin'],data['resolutionMax'],set(),list(y.protein.resolution for y in Search.parse_search(search)))
         )
-        
+
 
     def testSearchThreshold(self):
-        
+
         #locals = locals()
         chainList = {}
         for t in zip(range(1,6), (1,10,25,25,70)):
             i,thresh = t
             chainList[i] = self.create_bulk_residues( i, 1, threshold = thresh)
-        
+
         #setattr(obj, name, value)
-        
+
         # create Search
         search = Search(segmentLength=0)
         data = {}
         data['residues'] = 0
         data['threshold'] = 0
         search.data = data
-        
+
         self.assertEqual(
             # See that the intended query is executed by parse_search
             set(),
             set(Search.parse_search(search)),
             "Threshold search failed on %i  Expected results were the %s  Returned results were %s"%(data['threshold'],set(), list(y.protein.threshold for y in Search.parse_search(search)))
         )
-        
+
         data['threshold'] = 25
         search.data = data
         self.assertEqual(
@@ -275,17 +276,17 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Threshold search failed on %i  Expected results were the %s  Returned results were %s"%(data['threshold'],list(y.protein.threshold for y in chainList[1]+chainList[2]+chainList[3]+chainList[4]), list(y.protein.threshold for y in Search.parse_search(search)))
         )
-        
+
         data['threshold'] = 75
-        
+
         self.assertEqual(
             # See that the intended query is executed by parse_search
             set(chainList[1]+chainList[2]+chainList[3]+chainList[4]+chainList[5]),
             set(Search.parse_search(search)),
             "Threshold search failed on %i  Expected results were the %s  Returned results were %s"%(data['threshold'],list(y.protein.threshold for y in chainList[1]+chainList[2]+chainList[3]+chainList[4]+chainList[5]), list(y.protein.threshold for y in Search.parse_search(search)))
         )
-        
-        
+
+
         #for index in range(PRO_MIN,PRO_MAX):
             #search.threshold = index
             #search.save()
@@ -315,7 +316,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %s   Expected results were %s   Returned results were %s"%(data['proteins'],list(x.protein.code for x in chainList),list(y.protein.code for y in Search.parse_search(search)))
         )
-        
+
         #test inverse
         data['proteins_i'] = False
         self.assertEqual(
@@ -323,7 +324,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %s   Expected results were %s   Returned results were %s"%(data['proteins'],list(x.protein.code for x in chainList),list(y.protein.code for y in Search.parse_search(search)))
         )
-        
+
         #testing multi-code and parsing robustness
         data['proteins'] = 'gmez,             kats'
         data['proteins_i'] = True
@@ -332,7 +333,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on %s   Expected results were %s   Returned results were %s"%(data['proteins'],list(x.protein.code for x in chainList+chainList2),list(y.protein.code for y in Search.parse_search(search)))
         )
-        
+
         #test inverse
         data['proteins_i'] = True
         data['proteins'] = 'none'
@@ -341,7 +342,7 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on the empty set   Expected results were the empty set   Returned results were %s"%(list(y.protein.code for y in Search.parse_search(search)))
         )
-        
+
         #test inverse
         data['proteins_i'] = False
         data['proteins'] = 'gmez,kats'
@@ -350,20 +351,20 @@ class SearchParserValidation(unittest.TestCase):
             set(Search.parse_search(search)),
             "Resolution search failed on the empty set   Expected results were the empty set   Returned results were %s"%(list(y.protein.code for y in Search.parse_search(search)))
         )
-        
+
     def testSearchAa(self):
         aa_range = ('a', 'r', 'n', 'd', 'c')
         chainList = {}
         for t in zip(range(1,6), aa_range):
             i,aa_choice = t
             chainList[i] = self.create_bulk_residues( i, 1, aa = aa_choice)
-        
+
         # create Search
         search = Search(segmentLength=0)
         #search.save()
         data = {}
         data['residues'] = 1
-        
+
         for aa_index,aa_choice in enumerate(aa_range):
             data['aa_i_0'] = 1
             data['aa_0'] = str(aa_choice)
@@ -375,20 +376,20 @@ class SearchParserValidation(unittest.TestCase):
                 list(Search.parse_search(search)),
                 "Specific AA search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(aa_choice, (list(getattr(x, 'aa') for x in (chainList[aa_index+1]))), (list(str(getattr(y, 'aa')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
             )
-            
+
             #test the negation of a single index.
             data['aa_i_0'] = 0
             negatedList = []
             for k in range(1,6):
                 if k != (aa_index+1):
-                    negatedList += chainList[k] 
+                    negatedList += chainList[k]
             search.data = data
             self.assertEqual(
                 list(negatedList),
                 list(Search.parse_search(search)),
                 "Negated AA search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(aa_choice, (list(getattr(x, 'aa') for x in (negatedList))), (list(str(getattr(y, 'aa')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
             )
-            
+
         data['aa_i_0'] = 1
         aa_choice = ('a', 'r', 'n')
         data['aa_0'] = (aa_choice)
@@ -400,7 +401,7 @@ class SearchParserValidation(unittest.TestCase):
             list(Search.parse_search(search)),
             "Specific AA search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(aa_choice, (list(getattr(x, 'aa') for x in (chainList[1] + chainList[2] + chainList[3]))), (list(str(getattr(y, 'aa')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
         )
-        
+
         data['aa_i_0'] = 0
         aa_choice = ('a', 'r', 'n')
         data['aa_0'] = (aa_choice)
@@ -415,19 +416,19 @@ class SearchParserValidation(unittest.TestCase):
 
 
     def testSearchSs(self):
-        
+
         ss_range = ('H', 'G',  'E', 'T', 'S')
         chainList = {}
         for t in zip(range(1,6), ss_range):
             i,ss_choice = t
             chainList[i] = self.create_bulk_residues( i, 1, ss = ss_choice)
-        
+
         # create Search
         search = Search(segmentLength=0)
         #search.save()
         data = {}
         data['residues'] = 1
-        
+
         for ss_index,ss_choice in enumerate(ss_range):
             data['ss_i_0'] = 1
             data['ss_0'] = ss_choice
@@ -439,20 +440,20 @@ class SearchParserValidation(unittest.TestCase):
                 list(Search.parse_search(search)),
                 "Specific ss search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(ss_choice, (list(getattr(x, 'ss') for x in (chainList[ss_index+1]))), (list(str(getattr(y, 'ss')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
             )
-            
+
             #test the negation of a single index.
             data['ss_i_0'] = 0
             negatedList = []
             for k in range(1,6):
                 if k != (ss_index+1):
-                    negatedList += chainList[k] 
+                    negatedList += chainList[k]
             search.data = data
             self.assertEqual(
                 list(negatedList).sort(),
                 list(Search.parse_search(search)).sort(),
                 "Negated ss search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(ss_choice, (list(getattr(x, 'ss') for x in (negatedList))), (list(str(getattr(y, 'ss')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
             )
-            
+
         data['ss_i_0'] = 1
         ss_choice = ('H', 'G',  'E')
         data['ss_0'] = (ss_choice)
@@ -464,7 +465,7 @@ class SearchParserValidation(unittest.TestCase):
             list(Search.parse_search(search)).sort(),
             "Specific ss search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(ss_choice, (list(getattr(x, 'ss') for x in (chainList[1] + chainList[2] + chainList[3]))), (list(str(getattr(y, 'ss')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
         )
-        
+
         data['ss_i_0'] = 0
         ss_choice = ('H', 'G',  'E')
         data['ss_0'] = (ss_choice)
@@ -476,7 +477,7 @@ class SearchParserValidation(unittest.TestCase):
             list(Search.parse_search(search)).sort(),
             "Specific ss search failed on '%s'  Expected results were %s  Returned results were %s with %s entries"%(ss_choice, (list(getattr(x, 'ss') for x in (chainList[4] + chainList[5]))), (list(str(getattr(y, 'ss')) for y in (Search.parse_search(search)))), len(Search.parse_search(search)))
         )
-    
+
     def testSearchMultipleResidues(self):
         # create protein
         protein = self.create_protein(1)
@@ -484,12 +485,12 @@ class SearchParserValidation(unittest.TestCase):
         chain = self.create_chain(protein)
         #create residues
         chainList = [self.create_residue(1, z, protein, chain) for z in range(1,6)]
-        
+
         # create Search
         search = Search(segmentLength=0)
-        
+
         for i, field in enumerate(FIELDS):
-        
+
             # create associated Search_residues
             data = {}
             data['residues'] = 1
@@ -506,7 +507,7 @@ class SearchParserValidation(unittest.TestCase):
                 4,
                 "Multiple residue search failed on field %s  Expected result was %s  Returned result was %s"%(field, set((getattr(chainList[2], '%s'%field), )), set(getattr(x, '%s'%field) for x in Search.parse_search(search)))
             )
-    
+
 class SearchFieldValidationCase(unittest.TestCase):
     def setUp(self):
         pass
@@ -517,7 +518,7 @@ class SearchFieldValidationCase(unittest.TestCase):
             '1-1',
             '1,2,3',
             '1-2',
-            
+
             '1-1',
             '1-2,5-6',
             '1,23,456',
@@ -545,3 +546,96 @@ class SearchFieldValidationCase(unittest.TestCase):
 
         for value in invalidFields:
             self.assertNotEqual(searchField.syntaxPattern.match(value), None)
+
+#Selenium tests
+class PersistingSearchOptions(unittest.TestCase):
+    def setUp(self):
+
+       # Create a new instance of the Firefox driver
+        self.driver = webdriver.Firefox()
+
+    def test_removed_options_persist(self):
+
+        # Load search page
+        self.driver.get("http://localhost:8000/search")
+
+        # Select the box that indicates number of residues
+        residues = self.driver.find_element_by_id("id_residues")
+        for option in residues.find_elements_by_tag_name('option'):
+            if option.text == "4":
+                option.click()
+
+        #Composition
+        composition = self.driver.find_element_by_id("id_aa_choices_list_col_2")
+        comp_option = composition.find_elements_by_tag_name('li')[0]
+        comp_option.click()
+
+        #Conformation
+        conformation = self.driver.find_element_by_id("id_ss_choices_list_col_2")
+        conf_option = conformation.find_elements_by_tag_name('li')[0]
+        conf_option.click()
+
+        conformation_phi = self.driver.find_element_by_id("id_phi_2")
+        conformation_phi.clear()
+        conformation_phi.send_keys("<=-85,>=85")
+
+        conformation_psi = self.driver.find_element_by_id("id_psi_2")
+        conformation_psi.clear()
+        conformation_psi.send_keys("<=-80,>=80")
+
+        conformation_omega = self.driver.find_element_by_id("id_ome_2")
+        conformation_omega.clear()
+        conformation_omega.send_keys("<=-75,>=75")
+
+        #Mobility
+        self.driver.find_element_by_id("mobility_header").click()
+        mobility = self.driver.find_element_by_id("id_bm_2")
+        mobility.clear()
+        mobility.send_keys("<35")
+
+        #Angles
+        self.driver.find_element_by_id("angles_header").click()
+        angles = self.driver.find_element_by_id("id_a1_2")
+        angles.send_keys("30")
+
+        #Lengths
+        self.driver.find_element_by_id("lengths_header").click()
+        lengths = self.driver.find_element_by_id("id_L1_2")
+        lengths.send_keys("25")
+
+        #XAngles
+        self.driver.find_element_by_id("chi_header").click()
+        xangles = self.driver.find_element_by_id("id_chi1_2")
+        xangles.send_keys("20")
+
+        #Hackish way to do it, but there doesn't seem to be any other
+        #common ways to do it.
+        residues = self.driver.find_element_by_id("id_residues")
+        for option in residues.find_elements_by_tag_name('option'):
+            if option.text == "3":
+                option.click()
+
+        for option in residues.find_elements_by_tag_name('option'):
+            if option.text == "4":
+                option.click()
+
+        #Composition
+        self.assertEquals(comp_option.get_attribute("class"), " ")
+
+        #Conformation
+        self.assertEquals(comf_option.get_attribute("class"), " ")
+        self.assertEquals(conformation_phi.get_attribute("value"), "")
+        self.assertEquals(conformation_psi.get_attribute("value"), "")
+        self.assertEquals(conformation_omega.get_attribute("value"), "<=-90,>=90")
+
+        #Mobility
+        self.assertEquals(mobility.get_attribute("value"), "<25")
+
+        #Angles
+        self.assertEquals(angles.get_attribute("value"), "")
+
+        #Lengths
+        self.assertEquals(lengths.get_attribute("value"), "")
+
+        #XAngles
+        self.assertEquals(xangles.get_attribute("value"), "")
