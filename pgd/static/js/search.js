@@ -73,6 +73,9 @@ function sizeChange(evt){
             val = 10.3*newValue+6
         //}
 
+        // Update things to include in search. Fixes #9495.
+        $('tr.peptide_row .multiselect li, tr.conf_row .multiselect li').parent().updateInclusionSelect();
+
         $('table#residues').css({'width':val+'em'});
         $('table#protein').css({'width':600});
     }
