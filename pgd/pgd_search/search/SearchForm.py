@@ -79,13 +79,13 @@ for i in RESIDUE_INDEXES:
         form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
 
-    form_dict["ome_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90', required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+    form_dict["ome_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90', required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
     form_dict["ome_i_%i" % i]           = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
-    form_dict["omep_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90', required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+    form_dict["omep_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90', required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
     form_dict["omep_i_%i" % i]           = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
 
     for j in ("bm", "bs", "bg"):
-        form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(initial='<25', required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(initial='<25', required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
     for j in sidechain_angle_relationship_list:
         form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))

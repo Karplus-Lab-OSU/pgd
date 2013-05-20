@@ -31,12 +31,19 @@ function sizeChange(evt){
             for (i = MAX_LENGTH - 1; i >= newValue; i--) {
                 str = '.col_' + iArray[i-1]
 
-                // Hack for #9495: Uncheck all selections in removed columns.
-                inputArray = document.getElementById("id_aa_choices_list_col_"+iArray[i-1]).getElementsByTagName("input");
-                for (var k=0; k<inputArray.length; k++) {
-                    if (inputArray[k].type = "checkbox") {
-                        inputArray[k].checked = false;   // Uncheck checkbox
-                        inputArray[k].parentNode.className = "";   // Clear classname to properly display unchecked state.
+                // TODO: I think this code might be getting run too many times over.
+                fieldsToReset = document.getElementsByClassName("col_"+iArray[i-1]);
+                console.log(fieldsToReset.length+"  fields to reset");
+                for (var i_col=0; i_col<fieldsToReset.length; i_col++) {
+                    // Hack for #9495: Uncheck all selections in removed columns.
+                    inputArray = fieldsToReset[i_col].getElementsByClassName("needs_reset");
+                    for (var k=0; k<inputArray.length; k++) {
+                        if (inputArray[k].type == "checkbox") {
+                            inputArray[k].checked = false;   // Uncheck checkbox.
+                        }
+
+                        inputArray[k].value = '';   // Eh.. this is so that isDefault() inside updateInclusionField() will see that the field style of this element should be reset.
+                        updateInclusionField(inputArray[k], false);   // Reset field style.
                     }
                 }
 
@@ -195,6 +202,7 @@ $.fn.updateInclusionSelect = function(){
 
 /*
 Determine if an element has the default value for that field type
+TODO: The name of this function is misleading, because it currently just checks if the field is blank (disregarding whitespace). A better name might be something like "isEmpty".
 */
 function isDefault(element, field){
     val = $(element).val();

@@ -122,7 +122,7 @@
                         <span class="toggle">&nbsp;</span>
                         <ul id="id_aa_choices_list_col_{{r.index}}" class="multiselect field">
                             {% for choice in aa_choices|index_lookup:forloop.counter0 %}
-                                <li>{{choice.1}}<input type="checkbox" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}/></li>
+                                <li>{{choice.1}}<input type="checkbox" class="needs_reset" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}/></li>
                             {% endfor %}
                         </ul>
                         {{r.aa_i}}
@@ -139,7 +139,7 @@
                         <span class="toggle">&nbsp;</span>
                         <ul id="id_ss_choices_list_col_{{r.index}}" class="multiselect field">
                             {% for choice in ss_choices|index_lookup:forloop.counter0 %}
-                                <li>{% autoescape off %}{{choice.1}}{% endautoescape  %}<input type="checkbox" name="ss_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                                <li>{% autoescape off %}{{choice.1}}{% endautoescape  %}<input type="checkbox" class="needs_reset" name="ss_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
                             {% endfor %}
                         </ul>
                         {{r.ss_i}}
