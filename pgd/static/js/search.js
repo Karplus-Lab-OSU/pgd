@@ -129,9 +129,9 @@ function frobInclusions(node) {
         $node.removeClass('field_exclude');
         putNegateRow($parent, true);
     } else if (val == 0 && !$node.hasClass('field_exclude')) {
-        $parentNode.children(".toggle").addClass('toggle_Exclude');
-        $parentNode.children(".include").val(0);
-        $parentNode.children(".include").attr('disabled', false);
+        $parent.children(".toggle").addClass('toggle_Exclude');
+        $parent.children(".include").val(0);
+        $parent.children(".include").attr('disabled', false);
         $node.addClass('field_exclude');
         $node.removeClass('toggle_Include');
         putNegateRow($parent, false);
