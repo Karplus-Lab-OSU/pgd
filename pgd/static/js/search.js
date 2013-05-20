@@ -60,14 +60,16 @@ function sizeChange(evt){
                  * initial angles here instead of on the form.
                  * This is because the forms are super-wimpy and
                  * don't store state very well. */
-                $("#id_ome_" + iArray[i - 2]).val("<=-90,>=90");
-                frobInclusions($("#id_ome_" + iArray[i - 2]));
-                $("#id_bm_" + iArray[i - 2]).val("<25");
-                frobInclusions($("#id_bm_" + iArray[i - 2]));
-                $("#id_bg_" + iArray[i - 2]).val("<25");
-                frobInclusions($("#id_bg_" + iArray[i - 2]));
-                $("#id_bs_" + iArray[i - 2]).val("<25");
-                frobInclusions($("#id_bs_" + iArray[i - 2]));
+                if (evt != 1) {   // Hax (maybe?) for #9495. sizeChange() is called when the document is readied with an argument of 1.
+                    $("#id_ome_" + iArray[i - 2]).val("<=-90,>=90");
+                    frobInclusions($("#id_ome_" + iArray[i - 2]));
+                    $("#id_bm_" + iArray[i - 2]).val("<25");
+                    frobInclusions($("#id_bm_" + iArray[i - 2]));
+                    $("#id_bg_" + iArray[i - 2]).val("<25");
+                    frobInclusions($("#id_bg_" + iArray[i - 2]));
+                    $("#id_bs_" + iArray[i - 2]).val("<25");
+                    frobInclusions($("#id_bs_" + iArray[i - 2]));
+                }
             }
         }
         //update length
@@ -745,7 +747,7 @@ $(document).ready(function() {
 
     //force update of segments
     $('#oldLength').val(1);
-    sizeChange(1);
+    sizeChange(1);   // TODO: What does the 1 do here?
 
     // setup multiselects
     $('tr.peptide_row .multiselect li, tr.conf_row .multiselect li')
