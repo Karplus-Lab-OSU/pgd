@@ -69,14 +69,14 @@ for i in RESIDUE_INDEXES:
     form_dict["ss_i_%i" % i]    = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
 
     # the loops here are just to save on space/typing
-    for j in range(1,8):
-        form_dict["a%i_%i" % (j,i)]     = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+    for j in range(1,8):   # Angles
+        form_dict["a%i_%i" % (j,i)]     = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["a%i_i_%i" % (j,i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
-    for j in range(1,6):
-        form_dict["L%i_%i" % (j, i)]    = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+    for j in range(1,6):   # Lengths
+        form_dict["L%i_%i" % (j, i)]    = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["L%i_i_%i" % (j, i)]  = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
     for j in ("phi", "psi", "ome", "chi1","chi2","chi3","chi4",'chi5', "bm", "bs", "bg", "h_bond_energy", "zeta"):
-        form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
 
     form_dict["ome_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90', required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
@@ -88,10 +88,10 @@ for i in RESIDUE_INDEXES:
         form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(initial='<25', required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
     for j in sidechain_angle_relationship_list:
-        form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
     for j in sidechain_length_relationship_list:
-        form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field', 'size':8}))
+        form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False, widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'}))
 
 # Create the Search Form with the fields from the dict
