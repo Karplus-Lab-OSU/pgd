@@ -40,10 +40,12 @@ function sizeChange(evt){
                     for (var k=0; k<inputArray.length; k++) {
                         if (inputArray[k].type == "checkbox") {
                             inputArray[k].checked = false;   // Uncheck checkbox.
+                            $(inputArray[k]).parent().attr("class", ' ');   // Classname is set to an empty space here because that's what happens when residue is unchecked by hand. This artifact should be figured out, but I don't want to right now. TODO.
                         }
-
-                        inputArray[k].value = '';   // Eh.. this is so that isDefault() inside updateInclusionField() will see that the field style of this element should be reset.
-                        updateInclusionField(inputArray[k], false);   // Reset field style.
+                        else {
+                            inputArray[k].value = '';   // Eh.. this is so that isDefault() inside updateInclusionField() will see that the field style of this element should be reset.
+                            updateInclusionField(inputArray[k], false);   // Reset field style.
+                        }
                     }
                 }
 
