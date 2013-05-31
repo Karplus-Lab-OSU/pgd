@@ -623,7 +623,7 @@ class PersistingSearchOptions(unittest.TestCase):
         self.assertEquals(comp_option.get_attribute("class"), " ")
 
         #Conformation
-        self.assertEquals(comf_option.get_attribute("class"), " ")
+        self.assertEquals(conf_option.get_attribute("class"), " ")
         self.assertEquals(conformation_phi.get_attribute("value"), "")
         self.assertEquals(conformation_psi.get_attribute("value"), "")
         self.assertEquals(conformation_omega.get_attribute("value"), "<=-90,>=90")
