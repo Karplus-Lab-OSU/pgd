@@ -554,6 +554,9 @@ class PersistingSearchOptions(unittest.TestCase):
        # Create a new instance of the Firefox driver
         self.driver = webdriver.Firefox()
 
+    def tearDown(self):
+        self.driver.quit()
+
     def test_removed_options_persist(self):
 
         # Load search page
@@ -639,3 +642,67 @@ class PersistingSearchOptions(unittest.TestCase):
 
         #XAngles
         self.assertEquals(xangles.get_attribute("value"), "")
+
+    def test_sidechain_angles_reset(self):
+        # Open a new search.
+        self.driver.get("http://localhost:8000/search")
+
+        # Select the amino acid "His" on composition.
+        AAs = self.driver.find_element_by_id("id_aa_choices_list_col_0")
+        # JMT: There is probably a better way to do this
+        his_option = AAs.find_elements_by_tag_name('li')[8]
+        his_option.click()
+
+        # Open the "Sidechain Angles" section.
+        self.driver.find_element_by_id("sidechain_angle_header").click()
+
+        # Add the filter "<123" to the CbCgCd2 box.
+        CbCgCd2_box = self.driver.find_element_by_id("id_HIS__CB_CG_CD2_0")
+        CbCgCd2_box.clear()
+        CbCgCd2_box.send_keys("<123")
+
+        # Deselect the amino acid "His" on composition.
+        his_option.click()
+
+        # Select the amino acid "His" on composition.
+        his_option.click()
+
+        # What I expected to see:
+        # The CbCgCd2 box should be empty.
+        self.assertEquals(CbCgCd2_box.get_attribute("value"), "")
+
+        # What I did see:
+        # The CbCgCd2 box contains "<123".
+        pass
+
+    def test_sidechain_lengths_reset(self):
+        # Open a new search.
+        self.driver.get("http://localhost:8000/search")
+
+        # Select the amino acid "His" on composition.
+        AAs = self.driver.find_element_by_id("id_aa_choices_list_col_0")
+        # JMT: There is probably a better way to do this
+        his_option = AAs.find_elements_by_tag_name('li')[8]
+        his_option.click()
+
+        # Open the "Sidechain Lengths" section.
+        self.driver.find_element_by_id("sidechain_length_header").click()
+
+        # Add the filter "1" to the CbCg box.
+        CbCg_box = self.driver.find_element_by_id("id_HIS__CB_CG_0")
+        CbCg_box.clear()
+        CbCg_box.send_keys("1")
+
+        # Deselect the amino acid "His" on composition.
+        his_option.click()
+
+        # Select the amino acid "His" on composition.
+        his_option.click()
+
+        # What I expected to see:
+        # The CbCg box should be empty.
+        self.assertEquals(CbCg_box.get_attribute("value"), "")
+
+        # What I did see:
+        # The CbCg box contains "1".
+        pass
