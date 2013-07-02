@@ -53,12 +53,12 @@ class Command(BaseCommand):
     def filename(self, code):
         return 'pdb%s.ent.gz' % code[:4].lower()
 
-    def make_prefix(self, started, outof, sofar):
+    def prefix(self, code, mesg=''):
         now = datetime.now()
-        elapsed = now - started
-        percent = 100.0 * sofar / outof
-        remaining = str(elapsed * (outof - sofar) / sofar).split('.')[0]
-        return "  [%d/%d %.1f%%, %s remaining]" % (sofar, outof, percent, remaining)
+        elapsed = now - self.started
+        percent = 100.0 * self.sofar / self.outof
+        remaining = str(elapsed * (self.outof - self.sofar) / self.sofar).split('.')[0]
+        return '  [%d/%d %.1f%%, %s remaining] %s: %s' % (self.sofar, self.outof, percent, remaining, code, mesg)
 
     def process_chunk(self, data):
         """ Callback for FTP download progress bar. """
@@ -78,30 +78,26 @@ class Command(BaseCommand):
             resp = ftp.sendcmd('MDTM %s' % filename)
         except error_perm:
             # file not found on the website
+            self.stdout.write(self.prefix(code, 'file not found on site!\n'))
             return 'notonsite'
 
         remote_date = time.strptime(resp[4:], '%Y%m%d%H%M%S')
 
-        filechanged = False
         if date and time.mktime(remote_date) <= time.mktime(date):
             # file has not changed
+            if self.sofar % self.printper == 0:
+                self.stdout.write(self.prefix(code, 'file unchanged!\n'))
             return 'unchanged'
-        else:
-            # file has changed
-            filechanged = True
 
         # download the file
         size = ftp.size(filename)
 
-        # remove existing file
-        if os.path.exists(localfile):
-            os.remove(localfile)
-
         self.infile = open(localfile, 'w')
+        self.stdout.write(self.prefix(code))
         ftp.retrbinary('RETR %s' % filename, self.process_chunk)
         self.infile.close()
         sys.stdout.write('\n')
-        if filechanged:
+        if date:
             return 'changed'
         else:
             return 'new'
@@ -207,14 +203,17 @@ class Command(BaseCommand):
 
         # 'desired': to check all proteins for updates
         # 'missing': only download proteins that are not already here
-        sofar = 0
-        outof = len(self.desired)
-        printper = int(outof / 1000) if outof > 1000 else 1
-        started = datetime.now()
+        self.sofar = 0
+        self.outof = len(self.desired)
+        self.printper = int(self.outof / 1000) if self.outof > 1000 else 1
+        self.started = datetime.now()
         for code in self.desired:
-            # return code should indicate files type
+            self.sofar += 1
             result = self.fetch_pdb(ftp, code)
-            self.files[result].append(code)
+            try:
+                self.files[result].append(code)
+            except KeyError:
+                print "Invalid result %s returned from code %s" % (result, code)
 
         # output report
         if options['report']:
