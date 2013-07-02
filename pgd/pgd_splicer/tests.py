@@ -6,6 +6,7 @@ import datetime
 import ftplib
 import urllib
 import shutil
+import time
 
 # JMT: Due to a quirk with InnoDB and MySQL, an error may be generated
 # when the fixtures are loaded.  The error will be something like this:
@@ -177,11 +178,16 @@ class MonkeyPatch:
         self.old_urlopen = urllib.urlopen
         urllib.urlopen = MonkeyPatch.urlopen
 
-        # Remove all PDB entries and add ours from test files.
+        # Replace all PDB entries with our test entries.
+        # JMT: consider making a separate 'testpdb' directory?
         codes = ['1mwq', '1mww', '1twf', '3cgm', '3cgx', '3cgz']
         for code in codes:
             pdbfile = 'pdb%s.ent.gz' % code
-            shutil.copyfile(MonkeyPatch.sitefile(pdbfile), MonkeyPatch.localfile(pdbfile))
+            if os.path.exists(MonkeyPatch.sitefile(pdbfile)):
+                shutil.copyfile(MonkeyPatch.sitefile(pdbfile), MonkeyPatch.localfile(pdbfile))
+                shutil.copystat(MonkeyPatch.sitefile(pdbfile), MonkeyPatch.localfile(pdbfile))
+            else:
+                print "%s: site file does not exist, oh no!"
 
     def __exit__(self, type, value, traceback):
         # Clean up overrides
@@ -194,40 +200,52 @@ class ManagementCommands(TestCase):
     fixtures = ['pgd_core']
 
     def test_fetch_old(self):
+        # How far into the past do we set the test files?
+        howfar = 86400 * 365 * 10
 
+        # This requires the 3CGX protein file but does not require the 1MWQ protein file.
+        proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
+                    '1mwq': 'pdb/pdb1mwq.ent.gz'}
+
+        # The original modification times of the files.
+        newdates = {}
+
+        # The modification times of the files after they are set into the past.
+        olddates = {}
+
+        # The modification times after the management command returns.
+        postdates = {}
+
+        # The management command should ignore 1MWQ and add 3CGX.
         with MonkeyPatch():
-            # The management command should remove 1MWQ and add 3CGX.
 
-            # This requires the 3CGX protein file but does not require the 1MWQ protein file.
-            proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
-                        '1mwq': 'pdb/pdb1mwq.ent.gz'}
-
-            # If the files exist, save the file dates, and set the clock back a day.
-            olddates = {}
-
-            # Set the file dates back one year if they exist.
+            # Set the file dates back!
             for key in proteins:
+                os.utime(proteins[key], (-1, int(os.path.getmtime(proteins[key])) - howfar))
                 olddates[key] = int(os.path.getmtime(proteins[key]))
-                os.utime(proteins[key], (-1, olddates[key] - 86400))
 
             # Run the management command.
             management.call_command('fetch')
 
+            # Record the file dates now.
+            for key in proteins:
+                postdates[key] = int(os.path.getmtime(proteins[key]))
+
             # Only the 3CGX file should have been updated.
-            self.assertEqual(int(os.path.getmtime(proteins['3cgx'])), olddates['3cgx'])
-            self.assertEqual(int(os.path.getmtime(proteins['1mwq'])), olddates['1mwq'] - 86400)
+            self.assertEqual(postdates['3cgx'], int(time.time()))
+            self.assertEqual(postdates['1mwq'], olddates['1mwq'])
 
             # The 3CGX file should be larger than 8192 bytes.
             self.assertGreater(os.path.getsize(proteins['3cgx']), 8192)
 
     def test_fetch_missing(self):
 
-        with MonkeyPatch():
-            # The management command should remove 1MWQ and add 3CGX.
+        # This requires the 3CGX protein file but does not require the 1MWQ protein file.
+        proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
+                    '1mwq': 'pdb/pdb1mwq.ent.gz'}
 
-            # This requires the 3CGX protein file but does not require the 1MWQ protein file.
-            proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
-                        '1mwq': 'pdb/pdb1mwq.ent.gz'}
+        with MonkeyPatch():
+            # The management command should ignore 1MWQ and add 3CGX.
 
             # Remove the files if they exists.
             for key in proteins:
