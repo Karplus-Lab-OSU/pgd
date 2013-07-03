@@ -1044,3 +1044,5 @@ $(document).ready(function() {
     });
 });
 
+// vim: expandtab
+
