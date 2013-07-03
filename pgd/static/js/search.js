@@ -631,9 +631,14 @@ function fullRedraw(aa, aaColumn){
             }
         }
     }
-    
-    if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+
+    // Clear and remove all sidechain angles not shown by another aa.
+    if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){
         for (angle in sidechain_angle_lookup[aa]){
+            fieldToReset = $('input#id_'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_'+aaColumn);
+            fieldToReset.val('');   // Clear field value.
+            updateInclusionField(fieldToReset, false);   // Update field style.
+
             $('tr#'+aa+'__'+sidechain_angle_lookup[aa][angle]+'_row').hide();
         }
     }
@@ -667,8 +672,14 @@ function fullRedraw(aa, aaColumn){
             }
         }
     }
-    if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){//Only remove those sidechains that aren't still shown by another aa
+
+    // Clear and remove all sidechain lengths not shown by another aa.
+    if((!$this.hasClass('selected')) && ((selected_aa.indexOf(aa)==-1))){
         for (sclength in sidechain_length_lookup[aa]){
+            fieldToReset = $('input#id_'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_'+aaColumn);
+            fieldToReset.val('');   // Clear field value.
+            updateInclusionField(fieldToReset, false);   // Update field style.
+
             $('tr#'+aa+'__'+sidechain_length_lookup[aa][sclength]+'_row').hide();
         }
     }
