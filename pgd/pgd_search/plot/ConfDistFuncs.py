@@ -560,7 +560,7 @@ class ConfDistPlot():
         ctx.set_font_size (12*ratio)
         for i in range(5):
             #text value
-            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES and x1 <= 180 else (x + xstep*i)
+            xtext = ((x + xstep*i + 180)%360 - 180) if xText in ANGLES and x1 < 180 else (x + xstep*i)
             #drop decimal if value is an integer
             xtext = '%i' % int(xtext) if not xtext%1 else '%.1f' %  xtext
             #get X coordinate of hash, offsetting for length of text
@@ -571,7 +571,7 @@ class ConfDistPlot():
     
             #text value
             #ytext = self.y1 - ystep*i
-            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES and y1 <= 180 else (y + ystep*i)
+            ytext = ((y + ystep*i + 180)%360 - 180) if yText in ANGLES and y1 < 180 else (y + ystep*i)
             #drop decimal if value is an integer
             ytext = '%i' % int(ytext) if not ytext%1 else '%.1f' % ytext
             #get Y coordinate offsetting for height of text
