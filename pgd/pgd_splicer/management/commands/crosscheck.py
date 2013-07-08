@@ -76,33 +76,33 @@ class Command(BaseCommand):
 
         # Generate report.
         if len(self.notfile) == 0:
-            sys.stdout.write('All proteins in the database are in the file.')
+            sys.stdout.write('All proteins in the database are in the file.\n')
         else:
-            sys.stdout.write('Proteins found in the database ',
+            sys.stdout.write('Proteins found in the database ' +
                              'but not in the file: %d\n' % len(self.notfile))
-            sys.stdout.write(', '.join(sorted(self.notfile)), '\n')
+            sys.stdout.write(', '.join(sorted(self.notfile)) + '\n')
 
         if len(self.notdb) == 0:
-            sys.stdout.write('All proteins in the file are in the database.')
+            sys.stdout.write('All proteins in the file are in the database.\n')
         else:
-            sys.stdout.write('Proteins found in the file ',
+            sys.stdout.write('Proteins found in the file ' +
                              'but not in the database: %d\n' % len(self.notdb))
-            sys.stdout.write(', '.join(sorted(self.notdb)), '\n')
+            sys.stdout.write(', '.join(sorted(self.notdb)) + '\n')
 
         if self.wrong is {}:
-            sys.stdout.write('All proteins in the database ',
-                             'have settings which match the selection file.')
+            sys.stdout.write('All proteins in the database ' +
+                             'have settings which match the selection file.\n')
         else:
-            sys.stdout.write('Proteins found in the database ',
+            sys.stdout.write('Proteins found in the database ' +
                              'with incorrect settings: %d\n' % len(self.wrong))
             for key in sorted(self.wrong.iterkeys()):
                 sys.stdout.write('  %s: %s\n' % (key, self.wrong[key]))
 
         if self.chains is {}:
-            sys.stdout.write('All proteins in the database ',
-                             'have all chains listed in the selection file.')
+            sys.stdout.write('All proteins in the database ' +
+                             'have all chains listed in the selection file.\n')
         else:
-            sys.stdout.write('Proteins found in the database ',
+            sys.stdout.write('Proteins found in the database ' +
                              'missing chains: %d\n' % len(self.chains))
             for key in sorted(self.chains.iterkeys()):
                 sys.stdout.write('  %s: %s\n' % (key, self.chains[key]))
