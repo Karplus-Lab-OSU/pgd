@@ -1,0 +1,4 @@
+All proteins in the database are in the file.
+All proteins in the file are in the database.
+All proteins in the database have settings which match the selection file.
+All proteins in the database have all chains listed in the selection file.

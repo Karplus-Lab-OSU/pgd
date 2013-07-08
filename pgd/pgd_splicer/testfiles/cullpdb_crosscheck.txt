@@ -1,0 +1,6 @@
+Proteins found in the database but not in the file: 1
+1MWQ
+Proteins found in the file but not in the database: 1
+3CGX
+All proteins in the database have settings which match the selection file.
+All proteins in the database have all chains listed in the selection file.

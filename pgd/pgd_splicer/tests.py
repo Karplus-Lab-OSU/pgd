@@ -1,6 +1,8 @@
 from django.core import management
 from django.test import TestCase
 from pgd_splicer.models import ftp_update_settings
+from cStringIO import StringIO
+import sys
 import os
 from datetime import datetime
 import ftplib
@@ -274,3 +276,33 @@ class ManagementCommands(TestCase):
 
             # The 3CGX file should be larger than 8192 bytes.
             self.assertGreater(os.path.getsize(proteins['3cgx']), 8192)
+
+    def test_crosscheck_fixture(self):
+
+        # Cross-check the database against the fixture selection.txt file.
+        old_stdout = sys.stdout
+        sys.stdout = StringIO()
+        selection = MonkeyPatch.sitefile('fixture_selection.txt')
+        management.call_command('crosscheck', [],
+                                selection=selection, verbose=True)
+        test_out = sys.stdout.getvalue()
+        sys.stdout.close()
+        sys.stdout = old_stdout
+
+        good_out = MonkeyPatch.sitefile('fixture_crosscheck.txt')
+        self.assertEqual(test_out, file(good_out).read())
+
+    def test_crosscheck_cullpdb(self):
+
+        # Cross-check the database against the cullpdb selection.txt file.
+        old_stdout = sys.stdout
+        sys.stdout = StringIO()
+        selection = MonkeyPatch.sitefile('cullpdb_selection.txt')
+        management.call_command('crosscheck', [],
+                                selection=selection, verbose=True)
+        test_out = sys.stdout.getvalue()
+        sys.stdout.close()
+        sys.stdout = old_stdout
+
+        good_out = MonkeyPatch.sitefile('cullpdb_crosscheck.txt')
+        self.assertEqual(test_out, file(good_out).read())
