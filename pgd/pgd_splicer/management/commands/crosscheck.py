@@ -89,7 +89,7 @@ class Command(BaseCommand):
                              'but not in the database: %d\n' % len(self.notdb))
             sys.stdout.write(', '.join(sorted(self.notdb)) + '\n')
 
-        if self.wrong is {}:
+        if len(self.wrong) == 0:
             sys.stdout.write('All proteins in the database ' +
                              'have settings which match the selection file.\n')
         else:
@@ -98,7 +98,7 @@ class Command(BaseCommand):
             for key in sorted(self.wrong.iterkeys()):
                 sys.stdout.write('  %s: %s\n' % (key, self.wrong[key]))
 
-        if self.chains is {}:
+        if len(self.chains) == 0:
             sys.stdout.write('All proteins in the database ' +
                              'have all chains listed in the selection file.\n')
         else:
