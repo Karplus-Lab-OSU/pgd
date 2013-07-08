@@ -24,7 +24,7 @@ class Command(BaseCommand):
         self.indb = set(Protein.objects.all().values_list('code', flat=True))
 
         # List of proteins found in file.
-        self.infile = []
+        self.infile = set([])
 
         # Dict of proteins in database with settings that differ from
         # those in the selection file.
@@ -37,18 +37,9 @@ class Command(BaseCommand):
         # Value = List of missing chains
         self.chains = {}
 
-        # for every protein in the selection file:
-        #   is the protein in the database?
-        #   -- no, add to notfound list and continue
-        #   are the settings correct?
-        #   -- no, add to wrongsettings dict and continue
-        #   for every chain in the protein
-        #     is the chain in the database?
-        #     -- no, add to nochains dict and continue
-
         # Iterate through selection file.
-        with open(self.selection, 'r') as f:
-            line = f.readline()
+        f = open(self.selection, 'r')
+        for line in f:
             try:
                 code, selchains, threshold, resolution, rfactor, rfree = line
             except ValueError:
@@ -56,7 +47,7 @@ class Command(BaseCommand):
                 continue
 
             # Append code to list found in file
-            self.infile.append(code)
+            self.infile.update(code)
 
             # If protein found in database, perform remaining checks.
             if code in self.indb:
@@ -77,20 +68,21 @@ class Command(BaseCommand):
                         badchains.append(selchain)
                 if badchains is not []:
                     self.chains[code] = badchains
+        f.close()
 
         # Proteins found in one place but not in the other.
-        self.notfile = list(self.indb - self.infile)
-        self.notdb = list(self.infile - self.indb)
+        self.notfile = self.indb.difference(self.infile)
+        self.notdb = self.infile.difference(self.indb)
 
         # Generate report.
-        if self.notfile is []:
+        if len(self.notfile) == 0:
             sys.stdout.write('All proteins in the database are in the file.')
         else:
             sys.stdout.write('Proteins found in the database ',
                              'but not in the file: %d\n' % len(self.notfile))
             sys.stdout.write(', '.join(sorted(self.notfile)), '\n')
 
-        if self.notdb is []:
+        if len(self.notdb) == 0:
             sys.stdout.write('All proteins in the file are in the database.')
         else:
             sys.stdout.write('Proteins found in the file ',
