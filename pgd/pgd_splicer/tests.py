@@ -2,7 +2,7 @@ from django.core import management
 from django.test import TestCase
 from pgd_splicer.models import ftp_update_settings
 import os
-import datetime
+from datetime import datetime
 import ftplib
 import urllib
 import shutil
@@ -27,14 +27,17 @@ import time
 
 # 1.  Drop the dev database, re-create it and syncdb.
 # 2.  Populate the dev database.
-#     $ ./pgd_splicer/ProcessPDBTask.py --pipein < ./pgd_splicer/testfiles/fixture_selection.txt
+#     $ ./pgd_splicer/ProcessPDBTask.py --pipein < \
+#       ./pgd_splicer/testfiles/fixture_selection.txt
 # 3.  Write the fixture from the database.
-#     $ python manage.py dumpdata pgd_core --indent 2 --format json > ./pgd_splicer/fixtures/pgd_core.json
+#     $ python manage.py dumpdata pgd_core --indent 2 --format json > \
+#       ./pgd_splicer/fixtures/pgd_core.json
 
 
 class MonkeyPatch:
 
-    # This class monkeypatches the network modules to provide a controlled environment for testing.
+    # This class monkeypatches the network modules to provide a
+    # controlled environment for testing.
 
     # The cullpdb files contain references to:
     #  - 1TWF
@@ -78,10 +81,13 @@ class MonkeyPatch:
                 filename = cmdlist[1]
                 try:
                     rawmtime = os.path.getmtime(MonkeyPatch.sitefile(filename))
+                    rawstamp = datetime.fromtimestamp(rawmtime)
                     # return 20090301142529 for '03/01/2009 14:25:29 GMT'
-                    return "213 %s" % datetime.datetime.fromtimestamp(rawmtime).strftime('%Y%m%d%H%M%S')
+                    return "213 %s" % rawstamp.strftime('%Y%m%d%H%M%S')
                 except OSError:
-                    # If file does not exist, the FTP server will return a permanent error.
+                    # If file does not exist, the FTP server will
+                    # return a permanent error.
+
                     # NB: should be error_perm but we will use False
                     return False
             else:
@@ -116,9 +122,12 @@ class MonkeyPatch:
     class urlopen:
         def __init__(self, url, data=None, proxies=None):
             # List of known URLs and their corresponding files.
-            knownurls = {'http://dunbrack.fccc.edu/Guoli/culledpdb/': 'selection_page.txt',
-                         'http://dunbrack.fccc.edu/Guoli/culledpdb//cullpdb_pc25_res3.0_R1.0_d130614_chains8184.gz': 'cullpdb_pc25.gz',
-                         'http://dunbrack.fccc.edu/Guoli/culledpdb//cullpdb_pc90_res3.0_R1.0_d130614_chains24769.gz': 'cullpdb_pc90.gz'}
+            baseURL = 'http://dunbrack.fccc.edu/Guoli/culledpdb/'
+            pc25 = baseURL + '/cullpdb_pc25_res3.0_R1.0_d130614_chains8184.gz'
+            pc90 = baseURL + '/cullpdb_pc90_res3.0_R1.0_d130614_chains24769.gz'
+            knownurls = {baseURL: 'selection_page.txt',
+                         pc25: 'cullpdb_pc25.gz',
+                         pc90: 'cullpdb_pc90.gz'}
 
             self.url = url
             if self.url in knownurls:
@@ -184,8 +193,10 @@ class MonkeyPatch:
         for code in codes:
             pdbfile = 'pdb%s.ent.gz' % code
             if os.path.exists(MonkeyPatch.sitefile(pdbfile)):
-                shutil.copyfile(MonkeyPatch.sitefile(pdbfile), MonkeyPatch.localfile(pdbfile))
-                shutil.copystat(MonkeyPatch.sitefile(pdbfile), MonkeyPatch.localfile(pdbfile))
+                shutil.copyfile(MonkeyPatch.sitefile(pdbfile),
+                                MonkeyPatch.localfile(pdbfile))
+                shutil.copystat(MonkeyPatch.sitefile(pdbfile),
+                                MonkeyPatch.localfile(pdbfile))
             else:
                 print "%s: site file does not exist, oh no!"
 
@@ -203,7 +214,8 @@ class ManagementCommands(TestCase):
         # How far into the past do we set the test files?
         howfar = 86400 * 365 * 10
 
-        # This requires the 3CGX protein file but does not require the 1MWQ protein file.
+        # This requires the 3CGX protein file but does not require the
+        # 1MWQ protein file.
         proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
                     '1mwq': 'pdb/pdb1mwq.ent.gz'}
 
@@ -221,8 +233,8 @@ class ManagementCommands(TestCase):
 
             # Set the file dates back!
             for key in proteins:
-                os.utime(proteins[key], (-1, int(os.path.getmtime(proteins[key])) - howfar))
                 olddates[key] = int(os.path.getmtime(proteins[key]))
+                os.utime(proteins[key], (-1, olddates[key] - howfar))
 
             # Run the management command.
             management.call_command('fetch')
@@ -233,14 +245,15 @@ class ManagementCommands(TestCase):
 
             # Only the 3CGX file should have been updated.
             self.assertEqual(postdates['3cgx'], int(time.time()))
-            self.assertEqual(postdates['1mwq'], olddates['1mwq'])
+            self.assertLess(postdates['1mwq'], olddates['1mwq'])
 
             # The 3CGX file should be larger than 8192 bytes.
             self.assertGreater(os.path.getsize(proteins['3cgx']), 8192)
 
     def test_fetch_missing(self):
 
-        # This requires the 3CGX protein file but does not require the 1MWQ protein file.
+        # This requires the 3CGX protein file but does not require the
+        # 1MWQ protein file.
         proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
                     '1mwq': 'pdb/pdb1mwq.ent.gz'}
 

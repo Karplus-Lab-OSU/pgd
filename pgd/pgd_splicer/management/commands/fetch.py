@@ -24,7 +24,6 @@ class Command(BaseCommand):
                     default='25,90'),
         make_option('--resolution',
                     type='float',
-                    dest='max_resolution',
                     default=3.0),
         make_option('--r_factor',
                     type='float',
@@ -57,8 +56,10 @@ class Command(BaseCommand):
         now = datetime.now()
         elapsed = now - self.started
         percent = 100.0 * self.sofar / self.outof
-        remaining = str(elapsed * (self.outof - self.sofar) / self.sofar).split('.')[0]
-        return '  [%d/%d %.1f%%, %s remaining] %s: %s' % (self.sofar, self.outof, percent, remaining, code, mesg)
+        remaining = elapsed * (self.outof - self.sofar) / self.sofar
+        remaining_str = str(remaining).split('.')[0]
+        retvals = (self.sofar, self.outof, percent, remaining, code, mesg)
+        return '  [%d/%d %.1f%%, %s remaining] %s: %s' % retvals
 
     def process_chunk(self, data):
         """ Callback for FTP download progress bar. """
@@ -104,8 +105,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self.dunbrack_url = options['url']
-        self.threshold = '|'.join([str(int(s)) for s in options['thresholds'].split(',')])
-        self.max_resolution = options['max_resolution']
+        thresholds = [str(int(s)) for s in options['thresholds'].split(',')]
+        self.threshold = '|'.join(thresholds)
+        self.resolution = options['resolution']
         self.r_factor = options['r_factor']
         self.verbose = options['verbose']
 
@@ -113,7 +115,8 @@ class Command(BaseCommand):
         selection_page = urllib.urlopen(self.dunbrack_url).read()
         # FIXME: Grab the links based on the filenames!
         # <A href="link"> filename </A><br>
-        pattern = '\s(cullpdb_pc(%s)_res%s_R%s_.*\d\.gz)' % (self.threshold, self.max_resolution, self.r_factor)
+        patvals = (self.threshold, self.resolution, self.r_factor)
+        pattern = '\s(cullpdb_pc(%s)_res%s_R%s_.*\d\.gz)' % patvals
 
         files = re.findall(pattern, selection_page)
 
@@ -148,7 +151,7 @@ class Command(BaseCommand):
                         # protein is not in proteins dict yet create initial
                         # structure from parsed properties.
                         resolution = float(groups[4])
-                        if resolution > 0 and resolution <= self.max_resolution:
+                        if resolution > 0 and resolution <= self.resolution:
                             self.proteins[groups[0]] = {
                                 'code': groups[0],
                                 'chains': [groups[1]],
@@ -158,9 +161,10 @@ class Command(BaseCommand):
                                 'threshold': threshold
                             }
 
-        # store the date from the first file to use as the version.  The version will be
-        # updated now even though the import has just begun.  Its marked to indicate that
-        # it is still in progress
+        # store the date from the first file to use as the version.
+        # The version will be updated now even though the import has
+        # just begun.  Its marked to indicate that it is still in
+        # progress
         date = files[0][0][26:32]
         version = '20%s-%s-%s' % (date[:2], date[2:4], date[4:])
 
@@ -174,9 +178,11 @@ class Command(BaseCommand):
             with open(options['selection'], 'w') as out:
                 out.write('VERSION: %s\n' % version)
                 for k, v in self.proteins.items():
-                    out.write('%(code)s %(selchains)s %(threshold)s %(resolution)s %(rfactor)s %(rfree)s\n' % v)
+                    out.write('%(code)s %(selchains)s %(threshold)s ' +
+                              '%(resolution)s %(rfactor)s %(rfree)s\n' % v)
 
-        self.indexed = set(Protein.objects.all().values_list('code', flat=True))
+        self.indexed = set(Protein.objects.all().values_list('code',
+                                                             flat=True))
         self.desired = set(v['code'] for k, v in self.proteins.items())
 
         self.extras = self.indexed - self.desired
@@ -213,7 +219,7 @@ class Command(BaseCommand):
             try:
                 self.files[result].append(code)
             except KeyError:
-                print "Invalid result %s returned from code %s" % (result, code)
+                print "Invalid result %s from code %s" % (result, code)
 
         # output report
         if options['report']:
@@ -233,18 +239,21 @@ class Command(BaseCommand):
                     out.write('\n')
                 # fetch values default to []
                 if self.files['changed'] is not []:
-                    out.write('Proteins with newer versions on site: %d\n' % len(self.files['changed']))
+                    out.write('Proteins with newer versions on site: ' +
+                              '%d\n' % len(self.files['changed']))
                     out.write(', '.join(sorted(self.files['changed'])))
                     out.write('\n')
                 if self.files['notonsite'] is not []:
-                    out.write('Proteins not found on site: %d\n' % len(self.files['notonsite']))
+                    out.write('Proteins not found on site: ' +
+                              '%d\n' % len(self.files['notonsite']))
                     out.write(', '.join(sorted(self.files['notonsite'])))
                     out.write('\n')
                 if self.files['new'] is not []:
-                    out.write('New proteins downloaded: %d\n' % len(self.files['new']))
-                    out.write(', '.join(sorted(self.files['new'])))
-                    out.write('\n')
+                    out.write('New proteins downloaded: ' +
+                              '%d\n' % len(self.files['new']))
+                    out.write(', '.join(sorted(self.files['new'])) + '\n')
                 if self.files['changed'] is not []:
-                    out.write('Changed proteins downloaded: %d\n' % len(self.files['changed']))
+                    out.write('Changed proteins downloaded: ' +
+                              '%d\n' % len(self.files['changed']))
                     out.write(', '.join(sorted(self.files['changed'])))
                     out.write('\n')
