@@ -101,24 +101,61 @@ def search(request):
     }, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
+def residue_is_selected(data, index):
+    """
+    Determine whether a given residue index is selected in search data.
+
+    This is probably useful enough to live somewhere else, but I just don't
+    fucking care right now. Sorry.
+    """
+
+    count = int(data["residues"])
+
+    bottom = 0 - (count - 1) / 2
+    top  = int(math.ceil((count - 1) / 2.0))+1
+    indices = range(bottom, top)
+
+    return index in indices
+
+
 def editSearch(request, search_id=None):
     """
     Handler for editing an existing search
     """
+
     #load the search passed in
     if search_id:
         search = Search.objects.get(id=search_id)
         if search.user != request.user and search.isPublic == False:
             return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
-        form = SearchForm(search.data)
 
     #else use the search in the session if it exists
     else:
         try:
             search = request.session['search']
-            form = SearchForm(search.data)
         except KeyError:
-            form = SearchForm() # An unbound form
+            search = None
+
+    if search:
+        # Hax. Prepare a dataset which contains the initial angles for any
+        # residues which might not have been selected in the previous search, and
+        # then put the previous search's data over that dataset. This effectively
+        # is the same as creating the form unbound with initial data, and then
+        # binding it to the new dataset, but Django forms aren't capable of doing
+        # this.
+        # This fixes #1565 and related things, and could go away if the forms are
+        # refactored to use FormSets and so forth.
+        data = {}
+        for i in RESIDUE_INDEXES:
+            if not residue_is_selected(search.data, i):
+                data["ome_%d" % i] = "<=-90,>=90"
+                data["bm_%d" % i] = "<25"
+                data["bg_%d" % i] = "<25"
+                data["bs_%d" % i] = "<25"
+        data.update(search.data)
+        form = SearchForm(data)
+    else:
+        form = SearchForm() # An unbound form
 
 
     #construct a list of values for i

@@ -39,7 +39,7 @@ LANGUAGE_CODE = 'en-us'
 SITE_ID = 1
 
 #Google analytics ID. Enter the full id, as in: UA-xxxxxx-x 
-GOOGLE_ID = ''
+GOOGLE_ID = 'UA-9880071-1'
 
 # If you set this to False, Django will make some optimizations so as not
 # to load the internationalization machinery.
