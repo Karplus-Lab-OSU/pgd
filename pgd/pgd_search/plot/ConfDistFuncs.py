@@ -467,16 +467,8 @@ class ConfDistPlot():
         hashsize = 10*ratio
         
         # calculate bin count and sizes.
-        if x>0 and x1<0:
-            # account for circular coordinates
-            xBinCount = math.ceil((360.0+x1-x)/xbin)
-        else:
-            xBinCount = math.ceil((float(x1)-x)/xbin)
-        if y>0 and y1<0:
-            # account for circular coordinates
-            yBinCount = math.ceil((360.0+y1-y)/ybin)
-        else:
-            yBinCount = math.ceil((float(y1)-y)/ybin)
+        xBinCount = math.ceil(((360.0 if x > x1 else 0.0) + x1 - x)/xbin)
+        yBinCount = math.ceil(((360.0 if y > y1 else 0.0) + y1 - y)/ybin)
             
         # determine graph and bin sizes.  bins should always fall within the
         # borders of the graph, and the graph should always exactly fit the
