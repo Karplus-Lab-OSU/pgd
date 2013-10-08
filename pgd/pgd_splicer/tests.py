@@ -277,6 +277,34 @@ class ManagementCommands(TestCase):
             # The 3CGX file should be larger than 8192 bytes.
             self.assertGreater(os.path.getsize(proteins['3cgx']), 8192)
 
+    @staticmethod
+    def file_to_dict(infile):
+        my_dict = {}
+        with open(infile) as data:
+            for line in data:
+                words = line.split()
+                if words[0] == 'VERSION:':
+                    continue
+                my_dict[words[0]] = words[1:]
+        return my_dict
+
+    def test_fetch_selection(self):
+
+        with MonkeyPatch():
+            # The original selection file, with bad 1MWQ and no 3CGX.
+            good_selection = MonkeyPatch.sitefile('fixture_selection.txt')
+            good_dict = self.file_to_dict(good_selection)
+            # Remove 1MWQ.
+            del good_dict['1MWQ']
+            # Add 3CGX.
+            good_dict['3CGX'] = ['A', '25', '1.900', '0.17', '0.21']
+            test_selection = MonkeyPatch.localfile('test_selection.txt')
+            management.call_command('fetch', selection=test_selection)
+            test_dict = self.file_to_dict(test_selection)
+            self.assertEqual(good_dict, test_dict)
+            if os.path.exists(test_selection):
+                os.remove(test_selection)
+
     def test_crosscheck_fixture(self):
 
         # Cross-check the database against the fixture selection.txt file.
