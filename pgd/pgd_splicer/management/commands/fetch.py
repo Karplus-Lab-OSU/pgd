@@ -178,7 +178,7 @@ class Command(BaseCommand):
             with open(options['selection'], 'w') as out:
                 out.write('VERSION: %s\n' % version)
                 for k, v in self.proteins.items():
-                    out.write('%(code)s %(selchains)s %(threshold)s ' +
+                    out.write('%(code)s %(selchains)s %(threshold)s ' % v +
                               '%(resolution)s %(rfactor)s %(rfree)s\n' % v)
 
         self.indexed = set(Protein.objects.all().values_list('code',
