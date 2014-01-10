@@ -1,6 +1,6 @@
 from math import radians
 
-import cairo
+import cairocffi as cairo
 
 
 """ Set of classes for helping deal with SVG graphics """
