@@ -6,3 +6,4 @@ selenium
 mysql-python
 numpy
 simplejson
+cairocffi

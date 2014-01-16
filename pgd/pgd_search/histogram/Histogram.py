@@ -1,6 +1,6 @@
 import math
 
-import cairo
+import cairocffi as cairo
 from django.db import connections
 from django.db.backends.mysql.compiler import SQLCompiler
 from django.db.models import Max, Min, Count
