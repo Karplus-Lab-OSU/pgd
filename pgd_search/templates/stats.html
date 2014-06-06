@@ -1,0 +1,520 @@
+{% extends 'search_base.html' %}
+{% load search_extras %}
+{% block head %}
+    <style>
+        #content {
+            width:1100px;
+            margin:0 auto 0 auto;
+        }
+
+        table {
+            border-collapse:collapse;
+            border-spacing:0px;
+            margin:20px;
+        }
+
+        td {
+            border-right:1px dotted #888888;
+            border-top:1px dotted #888888;
+            color:black;
+            padding-right: 5px;
+            padding-left:5px;
+            text-align:center;
+        }
+
+        th {
+            color:black;
+            margin: 0px;
+            padding:5px;
+            border-bottom: 1px solid black;
+            border-right:1px dotted black;
+            border-top: 1px solid black;
+            background-color:#ffe680;
+            line-height:3em;
+            text-align:center;
+        }
+
+        tr {
+            margin: 0px;
+            padding: 0px;
+        }
+
+        tr.row-b {
+            background-color:#f0f7ff;
+        }
+
+        tr.selected, td.col_selected {
+            color:black;
+            background-color:#9adaff;
+        }
+
+        th.col_selected {
+            background-color:#fff1ba;
+        }
+
+        td.selected {
+            background-color:#3a76f1;
+            color:white;
+        }
+
+        .section {
+            border-left: 1px solid black;
+            border-right: 1px solid black;
+            border-top: 1px solid black;
+            font-weight:bold;
+        }
+
+        #stats.fieldsDetail {
+            position: absolute;
+            border: 1px solid black;
+            width:20em;
+            height:4em;
+            background-color:white;
+            padding:10px;
+        }
+
+        span.label {
+            font-weight:bold;
+            float:left;
+            width:10em;
+            text-align:right;
+            margin-right:1em;
+        }
+
+        th.ss {
+            cursor:help;
+        }
+
+        #stdev {
+            text-align:left;
+        }
+
+        #min {
+            margin-right:1em;
+        }
+
+        #range {
+            text-align:left;
+        }
+
+        .L5, .ome, .peptide, .aa_total {
+            border-right:1px solid black;
+        } 
+        .L1, .ome, .na, .peptide, .aa_total{
+            border-left:1px solid black;
+        }
+
+        tr.total{
+            border-bottom:1px solid black;
+            border-top:1px solid black;
+        }
+
+        tr.total td {
+            font-weight:bold;
+        }
+
+        td.sum, td.total {
+            text-align:right;
+        }
+
+        #stats.fields {
+            /* Reset alignment to compensate for 'text-align:center': */
+            text-align: left;
+            /* Specify the width of the element. This should be the same
+                as 'body min-width': */
+            width: 500px;
+            /* Set left and right margins to auto, thus centering the 
+                element in the containing (body) tag: */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        div#stats_fieldsDetail { display:none; }
+        
+        #index {border-top:0;}
+        
+        .aa_breakout h2 {
+            background-color:#3a76f1;
+            color:#fff;
+            padding:3px 3px 3px 8px;
+            width:900px;
+        }
+        
+        .aa_breakout table {
+            border: 1px solid black;
+            display:none;
+        }
+
+        .aa_breakout td, .aa_breakout th {
+            min-width:4em;
+        }
+
+        .aa_breakout tr.avg th, .aa_breakout tr.stddev th {padding:1px; line-height:1em;}
+
+        .qtip-content {font-size:14px;}
+
+    </style>
+    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+    <script type="text/javascript">
+        var col = '';
+        var contentText= 'Mouse over a table cell for more information about it.';
+
+        $(document).ready(function() {
+            $('select')
+                .change(function(){
+                    val = $(this).val();
+                    $('#stats').qtip('show');
+                    $('td.aa_total, td.sum').html('-');
+                    $('td.data').not('.sum').html('--');
+                    
+                    // clear all sidechain stats on index change
+                    $('.aa_breakout h2')
+                        .removeClass('open')
+                        .nextAll()
+                            .hide()
+                    $('.aa_breakout td').html('--');
+                    aa_details = {};
+                    
+                    $.getJSON('{{SITE_ROOT}}/search/statistics/data/',{'i':val},process_data);
+                });
+
+            $('#stats').qtip({
+                position:{
+                    corner: {
+                            target: 'center',
+                            tooltip: 'center'
+                            },
+                         },
+                style:{ //Style the qtip to look like the page
+                        name:'light',
+                        width:300,
+                        height:80,
+                        padding:50,
+                        textAlign: 'center',
+                        border: {
+                                radius:5,
+                                width: 5,
+                                color: '#909090'
+                                },
+                    },
+                show: false,
+                hide: false,
+                content:{
+                        prerender: false,//This kills pageload times if enabled
+                        text: '<img src="{{MEDIA_URL}}/images/ajax-loader.gif"/><br/><b>Calculating Statistics</b>',
+                        }
+                    });
+            $('#stats').qtip('show');
+
+            $.getJSON('{{SITE_ROOT}}/search/statistics/data/',process_data);
+
+            $('#content').qtip({
+                position:{
+                    adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                            resize: true
+                            },
+                    corner: {
+                            target: 'leftTop',
+                            tooltip: 'rightTop'
+                            },
+                    target:$('th.peptide')
+                         },
+                style:{ //Style the qtip to look like the page
+                      color: 'black',
+                      textAlign: 'center',
+                      title: { color: 'white', background: '#666666'},
+                      width: { min: 300, max: 330 },
+                      border:{ 
+                             width: 6, 
+                             color: '#909090'
+                             }
+                       },
+                show: false,
+                hide: false,
+                content:{
+                        prerender: false,//This kills pageload times if enabled
+                        text: contentText,
+                        title:  {
+                                text: 'Additional Data'
+                                }
+                        }
+                    }); 
+            $('#content').qtip('show');
+
+            $('th.ss').qtip({
+                position:{
+                    corner: {
+                            target: 'bottomMiddle',
+                            tooltip: 'topMiddle'
+                            }
+                         },
+                style:{ //Style the qtip to look like the page
+                        name:'light',
+                        padding:5,
+                        textAlign: 'center',
+                        border: {
+                                radius:5,
+                                width: 5,
+                                color: '#444444'
+                                },
+                        tip:{corner: 'topMiddle'}
+                    }
+            });
+            
+            $('.stats.fields').mouseout( function() {$('#stats.fieldsDetail').hide();})
+
+            $('tr.data')
+                .mouseover(function() {
+                    $(this).addClass('selected');
+                })
+                .mouseout(function(){
+                    $(this).removeClass('selected');
+                })
+
+            $('td.data')
+                .mouseover(function() {
+                    id = this.id;
+                    col = id.replace(/^(data_)[\w]{3,5}_/, '.');
+                    $(col).addClass('col_selected');
+                    $(this).addClass('selected');
+                })
+                .mouseout(function(){
+                    $(col).removeClass('col_selected');
+                    $(this).removeClass('selected');
+                })
+
+            $('.aa_breakout h2').click(function(){
+                $this = $(this);
+                if ($this.hasClass("open")) {
+                    $this.nextAll().hide();
+                    $this.removeClass("open");
+                } else {
+                    $this.addClass("open");
+                    $this.nextAll().show();
+                    aa = this.parentNode.id.substring(3);
+                    if (aa_details[aa]==undefined){
+                        index = $('select').val();
+                        $.getJSON('{{SITE_ROOT}}/search/statistics/aa/'+aa,
+                                  {i:index},
+                                  process_aa_data);
+                    }
+                }
+            });
+        });
+
+        var fields = [{% for f in fields %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}, {% for f in angles %}'{{f}}'{% if not forloop.last%},{% endif %}{% endfor %}];
+        var angles = [];
+        var details = {};
+        var aa_details = {};
+
+        /* converts a field to the required precision - all lengths must be explictly listed*/
+        function precision(value, field) {
+            if (value != null && (value || value != 0)){
+                if (field=='L1' || field=='L2' || field=='L3' || field=='L4' || field=='L5'
+                    {%for aa, fields in stat_fields.scl.items%}
+                    {%for field in fields %}
+                        || field == '{{field}}'
+                    {%endfor%}
+                    {%endfor%}
+                    ) {
+                    return value.toFixed(3);
+                }
+                return value.toFixed(1);
+            }
+            return '--';
+        }
+
+        /* processes data incoming from ajax request */
+        function process_data(data) {
+            // replace details with completely new list since the new one may
+            // not have all rows/columns in it.
+            details = {};
+            prefix = data['prefix'];
+            
+            /* regular fields */
+            for (i in data['fields']){
+                f_data = data['fields'][i]
+                aa = f_data['aa'];
+
+                if (aa == 'total') {
+                    $row = $('tr.total');
+                } else {
+                    $row = $('tr.'+aa);
+                }
+
+                for (f in fields) {
+                    field = fields[f];
+
+                    avg = precision(f_data['avg_'+field], field);
+                    stddev = precision(f_data['stddev_'+field], field);
+                    min = precision(f_data['min_'+field], field);
+                    max = precision(f_data['max_'+field], field);
+
+                    $row.children('td.'+field).html(avg);
+
+                    details[aa+'_'+field] = [stddev, min, max];
+                }
+                
+            }
+
+            for (i in data['ss_counts']){
+                row = data['ss_counts'][i];
+                aa = row[prefix+'aa'];
+                ss = row[prefix+'ss'];
+                $td = $('tr.'+aa).children('.sum.'+ss)
+                $td.html(row['ss_count']);
+            }
+
+            for (i in data['ss_totals']) {
+                row = data['ss_totals'][i];
+                ss = row[prefix+'ss'];
+                $row.children('.sum.'+ss).html(row['ss_count']);
+            }
+
+            for (i in data['aa_totals']) {
+                row = data['aa_totals'][i];
+                aa = row[prefix+'aa'];
+                $td = $('tr.'+aa).children('.aa_total');
+                $td.html(row['aa_count']);
+            }
+
+            $row.children('.aa_total').html(data['total']);
+            //XXX calling with setTimeout fixes issue where show/hide calls overlap and its never hidden
+            setTimeout("$('#stats').qtip('hide')", 0);
+        }
+
+        /* processes data for a single AA */
+        function process_aa_data(data) {
+            // replace details with completely new list since the new one may
+            // not have all rows/columns in it.
+            aa = data['aa'];
+            $aa = $('#aa_'+aa);
+            
+            aa_stats = {};
+            
+            for (k in data) {
+                if (k=='aa') {continue};
+                property = k.substring(0,3);
+                if (property=='std') {
+                    property = 'stddev';
+                    if (k.substring(7,16)=="sidechain"){
+                        field = k.substring(22);
+                    } else {
+                        field = k.substring(7);
+                    }
+                } else {
+                    if (k.substring(4,13)=="sidechain"){
+                        field = k.substring(19);
+                    } else {
+                        field = k.substring(4);
+                    }
+                }
+                
+                value = precision(data[k], field);
+                $row = $aa.find("." + property);                
+                if (property == "avg" || property == "stddev") {
+                    $row = $aa.find('.'+property);
+                    $row.find("."+field).html(value);
+                }
+                aa_stats[property] = value;
+            }
+            aa_details[aa] = aa_stats;
+        }
+
+        function showStats(key) {
+            details_ = details[key];
+            if (details_ != undefined) {
+
+                stddev = details_[0];
+                min = details_[1];
+                max = details_[2];
+
+                $('#stdev').html(stddev);
+                $('#min').html(min);
+                $('#max').html(max);
+                contentText=$('div#stats_fieldsDetail').html();
+                $('#content').qtip('api').updateContent(contentText);
+            }
+        }
+    </script>
+{% endblock %}
+
+{% block content %}
+    <table id="stats" >
+        <thead>
+        <tr><td colspan=100% id="index"><label>Index: <label> {{form.index}}</td></tr>
+        <tr>
+            <th class="peptide">Type</th>
+            <th class="aa_total">Total</th>
+            <th class="sum_na sum borderleft">N/A</th>
+            {% for ss in ss_types %}
+                <th class="sum {{ss.0}} ss" title="secondary structure: {{ss.1|safe}}">{{ss.0}}</th>
+            {% endfor %}
+
+            {% autoescape off %}
+            {% for field in stat_attributes %}
+                <th nowrap class="avg {{field.0}}">{{field.1}}</th>
+            {% endfor %}
+            {% endautoescape %}
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for aa in aa_types %}
+            <tr class="data {{aa.0}} {% cycle 'row-a' 'row-b' %}">
+                <td class="peptide {{aa.1}}">{{aa.1|upper}}</td>
+                <td class="borderright {{aa.1}} aa_total">-</td>
+                <td id="data_{{aa.1}}_na" class="data sum na -">-</td>
+                {% for ss in ss_types %}
+                    <td id="data_{{aa.1}}_{{ss.0}}" class="data sum {{ss.0}} {{aa.1}}">-</td>
+                {% endfor %}
+
+                {% for field in stat_attributes %}
+                     <td nowrap id="data_{{aa.1}}_{{field.0}}"  class="data avg {{field.0}} stats.fields {{aa.1}}" onmouseover="showStats('{{aa.0}}_{{field.0}}')">--</td>
+                {% endfor %}
+
+            </tr>
+        {% endfor %}
+
+        <tr class="data total {% cycle 'row-a' 'row-b' %}">
+            <td class="peptide total">Total</td>
+            <td class="borderright total aa_total"></td>
+            <td id="data_total_sum_{{ss.0}}" class="data sum na - total">0</td>
+            {% for ss in ss_types %}
+                <td id="data_total_{{ss.0}}" class="data sum {{ss.0}} total">0</td>
+            {% endfor %}
+
+            {% for field in stat_attributes %}
+                <td nowrap id="data_total_{{field.0}}"  class="data avg {{field.0}} total" onmouseover="showStats('total_{{field.0}}')">--</td>
+            {% endfor %}
+        </tr>
+
+      </tbody>
+    </table>
+
+    {% for aa in aa_types %}
+    {% if aa.0|in:stat_fields.scl %}
+    <div id="aa_{{aa.0}}" class="aa_breakout">
+        <h2>{{aa.1}}</h2>
+        <table>
+            <tr><th></th>{% for f in stat_fields.scl|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr class="avg"><th>Mean</th>                
+                {% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr class="stddev"><th>Stddev</th>
+                {% for f in stat_fields.scl|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+        </table>
+        <table>
+            <tr><th></th>{% for f in stat_fields.sca|index:aa.0 %}<th>{{f|atom}}</th>{% endfor %}</tr>
+            <tr class="avg"><th>Mean</th>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+            <tr class="stddev"><th>Stddev</th>{% for f in stat_fields.sca|index:aa.0 %}<td class="{{f}}">--</td>{% endfor %}</tr>
+        </table>
+    </div>
+    {% endif %}
+    {% endfor %}
+
+
+    <div id="stats_fieldsDetail">
+            <span class="label">Standard Deviation:</span><div id="stdev"></div>
+            <span class="label">Range:</span><div id="range"><span id="min"></span><span id="max"></span></div>
+    </div>
+{% endblock %}

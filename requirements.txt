@@ -1,0 +1,9 @@
+biopython
+django-registration
+south
+django==1.4
+selenium
+MySQL-python
+simplejson
+numpy
+cairocffi

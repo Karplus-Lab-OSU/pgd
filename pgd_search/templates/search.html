@@ -1,0 +1,401 @@
+{% extends 'search_base.html' %}
+{% load search_extras %}
+
+{% block head %}
+        <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/jquery.autocomplete.css" />
+        <link rel="stylesheet" type="text/css"
+            href="{{MEDIA_URL}}/css/search.css" />
+
+        <style>
+        .toggle_Include {
+            opacity:1;
+            background-image:url('{{MEDIA_URL}}/images/plus2.png');
+        }
+
+        .toggle_Exclude {
+            opacity:1;
+            background-image:url('{{MEDIA_URL}}/images/minus2.png');
+        }
+        </style>
+        
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
+        <script type="text/javascript">
+            var qtipsOn=true;
+            var angle_qtip_api = null;
+            var angle_target = null;
+            var firstRun = true;
+            var qtip_status = [];
+            var angle_drawing = $('#canvas');
+            var sidechain_angle_lookup = {{ sidechain_angle_lookup|safe }};
+            var sidechain_length_lookup = {{ sidechain_length_lookup|safe }};
+            var selected_aa = [];
+            var qtipState = '';
+            var qtipTotal = 0;
+            var protList = new Object();
+            /* List of columns which have been selected. */
+            var negateRow = {};
+            var AAs = [{% for aa in aa_choices.0 %}'{{aa.1|upper}}', {%endfor%}];
+
+            var MAX_LENGTH = {{maxLength}};
+
+            /* TODO: Taking out this existence check breaks things. Should it? */
+            {% if SITE_ROOT %}
+                var SITE_ROOT = {{SITE_ROOT}};
+            {% else %}
+                var SITE_ROOT = null;
+            {% endif %}
+        </script>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/search.js"></script>
+{% endblock %}
+
+{% block content %}
+    {% if form.errors %}
+        <div id="errors">
+        Please correct the following errors:
+            <ul class="errors">
+            {% for field, msg in form.errors.items %}
+                <li class="error"><strong>{{ field|escape }}</strong>{{msg|escape}}</li>
+
+            {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    <div id="formContainer">
+        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">{% csrf_token %}
+            <table id="protein">
+            <tbody>
+
+            <tr>
+                <td class="label"> {{form.residues.label}}</td>
+                <td class="field">
+                    {{form.residues}}
+                    <input type="hidden" id="oldLength" value="1">
+
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Resolution</td>
+                <td class="field">{{form.resolutionMin}} - {{form.resolutionMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">R-factor</td>
+                <td class="field">{{form.rfactorMin}} - {{form.rfactorMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">R-free</td>
+                <td class="field">{{form.rfreeMin}} - {{form.rfreeMax}}</td>
+            </tr>
+            <tr>
+                <td class="label">{{form.threshold.label}}</td>
+
+                <td class="field">{{form.threshold}}</td>
+            </tr>
+            <tr id="pdb_codes">
+                <td class="label">PDB Codes</td>
+                <td class="field" colspan="100%">
+                    <span class="toggle">&nbsp;</span>
+                    {{form.proteins}}{{form.proteins_i}}
+                </td>
+            </tr>
+            </tbody>
+            </table>
+            <div id="residuesContainer">
+            <table id="residues" >
+            <tbody>
+
+            <tr><td/>
+            {% for i in iValues %}
+                <th class="field col_{{i.0}}">{{i.1}}</th>
+            {% endfor %}
+
+            <tr><td colspan="100%" class="sectionheader" id="peptide_header">Composition ↓</td></tr>
+            <tr class="peptide_row">
+                <td class="label"></td>
+
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>
+                        <ul id="id_aa_choices_list_col_{{r.index}}" class="multiselect field">
+                            {% for choice in aa_choices|index_lookup:forloop.counter0 %}
+                                <li>{{choice.1}}<input type="checkbox" class="needs_reset" name="aa_{{r.index}}" value="{{choice.0}}" {{choice.2}}/></li>
+                            {% endfor %}
+                        </ul>
+                        {{r.aa_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="conf_header">Conformation ↓</td></tr>
+            <tr class="conf_row">
+                <td class="label"></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>
+                        <ul id="id_ss_choices_list_col_{{r.index}}" class="multiselect field">
+                            {% for choice in ss_choices|index_lookup:forloop.counter0 %}
+                                <li>{% autoescape off %}{{choice.1}}{% endautoescape  %}<input type="checkbox" class="needs_reset" name="ss_{{r.index}}" value="{{choice.0}}" {{choice.2}}></li>
+                            {% endfor %}
+                        </ul>
+                        {{r.ss_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="conf_row">
+                <td class="label">&Phi;</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+
+                        <span class="toggle">&nbsp;</span>{{r.phi}}{{r.phi_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="conf_row">
+                <td class="label">&Psi;</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.psi}}{{r.psi_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="conf_row">
+                <td class="label">&omega;</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.ome}}{{r.ome_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="mobility_header">Mobility →</td></tr>
+            <tr class="mobility_row">
+                <td class="label">B<sup>m</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.bm}}{{r.bm_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="mobility_row">
+                <td class="label">B<sup>&gamma;</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.bg}}{{r.bg_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="mobility_row">
+                <td class="label">B<sup>sc</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.bs}}{{r.bs_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles →</td></tr>
+                <tr class="angles_row">
+                    <td class="label">C<sup>-1</sup>NC<sup>&alpha;</sup></td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+
+                        <span class="toggle">&nbsp;</span>{{r.a1}}{{r.a1_i}}
+                    </td>
+                    {% endfor %}
+                    </tr>
+                <tr class="angles_row">
+                    <td class="label">NC<sup>&alpha;</sup>C<sup>&beta;</sup></td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a2}}{{r.a2_i}}
+                    </td>
+
+                    {% endfor %}
+                    </tr>
+                <tr class="angles_row">
+                    <td class="label">NC<sup>&alpha;</sup>C</td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a3}}{{r.a3_i}}
+                    </td>
+                    {% endfor %}
+                    </tr>
+
+                <tr class="angles_row">
+                    <td class="label">C<sup>&beta;</sup>C<sup>&alpha;</sup>C</td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a4}}{{r.a4_i}}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="angles_row">
+                    <td class="label">C<sup>&alpha;</sup>CO</td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a5}}{{r.a5_i}}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="angles_row">
+                    <td class="label">C<sup>&alpha;</sup>CN<sup>+1</sup></td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.a6}}{{r.a6_i}}
+                    </td>
+                    {% endfor %}
+                </tr>
+                <tr class="angles_row">
+                    <td class="label">OCN<sup>+1</sup></td>
+                    {% for r in residueFields %}
+                        <td class="field col_{{r.index}}">
+
+                        <span class="toggle">&nbsp;</span>{{r.a7}}{{r.a7_i}}
+                    </td>
+                    {% endfor %}
+                </tr>
+
+            <tr class="spacer"/>
+            <tr><td colspan="100%" class="sectionheader" id="lengths_header">Lengths →</td></tr>
+            <tr class="lengths_row">
+                <td class="label">C<sup>-1</sup>N</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L1}}{{r.L1_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr class="lengths_row">
+                <td class="label">NC<sup>&alpha;</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+
+                    <span class="toggle">&nbsp;</span>{{r.L2}}{{r.L2_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr class="lengths_row">
+                <td class="label">C<sup>&alpha;</sup>C<sup>&beta;</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L3}}{{r.L3_i}}
+                </td>
+
+                {% endfor %}
+            </tr>
+            <tr class="lengths_row">
+                <td class="label">C<sup>a</sup>C</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L4}}{{r.L4_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="lengths_row">
+                <td class="label">CO</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.L5}}{{r.L5_i}}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="chi_header">&chi; Angles →</td></tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>1</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi1}}{{r.chi1_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>2</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.chi2}}{{r.chi2_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>3</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi3}}{{r.chi3_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>4</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi4}}{{r.chi4_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="chi_row">
+                <td class="label">&chi;<sub>5</sub></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                    <span class="toggle">&nbsp;</span>{{r.chi5}}{{r.chi5_i}}
+                </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="sidechain_angle_header">Sidechain Angles →</td></tr>
+            <tr class="sidechain_angle_row">
+            {% for angle in sidechain_angle_list %}
+                <tr class="sidechain_angle_row" id="{{angle}}_row">
+                <td class="label">{{angle|sidechain_label}}</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span><span class="sidechain_angle_input">{{ r|sidechain_fields:angle }}</span>
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+
+            <tr><td colspan="100%" class="sectionheader" id="sidechain_length_header">Sidechain Lengths →</td></tr>
+            <tr class="sidechain_length_row">
+            {% for length in sidechain_length_list %}
+                <tr class="sidechain_length_row" id="{{length}}_row">
+                <td class="label">{{length|sidechain_label}}</td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span><span class="sidechain_length_input">{{ r|sidechain_fields:length }}</span>
+                    </td>
+                {% endfor %}
+                </tr>
+            {% endfor %}
+            </tr>
+            <tr class="spacer"/>
+            <tr class="submit"><td class="submit" colspan="100%"><input class="submit" type="submit" value="Submit">
+            </tbody>
+            </table>
+            </div>
+        </form>
+    </div>
+
+        <div id="canvas"></div>
+ 
+    <div id="helpPage">
+    	{% include 'qtiphelp.html' %}
+    </div>
+{% endblock %}

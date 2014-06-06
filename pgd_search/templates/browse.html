@@ -1,0 +1,327 @@
+{% extends 'search_base.html' %}
+{% load search_extras %}
+
+{% block head %}
+    <style>
+
+        #content {
+            width:100%;
+            margin-left:20px;
+            text-align:center;
+        }
+
+        table#results {
+            border-collapse:collapse;
+            border-spacing:0px;
+            margin-top:20px;
+
+            /* Reset alignment to compensate for 'text-align:center': */
+            text-align: left;
+            /* Specify the width of the element. This should be the same
+                as 'body min-width': */
+            width: 500px;
+            /* Set left and right margins to auto, thus centering the 
+                element in the containing (body) tag: */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .a7, .l5{
+            border-right:1px solid black;
+        }
+        .a1 {
+            border-left:1px solid black;
+        }
+
+        td {
+            border-right:1px dotted #888888;
+            padding:.3em;
+            text-align:center;
+        }
+
+        .iconLink {
+            padding: .1em;
+        }
+
+        tr.header {
+            border: 1px solid black;
+        }
+
+        tr.index{{start}} td {
+            border-top: 1px solid black;
+        }
+
+        tr.index{{stop}} td {
+            border-bottom:1px solid black;
+        }
+
+        tr.spacer-top td{
+            border:0;
+            height:20px;
+        }
+
+        tr.spacer-bottom td{
+            border:0;
+            height:10px;
+        }
+
+        {% for color in indexColors %}
+            .index{{forloop.counter0}}, .index-{{forloop.counter0}}{
+                background-color:#{{color.0}}{{color.1}}{{color.2}};
+                border-left:1px solid black;
+                border-right:1px solid black;
+            }
+        {% endfor %}
+
+        tr.selected, td.col_selected {
+            color:black;
+            background-color:#3a76f1;
+        }
+
+        th {
+            padding-left:4px;
+            padding-right:4px;
+            background-color:#fff6d5;
+            border-right:1px dotted black;
+            color:black;
+            line-height:3.3em;
+            text-align:center;
+            white-space: nowrap;
+        }
+
+        th.col_selected {
+            background-color:#3a76f1;
+        }
+
+        td.selected {
+            background-color:#3a76f1;
+            color:white;
+            border:1px solid black;
+        }
+
+        tr.fields {
+            border-top:1px solid black;
+            border-left:1px solid black;
+            border-right:1px solid black;
+            border-bottom:1px solid black;
+        }
+
+        a.pagination { 
+            border: 1px solid #3a76f1;
+            padding: 2px 4px 2px 4px;
+        }
+
+        .current_page {
+            color:white;
+            background-color:#3a76f1;
+            border: 1px solid blue;
+            padding: 2px 4px 2px 4px;
+            font-style:bold;
+        }
+
+        a.pagination:link { 
+            color:#3a76f1; 
+            text-decoration:none;
+        }
+        a.pagination:visited           { color:#3a76f1; text-decoration:none; }
+        a.pagination:hover             { 
+            color:black; 
+            text-decoration:none; 
+            border-color:black;
+        }
+        a.pagination:active            { color:#3a76f1; text-decoration:none;}
+
+        #page_jump {
+            width:2.9em;
+            margin-left:3px;
+            margin-right:3px;
+        }
+    </style>
+
+    <script type="text/javascript">
+        var id = '';
+        var attribute = '';
+        var offset = '';
+        var result = '';
+
+        function dOver(element){
+            id = element.id;
+            re = /^data_([\w]+)_([-\w]+)/;
+            matches = re.exec(id);
+            attribute = "td." +matches[1];
+            offset = parseInt(matches[2])+1;
+            result = element.parentNode.parentNode.parentNode.id
+
+            //highlight same result in other tables
+            $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).addClass('selected');
+            $('tr.header th.'+matches[1]).addClass('col_selected');
+        }
+
+        function dOut(){
+            $('tbody tr:nth-child({{segmentLength|add:2}}n+'+offset+') ' + attribute).removeClass('selected');
+            $('tr.header th.col_selected').removeClass('col_selected');
+        }
+
+        $(document).ready(function() {
+
+        });
+
+    </script>
+{% endblock %}
+
+{% block content %}
+    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+    <div class="pagination">
+        <span class="step-links">
+            {% if segments.has_previous %}
+                <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
+            {% endif %}
+
+            <span class="current">
+                {% for section in pages %}
+                    {% if section %}
+                        {% if not forloop.first %}...{% endif%}
+                        {% for page in section %}
+                            {% ifequal page segments.number %}
+                                <span class="current_page">{{page}}</span>
+                            {% else %}
+                                <a class="pagination " href="?page={{ page }}">{{page}}</a>
+                            {%endifequal%}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </span>
+
+            {% if segments.has_next %}
+                <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
+            {% endif %}
+        </span>
+    </div>
+
+    <table id="results" >
+        <thead>
+
+        </thead>
+        <tbody>
+        {% for segment in segments.object_list %}
+            <!--tbody class="segment" id="r{{forloop.counter|add:pageStart}}" class='data'-->
+
+            {% if forloop.counter0|divisibleby:5 %}
+                <tr class="header">
+                    <th>Match  </th>
+                    <th>Code</th>
+                    <th>External Database</th>
+                    <th>Residue</th>
+                    <th>ID</th>
+                    <th>Chain ID</th>
+                    <th class='aa'>AA</th>
+                    <th class='a1 borderLeft'>C<sup>-1</sup>NC<sup>&alpha;</sup></th>
+                    <th class='a2'>NC<sup>&alpha;</sup>C<sup>&beta;</sup></th>
+                    <th class='a3'>NC<sup>&alpha;</sup>C</th>
+                    <th class='a4'>C<sup>&beta;</sup>C<sup>&alpha;</sup>C</th>
+                    <th class='a5'>C<sup>&alpha;</sup>CO</th>
+                    <th class='a6'>C<sup>&alpha;</sup>CN<sup>+1</sup></th>
+                    <th class='a7 borderRight'>OCN<sup>+1</sup></th>
+                    <th class='l1'>C<sup>-1</sup>N</th>
+                    <th class='l2'>NC<sup>&alpha;</sup></th>
+                    <th class='l3'>C<sup>&alpha;</sup>C<sup>&beta;</sup></th>
+                    <th class='l4'>C<sup>&alpha;</sup>C</th>
+                    <th class='l5 borderRight'>CO</th>
+                    <th class='ss'>ss</th>
+                    <th class='phi'>&phi;</th>
+                    <th class='psi'>&psi;</th>
+                    <th class='ome'>&omega;</th>
+                    <th class='omep'>&omega;p</th>
+                    <th class='chi'>&chi;<sup>1</sup></th>
+                    <th class='chi'>&chi;<sup>2</sup></th>
+                    <th class='chi'>&chi;<sup>3</sup></th>
+                    <th class='chi'>&chi;<sup>4</sup></th>
+                    <th class='chi'>&chi;<sup>5</sup></th>
+                    <th class='bm'>B<sup>m</sup></th>
+                    <th class='bs'>B<sup>sc</sup></th>
+                    <th class='bg'>B<sup>&gamma;</sup></th>
+                    <th class='hbond'>H Bond</th>
+                    <th class='zeta'>&zeta;</th>
+                </tr>
+            {% else %}
+                <tr class="spacer-top"><td></td></tr>
+            {% endif %}
+
+            {% for i in indexes %}
+                {% with segment.segment|index_lookup:i as r %}
+                <tr class="data index{{i}}">
+                    <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
+                    <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
+                    <td>
+                    <a href="http://www.ebi.ac.uk/thornton-srv/databases/cgi-bin/pdbsum/GetPage.pl?pdbcode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdbsum.ico"></a>
+                    <a href="http://www.pdb.org/pdb/explore.do?structureId={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/pdb.ico"></a>
+                    <a href="http://eds.bmc.uu.se/cgi-bin/eds/uusfs?pdbCode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{MEDIA_URL}}/images/icons/eds.ico"></a></td>
+                    <td>{% ifequal i 0 %}i{% else %}i{{i|stringformat:"+d"}}{% endifequal %}</td>
+                    <td>{{r.oldID}}</td>
+                    <td>{{segment.chainID}}</td>
+                    <td id="data_aa_{{forloop.counter}}" class="data aa" onmouseover="dOver(this)" onmouseout="dOut()">{{r.aa|full_aa}}</td>
+                    <td nowrap id="data_a1_{{forloop.counter}}" class="data a1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a1|invalid:1}}</td>
+                    <td nowrap id="data_a2_{{forloop.counter}}" class="data a2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a2|invalid:1}}</td>
+                    <td nowrap id="data_a3_{{forloop.counter}}" class="data a3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a3|invalid:1}}</td>
+                    <td nowrap id="data_a4_{{forloop.counter}}" class="data a4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a4|invalid:1}}</td>
+                    <td nowrap id="data_a5_{{forloop.counter}}" class="data a5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a5|invalid:1}}</td>
+                    <td nowrap id="data_a6_{{forloop.counter}}" class="data a6" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a6|invalid:1}}</td>
+                    <td nowrap id="data_a7_{{forloop.counter}}" class="data a7" onmouseover="dOver(this)" onmouseout="dOut()">{{r.a7|invalid:1}}</td>
+                    <td nowrap id="data_l1_{{forloop.counter}}" class="data l1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L1|invalid:3}}</td>
+                    <td nowrap id="data_l2_{{forloop.counter}}" class="data l2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L2|invalid:3}}</td>
+                    <td nowrap id="data_l3_{{forloop.counter}}" class="data l3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L3|invalid:3}}</td>
+                    <td nowrap id="data_l4_{{forloop.counter}}" class="data l4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L4|invalid:3}}</td>
+                    <td nowrap id="data_l5_{{forloop.counter}}" class="data l5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.L5|invalid:3}}</td>
+                    <td nowrap id="data_ss_{{forloop.counter}}" class="data ss" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ss}}</td>
+                    <td nowrap id="data_phi_{{forloop.counter}}" class="data phi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.phi|invalid:2}}</td>
+                    <td nowrap id="data_psi_{{forloop.counter}}" class="data psi" onmouseover="dOver(this)" onmouseout="dOut()">{{r.psi|invalid:2}}</td>
+                    <td nowrap id="data_ome_{{forloop.counter}}" class="data ome" onmouseover="dOver(this)" onmouseout="dOut()">{{r.ome|invalid:2}}</td>
+                    <td nowrap id="data_omep_{{forloop.counter}}" class="data omep" onmouseover="dOver(this)" onmouseout="dOut()">{{r.omep|invalid:2}}</td>
+                    <td nowrap id="data_chi1_{{forloop.counter}}" class="data chi1" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi1|invalid:2}}</td>
+                    <td nowrap id="data_chi2_{{forloop.counter}}" class="data chi2" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi2|invalid:2}}</td>
+                    <td nowrap id="data_chi3_{{forloop.counter}}" class="data chi3" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi3|invalid:2}}</td>
+                    <td nowrap id="data_chi4_{{forloop.counter}}" class="data chi4" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi4|invalid:2}}</td>
+                    <td nowrap id="data_chi5_{{forloop.counter}}" class="data chi5" onmouseover="dOver(this)" onmouseout="dOut()">{{r.chi5|invalid:2}}</td>
+                    <td nowrap id="data_bm_{{forloop.counter}}" class="data bm" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bm|invalid:2}}</td>
+                    <td nowrap id="data_bs_{{forloop.counter}}" class="data bs" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bs|invalid:2}}</td>
+                    <td nowrap id="data_bg_{{forloop.counter}}" class="data bg" onmouseover="dOver(this)" onmouseout="dOut()">{{r.bg|invalid:2}}</td>
+                    <td nowrap id="data_hbond_{{forloop.counter}}" class="data hbond" onmouseover="dOver(this)" onmouseout="dOut()">{{r.h_bond_energy|invalid:2}}</td>
+                    <td nowrap id="data_zeta_{{forloop.counter}}" class="data zeta" onmouseover="dOver(this)" onmouseout="dOut()">{{r.zeta|invalid:2}}</td>
+                </tr>
+                {% endwith %}
+            {% endfor %}
+            <tr class="spacer-bottom"><td></td></tr>
+        <!--/tbody>
+        <tbody><tr class="spacer"/></tbody-->
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+    <div class="pagination">
+        <span class="step-links">
+            {% if segments.has_previous %}
+                <a class="pagination" href="?page={{ segments.previous_page_number }}"><<</a>
+            {% endif %}
+
+            <span class="current">
+                {% for section in pages %}
+                    {% if section %}
+                        {% if not forloop.first %}...{% endif%}
+                        {% for page in section %}
+                            {% ifequal page segments.number %}
+                                <span class="current_page">{{page}}</span>
+                            {% else %}
+                                <a class="pagination " href="?page={{ page }}">{{page}}</a>
+                            {%endifequal%}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+            </span>
+
+            {% if segments.has_next %}
+                <a class="pagination" href="?page={{ segments.next_page_number }}">>></a>
+            {% endif %}
+        </span>
+    </div>
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block head %}
+
+<style>
+
+    div#content{
+        padding:5px;
+        width:1000px;
+        margin-left:auto;
+        margin-right:auto;
+    }
+    div#save_form{
+
+    }
+    label{
+        float:left;
+    }
+    .form_label{
+        font-weight:bold;
+    }
+    #id_description{
+        float:left;
+    }
+    div.errors{
+        float:right;
+    }
+    div#errors {
+        color:red;
+        font-weight:bold;
+        text-align:left;
+        margin-left:25px;
+        margin-bottom:30px;
+    }
+
+    ul.errors {
+        color:red;
+        margin-left:30px;
+    }
+
+    ul.errorlist {
+        margin-left:45px;
+        font-weight:normal;
+        color:red;
+    }
+    td{
+        padding:6px;
+        margin: 6px;
+    }
+    td#save{
+        text-align:center;
+    }
+    td#public_option{
+        border-style:dashed;
+        border-color:#D9D9D9;
+        border-width:1px;
+        background-color:#E8E8E8;
+    }
+    #id_isPublic{
+        float:right;
+        margin: 6px;
+    }
+    th#label_column{
+        width:400px;
+    }
+    th#field_column{
+        width:600px;
+    }
+    input#id_title{
+        width:100%;
+        float:left;
+    }
+    textarea{
+        background-color: #ffffff;
+        border: 1px solid #d4d4d4;
+        font-size: 12px;
+        font-weight:2;
+        line-height:15px;
+        padding:1px;
+        width:100%;
+    }
+    p{
+        text-align:center;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+{% if session.search or form.id %}
+<div id="save_form">
+    <form method="post" action=".">{% csrf_token %}
+        <table>
+        <th id="label_column"></th>
+        <th id="field_column"></th>
+            <tr>
+                <td><span class="form_label">{{ form.title.label }}</span>
+                <br>
+                A brief description of the search. Maximum 300 characters.
+                </td>
+                <td>{{ form.title }}</td>
+            </tr>
+            <tr>
+                <td><span class="form_label">{{ form.description.label }}</span>
+                     <br>
+                    A more in depth description of the search. Maximum 5000 characters.
+                </td>
+                <td>{{ form.description }}</td>
+            </tr>
+            <tr>
+                <td id="public_option" colspan="2"><span class="form_label">{{ form.isPublic.label }}</span>{{ form.isPublic }}
+                    <br>
+                    Allows other people to view the search, but not to edit anything about it. Use this to share searches with a link to other people.
+                    By default, all searches are private and inaccessible to others.
+                </td>
+            </tr>
+            <tr>
+                <td id="save" colspan="2"><input type="submit" value="Save" /></td>
+            </tr>
+        </table>
+    </form>
+</div>
+<div id="errors">{{ form.errors }}</div>
+{% else %}
+<p>There is no search to save.</p>
+{% endif %}
+{% endblock %}

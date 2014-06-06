@@ -1,0 +1,1023 @@
+{% extends 'search_base.html' %}
+{% load search_extras %}
+
+{% block head %}
+        <style>
+            #content {
+                margin-left:auto;
+                margin-right:auto;
+                width:730px;
+                min-width:530px;
+            }
+
+            #canvas_container {
+                height: 472px;
+                margin: 15px;
+                margin-left:auto;
+                margin-right:auto;
+                min-height:482px;
+                width: 650px;
+            }
+
+            #canvas {
+                margin-left:auto;
+                margin-right:auto;
+                width: 560px;
+                height: 200px;
+            }
+            
+            #histoCanvas {
+                width: 300px;
+                height: 100%;
+            }
+
+            #histoCanvas svg {
+                margin:0;
+                padding:0;
+            }
+
+            div #error_list {
+                margin-left:auto;
+                margin-right:auto;
+                width: 440px;
+            }
+
+            #ajax_progress {
+                padding-top:10%;
+                width: 100%;
+                height: 90%;
+                text-align:center;
+            }
+
+            #ajax_progress div{
+                margin-left:auto;
+                margin-right:auto;
+                width: 350px;
+                height: 350px;
+                border:1px dotted black;
+            }
+
+            #ajax_progress img {
+                margin-top:40%;
+            }
+
+            #ajax_failed {
+                padding-top:10%;
+                width: 100%;
+                height: 90%;
+                text-align:center;
+            }
+
+            #ajax_failed div{
+                margin-left:auto;
+                margin-right:auto;
+                width: 350px;
+                height: 350px;
+                border:1px dotted black;
+            }
+
+            #ajax_failed img {
+                margin-top:33%;
+            }
+
+            #controls {
+                margin-top:10px;
+                /* Reset alignment to compensate for 'text-align:center': */
+                text-align: left;
+                /* Specify the width of the element. This should be the same
+                    as 'body min-width': */
+                width:20em;
+                /* Set left and right margins to auto, thus centering the 
+                    element in the containing (body) tag: */
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            #button-plot {
+                margin-top:15px;
+            }
+
+            input {
+                margin-right:10px;
+                height:1.71em;
+                padding-top:.5em;
+                line-height:2.15em;
+            }
+
+            #binDetails {
+                position:absolute;
+                top:9em;
+                left:30px;
+                float:left;
+                background-color:grey;
+                font-size:10;
+                color:white;
+                border: 1px solid #aaaaaa;
+                line-height:10px;
+            }
+
+            #binDetails td {
+                color:black;
+                line-height:1em;
+                padding:.5em;
+                margin:3px;
+                width:6em;
+            }
+
+            td.dev, td.y {
+                padding-left:20px;
+            }
+
+            #binDetails table {
+                margin: 0px;
+                background-color:grey;
+                border: 2px solid black;
+                width:20em;
+            }
+
+            td {
+                white-space : nowrap;
+            }
+
+            .label {
+                margin-right:10px;
+                margin-left:10px;
+                font-weight:bold;
+                text-align:left;
+                padding-right: 10px;
+            }
+
+            .col2 {
+                margin-left:30px;
+            }
+
+            .field {
+                text-align:left;
+                margin: 5px;
+            }
+
+            #id_residue, #id_reference, #id_background_color, #id_hash_color, #id_plot_hue, #id_graph_color, #id_text_color {
+                width:7.5em;
+            }
+
+            #id_x, #id_y, #id_xBin, #id_height{
+                width:9.75em;
+                margin-right: 5px;
+            }
+
+            #id_x1, #id_y1, #id_yBin, #id_width {
+                width:9.75em;
+            }
+
+            #buttons {
+                text-align:center;
+            }
+
+            #advanced {
+                border-top: 1px solid black;
+                border-left: 1px solid black;
+                border-right: 1px solid black;
+                border-bottom: 1px solid black;
+            }
+
+            .header {
+                background-color:#3a76f1;
+                color:white;
+                font-weight:bold;
+                padding-left:10px;
+            }
+            tr.spacer {
+                height:10px;
+            }
+
+            /*==================================
+            remove default focus style
+            ====================================*/
+            :focus {outline:none;}
+            .js ul.newList {left:-9999px;}
+
+            /*======================================
+            windows xp style - div that contains the 
+            <select> has been given an id of 
+            (for the purposes of this example
+            ========================================*/
+             .newListSelected {
+                background:#FFF url({{MEDIA_URL}}/images/dropdown.gif) no-repeat scroll 155px 1px; 
+                border:1px solid #d4d4d4;
+                color:#000;
+                height:2.21em;
+                padding:0 0 0 .3em;
+                margin-right:10px;
+                
+                }
+             .newListSelected div {
+                display:block;
+                font-size:.85em;
+                line-height:2.2em;
+                padding-left:3px;
+                text-align:left !important;
+                }
+             ul.newList {
+                background:#fff;
+                border:6px solid #999999;
+                color:#000;
+                font-size: 0.85em;
+                height:auto;
+                left:0;
+                list-style:none;
+                overflow:auto;
+                position:absolute;
+                text-align:left !important;
+                top:22px;
+                z-index:9999;
+                }
+             ul.newList li {
+                border-bottom: 1px solid #cccccc;
+                height:2em;
+                line-height:1em;
+                padding-left:5px;
+                padding-right:5px;
+                }
+             .hiLite {background:#316ac5!important; color:#fff!important;}
+             .newListHover {background:#ccc!important; color:#000!important; cursor:default;}
+             .newListSelHover {cursor:default;}
+             .newListSelHover,  .newListSelFocus {background-position:auto;}
+             div.selectedTxt {
+                width:8.75em;
+                height:100%;
+             }
+             
+             
+             
+             .choices {
+                display:none;
+             }
+             
+             .choices, .choices ul {
+                text-align:left;
+                list-style:none;
+             }
+             
+             .choices li {
+                border-bottom:1px solid #909090;
+                cursor:pointer;
+                padding-left:10px;
+                font-size:12px;
+             }
+             
+             .choices li:hover {background-color:#cccccc;}
+             
+             .sidechain_properties ul {
+                float:left;
+                width:120px;
+             }
+             
+             .sidechain_properties ul li {
+                border-left:1px solid #909090;
+             }
+             
+             .choice_input {
+                border:1px solid #D4D4D4;
+                width:8em;
+                height:2.62em;
+                font-size:0.85em;
+                line-height:2.2em;
+                padding-left:3px;
+             }
+             
+             #id_attribute, #id_xProperty, #id_yProperty {
+                display:none;
+             }
+        </style>
+
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/pgd.svg.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jqbrowser.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.stylish-select.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
+        <script type="text/javascript">
+            var bins = {};
+            var selected_bin = undefined;
+            var stats = {};
+            var contentText = 'Mouse over a bin in the plot to see the relevent data.';
+            var histoText = 'Click on a bin to see a histogram of it\'s data.';
+            var xBin = {{xBin|default:'""'}};
+            var yBin = {{yBin|default:'""'}};
+            var xMin = -180;
+            var xMax = 180;
+            var yMin = -180;
+            var yMax = 180;
+            var xProperty = "{{xProperty}}";
+            var yProperty = "{{yProperty}}";
+            var stat_field = false;
+            var is_IE = false;
+            
+            /**
+             * convert a field name into a formatted label.  do this by looking
+             * up the matching option for the choice lists.  this works for
+             * everything except sidechain labels, which need a bit more formatting
+             */
+            function field_to_label(field){
+                label =  $('.choices li[key='+field+']').html();
+                if (field.substring(0,9)=='sidechain') {
+                    label = field.substring(10,13)+": " + label
+                }
+                return label;
+            }
+            
+            $(document).ready(function(){
+                // IE checks - check different things not supported by IE to detect them
+                if($.jqbrowser.msie()){
+                    is_IE = true;
+                }
+
+                $('div#binDetails').hide();
+                $('div#histoG').hide();
+                $('#ajax_failed').hide();
+                $('#canvas_container').qtip({
+                        position:{
+                            adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                    x: 50,
+                                    y: 12,
+                                    resize: true
+                                    },
+                            corner: {
+                                    target: 'leftTop',
+                                    tooltip: 'rightTop'
+                                    },
+                            target:$('#canvas_container')
+                                 },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#666666'},
+                              width: 314,
+                              border:{ 
+                                     width: 6, 
+                                     color: '#909090'
+                                     }
+                                    
+                               },
+                               
+                        show: false,
+                        hide: false,
+                        content:{
+                                prerender: false,//This kills pageload times if enabled
+                                text: contentText,
+                                title:  {
+                                        text: 'Bin Details'
+                                        }
+                                }
+                            });
+                $('#buttons').qtip({
+                        position:{
+                            adjust: { //Make the tooltip avoid going outside the window due to browser resizing
+                                        x: 90,
+                                        y: -275,
+                                        resize: true
+                                    },
+                            corner: {
+                                    target: 'leftTop',
+                                    tooltip: 'rightTop'
+                                    },
+                            target:$('#buttons')
+                                 },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              'padding-left':1,
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#666666'},
+                              width: 314,
+                              border:{ 
+                                     width: 6, 
+                                     color: '#909090'
+                                     }
+                               },
+                        show: false,
+                        hide: false,
+                        content: {
+                            title: { text: 'Histogram'},
+                            text: histoText
+                        }
+                            }); 
+                $('#canvas_container').qtip('show');
+                $('#buttons').qtip('hide');
+                $('#button-plot').click(function (evt) {
+
+                    // update details popup with new parameters
+                    xBin = parseFloat($('input#id_xBin').attr('value'));
+                    yBin = parseFloat($('input#id_yBin').attr('value'));
+                    xProperty = $('#xProperty').html();
+                    yProperty = $('#yProperty').html();
+                    $('#x_property_label').html(xProperty);
+                    $('#y_property_label').html(yProperty);
+                    update_svg();
+                });
+
+                $('select').sSelect();
+
+                $('#button-save').click(function (evt) {
+                    $("form").attr('action','{{SITE_ROOT}}/search/plot/png/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
+                });
+
+                $('#button-data').click(function (evt) {
+                    $("form").attr('action','{{SITE_ROOT}}/search/plot/dump/').submit().attr('action','{{SITE_ROOT}}/search/plot/svg/')
+                });
+
+                $('#extra').hide()
+                $('#extra_toggle').click(function(){
+                    $('#extra').toggle();
+                    if ($(this).html()=='Extra Options &gt;&gt;') {
+                        $(this).html('Extra Options &lt;&lt;');
+                    }else{
+                        $(this).html('Extra Options &gt;&gt;');
+                    }
+                })
+
+                $('#advanced').hide()
+                $('#advanced_toggle').click(function(){
+                    $('#advanced').toggle();
+                    if ($(this).html()=='Colors/Dimensions &gt;&gt;') {
+                        $(this).html('Colors/Dimensions &lt;&lt;');
+                    }else{
+                        $(this).html('Colors/Dimensions &gt;&gt;');
+                    }
+                })
+
+
+                
+
+                update_svg();
+                
+                // properties used by all property selection dialogs
+                choices_qtip = {
+                        position:{
+                                target:"mouse",
+                                adjust:{y:15},
+                                corner: {target: 'center', tooltip: 'bottomMiddle'}
+                            },
+                        style:{ //Style the qtip to look like the page
+                              color: 'black',
+                              padding:0,
+                              textAlign: 'center',
+                              title: { color: 'white', background: '#666666'},
+                              width: { min: 240, max: 440 },
+                              border:{ 
+                                     width: 6, 
+                                     color: '#909090'
+                                     }
+                               },
+                        content:{text: $('#attribute_choices')},
+                        hide:{fixed:true, delay:1000},
+                        show:{delay:0, when:{event:"click"}}
+                    }
+                
+                $('#id_attribute').change(function(){
+                    if (label=='Observations') {
+                        $('#residue_attribute').css({'visibility': 'hidden'});
+                    } else {
+                        $('#residue_attribute').css({'visibility': 'visible'});
+                    }
+                }).each(function(){
+                        val = $(this).val();
+                        label = field_to_label(val);
+                        $('#attribute_field').html(label);
+                });
+                
+                $('#id_xProperty').change(function (){
+                        _default = get_defaults($(this).val());
+                        $('#id_x').val(_default['min']);
+                        $('#id_x1').val(_default['max']);
+                        $('#id_xBin').val(_default['stepsize']);
+                        })
+                    .each(function(){
+                        val = $(this).val();
+                        label = field_to_label(val);
+                        $('#xProperty').html(label);
+                });
+
+                $('#id_yProperty').change(function (){
+                    _default = get_defaults($(this).val());
+                    $('#id_y').val(_default['min']);
+                    $('#id_y1').val(_default['max']);
+                    $('#id_yBin').val(_default['stepsize']);
+                }).each(function(){
+                        val = $(this).val();
+                        label = field_to_label(val);
+                        $('#yProperty').html(label);
+                });
+                
+                var choice_target;
+                var choice_input;
+                
+                $('#attribute_field')
+                    .qtip(choices_qtip)
+                    .click(function(){
+                        choice_target=$(this);
+                        choice_input=$("#id_attribute");
+                        });
+                
+                choices_qtip['content']['text'] = $('#property_choices');
+                $('#xProperty')
+                    .qtip(choices_qtip)
+                    .click(function(){
+                        choice_target=$(this);
+                        choice_input=$("#id_xProperty");
+                        });
+                    
+                $('#yProperty')
+                    .qtip(choices_qtip)
+                    .click(function(){
+                        choice_target=$(this);
+                        choice_input=$("#id_yProperty");
+                        });
+                
+                    
+                // add qtip to sidechain choice in main field selection dialog
+                choices_qtip['content']['text'] = $('#aa_choices');
+                $('.choices .sidechain').qtip(choices_qtip);
+                
+                // mouseover clears all other menus.  easiest way to determine
+                // if another menu has focus
+                $('.attribute_choices').mouseover(function(){
+                   $('.qtip .sidechain, .qtip .aa_choices li').each(function(){
+                        $this = $(this);
+                        if($this.data("qtip")!=undefined){$this.qtip("hide")}
+                    });
+                });
+                $('.aa_choices').mouseover(function(){
+                    $('.qtip .aa_choices li').each(function(){
+                        $this = $(this);
+                        if($this.data("qtip")!=undefined){$this.qtip("hide")}
+                    });
+                });
+                
+                // mouseover on content
+                $('#content').mouseover(function(){
+                    $('#test, .qtip .sidechain, .qtip .aa_choices li').each(function(){
+                        $this = $(this);
+                        if($this.data("qtip")!=undefined){$this.qtip("hide")}
+                    });
+                });
+                
+                // add qtips to AA choices menu that pops up for drilling down
+                // to sidechain properties
+                {% for aa in aa_choices%}
+                    choices_qtip['content']['text'] = $("#{{aa}}");
+                    $('.aa_choices li.{{aa}}').qtip(choices_qtip);
+                {% endfor %}
+                
+                // add click handler to all fields including sidechain fields
+                // this will set the value and clear the menus
+                $('.property_choices li, .attribute_choices li').not('.sidechain').click(function(){
+                    key = $(this).attr("key");
+                    label = $(this).html();
+                    $('.qtip .sidechain, .qtip .aa_choices li').qtip("hide");
+                    choice_target
+                        .html(label)
+                        .qtip("hide");
+                    choice_input.val(key).change();
+                });
+                $('.sidechain_properties li').click(function(){
+                    key = $(this).attr("key");
+                    label = this.parentNode.parentNode.id + ":" + $(this).html();
+                    $('.qtip .sidechain, .qtip .aa_choices li').qtip("hide");
+                    choice_target
+                        .html(label)
+                        .qtip("hide");
+                    choice_input.val(key).change();
+                });
+                
+            });
+
+            var DEFAULTS =  {% autoescape off %}{{defaults}}{% endautoescape %};
+            function get_defaults(field) {
+                _defaults = DEFAULTS[field];
+                if (_defaults == undefined) {
+                    return {"stepsize": "", "max": "", "min": ""};
+                }
+                return _defaults;
+            }
+
+            /*
+               process form data and submit via ajax
+            */
+            function update_svg() {
+                // gather data from form
+                $form = $('#plotform');
+                $inputs = $form.find(' input, select');
+                    args = {};
+                    for (i=0; i<$inputs.length; i++) {
+                        input = $inputs.get(i);
+                        if (input.id.slice(0, 3) == 'id_') {
+                            args[input.id.slice(3)]= $(input).val();
+                        } else if (input.type == 'hidden') {
+                            args['csrfmiddlewaretoken'] = $(input).val();
+                        } else {
+                            args[input.id]= $(input).val();
+                        }
+                    }
+                // update statfield so details renders correctly
+                stat_field = ($('#id_attribute').val() != 'Observations');
+
+                //clear errors and graph
+                $('#errors').empty();
+
+                //clear graph
+                $('#canvas')
+                    .hide()
+                    .empty()
+                    .removeClass('hasSVG');
+                $('#ajax_failed').hide();
+                $('#ajax_progress').show();
+
+                // histogram
+                histoT = $('#attribute_field').html()
+                histoX = $('#id_xProperty').val();
+                histoY = $('#id_yProperty').val();
+                histoZ = $('#id_attribute').val();
+                histoXr = $('tr#xaxis td#residue_xProperty div.selectedTxt').html();if(histoXr=='i'){histoXr = 0};
+                histoYr = $('tr#yaxis td#residue_yProperty div.selectedTxt').html();if(histoYr=='i'){histoYr = 0};
+                histoZr = $('#id_residue_attribute').val();
+                $('#buttons').qtip('hide');
+                
+                // submit
+                $.post('{{SITE_ROOT}}/search/plot/svg/render/',args, process_svg_data, "json");
+            }
+
+            function process_svg_data(data) {
+                if (data == "-1" ){
+                    $('#ajax_progress').hide();
+                    $('#ajax_failed').show();
+                    return;
+                }
+                
+                if (data['errors'] != undefined) {
+                    process_form_errors(data['errors']);
+                    return;
+                }
+
+                // deactivate spinner
+                $('#ajax_progress').hide();
+                $('#canvas').show();
+                selected_bin = undefined;
+
+                xBin = data['xBin'];
+                yBin = data['yBin'];
+                xMin = data['x'];
+                xMax = data['x1'];
+                yMin = data['y'];
+                yMax = data['y1'];
+
+                $('#id_x').val(data['x']);
+                $('#id_x1').val(data['x1']);
+                $('#id_xBin').val(xBin);
+                $('#id_y').val(data['y']);
+                $('#id_y1').val(data['y1']);
+                $('#id_yBin').val(yBin);
+
+                // process graph
+                stats = {};
+                bins = {};
+                var paper = Raphael("canvas", 700, 482);
+                font = paper.getFont("DejaVu");
+                svg = data['svg'];
+                render_svg(svg, paper, font, process_bin_data);
+            }
+
+            function process_bin_data(rect, svg_rect) {
+                /*
+                 processes additional data passed along with bins.  The data
+                 includes avg, stddev, count.
+                 @param rect - Raphael rectangle object
+                 @param data - additional data
+                */
+                data = svg_rect['data'];
+                 rect[0].onmouseover = function(){
+                    if (is_IE) {
+                        bin_mouseover(this.id);
+                    } else {
+                        bin_mouseover(this.getAttribute('x')+'-'+this.getAttribute('y'));
+                    }
+                };
+
+                rect[0].onclick = function(){
+                    if (is_IE) {
+                        bin_click(this.id);
+                    } else {
+                        bin_click(this.getAttribute('x')+'-'+this.getAttribute('y'));
+                    }
+                };
+
+                //add static fields
+                if (is_IE){
+                    key = svg_rect[0]+'-'+svg_rect[1];
+                    rect[0].id = key;
+                } else {
+                    key = rect[0].getAttribute('x')+'-'+rect[0].getAttribute('y');
+                }
+                stats[key] = {
+                    'observations':data[0],
+                    'bin': [data[1][0],data[1][1]],
+                    'avg': data[2].toFixed(3),
+                    'dev': data[3].toFixed(3)
+                };
+                bins[key] = rect;
+            }
+
+            function process_form_errors(errors) {
+                $errors = $('#errors')
+
+                // clear existing errors
+                $errors.empty();
+
+                for (key in errors) {
+                    error = errors[key]
+                    html = "<li><strong>"+ error[0] + " - </strong>" + error[1] + "</li>";
+                    $errors.append(html);
+                }
+            }
+
+            function bin_click(key) {
+                /*
+                 handler for clicked bins.  This selects a bin allowing actions
+                 such as displaying a histogram.  this locks the bin in place
+                 preventing mouseover actions
+                */
+                old_selected = selected_bin;
+                // show new bin only if it wasn't the same bin
+                if (key != selected_bin) {
+                    bin = bins[key];
+                    bin.attr({'stroke-width':1, stroke:'#FF0000'});
+                    selected_bin = key;
+                    update_stats(key)
+                    histoQtip();
+                    field_stats = stats[key];
+                } else {
+                    selected_bin = undefined;
+                }
+
+                // deselect old bin if there was one
+                if (old_selected != undefined) {
+                    bins[old_selected].attr({'stroke-width':0, stroke:'#000000'});
+                }
+            }
+
+            function bin_mouseover(key){
+                if (selected_bin == undefined) {
+                    update_stats(key);
+                }
+            }
+
+            function update_stats(key) {
+                field_stats = stats[key];
+                // set static properties
+                X = xMin+field_stats['bin'][0]*xBin
+                Xm = xMin+field_stats['bin'][0]*xBin+xBin;
+                if (xMin < xMax) {
+                    if (Xm > xMax){Xm = xMax;} //adjust if it overruns max value
+                } else if (Xm > 180) {
+                    Xm = Xm - 360;
+                    X = X - 360
+                } 
+                
+                $('#stat_xattribute td.x').html(""+precision(X, xProperty));
+                $('#stat_xattribute td.y').html(""+precision(Xm, xProperty));
+                
+                // y
+                Y = yMin+field_stats['bin'][1]*yBin
+                Ym = yMin+field_stats['bin'][1]*yBin+yBin;
+                if (yMin < yMax) {
+                    if (Ym > yMax){Ym = yMax;} //adjust if it overruns max value
+                } else if (Ym > 180) {
+                    Ym = Ym - 360;
+                    Y = Y - 360
+                }
+            
+                $('#stat_yattribute td.x').html(""+precision(Y, yProperty));
+                $('#stat_yattribute td.y').html(""+precision(Ym, yProperty));
+                $('#stat_observations').html(field_stats['observations']);
+                $('#stat_field td.avg').html(field_stats['avg']);
+                $('#stat_field td.dev').html(field_stats['dev']);
+
+                contentText=$('div#binDetails').html();
+                $('div.qtip').qtip('api').updateContent(contentText);
+            }
+
+            function histoQtip() {
+                if(histoZ!='Observations'){
+                    $('#buttons').qtip('api').updateContent(' ')
+                    $('#buttons').qtip('api').updateContent($('#histo_progress'))
+                    $('#buttons').qtip('show');
+                    histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr);
+                }
+                else{
+                    $('#buttons').qtip('hide');
+                }
+            }
+        
+            function histo_svg(X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr) {
+                $('#histoCanvas').empty();
+                var csrf = $('#csrfmiddlewaretoken').val();
+                dict = {'x': X,
+                        'x1': Xm,
+                        'y': Y,
+                        'y1': Ym,
+                        'xRes': histoX,
+                        'yRes': histoY,
+                        'zRes': histoZ,
+                        'xResNum': histoXr,
+                        'yResNum': histoYr,
+                        'zResNum': histoZr,
+                        'csrfmiddlewaretoken':csrf}
+                $.post('{{SITE_ROOT}}/search/histogram/render/', dict, process_histo_svg, "json");
+            }
+        
+            function process_histo_svg(data) {
+                // clear canvas again just to make sure, the user
+                // may have clicked multiple times resulting many requests
+                // the last request to finish will be displayed
+                $('#histoCanvas').empty();
+                // process graph
+                var paper = Raphael("histoCanvas", 290, 210);
+                font = paper.getFont("DejaVu");
+                svg = data['svg'];
+                render_svg(svg, paper, font, process_histo_bars);
+                
+                // update qtip
+                histoText=' ';
+                $('#buttons').qtip('api').updateContent(histoText);
+                $('#buttons').qtip('api').updateTitle('Histogram of ' + histoT);
+                $('#buttons').qtip('api').updateContent($('#histoCanvas'))
+                
+            }
+            function process_histo_bars(rect, svg_rect) {
+                //Code to deal with the data that comes from clicking on the individual bars would go here (if needed).
+            }
+
+            function precision(value, field) {
+                if (value || value == 0){
+                    if (field=='CO' || field=='C<sup>-1</sup>N' || field=='NC<sup>&alpha;</sup>' || field=='C<sup>&alpha;</sup>C<sup>&beta;</sup>' || field=='C<sup>&alpha;</sup>C') {
+                        return value.toFixed(3);
+                    }
+                    return value.toFixed(1);
+                }
+                return '--';
+            }
+
+            function bin_mouseout(){
+                $('div#binDetails').hide();
+            }
+            
+        </script>
+{% endblock %}
+{% block content %}
+    <div id="canvas_container">
+        <div id="ajax_progress">
+            <div>
+            <img src="{{MEDIA_URL}}/images/ajax-loader.gif"/>
+            <h1>Generating Plot</h1>
+            </div>
+        </div>
+        <div id="ajax_failed">
+            <div>
+            <img src="{{MEDIA_URL}}/images/ajax-error.png"/>
+            <h1>Server Returned an Error.</h1>
+            </div>
+        </div>
+        <div id="canvas"></div>
+    </div>
+    <div id="error_list">
+        <ul id="errors"></ul>
+    </div>
+    <div id="buttons">
+        <button id="button-plot">Re-Plot</button>
+        <button id="button-save">Save Plot Image</button>
+        <button id="button-data">Save Plot Data</button>
+    </div>
+    <form id="plotform" name="plot" method="post">{% csrf_token %}
+        <table id="controls">
+            <tbody>
+            <tr><td class="header" colspan="100%">General</td></tr>
+            <tr>
+                <td class="label">Plotted Attribute</td>
+                {% autoescape off %}
+                <td id="attribute">{{form.attribute}}<div id="attribute_field" class="choice_input"></div></td>
+                <td id="residue_attribute">{{form.residue_attribute}}</td>
+                {% endautoescape %}
+                <td class="label col2">Bin X, Y</td>
+                <td>{{form.xBin}}{{form.yBin}}</td>
+            </tr>
+            <tr id="xaxis">
+                <td class="label">X Axis</td>
+                {% autoescape off %}
+                <td>{{form.xProperty}}<div id="xProperty" class="choice_input"></div></td>
+                <td id="residue_xProperty">{{form.residue_xproperty}}</td>
+                {% endautoescape %}
+                <td class="label col2">X Min, Max</td>
+                <td>{{form.x}}{{form.x1}}</td>
+            </tr>
+            <tr id="yaxis">
+                <td class="label">Y Axis</td>
+                {% autoescape off %}
+                <td>{{form.yProperty}}<div id="yProperty" class="choice_input"></div></td>
+                <td id="residue_yProperty">{{form.residue_yproperty}}</td>
+                {% endautoescape %}
+                <td class="label col2">Y Min, Max</td>
+                <td>{{form.y}}{{form.y1}}</td>
+            </tr>
+        </tbody>
+
+                <tr class="spacer"/>
+                <tr><td id="extra_toggle" class="header" colspan="100%">Extra Options &gt;&gt;</td></tr>
+                <tbody id="extra">
+                    <tr>
+                        <td class="label col2">Reference</td>
+                        <td>{{form.reference}}</td>
+                        <td class="label col2">Sigma Value</td>
+                        <td>{{form.sigmaVal}}</td>
+                    </tr>
+                </tbody>
+
+
+        <tr class="spacer"/>
+        <tr><td id="advanced_toggle" class="header" colspan="100%">Colors/Dimensions &gt;&gt;</td></tr>
+        <tbody id="advanced">
+                <tr>
+                    <td class="label">Image Background</td>
+                    <td>{{form.background_color}}</td>
+                    <td class="label">Graph Background</td>
+                    <td>{{form.graph_color}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Text Color</td>
+                    <td>{{form.text_color}}</td>
+                    <td class="label">Bin Shading</td>
+                    <td>{{form.plot_hue}}</td>
+                </tr>
+                <tr>
+                    <td class="label">Height/Width</td>
+                    <td>{{form.height}}{{form.width}}</td>
+                    <td class="label">Hash Color</td>
+                    <td>{{form.hash_color}}</td>
+                </tr>
+                </tbody>
+        </table>
+    </form>
+    <div id="binDetails">
+        <table>
+            <tr id="stat_xattribute"><td id="x_property_label" class="label">{{xProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+            <tr id="stat_yattribute"><td id="y_property_label" class="label">{{yProperty}}:</td><td class="x"></td><td class="y"></td></tr>
+            <tr><td class="label">Observations:</td><td id="stat_observations"></td></tr>
+            <tr id="stat_field"><td class="label">Avg{{stat_field|capfirst}}:</td><td class="avg"></td><td class="dev"></td></tr>
+        </table>
+    </div>
+    
+    <div id="histoG">
+        <div id="histo_progress">
+            <div>
+            <img src="{{MEDIA_URL}}/images/ajax-loader.gif"/>
+            <h5>Loading Histogram</h5>
+            </div>
+        </div>
+        <div id="histoCanvas"></div>
+    </div>
+    <ul id="attribute_choices" class="choices attribute_choices">
+        {% for key,display in attribute_choices%}
+            <li key="{{key}}">{{display|safe}}</li>
+        {% endfor %}
+        <li class="sidechain">Sidechain</li>
+    </ul>
+
+    <ul id="property_choices" class="choices property_choices">
+        {% for key,display in property_choices%}
+            <li key="{{key}}">{{display|safe}}</li>
+        {% endfor %}
+        <li class="sidechain">Sidechain</li>
+    </ul>
+    
+    <ul id="aa_choices" class="choices aa_choices">
+        {%for aa in aa_choices%}<li class="{{aa}}">{{aa}}</li>{%endfor%}
+    </ul>
+    
+    {% for aa in aa_choices %}
+    <div id="{{aa}}" class="sidechain_properties choices">
+        <ul>
+            {% for field in sidechain_lengths|index:aa %}
+            <li key="sidechain_{{aa}}__{{field}}">
+                {{field|atom}}
+            </li>
+            {% endfor %}
+        </ul>
+        <ul>
+            {% for field in sidechain_angles|index:aa %}
+            <li key="sidechain_{{aa}}__{{field}}">
+                {{field|atom}}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% endfor %}
+
+{% endblock %}

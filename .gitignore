@@ -1,0 +1,25 @@
+settings.py
+*.pyc
+*.key
+*.pem
+*.rej
+*.orig
+*~
+*.bak
+*.old
+*.dump
+*.tsv
+*.log
+*.patch
+*.diff
+*.swp
+*.kpf
+*.idea
+
+# files/dirs created by Fabric and or VirtualEnv
+bin
+dependencies
+include
+lib
+pysqlite2-doc
+build
