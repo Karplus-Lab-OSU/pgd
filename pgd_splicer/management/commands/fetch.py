@@ -12,7 +12,6 @@ import time
 from ftplib import FTP, error_perm
 from datetime import datetime
 
-
 class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('--url',

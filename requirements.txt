@@ -7,3 +7,4 @@ MySQL-python
 simplejson
 numpy
 cairocffi
+pytz

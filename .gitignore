@@ -15,6 +15,7 @@ settings.py
 *.swp
 *.kpf
 *.idea
+*.gz
 
 # files/dirs created by Fabric and or VirtualEnv
 bin

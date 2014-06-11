@@ -7,6 +7,7 @@ from pgd_core.models import *
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 from search.SearchForm import SearchSyntaxField
+import pytz
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -42,7 +43,7 @@ class SearchParserValidation(unittest.TestCase):
         protein.resolution      = i + .01
         protein.rfactor         = i + .02
         protein.rfree           = i + .03
-        protein.pdb_date        = datetime.date(2001,1,1)
+        protein.pdb_date        = datetime.datetime(2001,1,1, tzinfo=pytz.utc)
         protein.__dict__.update(kwargs)
         protein.save()
         return protein
