@@ -8,3 +8,4 @@ simplejson
 numpy
 cairocffi
 pytz
+pyamf
