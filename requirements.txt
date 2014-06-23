@@ -1,7 +1,7 @@
 biopython
 django-registration
 south
-django==1.4
+django==1.6
 selenium
 MySQL-python
 simplejson
