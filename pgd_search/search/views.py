@@ -1,5 +1,6 @@
 import math
 import re
+import pickle
 
 from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext
@@ -7,7 +8,7 @@ from django.shortcuts import render_to_response, redirect
 from django.conf import settings
 from django.forms.util import ErrorList
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
-from django.utils import simplejson
+import json
 from datetime import datetime
 from pgd_core.models import Protein
 from pgd_search.models import Search, Search_code
@@ -17,12 +18,13 @@ from pgd_constants import AA_CHOICES, SS_CHOICES
 from pgd_search.models import saveSearchForm
 from pgd_splicer.chi import CHI_MAP, PROTEIN_ORDER
 from pgd_splicer.sidechain import *
+from django.core import serializers
 
 #This might be a big faux pas
 from pgd_splicer.models import pdb_select_settings
 
-json_sidechain_lengths_lookup = simplejson.dumps(bond_lengths_string_dict)
-json_sidechain_angles_lookup = simplejson.dumps(bond_angles_string_dict)
+json_sidechain_lengths_lookup = json.dumps(bond_lengths_string_dict)
+json_sidechain_angles_lookup = json.dumps(bond_angles_string_dict)
 
 
 
@@ -51,8 +53,9 @@ def search(request):
             
             else:
                 #store search in session
+                
                 search.dataset_version = pdb_select_settings.DATA_VERSION
-                request.session['search'] = search_object
+                request.session['search'] = pickle.dumps(search_object)
                 return redirect('%s/search/results/' % settings.SITE_ROOT) # Redirect after POST
         
         # package aa_choices and ss_choices
@@ -137,7 +140,7 @@ def editSearch(request, search_id=None):
     #else use the search in the session if it exists
     else:
         try:
-            search = request.session['search']
+            search = pickle.loads(request.session['search'])
         except KeyError:
             search = None
 
@@ -270,7 +273,7 @@ def saveSearch(request,search_id=None):
                 if request.user!=search.user:
                     return HttpResponse("<p style='text-align:center;'>You don't have access to this search</p>")
             else:
-                search = request.session['search']
+                search = pickle.loads(request.session['search'])
 
             data = form.cleaned_data
             search.title = data['title']

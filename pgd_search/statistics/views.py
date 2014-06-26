@@ -1,5 +1,6 @@
-import simplejson
+import json
 import time
+import pickle
 from threading import Thread
 
 from django.db.models import Count
@@ -86,7 +87,7 @@ def search_statistics_data(request):
     """
     returns ajax'ified statistics data for the current search
     """
-    search = request.session['search']
+    search = pickle.loads(request.session['search'])
     try:        
         index = int(request.GET['i']) if request.GET.has_key('i') else 0
         stats = calculate_statistics(search.querySet(), index)
@@ -98,7 +99,7 @@ def search_statistics_data(request):
         traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
         raise e
-    return HttpResponse(simplejson.dumps(stats))
+    return HttpResponse(json.dumps(stats))
 
 
 def search_statistics_aa_data(request, aa):
@@ -117,7 +118,7 @@ def search_statistics_aa_data(request, aa):
         traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
 
         raise e
-    return HttpResponse(simplejson.dumps(stats))
+    return HttpResponse(json.dumps(stats))
 
 
 def calculate_statistics(queryset, iIndex=0):

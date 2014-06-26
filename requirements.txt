@@ -4,7 +4,6 @@ south
 django==1.6
 selenium
 MySQL-python
-simplejson
 numpy
 cairocffi
 pytz

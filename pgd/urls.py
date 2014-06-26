@@ -17,7 +17,7 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     #(r'^admin/(.*)', admin.site.root),
-    (r'^accounts/', include('registration.urls')),
+    (r'^accounts/', include('registration.backends.default.urls')),
     (r'^search/', include('pgd_search.urls')),
 
     # Static pages:
