@@ -1,4 +1,4 @@
-from django.http import HttpResponse
+from django.http import StreamingHttpResponse
 from DataDump import Dump
 import pickle
 
@@ -8,7 +8,7 @@ def dataDump(request):
     and return it to the user as a download
     """
     dump = Dump(pickle.loads(request.session['search']))
-    response = HttpResponse(dump, mimetype="text/tab-separated-values")
+    response = StreamingHttpResponse(dump, content_type="text/tab-separated-values")
     response['Content-Disposition'] = 'attachment; filename="data.tsv"'
 
     return response
