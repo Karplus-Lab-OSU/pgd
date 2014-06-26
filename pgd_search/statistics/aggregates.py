@@ -31,7 +31,6 @@ class PGDAggregate(Aggregate):
         # implementation of this aggregate
         query.aggregates[alias] = aggregate
         self.aggregate = aggregate
-    
 
 class DirectionalStdDev(PGDAggregate):
     alias = 'DirectionalStdDev'

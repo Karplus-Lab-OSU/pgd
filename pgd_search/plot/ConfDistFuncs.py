@@ -352,8 +352,8 @@ class ConfDistPlot():
 
         cn = connections['default']
         qn = SQLCompiler(annotated_query.query, cn, 'default').quote_name_unless_alias
-        sortx_sql = sortx.aggregate.as_sql(qn, cn)
-        sorty_sql = sorty.aggregate.as_sql(qn, cn)
+        sortx_sql = sortx.aggregate.as_sql(qn, cn)[0]
+        sorty_sql = sorty.aggregate.as_sql(qn, cn)[0]
 
         annotated_query = annotated_query.extra(select={'x':sortx_sql, 'y':sorty_sql})
         annotated_query = annotated_query.order_by('x','y')
