@@ -31,6 +31,7 @@ The following packages are required to run Protein Geometry Database. Either ins
     <https://bitbucket.org/ubernostrum/django-registration/wiki/Home>`_
     * `Py2Cairo <http://cairographics.org/pycairo/>`_ See instructions below for installing the correct Py2Cairo
     * `Selenium <http://docs.seleniumhq.org/>`_ for running browser-based tests
+    * liberation fonts - yum -y install git python-devel mysql-devel libffi-devel liberation-sans-fonts
 
 The process for installing "py2cairo" was recently reported to be:
 
