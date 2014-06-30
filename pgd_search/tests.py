@@ -554,7 +554,7 @@ class PersistingSearchOptions(LiveServerTestCase):
     def setUp(self):
     
        # Create a new instance of the Firefox driver
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.PhantomJS('./phantomjs') #webdriver.Firefox()
 
     def tearDown(self):
         self.driver.quit()
