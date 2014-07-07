@@ -189,6 +189,9 @@ class MonkeyPatch:
         self.old_urlopen = urllib.urlopen
         urllib.urlopen = MonkeyPatch.urlopen
 
+        if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
+            os.makedirs(ftp_update_settings.PDB_LOCAL_DIR)
+
         # Replace all PDB entries with our test entries.
         # JMT: consider making a separate 'testpdb' directory?
         codes = ['1mwq', '1mww', '1twf', '3cgm', '3cgx', '3cgz']
