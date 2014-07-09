@@ -9,7 +9,7 @@ Welcome to Protein Geometry Database's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 1
 
    installation
    importing_data

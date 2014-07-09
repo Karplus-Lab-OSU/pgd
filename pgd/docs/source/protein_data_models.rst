@@ -2,7 +2,7 @@
 Protein Data Models
 *******************
 
-.. image:: protein_model.png
+.. .. image:: protein_model.png
 
 Protein data model is composed of three classes: **Protein, Chain,** and **Residue**. The models are designed to represent the protein in the most compact way. With proper SQL indexes this is also the most efficient method of storing the data for search queries when the database contains greater than 2 million residues.
 
@@ -15,9 +15,9 @@ For more information on Django models:
     * `Django Query Reference
       <https://docs.djangoproject.com/en/dev/topics/db/queries/#topics-db-queries>`_
 
-=======
+-------
 Protein
-=======
+-------
 
 Represents a Protein.
 
@@ -29,18 +29,18 @@ Represents a Protein.
     * **residues** - related field collection, returns queryset of all residues related to this protein
     * **chains** - related field colleciton, returns queryset of all chain related to this protein
 
-=====
+-----
 Chain
-=====
+-----
 
 Chain id's are stored to allow importing of multiple chains from a single protein. The search interface does not currently include selection of chains.
 
     * **protein** (protein_id) Foreign Key relation to the protein this residue belongs to. May be retrieved as a Protein object or identifier
     * **residues** - related field collection, returns queryset of all residues related to this protein
 
-=======
+-------
 Residue
-=======
+-------
 
 Represents a Residue (Amino Acid) belonging to a protein
 

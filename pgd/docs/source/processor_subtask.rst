@@ -81,6 +81,7 @@ Example B-factor: Bm, Bs, Bg
 ============================
 
 ::
+
     """ 
     Other B Averages
         Bm - Average of bfactors in main chain.

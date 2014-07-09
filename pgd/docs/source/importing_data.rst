@@ -1,6 +1,10 @@
-=====================================
+**************
+Importing Data
+**************
+
+-------------------------------------
 Running Splicer From The Command Line
-=====================================
+-------------------------------------
 
 Splicer can be run from the command line. It requires that several steps be run separately.
 
@@ -22,9 +26,9 @@ Save the selection into a file::
 
     1 ./pgd_splicer/dunbrack_selector.py --pipeout > selection.txt
 
--------
+^^^^^^-
 Options
--------
+^^^^^^-
 
     * --pipeout - will only output the data. This should be used if you would like to create output suitable for input into one of the other steps
 
@@ -56,9 +60,9 @@ As before, a selection can be piped in::
 
 Expect this to take a few days as well.
 
-----------
+^^^^^^^^^^
 Parameters
-----------
+^^^^^^^^^^
 
 Parameters are all required, and may be repeated for multiple proteins.
 
@@ -66,15 +70,15 @@ Parameters are all required, and may be repeated for multiple proteins.
     * **chains** - list of chains to import, should be a string of chain ids. (ie. ABCDEF). The string should not have quotes around it.
     * **threshold, resolution, rfactor, rfree** - the value for these fields. These properties are retrieved from the selection script so they are included as input for processing the protein.
 
--------
+^^^^^^^
 Options
--------
+^^^^^^^
 
     * --pipein - input will be read from a pipe instead of arguments. proteins in the list should be separated by newlines.
 
-=======
+-------
 Example
-=======
+-------
 
 Some examples. Intermediate output is saved to a text file so that it can be examined later.
 

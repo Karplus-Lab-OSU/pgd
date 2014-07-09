@@ -9,9 +9,9 @@ Splicer can be `deployed <https://code.osuosl.org/projects/pydra>`_ and `run <ht
 Components of splicer can also be `run manually from the command line
 <https://code.osuosl.org/projects/pgd/wiki/Designsplicercli>`_
 
-===============
+---------------
 Slow FTP Issues
-===============
+---------------
 
 The FTP server for PDB files is a very slow, rate limited, server located in the UK. PDB files are currently 1.8 gigabytes total for 16,000 proteins in PGD. It can take a long time to download this much data from the FTP server. This is handled in two ways:
 
@@ -35,17 +35,17 @@ Pydra can't guarantee that future runs of Splicer will process the same set of p
 
 Note that this only matters when using
 
-==========================
+--------------------------
 Workunit Thrashing Problem
-==========================
+--------------------------
 
 There is an outstanding `bug in pydra that causes the node to crash when workunits complete too quickly <https://code.osuosl.org/projects/pydra#Node>`_. Splicer includes an option to batch process proteins to ensure that this does not happen. Eventually `batching workunits <https://code.osuosl.org/projects/pydra#Node>`_ will an automatic feature of Pydra
 
 When running repeat runs of Pydra it is important to increase the workunit size to at least 500-1000. Because the date checks are very fast it will cycle through the existing proteins very quickly.
 
-=================
+-----------------
 Debugging Splicer
-=================
+-----------------
 
 Pydra `logs <https://code.osuosl.org/projects/pydra#Node>`_ most things that happen within it. A full `task history <https://code.osuosl.org/projects/pydra#Node>`_ can be viewed by clicking the history icon found on the pydra `tasks page <https://code.osuosl.org/projects/pydra#Node>`_. Clicking on a task instance gives you more details about the task including which workunits were successful and what their arguments were.
 
