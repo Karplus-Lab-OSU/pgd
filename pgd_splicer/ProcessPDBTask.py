@@ -608,11 +608,13 @@ def parseWithBioPython(path, props, chains_filter=None):
                             if old_atom1:
                                 atoms[atom2] = old_atom1
                             else:
-                                del atoms[atom2]
+                                # del atoms[atom2]
+                                atoms.pop(atom2, None)
                             if old_atom2:
                                 atoms[atom1] = old_atom2
                             else:
-                                del atoms[atom1]
+                                # del atoms[atom1]
+                                atoms.pop(atom1, None)
 
 
                 #Calculate CHI values.  The mappings for per peptide chi's are stored
