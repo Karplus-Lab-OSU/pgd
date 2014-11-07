@@ -357,6 +357,18 @@ def hetatm_amino(s):
     return s.startswith("HETATM") and any(amino in s for amino in AA3to1)
 
 
+def atom_sec(s):
+    """
+    Any lines with ATOM that contain SEC should be changed to HETATM.
+
+    See #17223 for details.
+    """
+
+    if s.startswith("ATOM  ") and "SEC" in s:
+        return s.replace("ATOM  ", "HETATM")
+    else:
+        return s
+
 def parseWithBioPython(path, props, chains_filter=None):
     """
     Parse values from file that can be parsed using BioPython library
@@ -376,7 +388,10 @@ def parseWithBioPython(path, props, chains_filter=None):
     # HETATM pattern. This is largely for 2VQ1, see #8319 for details.
     for line in gunzipped:
         if not hetatm_amino(line):
-            decompressed.write(line)
+            # SEC is now an amino acid and will appear in ATOM lines.
+            # Unfortunately, DSSP cannot handle this, so any ATOM lines with
+            # SEC must be changed to HETATM lines.
+            decompressed.write(atom_sec(line))
 
     # Be kind; rewind.
     decompressed.seek(0)
