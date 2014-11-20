@@ -347,6 +347,18 @@ def pdb_file_is_newer(data):
     return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
 
 
+def amino_present(s):
+    """
+    Whether a given line contains a valid amino acid.
+    
+    NB: "SEC" is a valid amino acid, regardless of its absence from
+    AA3to1.
+
+    See #17223 for details.
+    """
+
+    return any(amino in s for amino in AA3to1) or "SEC" in s
+
 def hetatm_amino(s):
     """
     Whether a given line refers to a HETATM amino acid.
@@ -354,20 +366,18 @@ def hetatm_amino(s):
     These lines are undesirable and we should discard them.
     """
 
-    return s.startswith("HETATM") and any(amino in s for amino in AA3to1)
+    return s.startswith("HETATM ") and amino_present(s)
 
 
-def atom_sec(s):
+def atom_noamino(s):
     """
-    Any lines with ATOM that contain SEC should be changed to HETATM.
+    Whether a given line is an ATOM line with no valid amino acid.
 
-    See #17223 for details.
+    These lines are undesirable and we should discard them.
     """
 
-    if s.startswith("ATOM  ") and "SEC" in s:
-        return s.replace("ATOM  ", "HETATM")
-    else:
-        return s
+    return s.startswith("ATOM ") and not amino_present(s)
+
 
 def parseWithBioPython(path, props, chains_filter=None):
     """
@@ -386,12 +396,11 @@ def parseWithBioPython(path, props, chains_filter=None):
 
     # Go through, one line at a time, and discard lines that have the bad
     # HETATM pattern. This is largely for 2VQ1, see #8319 for details.
+    # Also remove any ATOM lines with invalid amino acids.
+    # See #17223 for details.
     for line in gunzipped:
-        if not hetatm_amino(line):
-            # SEC is now an amino acid and will appear in ATOM lines.
-            # Unfortunately, DSSP cannot handle this, so any ATOM lines with
-            # SEC must be changed to HETATM lines.
-            decompressed.write(atom_sec(line))
+	if not hetatm_amino(line) and not atom_noamino(line):
+            decompressed.write(line)
 
     # Be kind; rewind.
     decompressed.seek(0)
