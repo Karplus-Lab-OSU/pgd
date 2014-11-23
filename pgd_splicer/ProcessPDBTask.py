@@ -357,7 +357,7 @@ def amino_present(s):
     See #17223 for details.
     """
 
-    return any(amino in s for amino in AA3to1) or "SEC" in s
+    return any(amino in s for amino in AA3to1)
 
 def hetatm_amino(s):
     """
