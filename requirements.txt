@@ -8,3 +8,4 @@ numpy
 simplejson
 cairocffi
 Sphinx
+python-decouple==2.3
