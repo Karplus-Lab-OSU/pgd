@@ -54,11 +54,7 @@ Get the Code
     1. Make sure you have Git installed.
     2. Either download and unpack the "latest release":, or check it out from the repository::
 
-        # For public, read-only access use:
-        git clone git://git.osuosl.org/gitolite/pgd
-
-        # Developers with push access to the repository use:
-        git clone git@git.osuosl.org:pgd
+        git clone https://github.com/osuosl/pgd
 
 ^^^^^^^^^^^^^
 Configuration
