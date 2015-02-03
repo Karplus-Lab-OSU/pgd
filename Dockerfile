@@ -6,9 +6,9 @@ EXPOSE 8000
 
 #Sane configuration defaults
 ENV DATABASE_ENGINE mysql
-ENV DATABASE_NAME pgd_db
-ENV DATABASE_USER root
-ENV DATABASE_PASSWORD pgd_db
+ENV DATABASE_NAME pgd
+ENV DATABASE_USER pgd
+ENV DATABASE_PASSWORD pgd
 ENV DATABASE_HOST mysql
 
 RUN yum install -y mysql mysql-devel gcc gcc-c++ git libcairo-devel cairo pycairo python-setuptools python-devel libffi libffi-devel
