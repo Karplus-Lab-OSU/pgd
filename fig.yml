@@ -1,0 +1,16 @@
+mysql:
+ image: mysql
+ environment:
+   MYSQL_ROOT_PASSWORD: pgd
+   MYSQL_USER: pgd
+   MYSQL_PASSWORD: pgd
+   MYSQL_DATABASE: pgd
+
+web:
+  build: .
+  ports:
+    - "8000:8000"
+  volumes:
+    - .:/opt/pgd
+  links:
+    - mysql
