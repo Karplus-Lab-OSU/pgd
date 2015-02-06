@@ -9,3 +9,4 @@ simplejson
 cairocffi
 Sphinx
 python-decouple==2.3
+fig==1.0.1
