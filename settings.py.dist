@@ -12,12 +12,15 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASE_ENGINE = config('DATABASE_ENGINE', default='mysql') # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = config('DATABASE_NAME', default='master_naturalist_db')             # Or path to database file if sqlite3.
-DATABASE_USER = config('DATABASE_USER', default='root')             # Not used with sqlite3.
-DATABASE_PASSWORD = config('DATABASE_PASSWORD', default='scott')         # Not used with sqlite3.
-DATABASE_HOST = config('DATABASE_HOST', default='')             # Set to empty string for localhost.
-DATABASE_PORT = config('DATABASE_PORT', default='')             # Set to empty string for default.
+# At this time only MySQL is supported.  When other databases are
+# supported, these settings will be refactored.
+
+DATABASE_ENGINE = 'mysql' # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
+DATABASE_NAME = config('MYSQL_ENV_MYSQL_DATABASE', default='master_naturalist_db')             # Or path to database file if sqlite3.
+DATABASE_USER = config('MYSQL_ENV_MYSQL_USER', default='root')             # Not used with sqlite3.
+DATABASE_PASSWORD = config('MYSQL_ENV_MYSQL_PASSWORD', default='scott')         # Not used with sqlite3.
+DATABASE_HOST = config('MYSQL_PORT_3306_TCP_ADDR', default='')             # Set to empty string for localhost.
+DATABASE_PORT = config('MYSQL_PORT_3306_TCP_PORT', default='')             # Set to empty string for default.
 
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>/
 # for the django standalone server this should be ""
