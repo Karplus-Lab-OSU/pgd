@@ -16,7 +16,8 @@ working development environment. Using fig, getting started takes just one
 command:
 
 ::
-	$ fig up
+
+   $ fig up
 
 The following sections will not be necessary if you use fig.
 Consult the fig documentation for details on how to modify the `fig.yml` file,
@@ -29,7 +30,8 @@ Building an Image
 To build an image with PGD installed, run this command:
 
 ::
-    $ docker build -t osl_test/pgd .
+
+   $ docker build -t osl_test/pgd .
 
 The `-t` option specifies the tag for the image. We use `osl_test` here for
 testing.
@@ -45,11 +47,12 @@ The `--name` option gives this new container a name so it is easier to remember
 and refer to using the docker command.
 
 ::
-    $ docker run --name pgd_mysql \
+
+   $ docker run --name pgd_mysql \
     -e MYSQL_ROOT_PASSWORD=pgd \
     -e MYSQL_USER=pgd \
     -e MYSQL_PASSWORD=pgd \
-    -e MYSQL_DATABASE=pgd\
+    -e MYSQL_DATABASE=pgd \
     -d mysql
 
 Running an Image and Linking it
@@ -61,14 +64,16 @@ transparently access it. We will also forward the container's port
 8000 to the host's port 8000.
 
 ::
+
     $ docker run -d --name pgd -p 8000:8000 --link pgd_mysql:mysql osl_test/pgd
 
 Mounting the PGD Code as a Volume
 ---------------------------------
 
-Some developers may find it convenient to 
+Some developers may find the following to be convenient:
 
 ::
+
     $ docker run -d --name pgd \
     -p 8000:8000 \
     -v /path/to/code:/opt/pgd \
