@@ -3,7 +3,7 @@ Using PGD with Docker
 *********************
 
 PGD ships with a Dockerfile to make development easier.
-Consult the docker documentation for instructions how to use docker.
+Consult the docker documentation for instructions on how to use docker.
 http://docs.docker.com/reference/
 
 
@@ -49,10 +49,10 @@ and refer to using the docker command.
 ::
 
    $ docker run --name pgd_mysql \
-    -e MYSQL_ROOT_PASSWORD=pgd \
-    -e MYSQL_USER=pgd \
-    -e MYSQL_PASSWORD=pgd \
-    -e MYSQL_DATABASE=pgd \
+    -e MYSQL_ROOT_PASSWORD=pgd_root_password \
+    -e MYSQL_USER=pgd_user \
+    -e MYSQL_PASSWORD=pgd_user_password \
+    -e MYSQL_DATABASE=pgd_db \
     -d mysql
 
 Running an Image and Linking it
@@ -79,3 +79,4 @@ Some developers may find the following to be convenient:
     -v /path/to/code:/opt/pgd \
     --link pgd_mysql:mysql \
     osl_test/pgd
+
