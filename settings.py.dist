@@ -1,7 +1,8 @@
 # Django settings for pgd project.
 
 from decouple import config
-
+import os
+PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = config('DEBUG', default=False, cast=bool)
 TEMPLATE_DEBUG = DEBUG
@@ -28,7 +29,8 @@ DATABASE_PORT = config('MYSQL_PORT_3306_TCP_PORT', default='')             # Set
 SITE_ROOT = config('SITE_ROOT', default='')
 
 # absolute path to the docroot of this site
-DOC_ROOT = config('DOC_ROOT', default='')
+#DOC_ROOT = config('DOC_ROOT', default='')
+DOC_ROOT = PROJECT_ROOT
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
