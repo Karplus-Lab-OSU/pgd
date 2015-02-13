@@ -22,6 +22,9 @@ DATABASE_USER = config('MYSQL_ENV_MYSQL_USER', default='root')             # Not
 DATABASE_PASSWORD = config('MYSQL_ENV_MYSQL_PASSWORD', default='scott')         # Not used with sqlite3.
 DATABASE_HOST = config('MYSQL_PORT_3306_TCP_ADDR', default='')             # Set to empty string for localhost.
 DATABASE_PORT = config('MYSQL_PORT_3306_TCP_PORT', default='')             # Set to empty string for default.
+import sys
+if 'test' in sys.argv:
+    DATABASE_OPTIONS = {'init_command': 'SET foreign_key_checks=0'}
 
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>/
 # for the django standalone server this should be ""
