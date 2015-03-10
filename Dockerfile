@@ -4,7 +4,14 @@ MAINTAINER OSU OSL support@osuosl.org
 
 EXPOSE 8000
 
-RUN yum install -y \
+# Dockerfiles do not support "here documents"
+RUN echo "[osuosl]" > /etc/yum.repos.d/osuosl.repo
+RUN echo "name=OSUOSL Repository 6 - x86_64" >> /etc/yum.repos.d/osuosl.repo
+RUN echo "baseurl=http://ftp.osuosl.org/pub/osl/repos/yum/6/x86_64" >> /etc/yum.repos.d/osuosl.repo
+RUN echo "enabled=1" >> /etc/yum.repos.d/osuosl.repo
+RUN echo "gpgcheck=0" >> /etc/yum.repos.d/osuosl.repo
+
+RUN yum update && yum install -y \
   cairo \
   gcc \
   gcc-c++ \
@@ -14,6 +21,7 @@ RUN yum install -y \
   libffi-devel \
   mysql \
   mysql-devel \
+  osuosl-dssp \
   pycairo \
   python-setuptools \
   python-devel
