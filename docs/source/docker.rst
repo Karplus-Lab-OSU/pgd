@@ -10,19 +10,28 @@ http://docs.docker.com/reference/
 Using Fig
 ---------
 
-Fig is a command line tool to automate using multiple docker containers.
-Usually multiple long incantations of docker commands are necessary to get a
-working development environment. Using fig, getting started takes just one
-command:
+Fig is a command line tool to automate using multiple docker
+containers.  Usually multiple long incantations of docker commands are
+necessary to get a working development environment. Using fig, a
+simple instance of the PGD without any content can be started from
+scratch with a simple command:
 
 ::
 
    $ fig up
 
-The following sections will not be necessary if you use fig.
+Similarly, to run all the tests in the PGD code base, the following
+command can be very useful:
+
+::
+
+   $ fig run web python manage.py test
+
 Consult the fig documentation for details on how to modify the `fig.yml` file,
 and other commands you can use with fig.
 http://www.fig.sh/
+   
+The following sections will not be necessary if you use fig.
 
 Building an Image
 -----------------
@@ -44,7 +53,7 @@ fetch the `mysql` image automatically.
 The `-e` option passes an environment variable to the image. In this example we
 set a series of necessary environment variables to a simple default.
 The `--name` option gives this new container a name so it is easier to remember
-and refer to using the docker command.
+and reference when using the docker command.
 
 ::
 
@@ -67,6 +76,8 @@ transparently access it. We will also forward the container's port
 
     $ docker run -d --name pgd -p 8000:8000 --link pgd_mysql:mysql osl_test/pgd
 
+This should result in an instance of the PGD running on localhost at port 8000.
+       
 Mounting the PGD Code as a Volume
 ---------------------------------
 
