@@ -20,6 +20,8 @@ scratch with a simple command:
 
    $ fig up
 
+The application will be available on ``http://localhost:8000``.
+
 Similarly, to run all the tests in the PGD code base, the following
 command can be very useful:
 
