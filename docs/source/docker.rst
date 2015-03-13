@@ -22,6 +22,21 @@ scratch with a simple command:
 
 The application will be available on ``http://localhost:8000``.
 
+.. note::
+	Fig is a developer tool, and this early version is prone to certain kinds
+	of race conditions. It is possible for the web container to come up before
+	the database container, and if the web container can't find the database it
+	will fail.
+
+.. note::
+	Fig has been renamed docker-compose. Our workflow should be updated to
+	reflect this.
+
+	- The fig command will be renamed docker-compose
+	- The fig.yml file will be renamed to .docker-compose.yml
+	- The PyPI package will be renamed to docker-compose
+	- These docs will need to be updated.
+
 Similarly, to run all the tests in the PGD code base, the following
 command can be very useful:
 
