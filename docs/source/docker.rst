@@ -7,6 +7,93 @@ Consult the docker documentation for instructions on how to use docker.
 http://docs.docker.com/reference/
 
 
+Quick Start: Demonstrating the PGD with Fig and Docker
+------------------------------------------------------
+
+This is for folks who are already familiar with Fig and Docker.  If
+you are new to either of these tools, please skip ahead to the next
+section of the documentation.
+
+The first step is building the containers.
+
+
+::
+
+   $ fig build
+
+Now create the necessary database tables.  For this version of Django,
+syncdb is still required.  The PGD does not use the admin site at this
+time, so there's no need to create an account.
+
+::
+
+   $ fig run web python manage.py syncdb --noinput
+
+This command may fail the first time with a lack of connection due to
+fig's not-yet-mature orchestration functionality.  Simply run it again
+and it should succeed.
+
+The next step is to create a selection file.  It's possible to use a
+subset of an existing selection file (say the first hundred lines) but
+if you need to generate a new one, use this command:
+
+::
+
+   $ fig run web python ./pgd_splicer/dunbrack_selector.py --pipeout > selection.txt
+   $ sed 100q selection.txt > top-100-selection.txt
+
+The selected proteins must be retrieved from the worldwide PDB
+collection.  This command may take some time!
+
+::
+
+   $ fig run web python ./pgd_splicer/ftpupdate.py --pipein < top-100-selection.txt
+
+To list the proteins that were successfully downloaded, run this command:
+
+::
+
+   $ fig run web ls /opt/pgd/pdb
+
+You should see 100 files with names like `pdb1ae1.ent.gz`.
+
+Finally, all the retrieved proteins must be imported into the
+database.  This command will definitely take some time: a full update
+currently consists of over twenty-six thousand proteins, and can take
+upwards of eight hours to process.
+
+::
+
+   $ fig run web python ./pgd_splicer/ProcessPDBTask.py --pipein < top-100-selection.txt
+
+To confirm the number of proteins in the database, use the Django shell:
+
+::
+
+   $ fig run web python manage.py shell
+   Python 2.7.5 (default, Jun 17 2014, 18:11:42) 
+   [GCC 4.8.2 20140120 (Red Hat 4.8.2-16)] on linux2
+   Type "help", "copyright", "credits" or "license" for more information.
+   (InteractiveConsole)
+   >>> from pgd_core.models import Protein
+   >>> Protein.objects.count()
+   100
+   >>> 
+
+Looking good!  Now it's time to actually start the web server.
+
+::
+
+   $ fig up
+
+This will generate a screen or two of output from the different
+containers.  Once that output stabilizes, open a web browser to
+`http://localhost:8000` (or a different host, depending on where
+you're running Docker) and you should see the PGD!  Select 'Search',
+remove the default search constraints on omega from the search page,
+and select 'Submit', and you should see a Ramachandran plot with
+results.  Success!
+
 Using Fig
 ---------
 
@@ -107,4 +194,7 @@ Some developers may find the following to be convenient:
     -v /path/to/code:/opt/pgd \
     --link pgd_mysql:mysql \
     osl_test/pgd
+
+Be warned: this may clash with the Dockerfile's treatment of
+`settings.py` depending on whether one already exists in the checkout.
 
