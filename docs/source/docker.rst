@@ -21,6 +21,14 @@ The first step is building the containers.
 
    $ fig build
 
+The database containers (for MySQL and PDB files) need to be brought
+up next.
+
+::
+
+   $ fig up -d mysql pdb
+
+   
 Now create the necessary database tables.  For this version of Django,
 syncdb is still required.  The PGD does not use the admin site at this
 time, so there's no need to create an account.

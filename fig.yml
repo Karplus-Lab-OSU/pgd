@@ -6,8 +6,16 @@ mysql:
    MYSQL_PASSWORD: pgd_user_password
    MYSQL_DATABASE: pgd_db
 
+pdb:
+  image: centos:7
+  volumes:
+    - /opt/pgd/pdb
+  command: true
+
 web:
   build: .
+  volumes_from:
+    - pdb
   ports:
     - "8000:8000"
   links:
