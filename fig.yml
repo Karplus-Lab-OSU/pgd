@@ -1,0 +1,22 @@
+mysql:
+ image: mysql:5.5
+ environment:
+   MYSQL_ROOT_PASSWORD: pgd_root_password
+   MYSQL_USER: pgd_user
+   MYSQL_PASSWORD: pgd_user_password
+   MYSQL_DATABASE: pgd_db
+
+pdb:
+  image: centos:7
+  volumes:
+    - /opt/pgd/pdb
+  command: true
+
+web:
+  build: .
+  volumes_from:
+    - pdb
+  ports:
+    - "8000:8000"
+  links:
+    - mysql
