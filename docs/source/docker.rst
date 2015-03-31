@@ -14,7 +14,20 @@ This is for folks who are already familiar with Fig and Docker.  If
 you are new to either of these tools, please skip ahead to the next
 section of the documentation.
 
-The first step is building the containers.
+There are three steps to this process: building the containers,
+populating them with content, and starting the web server.
+
+Build the containers
+====================
+
+.. note::
+
+   The repository contains a script named `dev_setup.sh` which builds
+   the containers following the same instructions found in this
+   script.  Use at your own risk as the script may not be updated as
+   often as the documentation.  When in doubt, trust the docs!
+   
+This is pretty straightforward.
 
 
 ::
@@ -40,6 +53,16 @@ time, so there's no need to create an account.
 This command may fail the first time with a lack of connection due to
 fig's not-yet-mature orchestration functionality.  Simply run it again
 and it should succeed.
+
+Install the content
+===================
+
+.. note::
+
+   The repository contains a script named `integration_test.sh` which
+   tests the scripts mentioned in this section.  Use at your own risk
+   as the script may not be updated as often as the documentation.
+   Again, when in doubt, trust the docs!
 
 The next step is to create a selection file.  It's possible to use a
 subset of an existing selection file (say the first hundred lines) but
@@ -88,6 +111,9 @@ To confirm the number of proteins in the database, use the Django shell:
    100
    >>> 
 
+Start it up!
+============   
+   
 Looking good!  Now it's time to actually start the web server.
 
 ::
