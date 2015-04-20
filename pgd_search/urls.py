@@ -1,4 +1,4 @@
-from django.conf.urls.defaults import *
+from django.conf.urls import *
 from pgd_search.search.views import search, saved, editSearch, help, qtiphelp, saveSearch, deleteSearch, protein_search, chi_help
 from pgd_search.plot.views import renderToSVG, renderToPNG, plotDump, plot
 from pgd_search.statistics.views import search_statistics, search_statistics_data, search_statistics_aa_data

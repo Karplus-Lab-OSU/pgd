@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import simplejson
+import json
 
 def compare_dump(file_new, file_old):
 
@@ -7,10 +7,10 @@ def compare_dump(file_new, file_old):
     _file = None
     try:
         _file = open(file_new,'r')
-        new = simplejson.loads(_file.read())
+        new = json.loads(_file.read())
 
         _file = open(file_old,'r')
-        old = simplejson.loads(_file.read())
+        old = json.loads(_file.read())
 
     finally:
         if _file:

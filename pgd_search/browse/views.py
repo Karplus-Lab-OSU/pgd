@@ -3,7 +3,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.core.paginator import Paginator, InvalidPage, EmptyPage
 import math
-
+import pickle
 from pgd_search.views import settings_processor
 
 """
@@ -15,7 +15,7 @@ def browse(request):
     lint = int
 
     # get search from session
-    search = request.session['search']
+    search = pickle.loads(request.session['search'])
 
     #generate iValues
     start = 0 - (search.segmentLength-1) / 2

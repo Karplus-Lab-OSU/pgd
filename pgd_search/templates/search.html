@@ -66,7 +66,7 @@
     {% endif %}
 
     <div id="formContainer">
-        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">
+        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">{% csrf_token %}
             <table id="protein">
             <tbody>
 

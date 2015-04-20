@@ -7,6 +7,8 @@ from pgd_core.models import *
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 from search.SearchForm import SearchSyntaxField
+import pytz
+from django.test import LiveServerTestCase
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -16,7 +18,7 @@ for i in range(1, len(FIELDS)+1):
     #shift values into decimels
     FIELDS_DICT[FIELDS[i-1]] = i*.01
 
-class SearchParserValidation(unittest.TestCase):
+class SearchParserValidation(LiveServerTestCase):
 
     def calculateAA(self, chainIndex):
         #aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
@@ -42,7 +44,7 @@ class SearchParserValidation(unittest.TestCase):
         protein.resolution      = i + .01
         protein.rfactor         = i + .02
         protein.rfree           = i + .03
-        protein.pdb_date        = datetime.date(2001,1,1)
+        protein.pdb_date        = datetime.datetime(2001,1,1, tzinfo=pytz.utc)
         protein.__dict__.update(kwargs)
         protein.save()
         return protein
@@ -508,7 +510,7 @@ class SearchParserValidation(unittest.TestCase):
                 "Multiple residue search failed on field %s  Expected result was %s  Returned result was %s"%(field, set((getattr(chainList[2], '%s'%field), )), set(getattr(x, '%s'%field) for x in Search.parse_search(search)))
             )
 
-class SearchFieldValidationCase(unittest.TestCase):
+class SearchFieldValidationCase(LiveServerTestCase):
     def setUp(self):
         pass
 
@@ -548,19 +550,18 @@ class SearchFieldValidationCase(unittest.TestCase):
             self.assertNotEqual(searchField.syntaxPattern.match(value), None)
 
 #Selenium tests
-class PersistingSearchOptions(unittest.TestCase):
+class PersistingSearchOptions(LiveServerTestCase):
     def setUp(self):
 
        # Create a new instance of the Firefox driver
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.PhantomJS('./phantomjs') #webdriver.Firefox()
 
     def tearDown(self):
         self.driver.quit()
 
     def test_removed_options_persist(self):
-
         # Load search page
-        self.driver.get("http://localhost:8000/search")
+        self.driver.get(self.live_server_url + "/search")
 
         # Select the box that indicates number of residues
         residues = self.driver.find_element_by_id("id_residues")
@@ -645,7 +646,7 @@ class PersistingSearchOptions(unittest.TestCase):
 
     def test_sidechain_angles_reset(self):
         # Open a new search.
-        self.driver.get("http://localhost:8000/search")
+        self.driver.get(self.live_server_url + "/search")
 
         # Select the amino acid "His" on composition.
         AAs = self.driver.find_element_by_id("id_aa_choices_list_col_0")
@@ -677,7 +678,7 @@ class PersistingSearchOptions(unittest.TestCase):
 
     def test_sidechain_lengths_reset(self):
         # Open a new search.
-        self.driver.get("http://localhost:8000/search")
+        self.driver.get(self.live_server_url + "/search")
 
         # Select the amino acid "His" on composition.
         AAs = self.driver.find_element_by_id("id_aa_choices_list_col_0")

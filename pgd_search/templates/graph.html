@@ -612,6 +612,8 @@
                         input = $inputs.get(i);
                         if (input.id.slice(0, 3) == 'id_') {
                             args[input.id.slice(3)]= $(input).val();
+                        } else if (input.type == 'hidden') {
+                            args['csrfmiddlewaretoken'] = $(input).val();
                         } else {
                             args[input.id]= $(input).val();
                         }
@@ -894,7 +896,7 @@
         <button id="button-save">Save Plot Image</button>
         <button id="button-data">Save Plot Data</button>
     </div>
-    <form id="plotform" name="plot" method="post">
+    <form id="plotform" name="plot" method="post">{% csrf_token %}
         <table id="controls">
             <tbody>
             <tr><td class="header" colspan="100%">General</td></tr>

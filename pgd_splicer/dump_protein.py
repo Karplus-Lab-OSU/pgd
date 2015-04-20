@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
 import math
 from pgd.pgd_core.models import *
-import simplejson
+import json
 
 def dump_protein(code, preserve_precision):
     """
@@ -57,7 +57,7 @@ def dump_protein(code, preserve_precision):
             'h_bond_energy':3,
             'zeta':2}
 
-    json = {'code':code,
+    _json = {'code':code,
             'resolution':protein.resolution,
             'threshold':protein.threshold,
             'rfactor':protein.rfactor
@@ -76,9 +76,9 @@ def dump_protein(code, preserve_precision):
 
         json_residues[int(r.oldID)] = json_residue
 
-    json['residues'] = json_residues
+    _json['residues'] = json_residues
 
-    return simplejson.dumps(json)
+    return json.dumps(_json)
 
 
 if __name__ == '__main__':
