@@ -7,6 +7,9 @@ PROJECT_ROOT = os.path.abspath(os.path.dirname(__file__))
 DEBUG = config('DEBUG', default=False, cast=bool)
 TEMPLATE_DEBUG = DEBUG
 
+# Warning: this value is insecure!
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*')
+
 ADMINS = (
     # ('Your Name', 'your_email@domain.com'),
 )
@@ -85,10 +88,8 @@ TEMPLATE_LOADERS = (
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.middleware.csrf.CsrfResponseMiddleware'
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -122,3 +123,4 @@ INSTALLED_APPS = (
 QUERY_LIMIT = config('QUERY_LIMIT', default=50000000, cast=int)
 SEGMENT_SIZE = config('SEGMENT_SIZE', default=10, cast=int)
 DATA_VERSION = config('DATA_VERSION', default='testing')
+PGD_VERSION = config('PGD_VERSION', default='1.0.2')
