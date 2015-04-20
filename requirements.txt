@@ -10,4 +10,4 @@ pytz
 pyamf
 Sphinx
 python-decouple==2.3
-fig==1.0.1
+docker-compose==1.2.0
