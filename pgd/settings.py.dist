@@ -16,15 +16,19 @@ MANAGERS = ADMINS
 # At this time only MySQL is supported.  When other databases are
 # supported, these settings will be refactored.
 
-DATABASE_ENGINE = 'mysql' # 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-DATABASE_NAME = config('MYSQL_ENV_MYSQL_DATABASE', default='master_naturalist_db')             # Or path to database file if sqlite3.
-DATABASE_USER = config('MYSQL_ENV_MYSQL_USER', default='root')             # Not used with sqlite3.
-DATABASE_PASSWORD = config('MYSQL_ENV_MYSQL_PASSWORD', default='scott')         # Not used with sqlite3.
-DATABASE_HOST = config('MYSQL_PORT_3306_TCP_ADDR', default='')             # Set to empty string for localhost.
-DATABASE_PORT = config('MYSQL_PORT_3306_TCP_PORT', default='')             # Set to empty string for default.
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('MYSQL_ENV_MYSQL_DATABASE', default='master_naturalist_db'),
+        'USER': config('MYSQL_ENV_MYSQL_USER', default='root'),
+        'PASSWORD': config('MYSQL_ENV_MYSQL_PASSWORD', default='scott'),
+        'HOST': config('MYSQL_PORT_3306_TCP_ADDR', default=''),
+        'PORT': config('MYSQL_PORT_3306_TCP_PORT', default=''),
+    }
+}
 import sys
 if 'test' in sys.argv:
-    DATABASE_OPTIONS = {'init_command': 'SET foreign_key_checks=0'}
+    DATABASE['default']['OPTIONS'] = {'init_command': 'SET foreign_key_checks=0'}
 
 # prefix used for the site.  ie. http://myhost.com/<SITE_ROOT>/
 # for the django standalone server this should be ""
@@ -62,7 +66,7 @@ MEDIA_ROOT = config('MEDIA_ROOT', default='%s/static' % DOC_ROOT)
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = config('MEDIA_URL', default='%s/%s' % (SITE_ROOT, 'static'))
+MEDIA_URL = config('MEDIA_URL', default='%s/%s/' % (SITE_ROOT, 'static'))
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
