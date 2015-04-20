@@ -3,16 +3,17 @@ from django.template import RequestContext
 from pgd_search.views import settings_processor
 from pgd_splicer.models import pdb_select_settings
 import settings
-from pgd import VERSION
 
-extra_context = {'SITE_ROOT':settings.SITE_ROOT,
-                'MEDIA_ROOT': settings.MEDIA_URL,
-                'PGD_VERSION':VERSION,
-                'MEDIA':settings.MEDIA_URL,
-                'ROOT':settings.SITE_ROOT,
-                'DATA_VERSION':pdb_select_settings.DATA_VERSION,
-                'GOOGLE_ID':settings.GOOGLE_ID
-                }
+extra_context = {
+    'SITE_ROOT': settings.SITE_ROOT,
+    'MEDIA_ROOT': settings.MEDIA_URL,
+    'PGD_VERSION': settings.PGD_VERSION,
+    'MEDIA': settings.MEDIA_URL,
+    'ROOT': settings.SITE_ROOT,
+    'DATA_VERSION': pdb_select_settings.DATA_VERSION,
+    'GOOGLE_ID': settings.GOOGLE_ID
+}
+
 
 def welcome(request):
 	#delete session variable
