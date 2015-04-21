@@ -11,7 +11,7 @@ RUN echo "baseurl=http://ftp.osuosl.org/pub/osl/repos/yum/6/x86_64" >> /etc/yum.
 RUN echo "enabled=1" >> /etc/yum.repos.d/osuosl.repo
 RUN echo "gpgcheck=0" >> /etc/yum.repos.d/osuosl.repo
 
-RUN yum update && yum install -y \
+RUN yum update -y && yum install -y \
   cairo \
   gcc \
   gcc-c++ \
