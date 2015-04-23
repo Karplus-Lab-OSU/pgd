@@ -12,10 +12,17 @@ pdb:
     - /opt/pgd/pdb
   command: true
 
+media:
+  image: centos:7
+  volumes:
+    - /opt/pgd/media
+  command: true
+
 web:
   build: .
   volumes_from:
     - pdb
+    - media
   ports:
     - "8000:8000"
   links:

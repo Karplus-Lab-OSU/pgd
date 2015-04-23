@@ -18,7 +18,6 @@ def settings_processor(request):
 
     return {
         'PGD_VERSION': settings.PGD_VERSION,
-        'MEDIA': settings.MEDIA_URL,
         'ROOT': settings.SITE_ROOT,
         'DATA_VERSION': settings.DATA_VERSION,
         'GOOGLE_ID': settings.GOOGLE_ID

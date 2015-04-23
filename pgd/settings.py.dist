@@ -28,7 +28,7 @@ DATABASES = {
 }
 import sys
 if 'test' in sys.argv:
-    DATABASE['default']['OPTIONS'] = {'init_command': 'SET foreign_key_checks=0'}
+    DATABASES['default']['OPTIONS'] = {'init_command': 'SET foreign_key_checks=0'}
 
 # Warning: this value is insecure!
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*')
@@ -71,12 +71,12 @@ USE_TZ = True
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
-MEDIA_ROOT = config('MEDIA_ROOT', default='%s/static' % DOC_ROOT)
+MEDIA_ROOT = config('MEDIA_ROOT', default='%s/media' % DOC_ROOT)
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = config('MEDIA_URL', default='%s/%s/' % (SITE_ROOT, 'static'))
+MEDIA_URL = config('MEDIA_URL', default='%s/%s/' % (SITE_ROOT, 'media'))
 
 # URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
 # trailing slash.
@@ -148,6 +148,7 @@ INSTALLED_APPS = (
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
+    'django.contrib.staticfiles',
     'django.contrib.admin',
     'pgd_core',
     'pgd_search',

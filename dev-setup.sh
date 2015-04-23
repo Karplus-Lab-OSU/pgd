@@ -10,6 +10,9 @@ docker-compose build
 # start data containers
 docker-compose up -d mysql pdb
 
+# collectstatic
+docker-compose run web python manage.py collectstatic --noinput
+
 # create database
 # due to race conditions, this may require multiple attempts
 retcode=1
