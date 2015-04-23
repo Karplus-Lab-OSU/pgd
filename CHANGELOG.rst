@@ -16,6 +16,8 @@ Develop branch
   
 - Added changelog to repository and automatically generated news from it (#18123)
 
+- Imported GSoC 2014 changes, including updating to Django 1.6 (#17649)
+
 Version 1.0.2: released 2013 Oct 07
 
 - Fixed corrupt selection file generation (#15141)
