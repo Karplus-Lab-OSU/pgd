@@ -38,6 +38,7 @@ COPY ./requirements.txt /opt/pgd/requirements.txt
 RUN pip install -r requirements.txt
 # NB: copying the settings file is not a good idea when using volumes!
 COPY . /opt/pgd/
+RUN mkdir /opt/pgd/media
 RUN cp /opt/pgd/pgd/settings.py.dist /opt/pgd/pgd/settings.py
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
