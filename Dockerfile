@@ -15,30 +15,33 @@ RUN yum -y update && yum -y install \
     epel-release
 
 RUN yum -y update && yum -y install \
-  cairo \
+  bzip2 \
+  cairo-devel \
   gcc \
   gcc-c++ \
-  git \
-  libcairo-devel \
   libffi \
   libffi-devel \
   mysql \
   mysql-devel \
+  nodejs \
+  npm \
   osuosl-dssp \
-  pycairo \
+  python-devel \
   python-setuptools \
-  python-devel
+  tar
+
+RUN npm -g install phantomjs
 
 RUN easy_install pip
 
 # Copy and configure pgd
 WORKDIR /opt/pgd
+RUN mkdir /opt/pgd/media /opt/pgd/static
 # Copy requirements.txt separately for better caching
 COPY ./requirements.txt /opt/pgd/requirements.txt
 RUN pip install -r requirements.txt
 # NB: copying the settings file is not a good idea when using volumes!
 COPY . /opt/pgd/
-RUN mkdir /opt/pgd/media /opt/pgd/static
 RUN cp /opt/pgd/pgd/settings.py.dist /opt/pgd/pgd/settings.py
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

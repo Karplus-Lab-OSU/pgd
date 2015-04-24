@@ -1,13 +1,11 @@
 biopython
 django-registration
-south
 django==1.6
 selenium
 mysql-python
 numpy
 cairocffi
 pytz
-pyamf
 Sphinx
 python-decouple==2.3
 docker-compose==1.2.0
