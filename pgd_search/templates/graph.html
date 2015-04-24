@@ -1,4 +1,7 @@
 {% extends 'search_base.html' %}
+
+{% load staticfiles %}
+
 {% load search_extras %}
 
 {% block head %}
@@ -202,7 +205,7 @@
             (for the purposes of this example
             ========================================*/
              .newListSelected {
-                background:#FFF url({{STATIC_URL}}images/dropdown.gif) no-repeat scroll 155px 1px; 
+                background:#FFF url"{% static "images/dropdown.gif" %} ") no-repeat scroll 155px 1px; 
                 border:1px solid #d4d4d4;
                 color:#000;
                 height:2.21em;
@@ -290,12 +293,12 @@
              }
         </style>
 
-        <script type="text/javascript" src="{{STATIC_URL}}js/pgd.svg.js"></script>
-        <script type="text/javascript" src="{{STATIC_URL}}js/jqbrowser.js"></script>
-        <script type="text/javascript" src="{{STATIC_URL}}js/jquery.stylish-select.js"></script>
-        <script type="text/javascript" src="{{STATIC_URL}}js/raphael-min.js"></script>
-        <script type="text/javascript" src="{{STATIC_URL}}js/jquery.qtip-1.0.0-rc3.min.js"></script>
-        <script type="text/javascript" src="{{STATIC_URL}}js/DejaVu_400.font.full.js"></script>
+        <script type="text/javascript" src="{% static "js/pgd.svg.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/jqbrowser.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/jquery.stylish-select.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/raphael-min.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/jquery.qtip-1.0.0-rc3.min.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/DejaVu_400.font.full.js" %}"></script>
         <script type="text/javascript">
             var bins = {};
             var selected_bin = undefined;
@@ -876,13 +879,13 @@
     <div id="canvas_container">
         <div id="ajax_progress">
             <div>
-            <img src="{{STATIC_URL}}images/ajax-loader.gif"/>
+            <img src="{% static "images/ajax-loader.gif" %}"/>
             <h1>Generating Plot</h1>
             </div>
         </div>
         <div id="ajax_failed">
             <div>
-            <img src="{{STATIC_URL}}images/ajax-error.png"/>
+            <img src="{% static "images/ajax-error.png" %}"/>
             <h1>Server Returned an Error.</h1>
             </div>
         </div>
@@ -977,7 +980,7 @@
     <div id="histoG">
         <div id="histo_progress">
             <div>
-            <img src="{{STATIC_URL}}images/ajax-loader.gif"/>
+            <img src="{% static "images/ajax-loader.gif" %}"/>
             <h5>Loading Histogram</h5>
             </div>
         </div>

@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
+
+{% load staticfiles %}
+
 {% block head %}
-    <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/search.css" />
+    <link rel="stylesheet" type="text/css" href="{% static "css/search.css" %}" />
 {% endblock %}
 
 

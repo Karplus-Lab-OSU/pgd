@@ -1,4 +1,7 @@
 {% extends 'search_base.html' %}
+
+{% load staticfiles %}
+
 {% load search_extras %}
 
 {% block head %}
@@ -253,9 +256,9 @@
                     <td>{% if forloop.first %}{{forloop.parentloop.counter|add:pageStart}}{%endif%}</td>
                     <td>{% if forloop.first %}{{segment.protein_id}}{%endif%}</td>
                     <td>
-                    <a href="http://www.ebi.ac.uk/thornton-srv/databases/cgi-bin/pdbsum/GetPage.pl?pdbcode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{STATIC_URL}}images/icons/pdbsum.ico"></a>
-                    <a href="http://www.pdb.org/pdb/explore.do?structureId={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{STATIC_URL}}images/icons/pdb.ico"></a>
-                    <a href="http://eds.bmc.uu.se/cgi-bin/eds/uusfs?pdbCode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{{STATIC_URL}}images/icons/eds.ico"></a></td>
+                    <a href="http://www.ebi.ac.uk/thornton-srv/databases/cgi-bin/pdbsum/GetPage.pl?pdbcode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{% static "images/icons/pdbsum.ico" %}"></a>
+                    <a href="http://www.pdb.org/pdb/explore.do?structureId={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{% static "images/icons/pdb.ico" %}"></a>
+                    <a href="http://eds.bmc.uu.se/cgi-bin/eds/uusfs?pdbCode={{segment.protein_id}}"target="_blank"><img border="0" class="iconLink" src="{% static "images/icons/eds.ico" %}"></a></td>
                     <td>{% ifequal i 0 %}i{% else %}i{{i|stringformat:"+d"}}{% endifequal %}</td>
                     <td>{{r.oldID}}</td>
                     <td>{{segment.chainID}}</td>

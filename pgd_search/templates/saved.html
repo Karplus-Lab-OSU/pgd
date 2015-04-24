@@ -1,5 +1,7 @@
 {% extends "search_base.html" %}
 
+{% load staticfiles %}
+
     {% block head %}
         <style>
 
@@ -230,8 +232,8 @@
                         <td class="search_id">{{search.id}}</td>
                         <td class="timestamp">{{search.timestamp|date:"D, M d, Y"}}</td>
                         <td>{% if search.isPublic %} Yes: <a class="shared_link" href="{{ROOT}}/search/{{ search.id }}/view/">Link to Search</a>{% else %} No {% endif %}</td>
-                        <td class="edit" id="edit_{{search.id}}"><img id="edit_{{search.id}}" src="{{STATIC_URL}}images/edit.png"</></td>
-                        <td class="delete" id="delete_{{search.id}}"><img id="delete_{{search.id}}" src="{{STATIC_URL}}images/delete.png"</></td>
+                        <td class="edit" id="edit_{{search.id}}"><img id="edit_{{search.id}}" src="{% static "images/edit.png" %}"</></td>
+                        <td class="delete" id="delete_{{search.id}}"><img id="delete_{{search.id}}" src="{% static "images/delete.png" %}"</></td>
                         <td class="spacer {% if forloop.last %} last {% endif %}"></td>
                     </tr>
                     <tr id="id_{{search.id}}" class="{% cycle 'even' 'odd' %} hidden">

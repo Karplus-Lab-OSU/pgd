@@ -2,11 +2,13 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <?xml version="1.0" encoding="UTF-8"?>
 
+{% load staticfiles %}
+
 <html xmlns="http://www.w3.org/1999/xhtml">
     <title>{%block title%} Protein Geometry Database {%endblock%}</title>
     <head>
-        <script type="text/javascript" src="{{STATIC_URL}}js/jquery-1.4.1.min.js"></script>
-        <link rel="stylesheet" type="text/css" href="{{STATIC_URL}}css/main.css" />
+        <script type="text/javascript" src="{% static "js/jquery-1.4.1.min.js" %}"></script>
+        <link rel="stylesheet" type="text/css" href="{% static "css/main.css" %}" />
         
         {% if GOOGLE_ID %}
             <script type="text/javascript">
