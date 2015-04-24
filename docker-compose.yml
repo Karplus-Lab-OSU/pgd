@@ -18,11 +18,18 @@ media:
     - /opt/pgd/media
   command: true
 
+static:
+  image: centos:7
+  volumes:
+    - /opt/pgd/static
+  command: true
+
 web:
   build: .
   volumes_from:
     - pdb
     - media
+    - static
   ports:
     - "8000:8000"
   links:
