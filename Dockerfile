@@ -44,4 +44,4 @@ RUN pip install -r requirements.txt
 COPY . /opt/pgd/
 RUN cp /opt/pgd/pgd/settings.py.dist /opt/pgd/pgd/settings.py
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "--insecure", "0.0.0.0:8000"]
