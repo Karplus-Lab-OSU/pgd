@@ -11,30 +11,37 @@ RUN echo "baseurl=http://ftp.osuosl.org/pub/osl/repos/yum/6/x86_64" >> /etc/yum.
 RUN echo "enabled=1" >> /etc/yum.repos.d/osuosl.repo
 RUN echo "gpgcheck=0" >> /etc/yum.repos.d/osuosl.repo
 
-RUN yum update && yum install -y \
-  cairo \
+RUN yum -y update && yum -y install \
+    epel-release
+
+RUN yum -y update && yum -y install \
+  bzip2 \
+  cairo-devel \
   gcc \
   gcc-c++ \
-  git \
-  libcairo-devel \
   libffi \
   libffi-devel \
   mysql \
   mysql-devel \
+  nodejs \
+  npm \
   osuosl-dssp \
-  pycairo \
+  python-devel \
   python-setuptools \
-  python-devel
+  tar
+
+RUN npm -g install phantomjs
 
 RUN easy_install pip
 
 # Copy and configure pgd
 WORKDIR /opt/pgd
+RUN mkdir /opt/pgd/media /opt/pgd/static
 # Copy requirements.txt separately for better caching
 COPY ./requirements.txt /opt/pgd/requirements.txt
 RUN pip install -r requirements.txt
 # NB: copying the settings file is not a good idea when using volumes!
 COPY . /opt/pgd/
-RUN cp /opt/pgd/settings.py.dist /opt/pgd/settings.py
+RUN cp /opt/pgd/pgd/settings.py.dist /opt/pgd/pgd/settings.py
 
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "--insecure", "0.0.0.0:8000"]

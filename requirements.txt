@@ -1,12 +1,11 @@
 biopython
-django-registration==0.7
-south
-django>=1.3,<1.4
+django-registration
+django==1.6
 selenium
 mysql-python
 numpy
-simplejson
 cairocffi
+pytz
 Sphinx
 python-decouple==2.3
-fig==1.0.1
+docker-compose==1.2.0

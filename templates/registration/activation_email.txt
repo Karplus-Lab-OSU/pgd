@@ -1,8 +1,0 @@
-Hello, and welcome to PGD.
-Please activate your account by clicking on the link below. If you can't click on it, you can also copy and paste it into your browser. 
-
-http://{{ site.domain }}{% url registration_activate activation_key %}
-
-Link is valid for {{ expiration_days }} days. You will not be able to log in until you activate.
-
-Thanks for using PGD.

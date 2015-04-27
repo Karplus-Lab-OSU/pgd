@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Setup django environment
     # ==========================================================
     if not 'DJANGO_SETTINGS_MODULE' in os.environ:
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'pgd.settings'
     # ==========================================================
     # Done setting up django environment
     # ==========================================================

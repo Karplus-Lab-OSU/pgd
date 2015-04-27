@@ -48,7 +48,7 @@ class Search(models.Model):
     A query submitted by a user
     """
     dataset_version  = models.CharField(max_length='100')
-    isPublic         = models.BooleanField()
+    isPublic         = models.BooleanField(default=True)
     timestamp        = models.DateTimeField(null=True)
     title            = models.CharField(max_length='300')
     description      = models.CharField(max_length='5000')

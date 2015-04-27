@@ -1,4 +1,7 @@
 {% extends 'search_base.html' %}
+
+{% load staticfiles %}
+
 {% load search_extras %}
 {% block head %}
     <style>
@@ -154,7 +157,7 @@
         .qtip-content {font-size:14px;}
 
     </style>
-    <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
+    <script type="text/javascript" src="{% static "js/jquery.qtip-1.0.0-rc3.min.js" %}"></script>
     <script type="text/javascript">
         var col = '';
         var contentText= 'Mouse over a table cell for more information about it.';
@@ -201,7 +204,7 @@
                 hide: false,
                 content:{
                         prerender: false,//This kills pageload times if enabled
-                        text: '<img src="{{MEDIA_URL}}/images/ajax-loader.gif"/><br/><b>Calculating Statistics</b>',
+                        text: '<img src="{% static "images/ajax-loader.gif" %}"/><br/><b>Calculating Statistics</b>',
                         }
                     });
             $('#stats').qtip('show');

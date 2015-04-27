@@ -88,7 +88,7 @@
 {% block content %}
 {% if session.search or form.id %}
 <div id="save_form">
-    <form method="post" action=".">
+    <form method="post" action=".">{% csrf_token %}
         <table>
         <th id="label_column"></th>
         <th id="field_column"></th>

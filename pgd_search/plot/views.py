@@ -1,11 +1,11 @@
 import math
-
+import pickle
 from django.db.models import Max, Min
 from django.http import HttpResponse
 from django.template import RequestContext
 from django.conf import settings
 from django.shortcuts import render_to_response
-from django.utils import simplejson
+import json
 
 from PlotForm import PlotForm, ATTRIBUTE_CHOICES, PROPERTY_CHOICES
 from ConfDistFuncs import *
@@ -21,7 +21,7 @@ def drawGraph(request, height=470, width=560, xStart=None, yStart=None, xEnd=Non
     @return: returns an SVG instance.
     """
 
-    query = request.session['search'].querySet()
+    query = pickle.loads(request.session['search']).querySet()
     # calculate default values for min, max, and binsize if no values were given
     if residue_xproperty == 0:
         xPrefix = ''
@@ -67,7 +67,7 @@ def drawGraph(request, height=470, width=560, xStart=None, yStart=None, xEnd=Non
                 residue_attribute,
                 residue_xproperty,
                 residue_yproperty,
-                request.session['search'].querySet(),
+                pickle.loads(request.session['search']).querySet(),
                 hue,
                 background_color,
                 graph_color,
@@ -143,9 +143,8 @@ def plot(request):
     render the graph
     """
     form = PlotForm() # An unbound form
-
     response_dict = {
-        'defaults' : simplejson.dumps(RefDefaults()),
+        'defaults' : json.dumps(RefDefaults()),
         'xProperty': form.fields['xProperty'].initial,
         'yProperty': form.fields['yProperty'].initial,
         'xBin': form.fields['xBin'].initial,
@@ -158,7 +157,6 @@ def plot(request):
         'sidechain_lengths':bond_lengths_string_dict,
         'aa_choices':AA_CHOICES
     }
-
     return render_to_response('graph.html', response_dict, context_instance=RequestContext(request, processors=[settings_processor]))
 
 
@@ -193,10 +191,10 @@ def renderToSVG(request):
                                                 data['text_color'],
                                                 data['plot_hue'],
                                                 data['hash_color'])
-            json = simplejson.dumps({'svg':svg.to_dict(), \
+            _json = json.dumps({'svg':svg.to_dict(), \
                                         'x':x, 'x1':x1, 'xBin':xBin, \
                                         'y':y, 'y1':y1, 'yBin':yBin})
-            return HttpResponse(json)
+            return HttpResponse(_json)
 
         else:
             """
@@ -209,7 +207,7 @@ def renderToSVG(request):
                 for error in v:
                     errors.append([k, error._proxy____args[0]])
 
-            return HttpResponse(simplejson.dumps({'errors':errors}))
+            return HttpResponse(json.dumps({'errors':errors}))
     except Exception, e:
         print 'exception', e
         import traceback, sys
@@ -247,7 +245,7 @@ def plotDump(request):
                 int(data['residue_attribute']),
                 int(data['residue_xproperty']),
                 int(data['residue_yproperty']),
-                request.session['search'].querySet()
+                pickle.loads(request.session['search']).querySet()
             )
 
             response = HttpResponse(mimetype="text/tab-separated-values")
