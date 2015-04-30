@@ -185,3 +185,14 @@ QUERY_LIMIT = config('QUERY_LIMIT', default=50000000, cast=int)
 SEGMENT_SIZE = config('SEGMENT_SIZE', default=10, cast=int)
 DATA_VERSION = config('DATA_VERSION', default='testing')
 PGD_VERSION = config('PGD_VERSION', default='1.0.2')
+
+# Django registration
+ACCOUNT_ACTIVATION_DAYS = config('ACCOUNT_ACTIVATION_DAYS', default=5, cast=int)
+
+# Email configuration
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.osuosl.org')
+EMAIL_PORT = config('EMAIL_PORT', default='25')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='registration@pgd.science.oregonstate.edu')
+SERVER_EMAIL = config('SERVER_EMAIL', default='pgd@pgd.science.oregonstate.edu')
+LOGIN_REDIRECT_URL= '%s/search/' % SITE_ROOT
