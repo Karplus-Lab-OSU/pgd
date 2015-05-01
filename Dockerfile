@@ -40,8 +40,9 @@ RUN mkdir /opt/pgd/media /opt/pgd/static
 # Copy requirements.txt separately for better caching
 COPY ./requirements.txt /opt/pgd/requirements.txt
 RUN pip install -r requirements.txt
-# NB: copying the settings file is not a good idea when using volumes!
 COPY . /opt/pgd/
-RUN cp /opt/pgd/pgd/settings.py.dist /opt/pgd/pgd/settings.py
+
+# This key is suitable for development -- do not use it for production!
+ENV SECRET_KEY f7rbxi(+clw%v)1_j&q#aps^pk7$$-0(3gczqgq#l_y-nyt-w5 
 
 CMD ["python", "manage.py", "runserver", "--insecure", "0.0.0.0:8000"]

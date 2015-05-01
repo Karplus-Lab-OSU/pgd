@@ -12,6 +12,7 @@ Contents:
    :maxdepth: 1
 
    installation
+   docker
    importing_data
    updating_protein_database
    site_specific_information
