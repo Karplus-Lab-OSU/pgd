@@ -80,20 +80,3 @@ PLOT_PROPERTY_CHOICES = [
     ("zeta","zeta")
     #("h_bond_energy","H Bond"),
     ]
-
-# This class makes a property subscriptable
-# (may get moved to pgd_search/models.py)
-class Subscripter():
-    def __init__(self, key, parent):
-        self.key = key
-        self.parent = parent
-        #add this instance to the parent. doing this here
-        #makes defining subscriptor instance simpler because
-        #you only need to specify the key once
-        parent.__dict__[key] = self
-
-    def __getitem__(self, i):
-        return self.parent.__dict__['%s_%i' % (self.key, i)]
-
-    def __setitem__(self, i, val):
-        self.parent.__dict__['%s_%i' % (self.key, i)] = val

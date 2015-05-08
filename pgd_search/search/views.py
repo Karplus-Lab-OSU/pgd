@@ -20,9 +20,6 @@ from pgd_splicer.chi import CHI_MAP, PROTEIN_ORDER
 from pgd_splicer.sidechain import *
 from django.core import serializers
 
-#This might be a big faux pas
-from pgd_splicer.models import pdb_select_settings
-
 json_sidechain_lengths_lookup = json.dumps(bond_lengths_string_dict)
 json_sidechain_angles_lookup = json.dumps(bond_angles_string_dict)
 
@@ -54,7 +51,7 @@ def search(request):
             else:
                 #store search in session
                 
-                search.dataset_version = pdb_select_settings.DATA_VERSION
+                search.dataset_version = settings.DATA_VERSION
                 request.session['search'] = pickle.dumps(search_object)
                 return redirect('%s/search/results/' % settings.SITE_ROOT) # Redirect after POST
         

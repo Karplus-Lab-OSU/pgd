@@ -27,52 +27,6 @@ from ftplib import FTP, error_perm
 import re
 import time
 
-class FTPFile(object):
-
-    def __init__(self, _flags, _wtf, _owner, _group, _size, _date, _name):
-        self.flags = _flags
-        self.wtf = _wtf
-        self.owner = _owner
-        self.group = _group
-        self.size = _size
-        self.date = _date
-        self.name = _name
-
-    def __str__(self):
-        return '%s %s %s %s %s %s %s' % (self.flags, self.wtf, self.owner, self.group, self.size, self.date, self.name)
-
-
-def processFile(str):
-    p = re.compile( '([ldwrx\-]{9,11})\s+(\d+)\s+(\w+)\s+(\w+)\s+(\d+)\s+(\w+)\s+(\d+)\s+([0-9:]{4,5})\s+([a-zA-Z0-9_.\-]+)'  )
-    m = p.match(str)
-
-    if m==None:
-        print "None"
-        return
-
-    # get pdb identifier
-    pdb = m.group(9)[3:7]
-
-    #check if we need this file
-    if pdb not in pdb_local_files:
-        return
-
-    # extract date
-    dateStr = m.group(6)+' '+m.group(7)+' '+m.group(8)
-
-    # check for timestamp in place of year then parse date accordingly
-    if dateStr.find(':') != -1:
-        #no year in string so add it to the end
-        date = time.strptime(dateStr + time.strftime(' %Y'), '%b %d %H:%M %Y' )
-    else:
-        date = time.strptime(dateStr, '%b %d %Y' )
-
-    #file = FTPFile(m.group(1), m.group(2), m.group(3), m.group(4), m.group(5), date, m.group(9))
-    #files.append(file)
-    # XXX how does it get over here?
-    pdb_remote_files[pdb] = date
-
-
 class FTPUpdateTask(object):
 
     pdbTotal = 0

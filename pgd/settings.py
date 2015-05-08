@@ -196,3 +196,9 @@ EMAIL_PORT = config('EMAIL_PORT', default='25')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='registration@pgd.science.oregonstate.edu')
 SERVER_EMAIL = config('SERVER_EMAIL', default='pgd@pgd.science.oregonstate.edu')
 LOGIN_REDIRECT_URL= '%s/search/' % SITE_ROOT
+
+# FTP settings
+PDB_FTP_HOST = config('PDB_FTP_HOST', default='ftp.ebi.ac.uk')
+PDB_REMOTE_DIR = config('PDB_REMOTE_DIR', default='/pub/databases/rcsb/pdb/data/structures/all/pdb/')
+PDB_LOCAL_DIR = config('PDB_LOCAL_DIR', default='./pdb')
+PDB_TMP_DIR = config('PDB_TMP_DIR', default='./tmp')
