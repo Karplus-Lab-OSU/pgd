@@ -16,10 +16,6 @@ if __name__ == '__main__':
     # ==========================================================
 
 
-from ProcessPDBTask import *
-from ftpupdate import *
-from SegmentBuilder import *
-
 class ProteinImportTask():
     """
     Full import process for a single protein.

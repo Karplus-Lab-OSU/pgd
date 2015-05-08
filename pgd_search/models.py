@@ -12,7 +12,7 @@ from django.contrib.auth.models import User
 from pgd_core.models import Protein,Residue
 from pgd_constants import AA_CHOICES, AA_CHOICES_DICT, SS_CHOICES
 from pgd_splicer.sidechain import bond_lengths_string_dict, bond_angles_string_dict
-from pgd_core import residue_indexes
+from pgd_core.util import residue_indexes
 
 
 range_re = re.compile("(?<=[^-<>=])-")
