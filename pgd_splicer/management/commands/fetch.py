@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 from pgd_core.models import Protein
-from pgd_splicer.models import pdb_select_settings, ftp_update_settings
+from django.conf import settings
 import urllib
 import re
 import gzip
@@ -41,12 +41,10 @@ class Command(BaseCommand):
     )
     help = 'Retrieves missing proteins from the website.'
 
-    tmpdir = pdb_select_settings.PDB_TMP_DIR
-    pdbdir = pdb_select_settings.pdb_dir
-
-    localdir = ftp_update_settings.PDB_LOCAL_DIR
-    remotedir = ftp_update_settings.PDB_REMOTE_DIR
-    ftphost = ftp_update_settings.PDB_FTP_HOST
+    tmpdir = settings.PDB_TMP_DIR
+    localdir = settings.PDB_LOCAL_DIR
+    remotedir = settings.PDB_REMOTE_DIR
+    ftphost = settings.PDB_FTP_HOST
 
     def filename(self, code):
         return 'pdb%s.ent.gz' % code[:4].lower()
