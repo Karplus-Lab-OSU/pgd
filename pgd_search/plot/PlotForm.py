@@ -106,19 +106,45 @@ Form used by the plotting function
 """
 class PlotForm(forms.Form):
     attribute       = forms.CharField(initial='Observations')
+
     xProperty       = forms.CharField(initial='phi')
     yProperty       = forms.CharField(initial='psi')
-    reference       = forms.FloatField(required=False, widget=forms.TextInput(attrs={'size':8}))
-    sigmaVal        = forms.FloatField(initial=3, min_value=0, required=False, widget=forms.TextInput(attrs={'size':8}))
-    x               = forms.FloatField(required=False, initial=-180, widget=forms.TextInput(attrs={'size':4}))
-    x1              = forms.FloatField(required=False, initial=180, widget=forms.TextInput(attrs={'size':4}))
-    y               = forms.FloatField(required=False, initial=-180, widget=forms.TextInput(attrs={'size':4}))
-    y1              = forms.FloatField(required=False, initial=180, widget=forms.TextInput(attrs={'size':4}))
-    residue_attribute = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
-    residue_xproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
-    residue_yproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES], initial=0)
-    xBin            = forms.FloatField(required=False, initial=10, widget=forms.TextInput(attrs={'size':4}))
-    yBin            = forms.FloatField(required=False, initial=10, widget=forms.TextInput(attrs={'size':4}))
+
+    reference       = forms.FloatField(required=False,
+                                       widget=forms.TextInput(attrs={'size':8}))
+    sigmaVal        = forms.FloatField(initial=3,
+                                       min_value=0,
+                                       required=False,
+                                       widget=forms.TextInput(attrs={'size':8}))
+
+    x               = forms.FloatField(required=False,
+                                       initial=-180,
+                                       widget=forms.TextInput(attrs={'size':4}))
+    x1              = forms.FloatField(required=False,
+                                       initial=180,
+                                       widget=forms.TextInput(attrs={'size':4}))
+
+    y               = forms.FloatField(required=False,
+                                       initial=-180,
+                                       widget=forms.TextInput(attrs={'size':4}))
+    y1              = forms.FloatField(required=False,
+                                       initial=180,
+                                       widget=forms.TextInput(attrs={'size':4}))
+
+    residue_attribute = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES],
+                                          initial=0)
+
+    residue_xproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES],
+                                          initial=0)
+    residue_yproperty = forms.ChoiceField(choices=[(i,'i') if i == 0 else (i,i) for i in RESIDUE_INDEXES],
+                                          initial=0)
+
+    xBin            = forms.FloatField(required=False,
+                                       initial=10,
+                                       widget=forms.TextInput(attrs={'size':4}))
+    yBin            = forms.FloatField(required=False,
+                                       initial=10,
+                                       widget=forms.TextInput(attrs={'size':4}))
 
     #custom plot properties
     background_color= forms.ChoiceField(choices=BACKGROUND_CHOICES)
@@ -126,8 +152,10 @@ class PlotForm(forms.Form):
     text_color      = forms.ChoiceField(choices=TEXT_CHOICES)
     plot_hue        = forms.ChoiceField(choices=HUE_CHOICES)
     hash_color      = forms.ChoiceField(choices=HASH_CHOICES)
-    height          = forms.IntegerField(initial=470, widget=forms.TextInput(attrs={'size':4}))
-    width           = forms.IntegerField(initial=560, widget=forms.TextInput(attrs={'size':4}))
+    height          = forms.IntegerField(initial=470,
+                                         widget=forms.TextInput(attrs={'size':4}))
+    width           = forms.IntegerField(initial=560,
+                                         widget=forms.TextInput(attrs={'size':4}))
 
     def clean(self):
         data = self.cleaned_data
