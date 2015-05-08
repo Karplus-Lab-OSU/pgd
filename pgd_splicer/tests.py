@@ -47,6 +47,7 @@ class MonkeyPatch:
     #  - 3CGX
     #  - 3CGM
     #  - 1MWW
+    #  - 1H0H
 
     # For comparison, the database fixture contains:
     #  - 1TWF
@@ -54,8 +55,9 @@ class MonkeyPatch:
     #  - 1MWQ
     #  - 3CGM
     #  - 1MWW
+    #  - 1H0H
 
-    # Files for all six proteins are available as well.
+    # Files for all seven proteins are available as well.
 
     @staticmethod
     def sitefile(filename):
@@ -194,7 +196,7 @@ class MonkeyPatch:
 
         # Replace all PDB entries with our test entries.
         # JMT: consider making a separate 'testpdb' directory?
-        codes = ['1mwq', '1mww', '1twf', '3cgm', '3cgx', '3cgz']
+        codes = ['1mwq', '1mww', '1twf', '3cgm', '3cgx', '3cgz', '1h0h']
         for code in codes:
             pdbfile = 'pdb%s.ent.gz' % code
             if os.path.exists(MonkeyPatch.sitefile(pdbfile)):
