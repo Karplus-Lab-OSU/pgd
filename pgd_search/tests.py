@@ -1,6 +1,10 @@
 import unittest
 import datetime
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from pgd_search.models import *
 from pgd_core.models import *
 #from pgd_splicer.SegmentBuilder import SegmentBuilderTask
@@ -710,7 +714,7 @@ class PersistingSearchOptions(LiveServerTestCase):
 
 
 class SidechainStatistics(LiveServerTestCase):
-    # JMT: fixtures?
+    fixtures = ['pgd_core']
 
     @classmethod
     def setUpClass(cls):
@@ -727,22 +731,44 @@ class SidechainStatistics(LiveServerTestCase):
         self.driver.get(self.live_server_url + "/search")
 
         # Run default search
-        self.driver.find_element_by_class_name('submit').click()
+        self.driver.find_element_by_css_selector('input.submit').click()
 
         # Visit statistics link
-        self.driver.find_element_by_link_text('Statistics').click()
+        try:
+            stats_link = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.LINK_TEXT, 'Statistics'))
+            )
+            self.driver.find_element_by_link_text('Statistics').click()
+        except:
+            self.driver.save_screenshot("no-statistics.png")
+            self.fail("no stats link")
 
-        # The first div is for Arg.
-        div_xpath = "//div[@id='aa_r']"
-        h2_xpath = div_xpath+"/h2"
-        cbcg_xpath = div_xpath+"/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
+        # Wait for qtip to disappear
+        qtip_xpath = "//div[contains(., 'Calculating Statistics')]"
+        try:
+            qtip_element = WebDriverWait(self.driver, 10).until(
+                EC.invisibility_of_element_located((By.XPATH, qtip_xpath))
+            )
+        except:
+            self.driver.save_screenshot("no-qtip.png")
+            self.fail("qtip does not disappear")
 
-        # Before selecting the sidechain, the cbcg value should be '--'.
-        cbcg_val = self.driver.find_element_by_xpath(cbcg_xpath)
-        self.assertFalse(cbcg_val.is_displayed())
+        # Arg div table value should not be visible.
+        cbcg_xpath = "//div[@id='aa_r']/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
+
+        # Before selecting the sidechain, the cbcg value should not be visible.
+        try:
+            cbcg_element = self.driver.find_element_by_xpath(cbcg_xpath)
+        except:
+            self.driver.save_screenshot("no-cbcg-element.png")
+            self.fail("no cbcg element found")
+        self.assertFalse(cbcg_element.is_displayed())
 
         # Visit 'Arg' sidechain
+        h2_xpath = "//div[@id='aa_r']/h2"
         self.driver.find_element_by_xpath(h2_xpath).click()
 
-        # After, it should be something else!
-        self.assertTrue(cbcg_val.is_displayed())
+        # After, it should be visible and not equal to '--'.
+        # cbcg_element = self.driver.find_element_by_css_selector("td.CB_CG")
+        self.assertTrue(cbcg_element.is_displayed())
+        self.assertNotEqual("--", cbcg_element.text)
