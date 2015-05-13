@@ -746,7 +746,7 @@ class SidechainStatistics(LiveServerTestCase):
         # Wait for qtip to disappear
         qtip_xpath = "//div[contains(., 'Calculating Statistics')]"
         try:
-            qtip_element = WebDriverWait(self.driver, 10).until(
+            qtip_element = WebDriverWait(self.driver, 60).until(
                 EC.invisibility_of_element_located((By.XPATH, qtip_xpath))
             )
         except:
@@ -757,11 +757,7 @@ class SidechainStatistics(LiveServerTestCase):
         cbcg_xpath = "//div[@id='aa_r']/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
 
         # Before selecting the sidechain, the cbcg value should not be visible.
-        try:
-            cbcg_element = self.driver.find_element_by_xpath(cbcg_xpath)
-        except:
-            self.driver.save_screenshot("no-cbcg-element.png")
-            self.fail("no cbcg element found")
+        cbcg_element = self.driver.find_element_by_xpath(cbcg_xpath)
         self.assertFalse(cbcg_element.is_displayed())
 
         # Visit 'Arg' sidechain
