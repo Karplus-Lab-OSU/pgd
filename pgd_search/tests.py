@@ -707,3 +707,42 @@ class PersistingSearchOptions(LiveServerTestCase):
         # What I did see:
         # The CbCg box contains "1".
         pass
+
+
+class SidechainStatistics(LiveServerTestCase):
+    # JMT: fixtures?
+
+    @classmethod
+    def setUpClass(cls):
+        cls.driver = webdriver.PhantomJS()
+        super(SidechainStatistics, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        super(SidechainStatistics, cls).tearDownClass()
+
+    def test_sidechain_statistics_present(self):
+        # Load search page
+        self.driver.get(self.live_server_url + "/search")
+
+        # Run default search
+        self.driver.find_element_by_class_name('submit').click()
+
+        # Visit statistics link
+        self.driver.find_element_by_link_text('Statistics').click()
+
+        # The first div is for Arg.
+        div_xpath = "//div[@id='aa_r']"
+        h2_xpath = div_xpath+"/h2"
+        cbcg_xpath = div_xpath+"/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
+
+        # Before selecting the sidechain, the cbcg value should be '--'.
+        cbcg_val = self.driver.find_element_by_xpath(cbcg_xpath)
+        self.assertFalse(cbcg_val.is_displayed())
+
+        # Visit 'Arg' sidechain
+        self.driver.find_element_by_xpath(h2_xpath).click()
+
+        # After, it should be something else!
+        self.assertTrue(cbcg_val.is_displayed())

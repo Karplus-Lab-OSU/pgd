@@ -106,7 +106,7 @@ def search_statistics_aa_data(request, aa):
     """
     returns ajax'ified statistics data for a single aa in the current search
     """
-    search = request.session['search']
+    search = pickle.loads(request.session['search'])
     try:        
         index = int(request.GET['i']) if request.GET.has_key('i') else 0
         stats = calculate_aa_statistics(search.querySet(), aa, index)
