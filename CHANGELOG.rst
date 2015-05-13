@@ -18,6 +18,8 @@ Develop branch
 
 - Imported GSoC 2014 changes, including updating to Django 1.6 (#17649)
 
+- Fixed sidechain statistics which broke as a result of the upgrade (#18159)    
+
 Version 1.0.2: released 2013 Oct 07
 
 - Fixed corrupt selection file generation (#15141)
@@ -30,4 +32,4 @@ Version 1.0.0: released 2013 Aug 15
 
 - Sidechain lengths and angles are now reset when amino acids are deselected (#13623)
 
-  - Standard deviations are now calculated correctly on the search statistics page (#12459)
+- Standard deviations are now calculated correctly on the search statistics page (#12459)
