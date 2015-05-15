@@ -753,21 +753,56 @@ class SidechainStatistics(LiveServerTestCase):
             self.driver.save_screenshot("no-qtip.png")
             self.fail("qtip does not disappear")
 
-        # Arg div table value should not be visible.
-        cbcg_xpath = "//div[@id='aa_r']/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
+        # Sidechain statistics are stored in divs named after the residue.
+        # Inside each div is two tables -- one for lengths, one for angles.
+        # Each table has two rows -- one for mean, one for standard deviation.
+        # Each row has one element for each angle or length.
 
-        # Before selecting the sidechain, the cbcg value should not be visible.
-        cbcg_element = self.driver.find_element_by_xpath(cbcg_xpath)
-        self.assertFalse(cbcg_element.is_displayed())
+        ss_test_values = {
+            "aa_r": {
+                "CB_CG": {
+                    "avg": "1.521",
+                    "stddev": "0.014",
+                },
+                "CA_CB_CG": {
+                    "avg": "112.6",
+                    "stddev": "2.8",
+                },
+            },
+        }
 
-        # Visit 'Arg' sidechain
-        h2_xpath = "//div[@id='aa_r']/h2"
-        self.driver.find_element_by_xpath(h2_xpath).click()
+        ss_xpath_fmt = "//div[@id='%s']" + \
+                       "/table['%d']" + \
+                       "/tbody/tr[@class='%s']" + \
+                       "/td[@class='%s']"
+        ss_h2_fmt = "//div[@id='%s']/h2"
 
-        # After, it should be visible and not equal to '--'.
-        # cbcg_element = self.driver.find_element_by_css_selector("td.CB_CG")
-        self.assertTrue(cbcg_element.is_displayed())
-        self.assertNotEqual("--", cbcg_element.text)
+        for residue, elements in ss_test_values.iteritems():
+            h2_xpath = ss_h2_fmt % (residue)
+            h2_element = self.driver.find_element_by_xpath(h2_xpath)
+            for element, rows in elements.iteritems():
+                for row, value in rows.iteritems():
+                    # Lengths have one _, angles have two.
+                    # Lengths are in the first table, angles are in the second.
+                    table = row.count('_')
+                    ss_xpath = ss_xpath_fmt % (residue, table, row, element)
+                    ss_element = self.driver.find_element_by_xpath(ss_xpath)
+
+                    # Value should not be displayed.
+                    self.assertFalse(ss_element.is_displayed())
+
+                    # Trigger sidechain.
+                    self.driver.find_element_by_xpath(h2_xpath).click()
+
+                    # Value should be displayed and correct.
+                    self.assertTrue(ss_element.is_displayed())
+                    self.assertEqual(value, ss_element.text)
+
+                    # Trigger sidechain.
+                    self.driver.find_element_by_xpath(h2_xpath).click()
+
+                    # Value should not be displayed.
+                    self.assertFalse(ss_element.is_displayed())
 
 
 #selenium test for saving the plot
@@ -800,4 +835,3 @@ class SaveImageAfterSearch(LiveServerTestCase):
 
         #Click the button on the second page
         response = self.driver.find_element_by_id("button-save").click()
-        
