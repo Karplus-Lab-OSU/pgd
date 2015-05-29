@@ -184,7 +184,7 @@ LOGGING = {
 QUERY_LIMIT = config('QUERY_LIMIT', default=50000000, cast=int)
 SEGMENT_SIZE = config('SEGMENT_SIZE', default=10, cast=int)
 DATA_VERSION = config('DATA_VERSION', default='testing')
-PGD_VERSION = config('PGD_VERSION', default='1.0.2')
+PGD_VERSION = config('PGD_VERSION', default='develop')
 
 # Django registration
 ACCOUNT_ACTIVATION_DAYS = config('ACCOUNT_ACTIVATION_DAYS', default=5, cast=int)

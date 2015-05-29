@@ -1,4 +1,4 @@
-Develop branch
+Version 1.1: released 2015 May 29
 
 - Fixed wraparound plots (#3327)
 
