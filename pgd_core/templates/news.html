@@ -1,0 +1,78 @@
+j% extends "base.html" %}
+
+{% block title %}Protein Geometry Database - News{%endblock%}
+
+{% block head %}
+    <style>
+        #content {
+            margin:40px;
+        }
+        
+        li {
+            margin-bottom:20px;
+        }
+        
+        ul {
+            margin-left:30px;
+        }
+        
+        ul ul li {margin-bottom:0;}
+    </style>
+{% endblock %}
+
+{% block content %}
+
+<h1>News</h1>
+
+<ul>
+  <li>
+    <b>Version 1.1: released 2015 May 29</b>
+    <ul>
+      <li>Fixed wraparound plots (#3327)</li>
+      <li>Updated requirements.txt (#15615)</li>
+      <li>Used cairocffi instead of py2cairo (#15621)</li>
+      <li>Moved documentation into repository (#15999)</li>
+      <li>Created pdb directory as required (#16353)</li>
+      <li>Expanded splicer's support for additional amino acid types (#17223)</li>
+      <li>Fixed chi correction for 4MYI (#17229)</li>
+      <li>Added changelog to repository (#18123)</li>
+      <li>Imported GSoC 2014 changes, including updating to Django 1.6 (#17649)</li>
+      <li>Fixed sidechain statistics which broke as a result of the upgrade (#18159)</l>
+      <li>Fixed login (#18177)</li>
+  </li>
+    <b>Version 1.1: released 2013 Nov 11</b>
+    <ul>
+      <li>Wraparound plots have been fixed (#3327)</li>
+    <b>Version 1.0.2: released 2013 Oct 07</b>
+    <ul>
+      <li>Fix corrupt selection file generation (#15141)</li>
+    </ul>
+    <b>Version 1.0.1: released 2013 Aug 19</b>
+    <ul>
+      <li>Use population standard deviation instead of sample when generating plots (#14613)</li>
+    </ul>
+    <b>Version 1.0.0: released 2013 Aug 15</b>
+    <ul>
+      <li>Sidechain lengths and angles are now reset when amino acids are deselected (#13623)</li>
+      <li>Standard deviations are now calculated correctly on the search statistics page (#12459)</li>
+    </ul>
+  </li>
+  <li>
+    <b>Database: updated 2013 Oct 08</b>
+    <ul>
+      <li>23719 Proteins</li>
+      <li>715 New</li>
+      <li>70 Removed</li>
+    </ul>
+  </li>
+  <li>
+    <b>Database: updated 2013 Jul 01</b>
+    <ul>
+      <li>23074 proteins</li>
+      <li>24959 chains</li>
+      <li>5985607 residues</li>
+    </ul>
+  </li>
+</ul>
+{% endblock %}
+
