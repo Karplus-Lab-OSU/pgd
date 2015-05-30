@@ -12,7 +12,7 @@ from pgd_constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 from search.SearchForm import SearchSyntaxField
 import pytz
-from django.test import LiveServerTestCase
+from django.test import LiveServerTestCase, TestCase
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -768,3 +768,11 @@ class SidechainStatistics(LiveServerTestCase):
         # cbcg_element = self.driver.find_element_by_css_selector("td.CB_CG")
         self.assertTrue(cbcg_element.is_displayed())
         self.assertNotEqual("--", cbcg_element.text)
+
+
+class LoginTestCase(TestCase):
+    # create test user, try to log in as the user, see if that works.
+
+    def test_login_get(self):
+        response = self.client.get("/accounts/login", follow=True)
+        self.assertEqual(response.status_code, 200)
