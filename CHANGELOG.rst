@@ -20,6 +20,8 @@ Version 1.1: released 2015 May 29
 
 - Fixed sidechain statistics which broke as a result of the upgrade (#18159)    
 
+- Fixed login (#18177)
+
 Version 1.0.2: released 2013 Oct 07
 
 - Fixed corrupt selection file generation (#15141)
