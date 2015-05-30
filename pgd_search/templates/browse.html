@@ -173,7 +173,7 @@
 {% endblock %}
 
 {% block content %}
-    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}{% csrf_token %}</form>
     <div class="pagination">
         <span class="step-links">
             {% if segments.has_previous %}
@@ -300,7 +300,7 @@
         </tbody>
     </table>
 
-    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}</form>
+    <form action="#" type="get">Page <input type="text" id="page_jump" name="page" value="{{segments.number}}"> of {{segments.paginator.num_pages}}{% csrf_token %}</form>
     <div class="pagination">
         <span class="step-links">
             {% if segments.has_previous %}
