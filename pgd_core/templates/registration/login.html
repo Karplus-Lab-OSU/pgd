@@ -30,6 +30,7 @@
     </table>
   <div id="login"><input  type="submit" value="Log in" /></div>
   <input type="hidden" name="next" value="{{ next }}" />
+  {% csrf_token %}
 </form>
 
 <p>Forgot your Password?<strong><a style="color:black;"href="{% url "auth_password_reset" %}">...Reset It</a></strong></p>
