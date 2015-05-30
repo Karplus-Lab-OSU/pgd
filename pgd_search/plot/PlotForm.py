@@ -135,7 +135,6 @@ class PlotForm(forms.Form):
             data['xProperty'] = data['xProperty'].replace('-','_')
             data['yProperty'] = data['yProperty'].replace('-','_')
             data['attribute'] = data['attribute'].replace('-','_')
-            print data['xProperty']
         except KeyError:
             pass
         return data

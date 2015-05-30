@@ -251,28 +251,6 @@ class ConfDistPlot():
         xbin = self.xbin
         ybin = self.ybin
 
-        # if this is a circular spanning 180/-180 we must adjust the bins
-        # so that the range falls between -180 and 180
-        xlinear = True
-        if x1 > 180:
-            x = x1-360
-            x1 = 180-self.x
-            xlinear = False
-        elif x1 < 0 and x > 0:
-            x = x1
-            x1 = self.x
-            xlinear = False
-
-        ylinear = True
-        if y1 > 180:
-            y = y1-360
-            y1 = 180-self.y
-            ylinear = False
-        elif y1 < 0 and y > 0:
-            y = y1
-            y1 = self.y
-            ylinear = False
-            
         # Dictionary of bins, keyed by a tuple of x-y coordinates in field units
         #   i.e. (<x value>, <y value>)
         self.bins = {}
@@ -290,15 +268,15 @@ class ConfDistPlot():
             (Q(**{
                 '%s__gte'%self.xTextString: x,
                 '%s__lte'%self.xTextString: x1,
-            }) if xlinear else ( # Altered logic for circular values
-                Q(**{'%s__gte'%self.xTextString: self.x}) |
-                Q(**{'%s__lte'%self.xTextString: x})
+            }) if x < x1 else ( # Altered logic for circular values
+                Q(**{'%s__gte'%self.xTextString: x}) |
+                Q(**{'%s__lte'%self.xTextString: x1})
             )) & (Q(**{
                 '%s__gte'%self.yTextString: y,
                 '%s__lte'%self.yTextString: y1,
-            }) if ylinear else ( # altered logic for circular values
-                Q(**{'%s__gte'%self.yTextString: self.y}) |
-                Q(**{'%s__lte'%self.yTextString: y})
+            }) if y < y1 else ( # altered logic for circular values
+                Q(**{'%s__gte'%self.yTextString: y}) |
+                Q(**{'%s__lte'%self.yTextString: y1})
             ))
         )
         # Total # of observations
@@ -352,8 +330,8 @@ class ConfDistPlot():
 
         cn = connections['default']
         qn = SQLCompiler(annotated_query.query, cn, 'default').quote_name_unless_alias
-        sortx_sql = sortx.aggregate.as_sql(qn, cn)
-        sorty_sql = sorty.aggregate.as_sql(qn, cn)
+        sortx_sql = sortx.aggregate.as_sql(qn, cn)[0]
+        sorty_sql = sorty.aggregate.as_sql(qn, cn)[0]
 
         annotated_query = annotated_query.extra(select={'x':sortx_sql, 'y':sorty_sql})
         annotated_query = annotated_query.order_by('x','y')
@@ -489,16 +467,8 @@ class ConfDistPlot():
         hashsize = 10*ratio
         
         # calculate bin count and sizes.
-        if x>0 and x1<0:
-            # account for circular coordinates
-            xBinCount = math.ceil((360.0+x1-x)/xbin)
-        else:
-            xBinCount = math.ceil((float(x1)-x)/xbin)
-        if y>0 and y1<0:
-            # account for circular coordinates
-            yBinCount = math.ceil((360.0+y1-y)/ybin)
-        else:
-            yBinCount = math.ceil((float(y1)-y)/ybin)
+        xBinCount = math.ceil(((360.0 if x > x1 else 0.0) + x1 - x)/xbin)
+        yBinCount = math.ceil(((360.0 if y > y1 else 0.0) + y1 - y)/ybin)
             
         # determine graph and bin sizes.  bins should always fall within the
         # borders of the graph, and the graph should always exactly fit the

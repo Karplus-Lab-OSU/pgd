@@ -2,15 +2,13 @@ import math
 
 from django.conf import settings
 
-from pgd import VERSION
-
 
 """
 Properties for residues as indexes
 """
 RESIDUE_INDEX_START = 0 - (settings.SEGMENT_SIZE-1) / 2
-RESIDUE_INDEX_STOP  = int(math.ceil((settings.SEGMENT_SIZE-1) / 2.0))+1
-RESIDUE_INDEXES = range(RESIDUE_INDEX_START,RESIDUE_INDEX_STOP)
+RESIDUE_INDEX_STOP = int(math.ceil((settings.SEGMENT_SIZE-1) / 2.0))+1
+RESIDUE_INDEXES = range(RESIDUE_INDEX_START, RESIDUE_INDEX_STOP)
 
 
 def settings_processor(request):
@@ -19,9 +17,8 @@ def settings_processor(request):
     """
 
     return {
-        'PGD_VERSION':VERSION,
-        'MEDIA':settings.MEDIA_URL,
-        'ROOT':settings.SITE_ROOT,
-        'DATA_VERSION':settings.DATA_VERSION,
-        'GOOGLE_ID':settings.GOOGLE_ID
+        'PGD_VERSION': settings.PGD_VERSION,
+        'ROOT': settings.SITE_ROOT,
+        'DATA_VERSION': settings.DATA_VERSION,
+        'GOOGLE_ID': settings.GOOGLE_ID
     }

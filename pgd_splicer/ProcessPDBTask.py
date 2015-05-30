@@ -12,7 +12,7 @@ if __name__ == '__main__':
     # Setup django environment
     # ==========================================================
     if not 'DJANGO_SETTINGS_MODULE' in os.environ:
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'pgd.settings'
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
@@ -347,6 +347,18 @@ def pdb_file_is_newer(data):
     return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
 
 
+def amino_present(s):
+    """
+    Whether a given line contains a valid amino acid.
+    
+    NB: "SEC" is a valid amino acid, regardless of its absence from
+    AA3to1.
+
+    See #17223 for details.
+    """
+
+    return any(amino in s for amino in AA3to1)
+
 def hetatm_amino(s):
     """
     Whether a given line refers to a HETATM amino acid.
@@ -354,7 +366,17 @@ def hetatm_amino(s):
     These lines are undesirable and we should discard them.
     """
 
-    return s.startswith("HETATM") and any(amino in s for amino in AA3to1)
+    return s.startswith("HETATM ") and amino_present(s)
+
+
+def atom_noamino(s):
+    """
+    Whether a given line is an ATOM line with no valid amino acid.
+
+    These lines are undesirable and we should discard them.
+    """
+
+    return s.startswith("ATOM ") and not amino_present(s)
 
 
 def parseWithBioPython(path, props, chains_filter=None):
@@ -374,8 +396,10 @@ def parseWithBioPython(path, props, chains_filter=None):
 
     # Go through, one line at a time, and discard lines that have the bad
     # HETATM pattern. This is largely for 2VQ1, see #8319 for details.
+    # Also remove any ATOM lines with invalid amino acids.
+    # See #17223 for details.
     for line in gunzipped:
-        if not hetatm_amino(line):
+	if not hetatm_amino(line) and not atom_noamino(line):
             decompressed.write(line)
 
     # Be kind; rewind.
@@ -608,11 +632,13 @@ def parseWithBioPython(path, props, chains_filter=None):
                             if old_atom1:
                                 atoms[atom2] = old_atom1
                             else:
-                                del atoms[atom2]
+                                # del atoms[atom2]
+                                atoms.pop(atom2, None)
                             if old_atom2:
                                 atoms[atom1] = old_atom2
                             else:
-                                del atoms[atom1]
+                                # del atoms[atom1]
+                                atoms.pop(atom1, None)
 
 
                 #Calculate CHI values.  The mappings for per peptide chi's are stored

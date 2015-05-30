@@ -1,10 +1,10 @@
 from django.http import HttpResponse
-from django.utils import simplejson
-
+import json
+import pickle
 from Histogram import HistogramPlot
 
 def histogram(request, X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr):
-    query = request.session['search'].querySet()
+    query = pickle.loads(request.session['search']).querySet()
     hp = HistogramPlot(query, X, Xm, Y, Ym, histoX, histoY, histoZ, histoXr, histoYr, histoZr)
     svg = hp.HistoPlot()
     return svg
@@ -24,5 +24,5 @@ def renderHist(request):
                     data["yResNum"],
                     data["zResNum"]
                     )
-    json = simplejson.dumps({'svg':svg.to_dict()})
-    return HttpResponse(json)
+    _json = json.dumps({'svg':svg.to_dict()})
+    return HttpResponse(_json)

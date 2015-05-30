@@ -1,12 +1,18 @@
 import unittest
 import datetime
 from selenium import webdriver
+from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from pgd_search.models import *
 from pgd_core.models import *
 #from pgd_splicer.SegmentBuilder import SegmentBuilderTask
 from pgd_constants import AA_CHOICES, SS_CHOICES
 from math import ceil
 from search.SearchForm import SearchSyntaxField
+import pytz
+from django.test import LiveServerTestCase
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -16,7 +22,7 @@ for i in range(1, len(FIELDS)+1):
     #shift values into decimels
     FIELDS_DICT[FIELDS[i-1]] = i*.01
 
-class SearchParserValidation(unittest.TestCase):
+class SearchParserValidation(LiveServerTestCase):
 
     def calculateAA(self, chainIndex):
         #aa_choice = chainIndex-1 if chainIndex-1 < len(AA_CHOICES) else chainIndex-1-len(AA_CHOICES)
@@ -42,7 +48,7 @@ class SearchParserValidation(unittest.TestCase):
         protein.resolution      = i + .01
         protein.rfactor         = i + .02
         protein.rfree           = i + .03
-        protein.pdb_date        = datetime.date(2001,1,1)
+        protein.pdb_date        = datetime.datetime(2001,1,1, tzinfo=pytz.utc)
         protein.__dict__.update(kwargs)
         protein.save()
         return protein
@@ -508,7 +514,7 @@ class SearchParserValidation(unittest.TestCase):
                 "Multiple residue search failed on field %s  Expected result was %s  Returned result was %s"%(field, set((getattr(chainList[2], '%s'%field), )), set(getattr(x, '%s'%field) for x in Search.parse_search(search)))
             )
 
-class SearchFieldValidationCase(unittest.TestCase):
+class SearchFieldValidationCase(LiveServerTestCase):
     def setUp(self):
         pass
 
@@ -548,19 +554,18 @@ class SearchFieldValidationCase(unittest.TestCase):
             self.assertNotEqual(searchField.syntaxPattern.match(value), None)
 
 #Selenium tests
-class PersistingSearchOptions(unittest.TestCase):
+class PersistingSearchOptions(LiveServerTestCase):
     def setUp(self):
 
        # Create a new instance of the Firefox driver
-        self.driver = webdriver.Firefox()
+        self.driver = webdriver.PhantomJS() #webdriver.Firefox()
 
     def tearDown(self):
         self.driver.quit()
 
     def test_removed_options_persist(self):
-
         # Load search page
-        self.driver.get("http://localhost:8000/search")
+        self.driver.get(self.live_server_url + "/search")
 
         # Select the box that indicates number of residues
         residues = self.driver.find_element_by_id("id_residues")
@@ -645,7 +650,7 @@ class PersistingSearchOptions(unittest.TestCase):
 
     def test_sidechain_angles_reset(self):
         # Open a new search.
-        self.driver.get("http://localhost:8000/search")
+        self.driver.get(self.live_server_url + "/search")
 
         # Select the amino acid "His" on composition.
         AAs = self.driver.find_element_by_id("id_aa_choices_list_col_0")
@@ -677,7 +682,7 @@ class PersistingSearchOptions(unittest.TestCase):
 
     def test_sidechain_lengths_reset(self):
         # Open a new search.
-        self.driver.get("http://localhost:8000/search")
+        self.driver.get(self.live_server_url + "/search")
 
         # Select the amino acid "His" on composition.
         AAs = self.driver.find_element_by_id("id_aa_choices_list_col_0")
@@ -706,3 +711,60 @@ class PersistingSearchOptions(unittest.TestCase):
         # What I did see:
         # The CbCg box contains "1".
         pass
+
+
+class SidechainStatistics(LiveServerTestCase):
+    fixtures = ['pgd_core']
+
+    @classmethod
+    def setUpClass(cls):
+        cls.driver = webdriver.PhantomJS()
+        super(SidechainStatistics, cls).setUpClass()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.driver.quit()
+        super(SidechainStatistics, cls).tearDownClass()
+
+    def test_sidechain_statistics_present(self):
+        # Load search page
+        self.driver.get(self.live_server_url + "/search")
+
+        # Run default search
+        self.driver.find_element_by_css_selector('input.submit').click()
+
+        # Visit statistics link
+        try:
+            stats_link = WebDriverWait(self.driver, 10).until(
+                EC.presence_of_element_located((By.LINK_TEXT, 'Statistics'))
+            )
+            self.driver.find_element_by_link_text('Statistics').click()
+        except:
+            self.driver.save_screenshot("no-statistics.png")
+            self.fail("no stats link")
+
+        # Wait for qtip to disappear
+        qtip_xpath = "//div[contains(., 'Calculating Statistics')]"
+        try:
+            qtip_element = WebDriverWait(self.driver, 60).until(
+                EC.invisibility_of_element_located((By.XPATH, qtip_xpath))
+            )
+        except:
+            self.driver.save_screenshot("no-qtip.png")
+            self.fail("qtip does not disappear")
+
+        # Arg div table value should not be visible.
+        cbcg_xpath = "//div[@id='aa_r']/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
+
+        # Before selecting the sidechain, the cbcg value should not be visible.
+        cbcg_element = self.driver.find_element_by_xpath(cbcg_xpath)
+        self.assertFalse(cbcg_element.is_displayed())
+
+        # Visit 'Arg' sidechain
+        h2_xpath = "//div[@id='aa_r']/h2"
+        self.driver.find_element_by_xpath(h2_xpath).click()
+
+        # After, it should be visible and not equal to '--'.
+        # cbcg_element = self.driver.find_element_by_css_selector("td.CB_CG")
+        self.assertTrue(cbcg_element.is_displayed())
+        self.assertNotEqual("--", cbcg_element.text)

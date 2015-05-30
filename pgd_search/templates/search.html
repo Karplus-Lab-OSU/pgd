@@ -1,27 +1,30 @@
 {% extends 'search_base.html' %}
+
+{% load staticfiles %}
+
 {% load search_extras %}
 
 {% block head %}
-        <link rel="stylesheet" type="text/css" href="{{MEDIA_URL}}/css/jquery.autocomplete.css" />
+        <link rel="stylesheet" type="text/css" href="{% static "css/jquery.autocomplete.css" %}" />
         <link rel="stylesheet" type="text/css"
-            href="{{MEDIA_URL}}/css/search.css" />
+            href="{% static "css/search.css" %}" />
 
         <style>
         .toggle_Include {
             opacity:1;
-            background-image:url('{{MEDIA_URL}}/images/plus2.png');
+            background-image:url("{% static "images/plus2.png" %} ");
         }
 
         .toggle_Exclude {
             opacity:1;
-            background-image:url('{{MEDIA_URL}}/images/minus2.png');
+            background-image:url("{% static "images/minus2.png" %} ");
         }
         </style>
         
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/raphael-min.js"></script>
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.qtip-1.0.0-rc3.min.js"></script>
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/jquery.autocomplete.pack.js"></script>
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/DejaVu_400.font.full.js"></script>
+        <script type="text/javascript" src="{% static "js/raphael-min.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/jquery.qtip-1.0.0-rc3.min.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/jquery.autocomplete.pack.js" %}"></script>
+        <script type="text/javascript" src="{% static "js/DejaVu_400.font.full.js" %}"></script>
         <script type="text/javascript">
             var qtipsOn=true;
             var angle_qtip_api = null;
@@ -49,7 +52,7 @@
             {% endif %}
         </script>
 
-        <script type="text/javascript" src="{{MEDIA_URL}}/js/search.js"></script>
+        <script type="text/javascript" src="{% static "js/search.js" %}"></script>
 {% endblock %}
 
 {% block content %}
@@ -66,7 +69,7 @@
     {% endif %}
 
     <div id="formContainer">
-        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">
+        <form id="search" name="search" method="POST" action="{{SITE_ROOT}}/search/">{% csrf_token %}
             <table id="protein">
             <tbody>
 
