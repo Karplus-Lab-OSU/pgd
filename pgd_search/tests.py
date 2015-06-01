@@ -768,3 +768,36 @@ class SidechainStatistics(LiveServerTestCase):
         # cbcg_element = self.driver.find_element_by_css_selector("td.CB_CG")
         self.assertTrue(cbcg_element.is_displayed())
         self.assertNotEqual("--", cbcg_element.text)
+
+
+#selenium test for saving the plot
+#Works with selenium 2.45.0
+class SaveImageAfterSearch(LiveServerTestCase):
+
+    def setUp(self):
+        self.driver = webdriver.PhantomJS()
+
+    def tearDown(self):
+        self.driver.quit()
+
+    def test_saving_image(self):
+
+         # Load search page
+        self.driver.get(self.live_server_url + "/search")
+
+        # Select the box that indicates number of residues
+        residues = self.driver.find_element_by_id("id_residues")
+        for option in residues.find_elements_by_tag_name('option'):
+            if option.text == "4":
+                option.click()
+
+        #Clicking the submit button
+        self.driver.find_element_by_xpath("//input[@type='submit']").click()
+
+        #Waiting to click for the page to load
+        element = WebDriverWait(self.driver, 60).until(
+            EC.presence_of_element_located((By.ID, "button-save")))
+
+        #Click the button on the second page
+        response = self.driver.find_element_by_id("button-save").click()
+        
