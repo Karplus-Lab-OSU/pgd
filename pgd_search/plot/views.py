@@ -1,4 +1,5 @@
 import math
+import io
 import pickle
 from django.db.models import Max, Min
 from django.http import HttpResponse
@@ -130,10 +131,12 @@ def renderToPNG(request):
         width = 560
         height = 480
 
-    response = HttpResponse(content_type="image/png")
+    writer = io.BytesIO()
+    response = HttpResponse(mimetype="image/png")
     response['Content-Disposition'] = 'attachment; filename="plot.png"'
-    svg.render_png(response, width, height+30)
-
+    svg.render_png(writer, width, height+30)
+    response.write(writer.getvalue())
+    
     return response
 
 
