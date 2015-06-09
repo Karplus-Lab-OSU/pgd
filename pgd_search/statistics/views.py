@@ -190,7 +190,7 @@ def calculate_statistics(queryset, iIndex=0):
     #print '  -stats: %s (%s)' % (now-start, now-last)
     last = now
     end = time.time()
-    print 'Search Statistics Data in seconds: ', end-start
+    # print 'Search Statistics Data in seconds: ', end-start
 
     return stats
 
