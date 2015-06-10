@@ -176,6 +176,9 @@
                 {% endfor %}
             </tr>
             <tr class="spacer"/>
+
+            <!-- Mobility  Section -->
+
             <tr><td colspan="100%" class="sectionheader" id="mobility_header">Mobility →</td></tr>
             <tr class="mobility_row">
                 <td class="label">B<sup>m</sup></td>
@@ -203,6 +206,29 @@
             </tr>
 
             <tr class="spacer"/>
+
+            <!-- Occupancy Section -->
+
+            <tr><td colspan="100%" class="sectionheader" id="occupancy_header">Occupancy →</td></tr>
+            <tr class="occupancy_row">
+                <td class="label">B<sup>m</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.occm}}{{r.occm_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+            <tr class="occupancy_row">
+                <td class="label">B<sup>&gamma;</sup></td>
+                {% for r in residueFields %}
+                    <td class="field col_{{r.index}}">
+                        <span class="toggle">&nbsp;</span>{{r.occscs}}{{r.occscs_i}}
+                    </td>
+                {% endfor %}
+            </tr>
+
+            <tr class="spacer"/>
+
             <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles →</td></tr>
                 <tr class="angles_row">
                     <td class="label">C<sup>-1</sup>NC<sup>&alpha;</sup></td>

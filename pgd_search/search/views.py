@@ -81,7 +81,7 @@ def search(request):
 
     #order the residue properties in way that django template can handle it better
     residueFields = []
-    fields = ["ss", "aa", "phi", "psi", "ome", "omep", "chi1", "chi2", "chi3", "chi4", "chi5", "bm", "bs", "bg", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5']
+    fields = ["ss", "aa", "phi", "psi", "ome", "omep", "chi1", "chi2", "chi3", "chi4", "chi5", "bm", "bs", "bg","occm", "occscs", "h_bond_energy", "zeta", 'a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5']
     fields += sidechain_length_relationship_list
     fields += sidechain_angle_relationship_list
     for i in RESIDUE_INDEXES:

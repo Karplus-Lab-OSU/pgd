@@ -325,8 +325,8 @@ class Residue(models.Model):
     bm              = models.FloatField()
     bs              = models.FloatField()
     bg              = models.FloatField(null=True)
-    occm            = models.FloatField()
-    occscs          = models.FloatField()
+    occm            = models.FloatField(null=True)
+    occscs          = models.FloatField(null=True)
     h_bond_energy   = models.FloatField()
     zeta            = models.FloatField(null=True)
     terminal_flag   = models.BooleanField(default=False)#indicates this residue is next to a chain break
