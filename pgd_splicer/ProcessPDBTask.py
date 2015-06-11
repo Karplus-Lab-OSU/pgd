@@ -485,7 +485,6 @@ def parseWithBioPython(code, props, chains_filter=None):
                 # BioPython should do this automatically, but it does not
                 # always choose the main conformation.  Leading to some
                 # Interesting results
-                main_atom = ['N', 'CA', 'C', 'O','OXT']
                 atoms = {}
                 for atom in res.get_unpacked_list():
                     if atom.get_altloc() in ('A', ' '):
@@ -590,7 +589,6 @@ def parseWithBioPython(code, props, chains_filter=None):
                     res_dict['a4'] = calc_angle(CB,CA,C)
                     res_dict['L3'] = calc_distance(CA,CB)
                     res_dict['zeta'] = calc_dihedral(CA, N, C, CB)
-                    main_atom.append('CB')
 
                 # Calculate Bg - bfactor of the 4th atom in Chi1.
                 try:
@@ -604,21 +602,17 @@ def parseWithBioPython(code, props, chains_filter=None):
                 # Other B Averages
                 #    Bm - Average of bfactors in main chain.
                 #    Bm - Average of bfactors in side chain.
-                #    occscs - Min of side chain
-                #    occm   - Min of main chain
-                main_chain, side_chain = [], []
-                occ_m, occ_scs = [], []
 
+
+                main_chain = []
+                side_chain = []
                 for name in atoms:
-                    if name in main_atom:
-                        occ_m.append(atoms[name].get_occupancy())
-                        if name != 'CB':
-                            main_chain.append(atoms[name].get_bfactor())
+                    if name in ('N', 'CA', 'C', 'O','OXT'):
+                        main_chain.append(atoms[name].get_bfactor())
                     elif name in ('H'):
                         continue
                     else:
                         side_chain.append(atoms[name].get_bfactor())
-                        occ_scs.append(atoms[name].get_occupancy())
 
                 if main_chain != []:
                     res_dict['bm'] = sum(main_chain) // len(main_chain)
@@ -626,12 +620,25 @@ def parseWithBioPython(code, props, chains_filter=None):
                 if side_chain != []:
                     res_dict['bs'] = sum(side_chain) // len(side_chain)
 
+                #    occscs - Min of side chain
+                #    occm   - Min of main chain
+                #    occ_m  - List containing main chain occupancy values
+                #    occ_scs- List containing side chain occupancy values
+                #    issue link - https://code.osuosl.org/issues/17565
+                occ_m, occ_scs = [], []
+                for name in atoms:
+                    if name in ('N', 'CA', 'C', 'O','OXT', 'CB'):
+                        occ_m.append(atoms[name].get_occupancy())
+                    elif name in ('H'):
+                        continue
+                    else:
+                        occ_scs.append(atoms[name].get_occupancy())
+
                 if occ_m != []:
                     res_dict['occm'] = min(occ_m)
 
                 if occ_scs != []:
                     res_dict['occscs'] = min(occ_scs)
-
 
                 # CHI corrections - Some atoms have symettrical values
                 # in the sidechain that aren't guarunteed to be listed

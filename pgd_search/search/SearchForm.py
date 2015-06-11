@@ -4,7 +4,7 @@ from django.conf import settings
 from django import forms
 from django.forms import (Field, CharField, ChoiceField, FloatField,
                           IntegerField, MultipleChoiceField, HiddenInput,
-                          SelectMultiple, TextInput, Form, DecimalField)
+                          SelectMultiple, TextInput, Form)
 
 from pgd_search.views import RESIDUE_INDEXES
 from pgd_constants import AA_CHOICES, SS_CHOICES
@@ -115,8 +115,10 @@ for i in RESIDUE_INDEXES:
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False,
                                                        widget=HiddenInput(attrs={'class':'include'}))
 
+    #Adding the occupancy into search page
+    # issue : https://code.osuosl.org/issues/17577
     for j in ("occm", "occscs") :
-        form_dict["%s_%i" % (j,i)]     = DecimalField(max_value=1.0, min_value=0.0, required=False)
+        form_dict["%s_%i" % (j,i)]     = FloatField(max_value=1.0, min_value=0.0, required=False)
 
     form_dict["ome_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90',
                                                             required=False,
@@ -129,6 +131,11 @@ for i in RESIDUE_INDEXES:
                                                              widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
     form_dict["omep_i_%i" % i]           = IntegerField(required=False,
                                                         widget=HiddenInput(attrs={'class':'include'}))
+
+    form_dict["occm_i_%i" %i]            = FloatField(required=False, widget=HiddenInput(attrs={'class': 'include'}))
+
+    form_dict["occscs_i_%i" %i]          = FloatField(required=False, widget=HiddenInput(attrs={'class' : 'include'}))
+
     for j in ("bm", "bs", "bg"):
         form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(initial='<25',
                                                             required=False,
