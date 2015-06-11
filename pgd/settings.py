@@ -21,7 +21,7 @@ DATABASES = {
 }
 import sys
 if 'test' in sys.argv:
-    DATABASE_OPTIONS = {'init_command': 'SET foreign_key_checks=0'}
+    DATABASES['default']['OPTIONS'] = {'init_command': 'SET foreign_key_checks=0'}
 
 # Warning: this value is insecure!
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='*')
