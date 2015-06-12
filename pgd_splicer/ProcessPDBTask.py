@@ -18,6 +18,7 @@ if __name__ == '__main__':
     # ==========================================================
 
 from datetime import datetime
+from django.utils import timezone
 from gzip import GzipFile
 from math import degrees, sqrt
 from multiprocessing import Pool
@@ -331,7 +332,7 @@ def pdb_file_is_newer(data):
     path = './pdb/pdb%s.ent.gz' % code.lower()
     print path
     if os.path.exists(path):
-        pdb_date = datetime.fromtimestamp(os.path.getmtime(path))
+        pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(path)), timezone.get_default_timezone())
 
     else:
         print 'ERROR - File not found'
@@ -344,7 +345,8 @@ def pdb_file_is_newer(data):
         return True
 
     data['pdb_date'] = pdb_date
-    return protein.pdb_date < pdb_date and str(protein.pdb_date) != str(pdb_date)[:19]
+
+    return protein.pdb_date < pdb_date
 
 
 def amino_present(s):
