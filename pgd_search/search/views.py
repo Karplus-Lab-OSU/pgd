@@ -50,9 +50,9 @@ def search(request):
             
             else:
                 #store search in session
-                
                 search.dataset_version = settings.DATA_VERSION
                 request.session['search'] = pickle.dumps(search_object)
+                print (request.session['search'])
                 return redirect('%s/search/results/' % settings.SITE_ROOT) # Redirect after POST
         
         # package aa_choices and ss_choices

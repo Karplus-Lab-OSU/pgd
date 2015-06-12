@@ -115,10 +115,6 @@ for i in RESIDUE_INDEXES:
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False,
                                                        widget=HiddenInput(attrs={'class':'include'}))
 
-    #Adding the occupancy into search page
-    # issue : https://code.osuosl.org/issues/17577
-    for j in ("occm", "occscs") :
-        form_dict["%s_%i" % (j,i)]     = FloatField(max_value=1.0, min_value=0.0, required=False)
 
     form_dict["ome_%i" % i]             = SearchSyntaxField(initial='<=-90,>=90',
                                                             required=False,
@@ -143,6 +139,12 @@ for i in RESIDUE_INDEXES:
         form_dict["%s_i_%i" % (j, i)]   = IntegerField(required=False,
                                                        widget=HiddenInput(attrs={'class':'include'}))
 
+    #Adding the occupancy into search page
+    # issue : https://code.osuosl.org/issues/17577
+    for j in ("occm", "occscs") :
+        form_dict["%s_%i" % (j, i)]     = FloatField(max_value=1.0, min_value=0.0, required=False)
+        form_dict["%s_i_%s" % (j, i)]   = IntegerField(required=False, widget=HiddenInput(attrs={'class':'include'})) 
+
     for j in sidechain_angle_relationship_list:
         form_dict["%s_%i" % (j,i)]      = SearchSyntaxField(required=False,
                                                             widget=TextInput(attrs={'class':'field needs_reset', 'size':8}))
@@ -156,4 +158,5 @@ for i in RESIDUE_INDEXES:
                                                        widget=HiddenInput(attrs={'class':'include'}))
 
 # Create the Search Form with the fields from the dict
+print(form_dict)
 SearchForm = type('SearchForm', (SearchFormBase,), form_dict)
