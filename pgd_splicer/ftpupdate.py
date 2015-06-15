@@ -13,19 +13,18 @@ if __name__ == '__main__':
     # Setup django environment
     # ==========================================================
     if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'pgd.settings'
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
-
-# from pgd_splicer.models import *
-from pgd_splicer.models import ftp_update_settings
 
 import os
 
 from ftplib import FTP, error_perm
 import re
 import time
+
+from django.conf import settings
 
 class FTPUpdateTask(object):
 
@@ -36,16 +35,16 @@ class FTPUpdateTask(object):
         print 'FTPUpdateTask - Starting' #, data, kwargs
 
         #create local directory if needed
-        if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
-            os.mkdir(ftp_update_settings.PDB_LOCAL_DIR)
+        if not os.path.exists(settings.PDB_LOCAL_DIR):
+            os.mkdir(settings.PDB_LOCAL_DIR)
 
-        print '  FTP:', ftp_update_settings.PDB_FTP_HOST
-        print '  REMOTE_DIR:', ftp_update_settings.PDB_REMOTE_DIR
+        print '  FTP:', settings.PDB_FTP_HOST
+        print '  REMOTE_DIR:', settings.PDB_REMOTE_DIR
 
-        self.ftp = FTP(ftp_update_settings.PDB_FTP_HOST)
+        self.ftp = FTP(settings.PDB_FTP_HOST)
         #ftp.set_debuglevel(2) #set ftp debug level so all messages are shown
         self.ftp.login()
-        self.ftp.cwd(ftp_update_settings.PDB_REMOTE_DIR)
+        self.ftp.cwd(settings.PDB_REMOTE_DIR)
 
         # accept data as either a list of proteins, or a single protein
         if isinstance(data, list):
@@ -58,7 +57,7 @@ class FTPUpdateTask(object):
         self.pdbTotal = len(requested_pdbs)
 
         print 'Downloading %d PDB files to %s' % (self.pdbTotal,
-                                                  ftp_update_settings.PDB_LOCAL_DIR)
+                                                  settings.PDB_LOCAL_DIR)
 
         #get all the local timestamps
         for pdb in requested_pdbs:
@@ -66,7 +65,7 @@ class FTPUpdateTask(object):
             #1 get list of local files matching the pdbs and the file modification date
 
             filename = 'pdb%s.ent.gz' % pdb
-            path = os.path.join(ftp_update_settings.PDB_LOCAL_DIR, filename)
+            path = os.path.join(settings.PDB_LOCAL_DIR, filename)
             if os.path.exists(path):
                 date = time.gmtime(os.path.getmtime(path))
             else:
@@ -113,7 +112,7 @@ class FTPUpdateTask(object):
 
     def download_pdb(self, pdb):
         filename = 'pdb%s.ent.gz' % pdb
-        local_filename = '%s/%s' % (ftp_update_settings.PDB_LOCAL_DIR,
+        local_filename = '%s/%s' % (settings.PDB_LOCAL_DIR,
                                     filename)
 
         # Grab size and pretty-print our progress.
