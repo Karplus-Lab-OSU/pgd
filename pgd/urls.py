@@ -18,8 +18,8 @@ urlpatterns = patterns('',
     # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # Uncomment the next line to enable the admin:
-    #(r'^admin/(.*)', admin.site.root),
-    (r'^admin/', include(admin.site.urls)),
+    #(r'^admin/', include(admin.site.urls)),
+    
     (r'^search/', include('pgd_search.urls')),
       
     #override the default urls
