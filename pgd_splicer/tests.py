@@ -1,6 +1,6 @@
 from django.core import management
 from django.test import TestCase
-from pgd_splicer.models import ftp_update_settings
+from django.conf import settings
 from cStringIO import StringIO
 import sys
 import os
@@ -67,7 +67,7 @@ class MonkeyPatch:
     @staticmethod
     def localfile(filename):
         # All local files are stored in the localdir.
-        return os.path.join(ftp_update_settings.PDB_LOCAL_DIR, filename)
+        return os.path.join(settings.PDB_LOCAL_DIR, filename)
 
     class FTP:
         def __init__(self, host):
@@ -191,8 +191,8 @@ class MonkeyPatch:
         self.old_urlopen = urllib.urlopen
         urllib.urlopen = MonkeyPatch.urlopen
 
-        if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
-            os.makedirs(ftp_update_settings.PDB_LOCAL_DIR)
+        if not os.path.exists(settings.PDB_LOCAL_DIR):
+            os.makedirs(settings.PDB_LOCAL_DIR)
 
         # Replace all PDB entries with our test entries.
         # JMT: consider making a separate 'testpdb' directory?
@@ -216,6 +216,10 @@ class MonkeyPatch:
 class ManagementCommands(TestCase):
 
     fixtures = ['pgd_core']
+
+    def setUp(self):
+        self.out = StringIO()
+        self.err = StringIO()
 
     def test_fetch_old(self):
         # How far into the past do we set the test files?
@@ -244,7 +248,7 @@ class ManagementCommands(TestCase):
                 os.utime(proteins[key], (-1, olddates[key] - howfar))
 
             # Run the management command.
-            management.call_command('fetch')
+            management.call_command('fetch', stdout=self.out)
 
             # Record the file dates now.
             for key in proteins:
@@ -273,7 +277,7 @@ class ManagementCommands(TestCase):
                     os.remove(proteins[key])
 
             # Run the management command.
-            management.call_command('fetch')
+            management.call_command('fetch', stdout=self.out)
 
             # Only the 3CGX file should now exist.
             self.assertTrue(os.path.exists(proteins['3cgx']))
@@ -304,7 +308,7 @@ class ManagementCommands(TestCase):
             # Add 3CGX.
             good_dict['3CGX'] = ['A', '25', '1.900', '0.17', '0.21']
             test_selection = MonkeyPatch.localfile('test_selection.txt')
-            management.call_command('fetch', selection=test_selection)
+            management.call_command('fetch', stdout=self.out, selection=test_selection)
             test_dict = self.file_to_dict(test_selection)
             self.assertEqual(good_dict, test_dict)
             if os.path.exists(test_selection):

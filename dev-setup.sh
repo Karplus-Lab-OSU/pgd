@@ -3,6 +3,7 @@
 # clean up current situation
 docker-compose stop
 docker-compose rm --force
+find . \( -name "*.pyc" -o -name "*.pyo" \) -print0 | xargs -0 rm
 
 # rebuild containers
 docker-compose build

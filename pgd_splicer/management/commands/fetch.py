@@ -1,12 +1,11 @@
 from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 from pgd_core.models import Protein
-from pgd_splicer.models import pdb_select_settings, ftp_update_settings
+from django.conf import settings
 import urllib
 import re
 import gzip
 from cStringIO import StringIO
-import sys
 import os
 import time
 from ftplib import FTP, error_perm
@@ -42,12 +41,10 @@ class Command(BaseCommand):
     )
     help = 'Retrieves missing proteins from the website.'
 
-    tmpdir = pdb_select_settings.PDB_TMP_DIR
-    pdbdir = pdb_select_settings.pdb_dir
-
-    localdir = ftp_update_settings.PDB_LOCAL_DIR
-    remotedir = ftp_update_settings.PDB_REMOTE_DIR
-    ftphost = ftp_update_settings.PDB_FTP_HOST
+    tmpdir = settings.PDB_TMP_DIR
+    localdir = settings.PDB_LOCAL_DIR
+    remotedir = settings.PDB_REMOTE_DIR
+    ftphost = settings.PDB_FTP_HOST
 
     def filename(self, code):
         return 'pdb%s.ent.gz' % code[:4].lower()
@@ -63,8 +60,8 @@ class Command(BaseCommand):
 
     def process_chunk(self, data):
         """ Callback for FTP download progress bar. """
-        sys.stdout.write('.')
-        sys.stdout.flush()
+        self.stdout.write('x')
+        self.stdout.flush()
         self.infile.write(data)
 
     def fetch_pdb(self, ftp, code):
@@ -97,7 +94,7 @@ class Command(BaseCommand):
         self.stdout.write(self.prefix(code))
         ftp.retrbinary('RETR %s' % filename, self.process_chunk)
         self.infile.close()
-        sys.stdout.write('\n')
+        self.stdout.write('\n')
         if date:
             return 'changed'
         else:
@@ -111,7 +108,7 @@ class Command(BaseCommand):
         self.r_factor = options['r_factor']
         self.verbose = options['verbose']
 
-        print 'Reading selection page from website...'
+        self.stdout.write('Reading selection page from website...\n')
         selection_page = urllib.urlopen(self.dunbrack_url).read()
         # FIXME: Grab the links based on the filenames!
         # <A href="link"> filename </A><br>
@@ -124,7 +121,7 @@ class Command(BaseCommand):
         regex_str = '(\w{4})(\w)\s+(\d+)\s+(\w+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)'
         regex_pattern = re.compile(regex_str)
 
-        print 'Retrieving cull files...'
+        self.stdout.write('Retrieving cull files...\n')
         for filename, threshold in files:
             # get file
             webfile = urllib.urlopen('/'.join([self.dunbrack_url, filename]))
@@ -174,7 +171,7 @@ class Command(BaseCommand):
 
         # output selections
         if options['selection']:
-            print 'Writing selections to %s...' % options['selection']
+            self.stdout.write('Writing selections to %s...\n' % options['selection'])
             with open(options['selection'], 'w') as out:
                 out.write('VERSION: %s\n' % version)
                 for k, v in self.proteins.items():
@@ -202,7 +199,7 @@ class Command(BaseCommand):
             os.mkdir(self.localdir)
 
         # make FTP connection
-        print 'Connecting via FTP to %s...' % self.ftphost
+        self.stdout.write('Connecting via FTP to %s...\n' % self.ftphost)
         ftp = FTP(self.ftphost)
         ftp.login()
         ftp.cwd(self.remotedir)
@@ -219,11 +216,11 @@ class Command(BaseCommand):
             try:
                 self.files[result].append(code)
             except KeyError:
-                print "Invalid result %s from code %s" % (result, code)
+                self.stderr.write("Invalid result %s from code %s\n" % (result, code))
 
         # output report
         if options['report']:
-            print 'Writing report to %s...' % options['report']
+            self.stdout.write('Writing report to %s...\n' % options['report'])
             with open(options['report'], 'w') as out:
                 if self.extras is []:
                     out.write('No extraneous proteins were found.\n')
