@@ -1,4 +1,4 @@
-import unittest
+from unittest import TestCase
 import datetime
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -855,3 +855,8 @@ class SaveImageAfterSearch(LiveServerTestCase):
 
         #Click the button on the second page
         response = self.driver.find_element_by_id("button-save").click()
+
+class ViewTest(TestCase):
+    def home_page_noerror(self):
+        response = self.client.get(reverse('/'))
+        self.assertEqual(response.status_code, 200)
