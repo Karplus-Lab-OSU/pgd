@@ -13,6 +13,7 @@ from math import ceil
 from search.SearchForm import SearchSyntaxField
 import pytz
 from django.test import LiveServerTestCase
+import sys
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -713,58 +714,144 @@ class PersistingSearchOptions(LiveServerTestCase):
         pass
 
 
-class SidechainStatistics(LiveServerTestCase):
+class SeleniumTests(LiveServerTestCase):
     fixtures = ['pgd_core']
 
     @classmethod
     def setUpClass(cls):
         cls.driver = webdriver.PhantomJS()
-        super(SidechainStatistics, cls).setUpClass()
+        cls.driver.wait = WebDriverWait(cls.driver, 10)
+        super(SeleniumTests, cls).setUpClass()
 
     @classmethod
     def tearDownClass(cls):
         cls.driver.quit()
-        super(SidechainStatistics, cls).tearDownClass()
+        super(SeleniumTests, cls).tearDownClass()
 
     def test_sidechain_statistics_present(self):
-        # Load search page
+        # Load search page.
         self.driver.get(self.live_server_url + "/search")
 
-        # Run default search
+        # Run default search.
         self.driver.find_element_by_css_selector('input.submit').click()
 
-        # Visit statistics link
+        # Confirm that it returns 85 results.
+        # JMT: this could be a separate test.
+        # Running searches is expensive, though.
+        results = self.driver.find_element_by_css_selector('span.results')
+        # JMT: if this ever fails, set up WebDriverWait on ajax-loader.png
+        self.assertTrue("Results: 85", results.text)
+
+        # Can't save the plot to a file because PhantomJS does not yet
+        # support file downloads.
+
+        # Visit statistics link.
         try:
-            stats_link = WebDriverWait(self.driver, 10).until(
+            stats_link = self.driver.wait.until(
                 EC.presence_of_element_located((By.LINK_TEXT, 'Statistics'))
             )
-            self.driver.find_element_by_link_text('Statistics').click()
+            stats_link.click()
         except:
             self.driver.save_screenshot("no-statistics.png")
             self.fail("no stats link")
 
-        # Wait for qtip to disappear
+        # Wait for qtip to disappear.
+        # This is problematic!
         qtip_xpath = "//div[contains(., 'Calculating Statistics')]"
-        try:
-            qtip_element = WebDriverWait(self.driver, 60).until(
-                EC.invisibility_of_element_located((By.XPATH, qtip_xpath))
-            )
-        except:
-            self.driver.save_screenshot("no-qtip.png")
-            self.fail("qtip does not disappear")
+        qtip_element = self.driver.find_element_by_xpath(qtip_xpath)
+        if qtip_element.is_displayed():
+            try:
+                qtip_element = self.driver.wait.until(
+                    EC.invisibility_of_element_located((By.XPATH, qtip_xpath))
+                )
+            except:
+                self.driver.save_screenshot("no-qtip.png")
+                # self.fail("qtip does not disappear")
 
-        # Arg div table value should not be visible.
-        cbcg_xpath = "//div[@id='aa_r']/table/tbody/tr[@class='avg']/td[@class='CB_CG']"
+        # Sidechain statistics are stored in divs named after the residue.
+        # Inside each div is two tables -- one for lengths, one for angles.
+        # Each table has two rows -- one for mean, one for standard deviation.
+        # Each row has one element for each angle or length.
 
-        # Before selecting the sidechain, the cbcg value should not be visible.
-        cbcg_element = self.driver.find_element_by_xpath(cbcg_xpath)
-        self.assertFalse(cbcg_element.is_displayed())
+        ss_test_values = {
+            "aa_r": {
+                "CB_CG": {
+                    "avg": "1.521",
+                    "stddev": "0.014",
+                },
+                "CA_CB_CG": {
+                    "avg": "112.6",
+                    "stddev": "2.8",
+                },
+            },
+        }
 
-        # Visit 'Arg' sidechain
-        h2_xpath = "//div[@id='aa_r']/h2"
-        self.driver.find_element_by_xpath(h2_xpath).click()
+        ss_xpath_fmt = "//div[@id='%s']" + \
+                       "/table['%d']" + \
+                       "/tbody/tr[@class='%s']" + \
+                       "/td[@class='%s']"
+        ss_h2_fmt = "//div[@id='%s']/h2"
 
-        # After, it should be visible and not equal to '--'.
-        # cbcg_element = self.driver.find_element_by_css_selector("td.CB_CG")
-        self.assertTrue(cbcg_element.is_displayed())
-        self.assertNotEqual("--", cbcg_element.text)
+        for residue, elements in ss_test_values.iteritems():
+            h2_xpath = ss_h2_fmt % (residue)
+            h2_element = self.driver.find_element_by_xpath(h2_xpath)
+            for element, rows in elements.iteritems():
+                for row, value in rows.iteritems():
+                    # Lengths have one _, angles have two.
+                    # Lengths are in the first table, angles are in the second.
+                    table = row.count('_')
+                    ss_xpath = ss_xpath_fmt % (residue, table, row, element)
+                    ss_element = self.driver.find_element_by_xpath(ss_xpath)
+
+                    # Value should not be displayed.
+                    self.assertFalse(ss_element.is_displayed())
+
+                    # Trigger sidechain.
+                    self.driver.find_element_by_xpath(h2_xpath).click()
+
+                    # Value should be displayed and correct.
+                    # The field starts as '--' before the value is calculated.
+                    self.assertTrue(ss_element.is_displayed())
+                    self.driver.wait.until_not(
+                        EC.text_to_be_present_in_element((By.XPATH, ss_xpath),
+                                                         '--')
+                    )
+                    self.assertEqual(value, ss_element.text)
+
+                    # Trigger sidechain.
+                    self.driver.find_element_by_xpath(h2_xpath).click()
+
+                    # Value should not be displayed.
+                    self.assertFalse(ss_element.is_displayed())
+
+
+#selenium test for saving the plot
+#Works with selenium 2.45.0
+class SaveImageAfterSearch(LiveServerTestCase):
+
+    def setUp(self):
+        self.driver = webdriver.PhantomJS()
+
+    def tearDown(self):
+        self.driver.quit()
+
+    def test_saving_image(self):
+
+         # Load search page
+        self.driver.get(self.live_server_url + "/search")
+
+        # Select the box that indicates number of residues
+        residues = self.driver.find_element_by_id("id_residues")
+        for option in residues.find_elements_by_tag_name('option'):
+            if option.text == "4":
+                option.click()
+
+        #Clicking the submit button
+        self.driver.find_element_by_xpath("//input[@type='submit']").click()
+
+        #Waiting to click for the page to load
+        element = WebDriverWait(self.driver, 60).until(
+            EC.presence_of_element_located((By.ID, "button-save")))
+
+        #Click the button on the second page
+        response = self.driver.find_element_by_id("button-save").click()
