@@ -42,43 +42,42 @@ class Command(BaseCommand):
         chains = {}
 
         # Iterate through selection file.
-        f = open(selection, 'r')
-        for line in f:
-            try:
-                elems = line.split(' ')
-                code = elems[0]
-                selchains = elems[1]
-                threshold = int(elems[2])
-                resolution = float(elems[3])
-                rfactor = float(elems[4])
-                rfree = float(elems[5])
-            except ValueError:
-                # Version line only has two entries, we can skip it
-                continue
+        with open(selection, 'r') as f:
+            for line in f:
+                try:
+                    elems = line.split(' ')
+                    code = elems[0]
+                    selchains = elems[1]
+                    threshold = int(elems[2])
+                    resolution = float(elems[3])
+                    rfactor = float(elems[4])
+                    rfree = float(elems[5])
+                except ValueError:
+                    # Version line only has two entries, we can skip it
+                    continue
 
-            # Append code to list found in file
-            infile.add(code)
+                # Append code to list found in file
+                infile.add(code)
 
-            # If protein found in database, perform remaining checks.
-            if code in indb:
-                protein = Protein.objects.get(code=code)
-                fileset = (code, threshold, resolution, rfactor, rfree)
-                dbset = (protein.code, protein.threshold, protein.resolution,
-                         protein.rfactor, protein.rfree)
-                if fileset != dbset:
-                    wrong[code] = (fileset, dbset)
+                # If protein found in database, perform remaining checks.
+                if code in indb:
+                    protein = Protein.objects.get(code=code)
+                    fileset = (code, threshold, resolution, rfactor, rfree)
+                    dbset = (protein.code, protein.threshold, protein.resolution,
+                             protein.rfactor, protein.rfree)
+                    if fileset != dbset:
+                        wrong[code] = (fileset, dbset)
 
-                # Check chains.
-                badchains = []
-                for selchain in list(selchains):
-                    try:
-                        chainid = '%s%s' % (code, selchain)
-                        chain = protein.chains.get(id=chainid)
-                    except Chain.DoesNotExist:
-                        badchains.append(selchain)
-                if badchains != []:
-                    chains[code] = badchains
-        f.close()
+                    # Check chains.
+                    badchains = []
+                    for selchain in list(selchains):
+                        try:
+                            chainid = '%s%s' % (code, selchain)
+                            chain = protein.chains.get(id=chainid)
+                        except Chain.DoesNotExist:
+                            badchains.append(selchain)
+                    if badchains != []:
+                        chains[code] = badchains
 
         # Proteins found in one place but not in the other.
         notfile = indb.difference(infile)

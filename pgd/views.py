@@ -1,14 +1,13 @@
 from django.shortcuts import render_to_response
 from django.template import RequestContext
 from pgd_search.views import settings_processor
-from pgd_splicer.models import pdb_select_settings
-import settings
+from django.conf import settings
 
 extra_context = {
     'SITE_ROOT': settings.SITE_ROOT,
     'PGD_VERSION': settings.PGD_VERSION,
     'ROOT': settings.SITE_ROOT,
-    'DATA_VERSION': pdb_select_settings.DATA_VERSION,
+    'DATA_VERSION': settings.DATA_VERSION,
     'GOOGLE_ID': settings.GOOGLE_ID
 }
 
