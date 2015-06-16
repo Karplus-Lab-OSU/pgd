@@ -10,7 +10,7 @@ if __name__ == '__main__':
     # Setup django environment 
     # ==========================================================
     if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
-        os.environ['DJANGO_SETTINGS_MODULE'] = 'settings'
+        os.environ['DJANGO_SETTINGS_MODULE'] = 'pgd.settings'
     # ==========================================================
     # Done setting up django environment
     # ==========================================================
@@ -22,9 +22,7 @@ import re
 import sys
 import urllib
 
-
-from pgd_splicer.models import *
-
+from django.conf import settings
 
 def printc(txt):
     """ direct print statement that can be overritten to silence output """
@@ -73,10 +71,10 @@ class DunbrackPDBSelectorTask():
         printc('  max resolution: %s' % resolution)
         printc('  r_factor:       %s' % r_factor)
 
-        printc('Saving pdbs in %s' % pdb_select_settings.PDB_TMP_DIR)
-        if not os.path.exists(pdb_select_settings.PDB_TMP_DIR):
-            os.mkdir(pdb_select_settings.PDB_TMP_DIR)
-            printc('     making dir %s' % pdb_select_settings.PDB_TMP_DIR)
+        printc('Saving pdbs in %s' % settings.PDB_TMP_DIR)
+        if not os.path.exists(settings.PDB_TMP_DIR):
+            os.mkdir(settings.PDB_TMP_DIR)
+            printc('     making dir %s' % settings.PDB_TMP_DIR)
 
         # Download the files
         dunbrack_url = 'http://dunbrack.fccc.edu/Guoli/culledpdb/'
@@ -91,7 +89,7 @@ class DunbrackPDBSelectorTask():
         # given to get_files
         proteins = {}
         for filename, threshold in files:
-            path = pdb_select_settings.PDB_TMP_DIR+'/'+filename
+            path = settings.PDB_TMP_DIR+'/'+filename
             proteins = self.parse_file(path, float(resolution), threshold, proteins)
             os.remove(path)
 
@@ -210,7 +208,7 @@ def get_files(url, thresholds, resolution, r_factor):
 
         #write contents to file
         try:
-            output = open(pdb_select_settings.PDB_TMP_DIR+'/'+filename, "w")
+            output = open(settings.PDB_TMP_DIR+'/'+filename, "w")
             output.write(raw)
 
         finally:

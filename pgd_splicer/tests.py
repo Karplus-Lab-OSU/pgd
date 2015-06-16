@@ -1,6 +1,6 @@
 from django.core import management
 from django.test import TestCase
-from pgd_splicer.models import ftp_update_settings
+from django.conf import settings
 from cStringIO import StringIO
 import sys
 import os
@@ -67,7 +67,7 @@ class MonkeyPatch:
     @staticmethod
     def localfile(filename):
         # All local files are stored in the localdir.
-        return os.path.join(ftp_update_settings.PDB_LOCAL_DIR, filename)
+        return os.path.join(settings.PDB_LOCAL_DIR, filename)
 
     class FTP:
         def __init__(self, host):
@@ -191,8 +191,8 @@ class MonkeyPatch:
         self.old_urlopen = urllib.urlopen
         urllib.urlopen = MonkeyPatch.urlopen
 
-        if not os.path.exists(ftp_update_settings.PDB_LOCAL_DIR):
-            os.makedirs(ftp_update_settings.PDB_LOCAL_DIR)
+        if not os.path.exists(settings.PDB_LOCAL_DIR):
+            os.makedirs(settings.PDB_LOCAL_DIR)
 
         # Replace all PDB entries with our test entries.
         # JMT: consider making a separate 'testpdb' directory?
