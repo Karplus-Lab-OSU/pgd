@@ -19,12 +19,13 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     #(r'^admin/', include(admin.site.urls)),
-    
-    (r'^search/', include('pgd_search.urls')),
+
+    url(r'^search/', include('pgd_search.urls'), name='pgd_search'),
       
     #override the default urls
-    url(r'^accounts/login/$', auth_views.login,{'template_name': 'registration/login.html'},
-                name='auth_login'),
+    url(r'^accounts/login/$', auth_views.login,
+        {'template_name': 'registration/login.html'},
+        name='auth_login'),
     
     url(r'^accounts/logout/$',
        auth_views.logout,
