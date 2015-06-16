@@ -9,23 +9,27 @@ from django.test import TestCase , Client
 from django.core.urlresolvers import reverse
 
 
-class SimpleTest(TestCase):
+class RegistrationTestCase(TestCase):
 
 
-	fixtures=['users.json']
+	fixtures    	  = ['users']
+	default_url 	  = "http://testserver"
+	test_email		  = {'email' : 'email@gmail.com'}
+	test_ceredentials = {'username':'test1', 'password':'hey'}
+	test_new_password = {'old_password': 'hey','new_password1': 'heythere',
+						'new_password2' : 'heythere'}
 
 	def test_reset_password(self):
-		respon = self.client.post('http://testserver/accounts/password/reset/', {'email' : 'email@gmail.com'})
-		self.assertEqual(respon.status_code, 302)	
-		self.assertEqual(respon['Location'], 'http://testserver/accounts/password/reset/done/')
+		response = self.client.post(reverse('auth_password_reset'), self.test_email)
+		self.assertEqual(response.status_code, 302)
+		self.assertEqual(response['Location'], self.default_url+reverse('auth_password_reset_done'))
 
 	def test_change_password(self):
-		resp1 = Client()
-		resp1_get = resp1.get('http://testserver/accounts/password/change/')
-		self.assertEqual(resp1_get.status_code, 302)
-		resp2_post1 = resp1.post(resp1_get['Location'], {'username':'test1', 'password':'hey'}, follow=True)
-		self.assertEqual(resp2_post1.status_code, 200)
-		resp2_post2 = resp1.post(resp2_post1.redirect_chain[0][0], {'old_password': 'hey',
-		'new_password1': 'heythere', 'new_password2' : 'heythere'}, follow=True)
-		self.assertEqual(resp2_post2.status_code, 200)
-		self.assertEqual(resp2_post2.redirect_chain[0][0], 'http://testserver/accounts/password/change/done/')	
+		test_client = Client()
+		get_response = test_client.get(reverse('auth_password_change'))
+		self.assertEqual(get_response.status_code, 302)
+		post_response_1 = test_client.post(get_response['Location'], self.test_ceredentials, follow=True)
+		self.assertEqual(post_response_1.status_code, 200)
+		post_response_2 = test_client.post(post_response_1.redirect_chain[-1][0], self.test_new_password, follow=True)
+		self.assertEqual(post_response_2.status_code, 200)
+		self.assertEqual(post_response_2.redirect_chain[-1][0], self.default_url+reverse('auth_password_change_done'))
