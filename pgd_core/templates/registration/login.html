@@ -23,6 +23,7 @@
 {% endblock %}
 {% block content %}
 <form method="post" action=".">
+    {% csrf_token %}
     <table>
         <tr>
             {{ form.as_table }} 
@@ -32,6 +33,7 @@
   <input type="hidden" name="next" value="{{ next }}" />
 </form>
 
-<p>Forgot your Password?<strong><a style="color:black;"href="{% url auth_password_reset %}">...Reset It</a></strong></p>
-<p>Not Registered?<strong><a style="color:black;" href="{% url registration_register %}">...Register</a></strong></p>
+<p>Forgot your Password?<strong><a style="color:black;"href="{% url 'auth_password_reset' %}">...Reset It</a></strong></p>
+<p>Not Registered?<strong><a style="color:black;" href="{% url 'registration_register' %}">...Register</a></strong></p>
+
 {% endblock %}
