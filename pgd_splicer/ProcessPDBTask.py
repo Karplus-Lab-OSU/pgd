@@ -18,6 +18,7 @@ if __name__ == '__main__':
     # ==========================================================
 
 from datetime import datetime
+from django.conf import settings
 from django.utils import timezone
 from gzip import GzipFile
 from math import degrees, sqrt
@@ -329,8 +330,7 @@ def pdb_file_is_newer(data):
     """
 
     code =  data['code']
-    path = './pdb/pdb%s.ent.gz' % code.lower()
-    print path
+    path = os.path.join(settings.PDB_LOCAL_DIR, 'pdb{}.ent.gz'.format(code.lower()))
     if os.path.exists(path):
         pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(path)), timezone.get_default_timezone())
 

@@ -60,7 +60,7 @@ class Command(BaseCommand):
 
     def process_chunk(self, data):
         """ Callback for FTP download progress bar. """
-        self.stdout.write('x')
+        self.stdout.write('.', ending='')
         self.stdout.flush()
         self.infile.write(data)
 
@@ -76,7 +76,7 @@ class Command(BaseCommand):
             resp = ftp.sendcmd('MDTM %s' % filename)
         except error_perm:
             # file not found on the website
-            self.stdout.write(self.prefix(code, 'file not found on site!\n'))
+            self.stdout.write(self.prefix(code, 'file not found on site!'))
             return 'notonsite'
 
         remote_date = time.strptime(resp[4:], '%Y%m%d%H%M%S')
@@ -84,17 +84,17 @@ class Command(BaseCommand):
         if date and time.mktime(remote_date) <= time.mktime(date):
             # file has not changed
             if self.sofar % self.printper == 0:
-                self.stdout.write(self.prefix(code, 'file unchanged!\n'))
+                self.stdout.write(self.prefix(code, 'file unchanged!'))
             return 'unchanged'
 
         # download the file
         size = ftp.size(filename)
 
         self.infile = open(localfile, 'w')
-        self.stdout.write(self.prefix(code))
+        self.stdout.write(self.prefix(code), ending='')
         ftp.retrbinary('RETR %s' % filename, self.process_chunk)
         self.infile.close()
-        self.stdout.write('\n')
+        self.stdout.write('')
         if date:
             return 'changed'
         else:
@@ -108,7 +108,7 @@ class Command(BaseCommand):
         self.r_factor = options['r_factor']
         self.verbose = options['verbose']
 
-        self.stdout.write('Reading selection page from website...\n')
+        self.stdout.write('Reading selection page from website...')
         selection_page = urllib.urlopen(self.dunbrack_url).read()
         # FIXME: Grab the links based on the filenames!
         # <A href="link"> filename </A><br>
@@ -121,7 +121,7 @@ class Command(BaseCommand):
         regex_str = '(\w{4})(\w)\s+(\d+)\s+(\w+)\s+([\d\.]+)\s+([\d\.]+)\s+([\d\.]+)'
         regex_pattern = re.compile(regex_str)
 
-        self.stdout.write('Retrieving cull files...\n')
+        self.stdout.write('Retrieving cull files...')
         for filename, threshold in files:
             # get file
             webfile = urllib.urlopen('/'.join([self.dunbrack_url, filename]))
@@ -171,12 +171,15 @@ class Command(BaseCommand):
 
         # output selections
         if options['selection']:
-            self.stdout.write('Writing selections to %s...\n' % options['selection'])
+            self.stdout.write('Writing selections to %s...' % options['selection'])
             with open(options['selection'], 'w') as out:
                 out.write('VERSION: %s\n' % version)
-                for k, v in self.proteins.items():
-                    out.write('%(code)s %(selchains)s %(threshold)s ' % v +
-                              '%(resolution)s %(rfactor)s %(rfree)s\n' % v)
+                lines = [
+                    '%(code)s %(selchains)s %(threshold)s ' % v +
+                    '%(resolution)s %(rfactor)s %(rfree)s\n' % v
+                    for v in self.proteins.values()
+                ]
+                out.writelines(lines)
 
         self.indexed = set(Protein.objects.all().values_list('code',
                                                              flat=True))
@@ -199,7 +202,7 @@ class Command(BaseCommand):
             os.mkdir(self.localdir)
 
         # make FTP connection
-        self.stdout.write('Connecting via FTP to %s...\n' % self.ftphost)
+        self.stdout.write('Connecting via FTP to %s...' % self.ftphost)
         ftp = FTP(self.ftphost)
         ftp.login()
         ftp.cwd(self.remotedir)
@@ -216,41 +219,41 @@ class Command(BaseCommand):
             try:
                 self.files[result].append(code)
             except KeyError:
-                self.stderr.write("Invalid result %s from code %s\n" % (result, code))
+                self.stderr.write("Invalid result %s from code %s" % (result, code))
 
         # output report
         if options['report']:
-            self.stdout.write('Writing report to %s...\n' % options['report'])
+            self.stdout.write('Writing report to %s...' % options['report'])
             with open(options['report'], 'w') as out:
                 if self.extras is []:
-                    out.write('No extraneous proteins were found.\n')
+                    out.write('No extraneous proteins were found.')
                 else:
-                    out.write('Extraneous proteins: %d\n' % len(self.extras))
+                    out.write('Extraneous proteins: %d' % len(self.extras))
                     out.write(', '.join(sorted(self.extras)))
-                    out.write('\n')
+                    out.write('')
                 if self.missing is []:
-                    out.write('No proteins were missing.\n')
+                    out.write('No proteins were missing.')
                 else:
-                    out.write('Missing proteins: %d\n' % len(self.missing))
+                    out.write('Missing proteins: %d' % len(self.missing))
                     out.write(', '.join(sorted(self.missing)))
-                    out.write('\n')
+                    out.write('')
                 # fetch values default to []
                 if self.files['changed'] is not []:
                     out.write('Proteins with newer versions on site: ' +
-                              '%d\n' % len(self.files['changed']))
+                              '%d' % len(self.files['changed']))
                     out.write(', '.join(sorted(self.files['changed'])))
-                    out.write('\n')
+                    out.write('')
                 if self.files['notonsite'] is not []:
                     out.write('Proteins not found on site: ' +
-                              '%d\n' % len(self.files['notonsite']))
+                              '%d' % len(self.files['notonsite']))
                     out.write(', '.join(sorted(self.files['notonsite'])))
-                    out.write('\n')
+                    out.write('')
                 if self.files['new'] is not []:
                     out.write('New proteins downloaded: ' +
-                              '%d\n' % len(self.files['new']))
-                    out.write(', '.join(sorted(self.files['new'])) + '\n')
+                              '%d' % len(self.files['new']))
+                    out.write(', '.join(sorted(self.files['new'])) + '')
                 if self.files['changed'] is not []:
                     out.write('Changed proteins downloaded: ' +
-                              '%d\n' % len(self.files['changed']))
+                              '%d' % len(self.files['changed']))
                     out.write(', '.join(sorted(self.files['changed'])))
-                    out.write('\n')
+                    out.write('')

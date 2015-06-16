@@ -1,53 +1,33 @@
-from django.shortcuts import render_to_response
-from django.template import RequestContext
-from pgd_search.views import settings_processor
+from django.views.generic import TemplateView
 from django.conf import settings
 
-extra_context = {
-    'SITE_ROOT': settings.SITE_ROOT,
-    'PGD_VERSION': settings.PGD_VERSION,
-    'ROOT': settings.SITE_ROOT,
-    'DATA_VERSION': settings.DATA_VERSION,
-    'GOOGLE_ID': settings.GOOGLE_ID
-}
+
+class ExtraContextTemplateView(TemplateView):
+    extra_context = {
+        'SITE_ROOT': settings.SITE_ROOT,
+        'PGD_VERSION': settings.PGD_VERSION,
+        'ROOT': settings.SITE_ROOT,
+        'DATA_VERSION': settings.DATA_VERSION,
+        'GOOGLE_ID': settings.GOOGLE_ID
+    }
+
+    def get_context_data(self, *args, **kwargs):
+        context = super(ExtraContextTemplateView, self).get_context_data(*args, **kwargs)
+        context.update(self.extra_context)
+        return context
 
 
-def welcome(request):
-	#delete session variable
-	try:
-		del request.session['search']
-	except:
-		pass
-	return render_to_response('welcome.html',
-						{'extra_context' : extra_context},
-						context_instance=RequestContext(request, processors=[settings_processor]))
+class ReferencesView(ExtraContextTemplateView):
+    template_name = "references.html"
 
-def references(request):
-	#delete session variable
-	try:
-		del request.session['search']
-	except:
-		pass
-	return render_to_response('references.html',
-						{'extra_context' : extra_context},
-						context_instance=RequestContext(request, processors=[settings_processor]))
 
-def news(request):
-	#delete session variable
-	try:
-		del request.session['search']
-	except:
-		pass
-	return render_to_response('news.html',
-						{'extra_context' : extra_context},
-						context_instance=RequestContext(request, processors=[settings_processor]))
+class ContactUsView(ExtraContextTemplateView):
+    template_name = "contactus.html"
 
-def contactus(request):
-	#delete session variable
-	try:
-		del request.session['search']
-	except:
-		pass
-	return render_to_response('contactus.html',
-						{'extra_context' : extra_context},
-						context_instance=RequestContext(request, processors=[settings_processor]))
+
+class NewsView(ExtraContextTemplateView):
+    template_name = "news.html"
+
+
+class WelcomeView(ExtraContextTemplateView):
+    template_name = "welcome.html"

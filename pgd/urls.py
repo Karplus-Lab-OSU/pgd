@@ -1,9 +1,9 @@
 from django.conf.urls import include, url, patterns
-#from django.views.generic.simple import direct_to_template
-import settings
+from django.conf import settings
 from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
+from views import ReferencesView, ContactUsView, NewsView, WelcomeView
 admin.autodiscover()
 
 #from pgd import VERSION
@@ -69,12 +69,12 @@ urlpatterns = patterns('',
     url(r'^accounts/', include('registration.backends.default.urls')),
 
     # Static pages:
-    (r'^references/$', 'pgd.views.references'),
-    (r'^contactus/$', 'pgd.views.contactus'),
-    (r'^news/$', 'pgd.views.news'),
-    
+    (r'^references/$', ReferencesView.as_view()),
+    (r'^contactus/$', ContactUsView.as_view()),
+    (r'^news/$', NewsView.as_view()),
+
     #default url
-    url(r'^$','pgd.views.welcome', name='pgd_home'),
+    url(r'^$', WelcomeView.as_view(), name='pgd_home'),
 )
 
 #The following is used to serve up local media files like images
