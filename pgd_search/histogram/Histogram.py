@@ -5,10 +5,7 @@ from django.db import connections
 from django.db.backends.mysql.compiler import SQLCompiler
 from django.db.models import Max, Min, Count
 
-from pgd_constants import *
-from pgd_core.models import *
-from pgd_search.models import *
-from svg import *
+from svg import SVG
 from pgd_search.statistics.aggregates import BinSort
 
 
