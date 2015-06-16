@@ -128,10 +128,6 @@ for i in RESIDUE_INDEXES:
     form_dict["omep_i_%i" % i]           = IntegerField(required=False,
                                                         widget=HiddenInput(attrs={'class':'include'}))
 
-    form_dict["occm_i_%i" %i]            = FloatField(required=False, widget=HiddenInput(attrs={'class': 'include'}))
-
-    form_dict["occscs_i_%i" %i]          = FloatField(required=False, widget=HiddenInput(attrs={'class' : 'include'}))
-
     for j in ("bm", "bs", "bg"):
         form_dict["%s_%i" % (j, i)]     = SearchSyntaxField(initial='<25',
                                                             required=False,
@@ -158,5 +154,4 @@ for i in RESIDUE_INDEXES:
                                                        widget=HiddenInput(attrs={'class':'include'}))
 
 # Create the Search Form with the fields from the dict
-print(form_dict)
 SearchForm = type('SearchForm', (SearchFormBase,), form_dict)

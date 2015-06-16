@@ -602,8 +602,6 @@ def parseWithBioPython(code, props, chains_filter=None):
                 # Other B Averages
                 #    Bm - Average of bfactors in main chain.
                 #    Bm - Average of bfactors in side chain.
-
-
                 main_chain = []
                 side_chain = []
                 for name in atoms:
@@ -639,6 +637,7 @@ def parseWithBioPython(code, props, chains_filter=None):
 
                 if occ_scs != []:
                     res_dict['occscs'] = min(occ_scs)
+
 
                 # CHI corrections - Some atoms have symettrical values
                 # in the sidechain that aren't guarunteed to be listed
