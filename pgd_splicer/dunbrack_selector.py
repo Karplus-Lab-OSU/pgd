@@ -89,7 +89,7 @@ class DunbrackPDBSelectorTask():
         # given to get_files
         proteins = {}
         for filename, threshold in files:
-            path = settings.PDB_TMP_DIR+'/'+filename
+            path = os.path.join(settings.PDB_TMP_DIR, filename)
             proteins = self.parse_file(path, float(resolution), threshold, proteins)
             os.remove(path)
 
@@ -208,7 +208,7 @@ def get_files(url, thresholds, resolution, r_factor):
 
         #write contents to file
         try:
-            output = open(settings.PDB_TMP_DIR+'/'+filename, "w")
+            output = open(os.path.join(settings.PDB_TMP_DIR, filename), "w")
             output.write(raw)
 
         finally:
