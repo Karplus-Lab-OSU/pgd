@@ -335,7 +335,7 @@ def pdb_file_is_newer(data):
         pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(path)), timezone.get_default_timezone())
 
     else:
-        print 'ERROR - File not found'
+        print 'ERROR - File not found: %s' % path
         return False
     try:
         protein = ProteinModel.objects.get(code=code)
@@ -387,9 +387,7 @@ def parseWithBioPython(path, props, chains_filter=None):
     @return a dict containing the properties that were processed
     """
 
-    pdb = './pdb'
-
-    full_path = os.path.abspath(os.path.join(pdb, path))
+    full_path = os.path.abspath(os.path.join(settings.PDB_LOCAL_DIR, path))
 
     chains = props['chains']
 

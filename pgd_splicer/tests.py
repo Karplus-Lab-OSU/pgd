@@ -15,7 +15,8 @@ import time
 
 # 1.  Drop the dev database, re-create it and syncdb.
 # 2.  Populate the dev database.
-#     $ ./pgd_splicer/ProcessPDBTask.py --pipein < \
+#     $ PDB_LOCAL_DIR=./pgd_splicer/testfiles \
+#       ./pgd_splicer/ProcessPDBTask.py --pipein < \
 #       ./pgd_splicer/testfiles/fixture_selection.txt
 # 3.  Write the fixture from the database.
 #     $ python manage.py dumpdata pgd_core --indent 2 --format json > \
