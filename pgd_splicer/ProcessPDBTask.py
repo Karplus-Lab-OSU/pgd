@@ -637,7 +637,9 @@ def parseWithBioPython(code, props, chains_filter=None):
 
                 if occ_scs != []:
                     res_dict['occscs'] = min(occ_scs)
-
+                    
+                if res_dict['aa'] == 'g' or res_dict['aa'] == 'a' :
+                    res_dict['occscs'] = 1.0
 
                 # CHI corrections - Some atoms have symettrical values
                 # in the sidechain that aren't guarunteed to be listed
