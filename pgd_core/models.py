@@ -17,6 +17,10 @@ class Protein(models.Model):
     # updates allowing up-to-date proteins to be skipped.
     pdb_date    = models.DateTimeField()
 
+    # JMT: upgrade to Django 1.6 caused deadlocks on insert
+    class Meta:
+        select_on_save = True
+
     def __unicode__(self):
         return self.code
 
@@ -29,9 +33,13 @@ class Protein(models.Model):
 # in the residue table.  Once splicer is updated and importing directly to the database the PK
 # will be changed to an integer.
 class Chain (models.Model):
-        id      = models.CharField(max_length=5, primary_key=True)
-        protein = models.ForeignKey(Protein, related_name='chains')
-        code    = models.CharField(max_length=1)
+    id      = models.CharField(max_length=5, primary_key=True, unique=True)
+    protein = models.ForeignKey(Protein, related_name='chains')
+    code    = models.CharField(max_length=1)
+
+    # JMT: upgrade to Django 1.6 caused deadlocks on insert
+    class Meta:
+        select_on_save = True
 
 
 class Sidechain_ARG(models.Model):
