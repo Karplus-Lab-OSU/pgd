@@ -144,6 +144,37 @@ Raphaël is a small JavaScript library that should simplify your work
 with vector graphics on the web. Raphael is cross-browser supported
 and is used to render graphs within PGD.
 
+==================
+Other technologies
+==================
+
+These technologies are used to create data files such as fonts which
+are used by PGD.
+
+---------------
+DejaVu 400 Font
+---------------
+
+The DejaVu font included in PGD was generated with `cufon`_.
+
+To rebuild the font:
+
+#. Download the latest version of the font from `Sourceforge`_.
+#. Visit the `cufon font generator`_ site.
+#. Upload the DejaVuSans files that correspond to the choices.
+#. Select "Basic Latin" and "Greek and Coptic".
+#. Set the units-per-em to 360.
+#. Set the receiving function to "Raphael.registerFont".
+#. Acknowledge and accept terms, then hit the "Let's do this!" button.
+
+These instructions are untested!
+
+.. _cufon: https://github.com/sorccu/cufon
+.. _Sourceforge: http://sourceforge.net/projects/dejavu/?source=typ_redirect
+.. _yui compressor: https://github.com/yui/yuicompressor
+.. _cufon font generator: http://cufon.shoqolate.com/generate/
+
+
 ============
 Soon to come
 ============
@@ -151,9 +182,9 @@ Soon to come
 These technologies are soon to be added to PGD in the hopes of
 simplifying things or making them work better.
 
---------------------------
+----------------
 jQuery UI 1.11.4
---------------------------
+----------------
 
 Homepage
     http://jqueryui.com/
@@ -184,3 +215,5 @@ functionality is available via a separate plugin.
 
 Alternatively, this functionality may be replaced with feature checks
 instead of browser checks.  Have to wait and see!
+
+
