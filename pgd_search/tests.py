@@ -880,3 +880,38 @@ class ViewTest(TestCase):
     def home_page_noerror(self):
         response = self.client.get(reverse('/'))
         self.assertEqual(response.status_code, 200)
+
+class CheckDumpTest(LiveServerTestCase) :
+
+
+    fixtures = ['new_db.json']
+
+    plain_request = {'residues':3 ,'resolutionMin':0,'resolutionMax':1.2,'rfactorMin':0,
+    'rfactorMax':0.25,'rfreeMin':0,'rfreeMax':0.3,'threshold':25,'ome_-4':'<=-90,>=90',
+    'ome_i_-4':1, 'ome_-3':'<=-90,>=90','ome_i_-3':1,'ome_-2':'<=-90,>=90',
+    'ome_i_-2':1,'ome_-1':'<=-90,>=90', 'ome_i_-1':1, 'ome_0':'<=-90,>=90',
+    'ome_i_0':1,'ome_1':'<=-90,>=90','ome_i_1':1,'ome_2':'<=-90,>=90','ome_i_2':1,
+    'ome_3':'<=-90,>=90','ome_i_3':1,'ome_4':'<=-90,>=90','ome_i_4':1,'ome_5':'<=-90,>=90',
+    'ome_i_5':1,'bm_-4':'<25','bm_i_-4':1,'bm_-3':'<25','bm_i_-3':1,'bm_-2':'<25',
+    'bm_i_-2':1,'bm_-1':'<25','bm_i_-1':1,'bm_0':'<25','bm_i_0':1,'bm_1':'<25',
+    'bm_i_1':1,'bm_2':'<25','bm_i_2':1,'bm_3':'<25','bm_i_3':1,'bm_4':'<25',
+    'bm_i_4':1,'bm_5':'<25','bm_i_5':1,'bg_-4':'<25','bg_i_-4':1,'bg_-3':'<25',
+    'bg_i_-3':1,'bg_-2':'<25','bg_i_-2':1,'bg_-1':'<25','bg_i_-1':1,'bg_0':'<25',
+    'bg_i_0':1,'bg_1':'<25','bg_i_1':1,'bg_2':'<25','bg_i_2':1,'bg_3':'<25',
+    'bg_i_3':1,'bg_4':'<25','bg_i_4':1,'bg_5':'<25','bg_i_5':1,'bs_-4':'<25',
+    'bs_i_-4':1,'bs_-3':'<25','bs_i_-3':1,'bs_-2':'<25','bs_i_-2':1,'bs_-1':'<25',
+    'bs_i_-1':1,'bs_0':'<25','bs_i_0':1,'bs_1':'<25','bs_i_1':1,'bs_2':'<25',
+    'bs_i_2':1,'bs_3':'<25','bs_i_3':1,'bs_4':'<25','bs_i_4':1,'bs_5':'<25','bs_i_5':1}
+
+    def download_tsv(self):
+        search = Search(segmentLength=3)
+        search.data = self.plain_request
+        search.save()
+
+        from pgd_search.dump.DataDump import Dump
+        dump = Dump(search)
+        actual = StringIO()
+        for i in dump:
+            actual.write(i)
+        expected = file('./pgd_search/testfiles/data.tsv').read()
+        self.assertEqual(expected, actual.getvalue())
