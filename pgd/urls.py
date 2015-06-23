@@ -21,53 +21,9 @@ urlpatterns = patterns('',
     #(r'^admin/', include(admin.site.urls)),
 
     url(r'^search/', include('pgd_search.urls'), name='pgd_search'),
-      
-    #override the default urls
-    url(r'^accounts/login/$', auth_views.login,
-        {'template_name': 'registration/login.html'},
-        name='auth_login'),
+
+    url(r'^accounts/', include('pgd_core.urls')),
     
-    url(r'^accounts/logout/$',
-       auth_views.logout,
-       {'template_name' : 'registration/logout.html'},
-       name='auth_logout'),
-
-    url(r'^accounts/password/change/$',
-       auth_views.password_change,
-       {'post_change_redirect': reverse_lazy('auth_password_change_done'),
-       'template_name' : 'registration/password_change.html'},
-       name='auth_password_change'),
-
-    url(r'^accounts/password/change/done/$',
-       auth_views.password_change_done,
-       {'template_name' : 'registration/change_done.html'},
-       name='auth_password_change_done'),
-
-    url(r'^accounts/password/reset/$',
-       auth_views.password_reset,
-       {'post_reset_redirect': reverse_lazy('auth_password_reset_done'), 
-       'template_name': 'registration/password_reset.html'},
-       name='auth_password_reset'),
-
-    url(r'^accounts/password/reset/confirm/(?P<uidb64>[0-9A-Za-z_\-]+)/(?P<token>.+)/$',
-       auth_views.password_reset_confirm,
-       {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'),
-       'template_name' : 'registration/reset_confirm.html'},
-       name='auth_password_reset_confirm'),
-
-    url(r'^accounts/password/reset/complete/$',
-       auth_views.password_reset_complete,
-       {'post_reset_redirect': reverse_lazy('auth_password_reset_complete'), 
-        'template_name' : 'reset_complete'},
-       name='auth_password_reset_complete'),
-
-    url(r'^accounts/password/reset/done/$',
-       auth_views.password_reset_done,
-       {'template_name': 'registration/reset_done.html'},
-       name='auth_password_reset_done'),
-
-    url(r'^accounts/', include('registration.urls')),
-
     # Static pages:
     (r'^references/$', ReferencesView.as_view()),
     (r'^contactus/$', ContactUsView.as_view()),
