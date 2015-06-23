@@ -66,7 +66,7 @@ urlpatterns = patterns('',
        {'template_name': 'registration/reset_done.html'},
        name='auth_password_reset_done'),
 
-    url(r'^accounts/', include('registration.backends.default.urls')),
+    url(r'^accounts/', include('registration.urls')),
 
     # Static pages:
     (r'^references/$', ReferencesView.as_view()),

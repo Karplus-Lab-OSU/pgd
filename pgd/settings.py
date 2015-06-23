@@ -147,6 +147,7 @@ INSTALLED_APPS = (
     'django.contrib.sites',
     'django.contrib.staticfiles',
     'django.contrib.admin',
+    'registration',
     'pgd_core',
     'pgd_search',
     'pgd_splicer',
