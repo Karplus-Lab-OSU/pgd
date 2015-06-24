@@ -1,5 +1,5 @@
 biopython
-django-registration
+django-registration-redux
 django==1.6
 selenium
 mysql-python

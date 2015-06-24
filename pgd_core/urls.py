@@ -7,10 +7,6 @@ from django.core.urlresolvers import reverse_lazy
 
 urlpatterns = patterns('',
 
-    url(r'^login/$', auth_views.login,
-        {'template_name': 'registration/login.html'},
-        name='auth_login'),
-    
     url(r'^logout/$',
        auth_views.logout,
        {'template_name' : 'registration/logout.html'},
@@ -50,6 +46,6 @@ urlpatterns = patterns('',
        {'template_name': 'registration/reset_done.html'},
        name='auth_password_reset_done'),
 
-    url(r'^', include('registration.urls')),
+    (r'^', include('registration.backends.default.urls')),
 
     )
