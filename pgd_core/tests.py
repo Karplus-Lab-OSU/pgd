@@ -7,6 +7,7 @@ Replace this with more appropriate tests for your application.
 
 from django.test import TestCase , Client
 from django.core.urlresolvers import reverse
+from django.core import mail
 
 
 class RegistrationTestCase(TestCase):
@@ -14,10 +15,25 @@ class RegistrationTestCase(TestCase):
 
 	fixtures    	  = ['users']
 	default_url 	  = "http://testserver"
-	test_email		  = {'email' : 'email@gmail.com'}
+	test_email		  = {'email' : 'email@example.org'}
 	test_ceredentials = {'username':'test1', 'password':'hey'}
+	
+	register_details  = {
+	'username' : 'vamos', 
+	'email' : 'email@example.org', 
+	'password1' : 'hola',
+	'password2' : 'hola'}
+
 	test_new_password = {'old_password': 'hey','new_password1': 'heythere',
 						'new_password2' : 'heythere'}
+
+	def test_register(self) :
+		test_client = Client()
+		response = test_client.post(reverse('registration_register'), self.register_details, follow=True)
+		self.assertEqual(response.status_code, 200)
+		self.assertEqual(response.redirect_chain[-1][0], self.default_url+'/accounts/register/complete/')
+		self.assertEqual(len(mail.outbox), 1)
+		self.assertEqual(mail.outbox[0].to[0], self.test_email['email'])	
 
 	def test_reset_password(self):
 		response = self.client.post(reverse('auth_password_reset'), self.test_email)
