@@ -4,7 +4,7 @@ from decouple import config
 import os
 PROJECT_ROOT = os.path.dirname(os.path.abspath(os.path.dirname(__file__)))
 
-DEBUG = config('DEBUG', default=False, cast=bool)
+DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (

@@ -2,8 +2,9 @@ from django.conf.urls import *
 from django.conf import settings
 from django.contrib.auth import views as auth_views
 from django.core.urlresolvers import reverse_lazy
-
-
+from forms import UserRegistrationForm
+from views import MyRegistrationView
+from registration.backends.default.views import RegistrationView 
 
 urlpatterns = patterns('',
 
@@ -45,6 +46,9 @@ urlpatterns = patterns('',
        auth_views.password_reset_done,
        {'template_name': 'registration/reset_done.html'},
        name='auth_password_reset_done'),
+    
+    url(r'^register/$', MyRegistrationView.as_view(),
+        name='registration_register'),
 
     (r'^', include('registration.backends.default.urls')),
 
