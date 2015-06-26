@@ -2,7 +2,6 @@ import pytz
 from django import forms
 from registration.forms import RegistrationForm
 from django.utils.translation import ugettext_lazy as _
-from pgd_core.models import RegProfile
 from registration.models import RegistrationProfile
 
 attrs_dict = { 'class': 'required' }
@@ -10,19 +9,12 @@ attrs_dict = { 'class': 'required' }
 class UserRegistrationForm(RegistrationForm):
 
 
-	TIMEZONE = pytz.all_timezones
+	first_name = forms.CharField(label="First Name",
+					widget=forms.TextInput(attrs={'placeholder': 'first_name'}))
 
+	last_name  = forms.CharField(label="Last Name",
+					widget=forms.TextInput(attrs={'placeholder': 'Last Name'}))
 
-	research_summary = forms.CharField(
-						widget=forms.Textarea(attrs={'class': 'research'}))
-
-	location         = forms.CharField(label="university/company", 
-						widget=forms.TextInput(attrs={'placeholder': 'Search'}))
-
-	timezone 	 	 = forms.CharField(
-						widget=forms.TextInput(attrs={'class': 'timezone'}) )
-
-	country			 = forms.CharField(widget=forms.TextInput(attrs={'class': 'country'}))
 
 '''
 	def save(self, profile_callback=None):
@@ -35,3 +27,11 @@ class UserRegistrationForm(RegistrationForm):
 		new_profile.save()
 		return new_user
 '''
+
+class EditForm(forms.Form):
+
+	first_name = forms.CharField(label="First Name",
+					widget=forms.TextInput(attrs={'placeholder': 'first_name'}))
+
+	last_name  = forms.CharField(label="Last Name",
+					widget=forms.TextInput(attrs={'placeholder': 'Last Name'}))

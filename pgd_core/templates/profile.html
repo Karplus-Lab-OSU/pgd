@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% load staticfiles %}
+
+
+{% block content %}
+	<head> Welcome, {{full_name}} </head>
+	<table id="profile_details">
+		<tbody>
+			<p>
+				<tr>
+					<td> Username : </td>
+					<td> {{user_name}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr> 
+					<td> First Name </td>
+					<td> {{first_name}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr>
+					<td> Last Name </td>
+					<td> {{last_name}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr>
+					<td> E-mail ID </td>
+					<td> {{email}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr>
+					<td> Saved searches will be added in future </td>
+				</tr>
+			</p>
+		</tbody>
+		
+	</table>
+{% endblock %}

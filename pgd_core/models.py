@@ -1,5 +1,4 @@
 import math
-import pytz
 
 from django.db import models
 from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
@@ -426,6 +425,7 @@ def determine_alias(query, index):
         except IndexError:
             return None
 
+'''
 #Required: name, email.  Optional: One-line research summary, location (university/company), timezone, country.
 
 class RegProfile(models.Model) :
@@ -438,3 +438,4 @@ class RegProfile(models.Model) :
     location         = models.CharField(max_length=30, blank=True, null=True)
     timezone         = models.CharField(max_length=100, blank=True, null=True)
     country          = models.CharField(max_length=30, blank=True, null=True)
+'''
