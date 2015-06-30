@@ -19,8 +19,8 @@ import time
 #       ./pgd_splicer/ProcessPDBTask.py --pipein < \
 #       ./pgd_splicer/testfiles/fixture_selection.txt
 # 3.  Write the fixture from the database.
-#     $ python manage.py dumpdata pgd_core --indent 2 --format json > \
-#       ./pgd_splicer/fixtures/pgd_core.json
+#     $ python manage.py dumpdata pgd_splicer --indent 2 --format json > \
+#       ./pgd_splicer/fixtures/pgd_splicer.json
 
 class MonkeyPatch:
 
@@ -201,7 +201,7 @@ class MonkeyPatch:
 
 class ManagementCommands(TestCase):
 
-    fixtures = ['pgd_core']
+    fixtures = ['pgd_splicer']
 
     def setUp(self):
         self.out = StringIO()
