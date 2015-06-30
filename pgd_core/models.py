@@ -2,6 +2,8 @@ import math
 
 from django.db import models
 from pgd_constants import AA_CHOICES, SS_CHOICES, AA_CHOICES_DICT
+from django.contrib.auth.models import User
+
 
 # Protein model
 # (was 'protein_info')

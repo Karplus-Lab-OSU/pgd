@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% load staticfiles %}
+
+
+{% block content %}
+	<head> Welcome, {{full_name}} </head>
+	<table id="profile_details">
+		<tbody>
+			<p>
+				<tr>
+					<td> Username : </td>
+					<td> {{user_name}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr> 
+					<td> First Name </td>
+					<td> {{first_name}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr>
+					<td> Last Name </td>
+					<td> {{last_name}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr>
+					<td> Email </td>
+					<td> {{email}} </td>
+				</tr>
+			</p>
+			<p>
+				<tr>
+					<td> Saved searches </td>
+				</tr>
+				<td>
+					<table class="sSearch">
+						<tr>
+							<th class="sSearch">
+								Time stamp
+							</th>
+							<th class="sSearch">
+								Description
+							</th>
+							<th class="sSearch">
+								Title
+							</th>
+							<th class="sSearch">
+								Public ?
+							</th>
+						</tr>
+
+						{% for attr in saved_search %}
+
+							<tr>
+								<td class="sSearch">{{ attr.timestamp }}</td>
+
+								<td class="sSearch">{{ attr.description }}</td>
+
+								<td class="sSearch">{{ attr.title }}</td>
+
+								<td class="sSearch">{{ attr.isPublic }}</td>
+							</tr>
+						{% endfor %}
+					</table>
+				</td>
+			</p>
+		</tbody>
+		
+	</table>
+<style>
+
+	table {
+	    border-collapse: collapse;
+	}
+
+	.sSearch{
+	    border: 1px solid black;
+	}
+</style> 
+{% endblock %}

@@ -715,7 +715,7 @@ class PersistingSearchOptions(LiveServerTestCase):
 
 
 class SeleniumTests(LiveServerTestCase):
-    fixtures = ['pgd_core']
+    fixtures = ['pgd_splicer']
 
     @classmethod
     def setUpClass(cls):
