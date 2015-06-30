@@ -13,7 +13,7 @@ from django.core import mail
 class RegistrationTestCase(TestCase):
 
 
-	fixtures    	  = ['new_users']
+	fixtures    	  = ['user_search']
 	default_url 	  = "http://testserver"
 	test_email		  = {'email' : 'email@example.org'}
 	test_credentials = {'username':'test_user', 'password':'hello'}
@@ -83,3 +83,14 @@ class RegistrationTestCase(TestCase):
 		self.assertEqual(post_response_2.status_code, 200)
 		self.assertEqual(post_response_2.redirect_chain[-1][0], self.default_url+reverse('auth_password_change_done'))
 
+	def test_save_search(self):
+
+		test_client = Client()
+		get_response = test_client.get(reverse('generic_profile', args=('test_user',)))
+		self.assertNotIn('<td class="sSearch">False</td>' , get_response)
+		get_profile = test_client.get(reverse('user_profile'), follow=True)
+		self.assertEqual(get_profile.status_code, 200)
+		post_credentials = test_client.post(get_profile.redirect_chain[-1][0], self.test_credentials, follow=True)
+		self.assertEqual(post_credentials.status_code, 200)
+		profile_page = test_client.get(reverse('generic_profile', args=('test_user',)))
+		self.assertIn('<td class="sSearch">False</td>' , profile_page.content)

@@ -33,10 +33,51 @@
 			</p>
 			<p>
 				<tr>
-					<td> Saved searches will be added in future </td>
+					<td> Saved searches </td>
 				</tr>
+				<td>
+					<table class="sSearch">
+						<tr>
+							<th class="sSearch">
+								Time stamp
+							</th>
+							<th class="sSearch">
+								Description
+							</th>
+							<th class="sSearch">
+								Title
+							</th>
+							<th class="sSearch">
+								Is Public
+							</th>
+						</tr>
+
+						{% for attr in saved_search %}
+
+							<tr>
+								<td class="sSearch">{{ attr.timestamp }}</td>
+
+								<td class="sSearch">{{ attr.description }}</td>
+
+								<td class="sSearch">{{ attr.title }}</td>
+
+								<td class="sSearch">{{ attr.isPublic }}</td>
+							</tr>
+						{% endfor %}
+					</table>
+				</td>
 			</p>
 		</tbody>
 		
 	</table>
+<style>
+
+	table {
+	    border-collapse: collapse;
+	}
+
+	.sSearch{
+	    border: 1px solid black;
+	}
+</style> 
 {% endblock %}

@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from registration.backends.default.views import RegistrationView
 from forms import UserRegistrationForm as MyCustomRegistrationForm, EditForm
+from pgd_search.models import Search
 
 class MyRegistrationView(RegistrationView):
 
@@ -31,6 +32,8 @@ def profile_view(request) :
 		prof_details['email'] = request.user.email
 		prof_details['user_name'] = request.user.username
 		prof_details['full_name'] = request.user.get_full_name()
+		search = Search.objects.all().filter(user=request.user)
+		prof_details['saved_search'] = search
 
 		return render(request, 'profile.html', prof_details)
 	else :
@@ -58,6 +61,8 @@ def edit_profile_view(request):
 
 def get_profile_view(request, username):
 
+	
+	
 	try:
 		user = User.objects.get(username=username)
 		prof_details = {}
@@ -65,14 +70,23 @@ def get_profile_view(request, username):
 		prof_details['last_name'] = user.last_name
 		prof_details['email'] = user.email
 		prof_details['user_name'] = username
+
+		if request.user.username == username :
+			search = Search.objects.all().filter(user=request.user)
+		else :
+			search = Search.objects.filter(
+				user=User.objects.get(username=username)).all().exclude(isPublic=False)
+
+		prof_details['saved_search'] = search
 		if request.user.is_active :
 			prof_details['full_name'] = request.user.get_full_name()
 		else :
 			prof_details['full_name'] = ''
+
 		return render(request, 'profile.html', prof_details)
 	
 	except Exception, e:
 		return render(request, 'user_non-existant.html')	
 
-		#raise e
+			#raise e
 	
