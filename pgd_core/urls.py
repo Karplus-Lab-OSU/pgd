@@ -53,5 +53,5 @@ urlpatterns = patterns('',
     (r'^', include('registration.backends.default.urls')),
     url(r'^profile/$',  profile_view, name='user_profile'),
     url(r'^profile/([a-zA-Z_@\+\.-]+)/$',get_profile_view, name='generic_profile'),
-    url(r'^profile/edit$',  edit_profile_view, name='user_profile_edit')
+    url(r'^profile-edit/$',  edit_profile_view, name='user_profile_edit')
     )

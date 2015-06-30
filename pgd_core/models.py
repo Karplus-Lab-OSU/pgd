@@ -424,18 +424,3 @@ def determine_alias(query, index):
             return query.join_map[k][int(math.fabs(index))-1]
         except IndexError:
             return None
-
-'''
-#Required: name, email.  Optional: One-line research summary, location (university/company), timezone, country.
-
-class RegProfile(models.Model) :
-
-
-    TIMEZONES = pytz.all_timezones
-
-    user             = models.ForeignKey(User, unique=True)
-    research_summary = models.CharField(max_length=250, blank=True, null=True)
-    location         = models.CharField(max_length=30, blank=True, null=True)
-    timezone         = models.CharField(max_length=100, blank=True, null=True)
-    country          = models.CharField(max_length=30, blank=True, null=True)
-'''

@@ -13,7 +13,7 @@ from django.core import mail
 class RegistrationTestCase(TestCase):
 
 
-	fixtures    	  = ['user_search']
+	fixtures    	  = ['profile']
 	default_url 	  = "http://testserver"
 	test_email		  = {'email' : 'email@example.org'}
 	test_credentials = {'username':'test_user', 'password':'hello'}
