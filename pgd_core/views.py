@@ -112,4 +112,4 @@ def search(request):
 
 def notfound(request) :
 
-	return render(request, 'user_non-existant.html')
+	return render(request, 'usernotfound.html')
