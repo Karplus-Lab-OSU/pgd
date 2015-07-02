@@ -86,7 +86,7 @@ def get_profile_view(request, username):
 		return render(request, 'profile.html', prof_details)
 	
 	except Exception, e:
-		return render(request, 'user_non-existant.html')	
+		return redirect(reverse('notfound'))	
 
 
 def search(request):
@@ -105,6 +105,11 @@ def search(request):
 			username = user_list[0].username
 			redirect(reverse('generic_profile', args=(username,)))
 		else :
-			return render(request, 'user_non-existant.html')
+			return redirect(reverse('notfound'))
 
 	return render(request, 'search_result.html', {'user_list': user_list})
+
+
+def notfound(request) :
+
+	return render(request, 'usernotfound.html')
