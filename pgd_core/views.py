@@ -7,6 +7,7 @@ from django.contrib.auth.decorators import login_required
 from registration.backends.default.views import RegistrationView
 from forms import UserRegistrationForm as MyCustomRegistrationForm, EditForm
 from pgd_search.models import Search
+from django.db.models import Q
 
 class MyRegistrationView(RegistrationView):
 
@@ -62,7 +63,6 @@ def edit_profile_view(request):
 def get_profile_view(request, username):
 
 	
-	
 	try:
 		user = User.objects.get(username=username)
 		prof_details = {}
@@ -88,5 +88,23 @@ def get_profile_view(request, username):
 	except Exception, e:
 		return render(request, 'user_non-existant.html')	
 
-			#raise e
-	
+
+def search(request):
+	query = request.GET.get('q')
+	user_list = {}
+
+	if query:
+
+		user_list = User.objects.filter(Q(username__icontains=query) | Q(first_name__icontains=query) | Q(last_name__icontains=query)).all()
+		
+		if user_list.count() > 1 :
+
+			return render(request, 'search_result.html', {'user_list': user_list})
+
+		elif user_list.count() == 1 :
+			username = user_list[0].username
+			redirect(reverse('generic_profile', args=(username,)))
+		else :
+			return render(request, 'user_non-existant.html')
+
+	return render(request, 'search_result.html', {'user_list': user_list})

@@ -94,3 +94,20 @@ class RegistrationTestCase(TestCase):
 		self.assertEqual(post_credentials.status_code, 200)
 		profile_page = test_client.get(reverse('generic_profile', args=('test_user',)))
 		self.assertIn('<td class="sSearch">False</td>' , profile_page.content)
+
+	def test_search_user(self):
+
+		test_client = Client()
+		#Multiple match
+		search_multiple = test_client.get(reverse('user-search'), {'q':'test'})
+		self.assertIn('<a href="/accounts/profile/test/"> test </a>' , search_multiple.content)
+		self.assertIn('a href="/accounts/profile/test_user/"> test_user </a>' , search_multiple.content)
+
+		#Single match 
+		search_single = test_client.get(reverse('user-search'), {'q' : 'test_user'})
+		self.assertIn('a href="/accounts/profile/test_user/"> test_user </a>' , search_single.content)
+
+		#No matches
+		search_none = test_client.get(reverse('user-search'), {'q' : 'whatever'}, redirect=True)
+		non_tag = "<p style=\"text-align:center;\">Sorry, the user that you're trying to search does not exist.</p>"
+		self.assertIn(non_tag , search_none.content)

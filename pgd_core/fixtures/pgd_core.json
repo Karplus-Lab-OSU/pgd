@@ -39,7 +39,7 @@
     "pk": 3, 
     "model": "auth.user", 
     "fields": {
-        "username": "Underwood", 
+        "username": "test", 
         "first_name": "Frank", 
         "last_name": "Underwood", 
         "is_active": true, 

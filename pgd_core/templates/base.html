@@ -45,7 +45,14 @@
               <span class="menuitem "><a class="mainmenuitem" href="{{SITE_ROOT}}/news">News</a></span>
               <span class="menuitem "><a class="mainmenuitem" href="{{SITE_ROOT}}/references">References</a></span>
               <span class="menuitem "><a class="mainmenuitem" href="{{SITE_ROOT}}/contactus">Contact Us</a></span>
-              <span class="menuitem lastmenuitem"><a class="mainmenuitem" href="{{SITE_ROOT}}/search/help/">Help</a></span>
+              <span class="menuitem "><a class="mainmenuitem lastmenuitem" href="{{SITE_ROOT}}/search/help/">Help</a></span>
+                  <div style="position:absolute; top:0px; right:150px; width:200px;">
+                    <form method="GET" action="{% url 'user-search' %}">
+                      <input type="text" name="q" placeholder="Search Users" />
+                    </form>
+                  </div> 
+
+              
               <span id="version"> <strong>PGD </strong>{{PGD_VERSION}} </span>
          </div>
          <div id="submenu">

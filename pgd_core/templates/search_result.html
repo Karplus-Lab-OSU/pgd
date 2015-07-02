@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<head> Matched Searches </head>
+<table id="search_matches">
+	<tbody>
+		<tr>
+			<th>
+				Full Name 
+			</th>
+			<th>
+				Link
+			</th>
+
+		</tr>
+		{% for users in user_list %}
+			<p>
+				<tr>
+					<td>
+						{{ users.get_full_name }}
+					</td>
+					<td>
+						<a href="{% url 'generic_profile' users.username %}"> {{ users.username }} </a> 
+					</td>
+				</tr>
+			</p>
+		{% endfor %}
+	</tbody>
+</table>
+{% endblock %}
