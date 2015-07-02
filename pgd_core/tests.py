@@ -109,5 +109,4 @@ class RegistrationTestCase(TestCase):
 
 		#No matches
 		search_none = test_client.get(reverse('user-search'), {'q' : 'whatever'}, redirect=True)
-		non_tag = "<p style=\"text-align:center;\">Sorry, the user that you're trying to search does not exist.</p>"
-		self.assertIn(non_tag , search_none.content)
+		self.assertEqual(search_none['Location'], self.default_url+reverse('notfound'))
