@@ -106,6 +106,7 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    'djangobower.finders.BowerFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -123,6 +124,8 @@ TEMPLATE_CONTEXT_PROCESSORS = (
     'django.core.context_processors.media',
     'context_processors.PGDContextProcessor',
 )
+
+BOWER_COMPONENTS_ROOT = os.path.join(PROJECT_ROOT, 'components')
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -151,6 +154,19 @@ INSTALLED_APPS = (
     'pgd_core',
     'pgd_search',
     'pgd_splicer',
+    'djangobower',
+)
+
+# The following js dependencies are being stored as minimized files
+# in PGD. Bower is managing jquery 1.4.1, however, a different version
+# is sourced within the code (1.4.2).
+
+# A jquery autocomplete plugin is also being stored as a minimized file.
+# Its version appears to be unsupported by Bower.
+BOWER_INSTALLED_APPS = (
+    'jquery#1.4.1',
+    'qTip#1.0.0-rc3',
+    'raphael#1.4.3',
 )
 
 # A sample logging configuration. The only tangible logging
