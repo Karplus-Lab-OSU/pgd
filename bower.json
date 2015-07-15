@@ -1,0 +1,21 @@
+{
+  "name": "pgd-bower",
+  "version": "0.0.0",
+  "homepage": "https://github.com/osuosl/pgd",
+  "authors": [
+    "n/a"
+  ],
+  "license": "Apache 2.0",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "raphael": "1.4.3",
+    "jquery": "1.4.1",
+    "qTip": "1.0.0-rc3"
+  }
+}

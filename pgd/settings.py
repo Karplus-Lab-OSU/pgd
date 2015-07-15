@@ -158,8 +158,7 @@ INSTALLED_APPS = (
 )
 
 # The following js dependencies are being stored as minimized files
-# in PGD. Bower is managing jquery 1.4.1, however, a different version
-# is sourced within the code (1.4.2).
+# in PGD.
 
 # A jquery autocomplete plugin is also being stored as a minimized file.
 # Its version appears to be unsupported by Bower.
