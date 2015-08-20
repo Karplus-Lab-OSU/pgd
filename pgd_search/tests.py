@@ -877,14 +877,19 @@ class SaveImageAfterSearch(LiveServerTestCase):
         response = self.driver.find_element_by_id("button-save").click()
 
 class ViewTest(TestCase):
-    def home_page_noerror(self):
+
+
+    #Method must start with "test"
+    def test_home_page_noerror(self):
         response = self.client.get(reverse('/'))
         self.assertEqual(response.status_code, 200)
 
-class CheckDumpTest(LiveServerTestCase) :
 
 
-    fixtures = ['new_db.json']
+class CheckDumpTest(TestCase) :
+
+
+    fixtures = ['new_db']
 
     plain_request = {'residues':3 ,'resolutionMin':0,'resolutionMax':1.2,'rfactorMin':0,
     'rfactorMax':0.25,'rfreeMin':0,'rfreeMax':0.3,'threshold':25,'ome_-4':'<=-90,>=90',
@@ -903,15 +908,22 @@ class CheckDumpTest(LiveServerTestCase) :
     'bs_i_-1':1,'bs_0':'<25','bs_i_0':1,'bs_1':'<25','bs_i_1':1,'bs_2':'<25',
     'bs_i_2':1,'bs_3':'<25','bs_i_3':1,'bs_4':'<25','bs_i_4':1,'bs_5':'<25','bs_i_5':1}
 
-    def download_tsv(self):
+    def test_download_tsv(self):
         search = Search(segmentLength=3)
         search.data = self.plain_request
         search.save()
 
+        print search
+        print "This was searched.."
+        print "Type of search is.."
+        print type(search)
         from pgd_search.dump.DataDump import Dump
         dump = Dump(search)
         actual = StringIO()
-        for i in dump:
+        content_list = []
+        for i in actual:
             actual.write(i)
-        expected = file('./pgd_search/testfiles/data.tsv').read()
-        self.assertEqual(expected, actual.getvalue())
+            #content_list.append(i)
+        cherry_picked = '67\t1MWQ\t(i)\t78\tA\tAsp\t119.025629533\t110.55635407\t109.466235584\t109.036382471\t118.692776936\t119.349802926\t121.907974188\t1.3341533797\t1.45847094945\t1.53099872443\t1.52931367534\t1.25661859877\t-\t-59.7739650518\t137.906951239\t172.895182791\tNone\t-157.022289562\t-76.3184513018\tNone\tNone\tNone\t7.0\t7.0\t6.96\t1.0\t1.0\t0.0\t35.15915330'
+        self.assertIn(cherry_picked, actual.read())
+        
