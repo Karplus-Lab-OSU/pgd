@@ -909,14 +909,19 @@ class CheckDumpTest(TestCase) :
     'bs_i_2':1,'bs_3':'<25','bs_i_3':1,'bs_4':'<25','bs_i_4':1,'bs_5':'<25','bs_i_5':1}
 
     def test_download_tsv(self):
-        search = Search(segmentLength=3)
-        search.data = self.plain_request
+        search = Search(segmentLength=5)
+
+        # create associated Search_residues
+        data = {}
+        #data['index'] = 5
+        data['residues'] = 1
+        data['a1_i_0'] = 1
+        data['a1_0'] = "1-5"
+
+        #Set search data equal to search residue parameters
+        search.data = data
         search.save()
 
-        print search
-        print "This was searched.."
-        print "Type of search is.."
-        print type(search)
         from pgd_search.dump.DataDump import Dump
         dump = Dump(search)
         actual = StringIO()
@@ -924,6 +929,7 @@ class CheckDumpTest(TestCase) :
         for i in actual:
             actual.write(i)
             #content_list.append(i)
+        print actual.read()
         cherry_picked = '67\t1MWQ\t(i)\t78\tA\tAsp\t119.025629533\t110.55635407\t109.466235584\t109.036382471\t118.692776936\t119.349802926\t121.907974188\t1.3341533797\t1.45847094945\t1.53099872443\t1.52931367534\t1.25661859877\t-\t-59.7739650518\t137.906951239\t172.895182791\tNone\t-157.022289562\t-76.3184513018\tNone\tNone\tNone\t7.0\t7.0\t6.96\t1.0\t1.0\t0.0\t35.15915330'
         self.assertIn(cherry_picked, actual.read())
         
