@@ -29,7 +29,7 @@ from tempfile import NamedTemporaryFile
 import logging
 
 import Bio.PDB
-from Bio.PDB import calc_angle as pdb_calc_angle
+from Bio.PDB import calc_angle as pdb_calc_angle, PDBIO
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
 
@@ -429,7 +429,47 @@ def parseWithBioPython(code, props, chains_filter=None):
     # Be kind; rewind.
     decompressed.seek(0)
 
+    alt_structure = Bio.PDB.PDBParser().get_structure('pdbname',
+                                                  decompressed.name)
+    io=PDBIO()
+    io.set_structure(alt_structure)
+    io.save("not-ordered.pdb")
+
+
+    for ichain in alt_structure[0] :
+        for ires in ichain :
+            if ires.is_disordered():
+                res_sum = {}
+                count_sum = {}
+                for atom in ires :
+                    if atom.is_disordered():
+                        try :
+                            res_sum[ atom.get_altloc() ] = res_sum[atom.get_altloc()] + atom.get_occupancy()
+                        except KeyError :
+                            res_sum[atom.get_altloc()] = atom.get_occupancy()
+                        try :
+                            count_sum[atom.get_altloc()] = count_sum[atom.get_altloc()]+1
+                        except KeyError :
+                            count_sum[atom.get_altloc()] = 1
+
+                avg_dict = {}
+                for k,v in res_sum.iteritems() :
+                    avg_dict[k] = res_sum[k]/count_sum[k]
+
+                keepAltID = max(k for k, v in avg_dict.iteritems())
+                for atom in ires :
+                    if ( not atom.is_disordered()) or atom.get_altloc()  ==  keepAltID :
+                        atom.set_altloc(' ') 
+
+    io=PDBIO()
+    io.set_structure(alt_structure)
+    io.save("ordered.pdb")
+    #I'm currently not using this pdb file for further use in this file
+    #Even though the test pass, i need confirmation from you
+
     structure = Bio.PDB.PDBParser().get_structure('pdbname',
+                                                  decompressed.name)
+    Bio.PDB.PDBParser().get_structure('pdbname',
                                                   decompressed.name)
 
     # dssp can't do multiple models. if we ever need to, we'll have to

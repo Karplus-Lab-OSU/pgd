@@ -334,6 +334,7 @@ class ManagementCommands(TestCase):
         self.assertEqual(test_out, file(good_out).read())
 
 
+<<<<<<< 3d1bd432d57b1de93b73afc3fb1f90a9f0c079d7
 class ProcessPDBTask(TestCase):
 
     def test_import_pdb(self):
