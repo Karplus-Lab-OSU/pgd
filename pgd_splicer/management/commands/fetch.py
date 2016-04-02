@@ -16,7 +16,7 @@ class Command(BaseCommand):
     option_list = BaseCommand.option_list + (
         make_option('--url',
                     type='string',
-                    default='http://dunbrack.fccc.edu/Guoli/culledpdb/',
+                    default='http://dunbrack.fccc.edu/Guoli/culledpdb_hh/',
                     help='URL for Dunbrack website'),
         make_option('--thresholds',
                     type='string',

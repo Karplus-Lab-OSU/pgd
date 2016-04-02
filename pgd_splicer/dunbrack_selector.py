@@ -7,7 +7,7 @@ if __name__ == '__main__':
     sys.path.append(os.getcwd())
 
     # ==========================================================
-    # Setup django environment 
+    # Setup django environment
     # ==========================================================
     if not os.environ.has_key('DJANGO_SETTINGS_MODULE'):
         os.environ['DJANGO_SETTINGS_MODULE'] = 'pgd.settings'
@@ -45,7 +45,7 @@ class DunbrackPDBSelectorTask():
         """
         Main work function.
         """
-        
+
         printc("DunbrackPDBSelectorTask: Starting")
         try:
             thresholds = kwargs['thresholds']
@@ -77,7 +77,7 @@ class DunbrackPDBSelectorTask():
             printc('     making dir %s' % settings.PDB_TMP_DIR)
 
         # Download the files
-        dunbrack_url = 'http://dunbrack.fccc.edu/Guoli/culledpdb/'
+        dunbrack_url = 'http://dunbrack.fccc.edu/Guoli/culledpdb_hh/'
         files = get_files(dunbrack_url, thresholds, resolution, r_factor)
 
         printc('files: %s %s %s %s' % (dunbrack_url, thresholds, resolution, r_factor))
@@ -85,7 +85,7 @@ class DunbrackPDBSelectorTask():
         self.progressValue = 20
 
         # Parse the files that were downloaded - the downloaded files
-        # might not match expected files if nothing matched the parameters 
+        # might not match expected files if nothing matched the parameters
         # given to get_files
         proteins = {}
         for filename, threshold in files:
@@ -93,7 +93,7 @@ class DunbrackPDBSelectorTask():
             proteins = self.parse_file(path, float(resolution), threshold, proteins)
             os.remove(path)
 
-        # store the date from the first file to use as the version.  The version will be 
+        # store the date from the first file to use as the version.  The version will be
         # updated now even though the import has just begun.  Its marked to indicate that
         # it is still in progress
         date = files[0][0][26:32]
@@ -220,12 +220,12 @@ def get_files(url, thresholds, resolution, r_factor):
 
 if __name__ == '__main__':
     import sys
-    
+
     task =  DunbrackPDBSelectorTask()
     pipe = False
-    
+
     argv = sys.argv
-    
+
     if '--help' in argv:
         print 'Usage:'
         print '   dunbrack_selector.py [--file name] [--pipeout]'
@@ -239,14 +239,14 @@ if __name__ == '__main__':
         def null_print(txt):
             pass
         printc = null_print
-    
+
     pdbs = task.work(clean=pipe)
-    
+
     if '--codes' in argv:
         format = '%(code)s\n'
     else:
         format = '%(code)s %(chains)s %(threshold)s %(resolution)s %(rfactor)s %(rfree)s\n'
-    
+
     out = sys.stdout
     for p in pdbs['data']:
         p['chains'] = ''.join(p['chains'])

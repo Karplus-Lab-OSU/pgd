@@ -112,7 +112,7 @@ class MonkeyPatch:
     class urlopen:
         def __init__(self, url, data=None, proxies=None):
             # List of known URLs and their corresponding files.
-            baseURL = 'http://dunbrack.fccc.edu/Guoli/culledpdb/'
+            baseURL = 'http://dunbrack.fccc.edu/Guoli/culledpdb_hh/'
             pc25 = baseURL + '/cullpdb_pc25_res3.0_R1.0_d130614_chains8184.gz'
             pc90 = baseURL + '/cullpdb_pc90_res3.0_R1.0_d130614_chains24769.gz'
             knownurls = {baseURL: 'selection_page.txt',
