@@ -1,5 +1,7 @@
 Develop branch
 
+- Fixed the error saving image in png format 
+
 - Fixed wraparound plots (#3327)
 
 - Updated requirements.txt (#15615)
