@@ -352,7 +352,7 @@ def pdb_file_is_newer(data):
 def amino_present(s):
     """
     Whether a given line contains a valid amino acid.
-    
+
     NB: "SEC" is a valid amino acid, regardless of its absence from
     AA3to1.
 
@@ -496,7 +496,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 key = chain, (hetflag, res_id, icode)
                 if key in dssp:
                     (residue_dssp, secondary_structure, accessibility,
-                     relative_accessibility, phi, psi) = dssp[key]
+                     relative_accessibility, phi, psi) = dssp[key][:6]
                 else:
                     raise InvalidResidueException("Key %r not in DSSP" %
                                                   (key,))

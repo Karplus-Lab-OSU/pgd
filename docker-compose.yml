@@ -10,19 +10,19 @@ pdb:
   image: centos:7
   volumes:
     - /opt/pgd/pdb
-  command: true
+  command: /bin/true
 
 media:
   image: centos:7
   volumes:
     - /opt/pgd/media
-  command: true
+  command: /bin/true
 
 static:
   image: centos:7
   volumes:
     - /opt/pgd/static
-  command: true
+  command: /bin/true
 
 web:
   build: .

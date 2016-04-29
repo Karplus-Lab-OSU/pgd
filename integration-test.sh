@@ -8,9 +8,10 @@ HOWMANY=${1:-10}
 SELFILE=$(mktemp)
 SHORTFILE=$(mktemp)
 
-# check if we are running on docker
-IN_DOCKER=$(grep -q docker /proc/1/cgroup)$?
-if [[ $IN_DOCKER -eq 1 ]]; then
+# NB: these tests only run on docker!
+
+# check if we are already running on docker
+if [ ! -f /.dockerinit ]; then
     DOCKER='docker-compose run web'
 else
     DOCKER=
@@ -68,4 +69,3 @@ if [[ ${TESTEMPTY} -eq 1 && ${TESTFILES} -eq 1 && ${TESTFULL} -eq 1 ]]; then
 else
     exit 1
 fi
-
