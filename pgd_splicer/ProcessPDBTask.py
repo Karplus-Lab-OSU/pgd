@@ -495,8 +495,8 @@ def parseWithBioPython(path, props, chains_filter=None):
                 chain = res.get_parent().get_id()
                 key = chain, (hetflag, res_id, icode)
                 if key in dssp:
-                    (residue_dssp, secondary_structure, accessibility,
-                     relative_accessibility, phi, psi) = dssp[key][:6]
+                    (secondary_structure, accessibility,
+                     relative_accessibility, phi, psi) = dssp[key][2:7]
                 else:
                     raise InvalidResidueException("Key %r not in DSSP" %
                                                   (key,))

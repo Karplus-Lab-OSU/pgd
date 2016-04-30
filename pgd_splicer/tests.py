@@ -329,3 +329,49 @@ class ManagementCommands(TestCase):
 
         good_out = MonkeyPatch.sitefile('cullpdb_crosscheck.txt')
         self.assertEqual(test_out, file(good_out).read())
+
+
+class ProcessPDBTask(TestCase):
+
+    def test_import_pdb(self):
+
+        # Choose the first protein in the selection file.
+        with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
+            line = f.readline().split(' ')
+
+        # Build pdbs variable.
+        # NB: structure taken from process_args() in ProcessPDBTask.main()
+        pdbs = [
+            {
+                'code': line[0],
+                'chains': [c for c in line[1]],
+                'threshold': float(line[2]),
+                'resolution': float(line[3]),
+                'rfactor': float(line[4]),
+                'rfree': float(line[5])
+                }
+        ]
+
+        # Install that protein into the database with ProcessPDBTask.
+        from ProcessPDBTask import ProcessPDBTask
+        task = ProcessPDBTask()
+
+        task.work(**{'data': pdbs})
+
+        # Check that all residues have valid secondary structures.
+        from pgd_core.models import Protein
+        try:
+            p = Protein.objects.get(code=line[0])
+        except Protein.DoesNotExist:
+            self.fail("target protein not in database -- add failed")
+        except:
+            self.fail("Unknown exception")
+
+        from pgd_constants import SS_CHOICES
+        valid_ss = [x[0] for x in SS_CHOICES]
+        # '-' is valid and not in SS_CHOICES
+        valid_ss.append('-')
+        for c in p.chains.all():
+            for r in c.residues.all():
+                if r.ss not in valid_ss:
+                    self.fail("%s %s res %s: ss %s is invalid" % (p.code, c.code, r.chainIndex, r.ss))
