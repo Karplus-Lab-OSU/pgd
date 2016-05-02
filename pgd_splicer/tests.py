@@ -337,31 +337,18 @@ class ProcessPDBTask(TestCase):
 
         # Choose the first protein in the selection file.
         with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
-            line = f.readline().split(' ')
-
-        # Build pdbs variable.
-        # NB: structure taken from process_args() in ProcessPDBTask.main()
-        pdbs = [
-            {
-                'code': line[0],
-                'chains': [c for c in line[1]],
-                'threshold': float(line[2]),
-                'resolution': float(line[3]),
-                'rfactor': float(line[4]),
-                'rfree': float(line[5])
-                }
-        ]
+            line = f.readline()
 
         # Install that protein into the database with ProcessPDBTask.
+        pdbs = [line]
         from ProcessPDBTask import ProcessPDBTask
         task = ProcessPDBTask()
-
-        task.work(**{'data': pdbs})
+        task.work(pdbs)
 
         # Check that all residues have valid secondary structures.
         from pgd_core.models import Protein
         try:
-            p = Protein.objects.get(code=line[0])
+            p = Protein.objects.get(code=line.split(' ')[0])
         except Protein.DoesNotExist:
             self.fail("target protein not in database -- add failed")
         except:

@@ -127,12 +127,12 @@ class ProcessPDBTask():
         return self.finished_proteins / self.total_proteins * 100
 
 
-    def work(self, **kwargs):
+    def work(self, pdbs):
         """
         Work function - expects a list of pdb file prefixes.
         """
         # process a single protein dict, or a list of proteins
-        pdbs = kwargs['data']
+        # pdbs = kwargs['data']
 
         print 'processing :', len(pdbs)
 
@@ -176,16 +176,26 @@ class ProcessPDBTask():
         # return only the code of proteins inserted or updated
         # we no longer need to pass any data as it is contained in the database
         # for now assume everything was updated
-        codes = {'pdbs':[p['code'] for p in pdbs]}
-        return codes
+        return pdbs
 
 
-def workhorse(data):
+def workhorse(pdb):
     """
     Update a single protein entry.
 
     This is a viable entrypoint for parallelizing the process.
     """
+
+    # Break out selection line data here.
+    line = pdb.split(' ')
+    data = {
+        'code': line[0],
+        'chains': [c for c in line[1]],
+        'threshold': float(line[2]),
+        'resolution': float(line[3]),
+        'rfactor': float(line[4]),
+        'rfree': float(line[5])
+    }
 
     # only update pdbs if they are newer
     if pdb_file_is_newer(data):
@@ -821,15 +831,6 @@ if __name__ == '__main__':
     """
     import logging
 
-    def process_args(args):
-        return {'code':args[0],
-                'chains':[c for c in args[1]],
-                'threshold':float(args[2]),
-                'resolution':float(args[3]),
-                'rfactor':float(args[4]),
-                'rfree':float(args[5])
-                }
-
     task = ProcessPDBTask()
 
     logging.basicConfig(filename='ProcessPDB.log',level=logging.DEBUG)
@@ -850,16 +851,17 @@ if __name__ == '__main__':
 
     elif len(argv) == 2 and argv[1] == '--pipein':
         for line in sys.stdin:
-            pdbs.append(process_args(line.split(' ')))
+            pdbs.append(line)
 
     else:
         for i in range(1,len(argv),6):
             try:
-                print argv[i:i+6]
-                pdbs.append(process_args(argv[i:i+6]))
+                line = " ".join(argv[i:i+6])
+                pdbs.append(line)
             except IndexError, e:
                 print e
                 print 'Usage: ProcessPDBTask.py code chain threshold resolution rfactor rfree...'
                 sys.exit(0)
 
-    task.work(**{'data':pdbs})
+    # task.work(**{'data':pdbs})
+    task.work(pdbs)
