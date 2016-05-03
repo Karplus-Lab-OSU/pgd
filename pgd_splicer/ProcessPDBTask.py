@@ -27,6 +27,7 @@ from operator import itemgetter
 import os
 import sys
 from tempfile import NamedTemporaryFile
+import logging
 
 import Bio.PDB
 from Bio.PDB import calc_angle as pdb_calc_angle
@@ -132,14 +133,12 @@ class ProcessPDBTask():
         Work function - expects a list of pdb file prefixes.
         """
         # process a single protein dict, or a list of proteins
-        # pdbs = kwargs['data']
 
-        print 'processing :', len(pdbs)
-
+        logging.info('processing {} proteins', len(pdbs))
 
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
-        #print 'PDBS TO PROCESS:', pdbs
+
         self.total_proteins = len(pdbs)
         skipped = 0
         imported = 0
@@ -160,18 +159,16 @@ class ProcessPDBTask():
             elapsed = now - started
             if int(percent):
                 remaining = elapsed * 100 // int(percent)
-		remaining -= elapsed
+                remaining -= elapsed
             else:
                 remaining = elapsed * 100
-            print "-" * 42
-            print "Processed protein %s of %s" % (self.finished_proteins,
-                                                  self.total_proteins)
-            print "%s imported, %s skipped (%0.6f%%)" % (imported, skipped,
-                                                         percent)
-            print "%s elapsed, %s remaining" % (elapsed, remaining)
-            print "-" * 42
+            logging.info("-" * 42)
+            logging.info("processed protein {} of {}".format(self.finished_proteins, self.total_proteins))
+            logging.info("{} imported, {} skipped ({:f}%)".format(imported, skipped, percent))
+            logging.info("{} elapsed, {} remaining".format(elapsed, remaining))
+            logging.info("-" * 42)
 
-        print 'ProcessPDBTask - Processing Complete'
+        logging.info('processing complete: {} elapsed, {} imported, {} skipped'.format(elapsed, imported, skipped))
 
         # return only the code of proteins inserted or updated
         # we no longer need to pass any data as it is contained in the database
@@ -179,7 +176,7 @@ class ProcessPDBTask():
         return pdbs
 
 
-def workhorse(pdb):
+def workhorse(line):
     """
     Update a single protein entry.
 
@@ -187,26 +184,33 @@ def workhorse(pdb):
     """
 
     # Break out selection line data here.
-    line = pdb.split(' ')
+    values = line.split(' ')
+
     data = {
-        'code': line[0],
-        'chains': [c for c in line[1]],
-        'threshold': float(line[2]),
-        'resolution': float(line[3]),
-        'rfactor': float(line[4]),
-        'rfree': float(line[5])
+        'code': values[0],
+        'chains': [c for c in values[1]],
+        'threshold': float(values[2]),
+        'resolution': float(values[3]),
+        'rfactor': float(values[4]),
+        'rfree': float(values[5])
     }
 
+    logger = logging.getLogger(values[0])
+    pdb = {
+        'data': data,
+        'logger': logger
+        }
+
     # only update pdbs if they are newer
-    if pdb_file_is_newer(data):
-        return process_pdb(data)
+    if pdb_file_is_newer(pdb):
+        return process_pdb(pdb)
     else:
-        print 'INFO: Skipping up-to-date PDB: %s' % data['code']
+        logger.info('pdb file is not newer')
         return False
 
 
 @transaction.commit_manually
-def process_pdb(data):
+def process_pdb(pdb):
     """
     Process an individual pdb file
     """
@@ -215,27 +219,28 @@ def process_pdb(data):
     # added to it as the protein is processed.  This prevents memory leaks
     # due to the original dict having a reference held outside this method.
     # e.g. if it were looped over with a large list of PDBs
-    data = data.copy()
+    # data = data.copy()
+    data = pdb['data']
+    logger = pdb['logger']
 
     try:
         residue_props = None
         code = data['code']
         chains_filter = data.get("chains")
-        filename = 'pdb%s.ent.gz' % code.lower()
-        print '    Processing: ', code
+        logger.debug('process_pdb')
 
         # update datastructure
         data['chains'] = {}
 
         # 1) parse with bioPython
-        data = parseWithBioPython(filename, data, chains_filter)
+        data = parseWithBioPython(code, data, chains_filter)
 
         # 2) Create/Get Protein and save values
         try:
             protein = ProteinModel.objects.get(code=code)
-            print '  Existing protein: ', code
+            logger.debug('protein exists')
         except ProteinModel.DoesNotExist:
-            print '  Creating protein: ', code
+            logger.debug('protein does not exist')
             protein = ProteinModel()
         protein.code       = code
         protein.threshold  = float(data['threshold'])
@@ -251,9 +256,9 @@ def process_pdb(data):
             chainId = '%s%s' % (protein.code, chaincode)
             try:
                 chain = protein.chains.get(id=chainId)
-                print '   Existing Chain: %s' % chaincode
+                logger.debug('{}: chain exists'.format(chaincode))
             except ChainModel.DoesNotExist:
-                print '   Creating Chain: %s' % chaincode
+                logger.debug('{}: chain does not exist'.format(chaincode))
                 chain = ChainModel()
                 chain.id      = chainId
                 chain.protein = protein
@@ -271,13 +276,14 @@ def process_pdb(data):
                 # 4a) find the residue object so it can be updated or create a new one
                 try:
                     residue = chain.residues.get(oldID=str(residue_props['oldID']))
+                    logger.debug('{}: residue exists'.format(residue))
                 except ResidueModel.DoesNotExist:
                     #not found, create new residue
-                    #print 'New Residue'
                     residue = ResidueModel()
                     residue.protein = protein
                     residue.chain   = chain
                     residue.chainID = chain.id[4]
+                    # logger.debug('{}: residue does not exist'.format(residue))
 
                 # 4b) copy properties into a residue object
                 #     property keys should match property name in object
@@ -312,16 +318,19 @@ def process_pdb(data):
 
 
                 old_residue = residue
-            print '    %s proteins' % len(residues)
+            logger.debug('{}: {} residues'.format(chainId, len(residues)))
 
 
     except Exception, e:
         import traceback
         exceptionType, exceptionValue, exceptionTraceback = sys.exc_info()
-        print "*** print_tb:"
-        print residue_props
-        traceback.print_tb(exceptionTraceback, limit=10, file=sys.stdout)
-        print 'EXCEPTION in Residue: %s %s %s' % (code, e.__class__, e)
+        from cStringIO import StringIO
+        tb = StringIO()
+        traceback.print_tb(exceptionTraceback, limit=10, file=tb)
+        logger.error('{}: EXCEPTION in Residue: {} {}'.format(code, e.__class__, e))
+        logger.error('{}: PROPS: {}'.format(code, residue_props))
+        logger.error('{}: TRACEBACK: {}'.format(code, tb.getvalue()))
+        tb.close()
         transaction.rollback()
         return False
 
@@ -330,7 +339,7 @@ def process_pdb(data):
     return True
 
 
-def pdb_file_is_newer(data):
+def pdb_file_is_newer(pdb):
     """
     Compares if the pdb file used as an input is newer than data already
     in the database.
@@ -339,13 +348,15 @@ def pdb_file_is_newer(data):
     processed.
     """
 
-    code =  data['code']
+    data = pdb['data']
+    logger = pdb['logger']
+    code = data['code']
     path = os.path.join(settings.PDB_LOCAL_DIR, 'pdb{}.ent.gz'.format(code.lower()))
     if os.path.exists(path):
         pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(path)), timezone.get_default_timezone())
 
     else:
-        print 'ERROR - File not found: %s' % path
+        logger.error('File not found: {}'.format(path))
         return False
     try:
         protein = ProteinModel.objects.get(code=code)
@@ -391,13 +402,15 @@ def atom_noamino(s):
     return s.startswith("ATOM ") and not amino_present(s)
 
 
-def parseWithBioPython(path, props, chains_filter=None):
+def parseWithBioPython(code, props, chains_filter=None):
     """
     Parse values from file that can be parsed using BioPython library
     @return a dict containing the properties that were processed
     """
 
-    full_path = os.path.abspath(os.path.join(settings.PDB_LOCAL_DIR, path))
+    logger = logging.getLogger(code)
+
+    full_path = os.path.abspath(os.path.join(settings.PDB_LOCAL_DIR, 'pdb{}.ent.gz'.format(code.lower())))
 
     chains = props['chains']
 
@@ -431,14 +444,14 @@ def parseWithBioPython(path, props, chains_filter=None):
 
         # only process selected chains
         if chains_filter and not chain_id in chains_filter:
-            print 'Skipping Chain: %s' % chain_id
+            logger.debug('skipping chain {}'.format(chain_id))
             continue
 
         # construct structure for saving chain
         if not chain_id in props['chains']:
             residues = {}
             props['chains'][chain_id] = residues
-            print 'PROCESSING CHAIN [%s]' % chain, len(chain)
+            logger.debug('processing chain {} ({} residues)'.format(chain, len(chain)))
 
         newID = 0
 
@@ -677,7 +690,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 # something has gone wrong in the current residue
                 # indicating that it should be excluded from processing
                 # log a warning
-                print 'Invalid residue! protein: %s chain: %s residue: %s exception: %s' % (path, chain_id, res.get_id(), e)
+                logger.warning('invalid residue! chain {} residue: {} exception: {}'.format(chain_id, res.get_id(), e))
                 if oldC:
                     residues[res_old_id]['terminal_flag'] = True
                     newID += 1
@@ -688,7 +701,7 @@ def parseWithBioPython(path, props, chains_filter=None):
                 if res_id in residues:
                     del residues[res_id]
 
-        print 'Processed %s residues' % len(residues)
+        logger.debug('processed {} residues'.format(len(residues)))
 
     return props
 
@@ -829,13 +842,22 @@ if __name__ == '__main__':
     """
     Run if file is executed from the command line
     """
-    import logging
 
     task = ProcessPDBTask()
 
-    logging.basicConfig(filename='ProcessPDB.log',level=logging.DEBUG)
-    task.logger = logging
-    #task.parent = WorkerProxy()
+    # Configure logging.
+    logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(name)-4s %(levelname)-8s %(message)s',
+                        datefmt='%Y-%m-%d %H:%M:%S',
+                        filename='ProcessPDB.log',
+                        filemode='w')
+
+    # Log all info messages to the console.
+    console = logging.StreamHandler()
+    console.setLevel(logging.INFO)
+    formatter = logging.Formatter('%(name)-4s %(levelname)-8s %(message)s')
+    console.setFormatter(formatter)
+    logging.getLogger('').addHandler(console)
 
     pdbs = []
 
@@ -863,5 +885,4 @@ if __name__ == '__main__':
                 print 'Usage: ProcessPDBTask.py code chain threshold resolution rfactor rfree...'
                 sys.exit(0)
 
-    # task.work(**{'data':pdbs})
     task.work(pdbs)

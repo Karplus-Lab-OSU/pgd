@@ -335,6 +335,10 @@ class ProcessPDBTask(TestCase):
 
     def test_import_pdb(self):
 
+        # Log only errors to the console!
+        import logging
+        logging.basicConfig(level=logging.ERROR)
+
         # Choose the first protein in the selection file.
         with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
             line = f.readline()
