@@ -26,6 +26,8 @@ import time
 
 from django.conf import settings
 
+from tools import localfile, remotefile
+
 class FTPUpdateTask(object):
 
     pdbTotal = 0
@@ -44,7 +46,7 @@ class FTPUpdateTask(object):
         self.ftp = FTP(settings.PDB_FTP_HOST)
         #ftp.set_debuglevel(2) #set ftp debug level so all messages are shown
         self.ftp.login()
-        self.ftp.cwd(settings.PDB_REMOTE_DIR)
+        # self.ftp.cwd(settings.PDB_REMOTE_DIR)
 
         # accept data as either a list of proteins, or a single protein
         if isinstance(data, list):
@@ -64,12 +66,16 @@ class FTPUpdateTask(object):
             #===============================================
             #1 get list of local files matching the pdbs and the file modification date
 
-            filename = 'pdb%s.ent.gz' % pdb
-            path = os.path.join(settings.PDB_LOCAL_DIR, filename)
-            if os.path.exists(path):
-                date = time.gmtime(os.path.getmtime(path))
+            lfile = localfile(pdb)
+            rfile = remotefile(pdb)
+
+            if os.path.exists(lfile):
+                date = time.gmtime(os.path.getmtime(lfile))
             else:
                 date = None
+                ldir = os.path.dirname(lfile)
+                if not os.path.exists(ldir):
+                    os.makedirs(ldir)
 
             print "Local file:"
             if date:
@@ -81,10 +87,10 @@ class FTPUpdateTask(object):
             # ===============================================
             #2 iterate through list and purge pdbs that are not new or newer
 
-            print '    Checking Remote File:', filename
+            print '    Checking Remote File:', rfile
 
             try:
-                resp = self.ftp.sendcmd('MDTM %s' % filename)
+                resp = self.ftp.sendcmd('MDTM %s' % rfile)
             except error_perm:
                 # 550 error (permission error) results when a file does not
                 # exist, remove pdb from list
@@ -100,7 +106,22 @@ class FTPUpdateTask(object):
 
             # ===============================================
             #3 download files that are in the list
-            self.download_pdb(pdb)
+
+            # Grab size and pretty-print our progress.
+            size = self.ftp.size(rfile)
+            if size:
+                print "  %s - %s (%.2f KiB)" % (self.progressMessage(), pdb, size / 1024),
+            else:
+                print "  %s - %s" % (self.progressMessage(), pdb),
+
+            #remove file if it exists already
+            if os.path.exists(lfile):
+                os.remove(lfile)
+
+            self._incoming_file = open(lfile, "w")
+            self.ftp.retrbinary('RETR {}'.format(rfile), self.processChunk)
+            self._incoming_file.close()
+            sys.stdout.write("\n")
 
             self.pdbCount += 1
 
@@ -109,28 +130,6 @@ class FTPUpdateTask(object):
                                                          self.pdbTotal,
                                                          self.progress())
         return kwargs
-
-    def download_pdb(self, pdb):
-        filename = 'pdb%s.ent.gz' % pdb
-        local_filename = '%s/%s' % (settings.PDB_LOCAL_DIR,
-                                    filename)
-
-        # Grab size and pretty-print our progress.
-        size = self.ftp.size(filename)
-        if size:
-            print "  %s - %s (%.2f KiB)" % (self.progressMessage(), pdb,
-                                                size / 1024),
-        else:
-            print "  %s - %s" % (self.progressMessage(), pdb),
-
-        #remove file if it exists already
-        if os.path.exists(local_filename):
-            os.remove(local_filename)
-
-        self._incoming_file = open(local_filename,"w")
-        self.ftp.retrbinary('RETR %s' % filename, self.processChunk)
-        self._incoming_file.close()
-        sys.stdout.write("\n")
 
     def processChunk(self, data):
         """

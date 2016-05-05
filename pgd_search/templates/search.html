@@ -44,12 +44,13 @@
 
             var MAX_LENGTH = {{maxLength}};
 
+            var SITE_ROOT = {{ SITE_ROOT|default:"''" }}
             /* TODO: Taking out this existence check breaks things. Should it? */
-            {% if SITE_ROOT %}
-                var SITE_ROOT = {{SITE_ROOT}};
-            {% else %}
-                var SITE_ROOT = null;
-            {% endif %}
+            /* {% if SITE_ROOT %} */
+                /* var SITE_ROOT = {{SITE_ROOT}}; */
+            /* {% else %} */
+                /* var SITE_ROOT = ''; */
+            /* {% endif %} */
         </script>
 
         <script type="text/javascript" src="{% static "js/search.js" %}"></script>

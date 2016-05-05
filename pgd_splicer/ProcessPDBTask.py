@@ -18,7 +18,6 @@ if __name__ == '__main__':
     # ==========================================================
 
 from datetime import datetime
-from django.conf import settings
 from django.utils import timezone
 from gzip import GzipFile
 from math import degrees, sqrt
@@ -33,6 +32,8 @@ import Bio.PDB
 from Bio.PDB import calc_angle as pdb_calc_angle
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
+
+from tools import localfile
 
 from pgd_core.models import (Protein as ProteinModel, Chain as ChainModel,
                              Residue as ResidueModel, Sidechain_ARG,
@@ -351,9 +352,9 @@ def pdb_file_is_newer(pdb):
     data = pdb['data']
     logger = pdb['logger']
     code = data['code']
-    path = os.path.join(settings.PDB_LOCAL_DIR, 'pdb{}.ent.gz'.format(code.lower()))
-    if os.path.exists(path):
-        pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(path)), timezone.get_default_timezone())
+    lfile = localfile(code)
+    if os.path.exists(lfile):
+        pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(lfile)), timezone.get_default_timezone())
 
     else:
         logger.error('File not found: {}'.format(path))
@@ -410,12 +411,12 @@ def parseWithBioPython(code, props, chains_filter=None):
 
     logger = logging.getLogger(code)
 
-    full_path = os.path.abspath(os.path.join(settings.PDB_LOCAL_DIR, 'pdb{}.ent.gz'.format(code.lower())))
+    lfile = localfile(code)
 
     chains = props['chains']
 
     decompressed = NamedTemporaryFile()
-    gunzipped = GzipFile(full_path)
+    gunzipped = GzipFile(lfile)
 
     # Go through, one line at a time, and discard lines that have the bad
     # HETATM pattern. This is largely for 2VQ1, see #8319 for details.

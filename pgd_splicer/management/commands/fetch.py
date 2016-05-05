@@ -2,6 +2,7 @@ from django.core.management.base import BaseCommand, CommandError
 from optparse import make_option
 from pgd_core.models import Protein
 from django.conf import settings
+from pgd_splicer.tools import localfile, remotefile
 import urllib
 import re
 import gzip
@@ -42,12 +43,7 @@ class Command(BaseCommand):
     help = 'Retrieves missing proteins from the website.'
 
     tmpdir = settings.PDB_TMP_DIR
-    localdir = settings.PDB_LOCAL_DIR
-    remotedir = settings.PDB_REMOTE_DIR
     ftphost = settings.PDB_FTP_HOST
-
-    def filename(self, code):
-        return 'pdb%s.ent.gz' % code[:4].lower()
 
     def prefix(self, code, mesg=''):
         now = datetime.now()
@@ -65,15 +61,18 @@ class Command(BaseCommand):
         self.infile.write(data)
 
     def fetch_pdb(self, ftp, code):
-        filename = self.filename(code)
-        localfile = os.path.join(self.localdir, filename)
-        if os.path.exists(localfile):
-            date = time.gmtime(os.path.getmtime(localfile))
+        lfile = localfile(code)
+        rfile = remotefile(code)
+        if os.path.exists(lfile):
+            date = time.gmtime(os.path.getmtime(lfile))
         else:
             date = None
+            ldir = os.path.dirname(lfile)
+            if not os.path.exists(ldir):
+                os.makedirs(ldir)
 
         try:
-            resp = ftp.sendcmd('MDTM %s' % filename)
+            resp = ftp.sendcmd('MDTM %s' % rfile)
         except error_perm:
             # file not found on the website
             self.stdout.write(self.prefix(code, 'file not found on site!'))
@@ -88,11 +87,11 @@ class Command(BaseCommand):
             return 'unchanged'
 
         # download the file
-        size = ftp.size(filename)
+        size = ftp.size(rfile)
 
-        self.infile = open(localfile, 'w')
+        self.infile = open(lfile, 'w')
         self.stdout.write(self.prefix(code), ending='')
-        ftp.retrbinary('RETR %s' % filename, self.process_chunk)
+        ftp.retrbinary('RETR %s' % rfile, self.process_chunk)
         self.infile.close()
         self.stdout.write('')
         if date:
@@ -197,15 +196,10 @@ class Command(BaseCommand):
                       'new': [],
                       'changed': []}
 
-        # fetch missing protein models
-        if not os.path.exists(self.localdir):
-            os.mkdir(self.localdir)
-
         # make FTP connection
         self.stdout.write('Connecting via FTP to %s...' % self.ftphost)
         ftp = FTP(self.ftphost)
         ftp.login()
-        ftp.cwd(self.remotedir)
 
         # 'desired': to check all proteins for updates
         # 'missing': only download proteins that are not already here

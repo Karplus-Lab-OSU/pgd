@@ -11,8 +11,8 @@ SHORTFILE=$(mktemp)
 # NB: these tests only run on docker!
 
 # check if we are already running on docker
-if [ ! -f /.dockerinit ]; then
-    DOCKER='docker-compose run web'
+if [ ! -f /.dockerenv ]; then
+    DOCKER='docker-compose run --rm web'
 else
     DOCKER=
 fi
@@ -40,7 +40,7 @@ $DOCKER python ./pgd_splicer/ftpupdate.py --pipein < ${SHORTFILE}
 
 # this command should list ${HOWMANY} files
 TESTFILES=0
-FILES=`$DOCKER ls -1 /opt/pgd/pdb | wc -l`
+FILES=`$DOCKER find /opt/pgd/pdb -type f -print | wc -l`
 if [[ $FILES -ne $HOWMANY ]]; then
     echo "FAIL: $((FILES)) files found, should be $((HOWMANY))"
 else
