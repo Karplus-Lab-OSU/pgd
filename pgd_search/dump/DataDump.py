@@ -28,7 +28,7 @@ def db_to_ascii(field):
 
 
 # A list of values that should not be printed out
-FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5'
+FIELDS = ['aa','a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5',
           'ss','phi', 'psi', 'ome','omep', 'chi1','chi2','chi3','chi4','chi5',
           'bm', 'bs', 'bg', 'h_bond_energy', 'zeta']
 for field in  sidechain_length_relationship_list:
@@ -37,7 +37,7 @@ for field in sidechain_angle_relationship_list:
     FIELDS.append('sidechain_%s' % field)
 
 FIELD_LABEL_REPLACEMENTS = {
-    'h_bond_energy':'H Bond', 
+    'h_bond_energy':'H Bond',
     'aa':'AA',
     'L1':u'C(-1)N',
     'L2':u'N-CA',
@@ -128,7 +128,7 @@ class BufferThread(Thread):
         page_num = self.parent.current_page
         self.parent.current_page += 1
 
-        
+
 
         for segment in self.parent.pages.page(page_num).object_list:
             self.parent.count += 1
@@ -178,7 +178,7 @@ class BufferThread(Thread):
                 with self.parent.buffer_lock:
                     self.parent.buffer.append(string)
 
-        # update parents buffer with new lines then release this thread so 
+        # update parents buffer with new lines then release this thread so
         # parent can create a new thread if needed
         with self.parent.buffer_lock:
             if self.parent.current_page > self.parent.page_max:
@@ -190,7 +190,7 @@ class BufferThread(Thread):
 
 class Dump():
     """
-    Class that encapsulates a dump of a queryset.  This class turns the 
+    Class that encapsulates a dump of a queryset.  This class turns the
     results of the query set into an iterable returning sections of text
     that make up the dump file.
     """
@@ -218,7 +218,7 @@ class Dump():
         self.nEOF = True
         self.create_meta_data(search)
         self.create_header()
-        
+
 
         #calculate list of iValues
         self.iValues = [
@@ -229,7 +229,7 @@ class Dump():
                 0 - (search.segmentLength-1)/2, #start
                 int(math.ceil((search.segmentLength-1) / 2.0))+1, #stop
             )
-        ] 
+        ]
 
         #calculate iIndex
         self.iIndex = int(math.ceil(settings.SEGMENT_SIZE/2.0)-1)
@@ -253,7 +253,7 @@ class Dump():
         self.buffer.append(string)
         parts = []
         indexes = residue_indexes(search.segmentLength)
-        
+
         #The rest of the loops fill in the data
         i=0
         for residue in search.residues:
@@ -262,7 +262,7 @@ class Dump():
             for key in RESIDUE_FIELDS:
                 if key[:9] == 'sidechain':
                     key = key[10:]
-                
+
                 if key in residue:
                     if key is 'ss':
                         parts.append(''.join(residue[key]))
@@ -270,15 +270,15 @@ class Dump():
                         parts.append(str(residue[key]))
                 else:
                     parts.append('')
-                
+
             #At the end of a row, so join string and add newline
             string = '%s\n' % '\t'.join(parts)
             self.buffer.append(string)
             parts = []
             i+=1
         self.buffer.append("***END_META_DATA***\n")
-    
-    
+
+
     def create_header(self):
         """
         Creates the header for the dump.  This must happen before any calls to
