@@ -14,6 +14,7 @@ from search.SearchForm import SearchSyntaxField
 import pytz
 from django.test import LiveServerTestCase
 import sys
+import requests
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -823,6 +824,25 @@ class SeleniumTests(LiveServerTestCase):
 
                     # Value should not be displayed.
                     self.assertFalse(ss_element.is_displayed())
+
+    def test_data_dump(self):
+        # Load search page.
+        self.driver.get(self.live_server_url + "/search")
+
+        # Run default search.
+        self.driver.find_element_by_css_selector('input.submit').click()
+
+        # Run data dump.
+        dump_link = self.live_server_url + "/search/dump"
+        session = requests.Session()
+        cookies = self.driver.get_cookies()
+
+        for cookie in cookies:
+            session.cookies.set(cookie['name'], cookie['value'])
+        response = session.get(dump_link)
+
+        # It should have more than 7 lines.
+        self.assertTrue(response.content.count('\n') > 7)
 
 
 #selenium test for saving the plot
