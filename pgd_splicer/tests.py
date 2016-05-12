@@ -22,6 +22,7 @@ import time
 #     $ python manage.py dumpdata pgd_splicer --indent 2 --format json > \
 #       ./pgd_splicer/fixtures/pgd_splicer.json
 
+
 class MonkeyPatch:
 
     # This class monkeypatches the network modules to provide a
@@ -168,7 +169,7 @@ class MonkeyPatch:
                 return 200
 
         def geturl(self):
-            return url
+            return self.url
 
     def __enter__(self):
         # Override existing FTP and urlopen with our versions.
@@ -186,10 +187,8 @@ class MonkeyPatch:
         for code in codes:
             pdbfile = 'pdb%s.ent.gz' % code
             if os.path.exists(MonkeyPatch.sitefile(pdbfile)):
-                shutil.copyfile(MonkeyPatch.sitefile(pdbfile),
-                                MonkeyPatch.localfile(pdbfile))
-                shutil.copystat(MonkeyPatch.sitefile(pdbfile),
-                                MonkeyPatch.localfile(pdbfile))
+                shutil.copy2(MonkeyPatch.sitefile(pdbfile),
+                             MonkeyPatch.localfile(pdbfile))
             else:
                 print "%s: site file does not exist, oh no!"
 
@@ -215,9 +214,6 @@ class ManagementCommands(TestCase):
         # 1MWQ protein file.
         proteins = {'3cgx': 'pdb/pdb3cgx.ent.gz',
                     '1mwq': 'pdb/pdb1mwq.ent.gz'}
-
-        # The original modification times of the files.
-        newdates = {}
 
         # The modification times of the files after they are set into the past.
         olddates = {}
@@ -342,27 +338,46 @@ class ProcessPDBTask(TestCase):
         # Choose the first protein in the selection file.
         with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
             line = f.readline()
+        code = line.split(' ')[0]
 
         # Install that protein into the database with ProcessPDBTask.
         pdbs = [line]
         from ProcessPDBTask import ProcessPDBTask
         task = ProcessPDBTask()
-        task.work(pdbs)
 
-        # Check that all residues have valid secondary structures.
+        # The protein file is in the local file directory.
+        with MonkeyPatch():
+            task.work(pdbs)
+
+        # Confirm that that protein was added.
         from pgd_core.models import Protein
         try:
-            p = Protein.objects.get(code=line.split(' ')[0])
+            p = Protein.objects.get(code=code)
         except Protein.DoesNotExist:
             self.fail("target protein not in database -- add failed")
         except:
             self.fail("Unknown exception")
 
-        from pgd_constants import SS_CHOICES
+        # Check that no residues are malformed.
+        from pgd_constants import AA_CHOICES, SS_CHOICES
+        valid_aa = [x[0] for x in AA_CHOICES]
         valid_ss = [x[0] for x in SS_CHOICES]
         # '-' is valid and not in SS_CHOICES
         valid_ss.append('-')
         for c in p.chains.all():
             for r in c.residues.all():
+                # Is amino acid valid?
+                if r.aa not in valid_aa:
+                    self.fail("%s %s res %s: aa %s is invalid" % (p.code, c.code, r.chainIndex, r.aa))
+                # Is secondary structure valid?
                 if r.ss not in valid_ss:
                     self.fail("%s %s res %s: ss %s is invalid" % (p.code, c.code, r.chainIndex, r.ss))
+                # Are phi/psi/ome/omep values within limits?
+                if r.phi is not None and abs(r.phi) >= 180.0:
+                    self.fail("%s %s res %s: phi value invalid: %f" % (p.code, c.code, r.chainIndex, r.phi))
+                if r.psi is not None and abs(r.psi) >= 180.0:
+                    self.fail("%s %s res %s: psi value invalid: %f" % (p.code, c.code, r.chainIndex, r.psi))
+                if r.ome is not None and abs(r.ome) >= 180.0:
+                    self.fail("%s %s res %s: ome value invalid: %f" % (p.code, c.code, r.chainIndex, r.ome))
+                if r.omep is not None and abs(r.omep) >= 180.0:
+                    self.fail("%s %s res %s: omep value invalid: %f" % (p.code, c.code, r.chainIndex, r.omep))
