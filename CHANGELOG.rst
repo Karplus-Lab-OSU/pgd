@@ -20,6 +20,8 @@ Develop branch
 
 - Fixed sidechain statistics which broke as a result of the upgrade (#18159)    
 
+- Fixed secondary structure code which broke after updating DSSP binary (#18243)
+
 Version 1.0.2: released 2013 Oct 07
 
 - Fixed corrupt selection file generation (#15141)
