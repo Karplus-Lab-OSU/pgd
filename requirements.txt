@@ -9,3 +9,4 @@ pytz
 Sphinx
 python-decouple==2.3
 docker-compose==1.2.0
+dj-database-url
