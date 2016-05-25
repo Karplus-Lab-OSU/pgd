@@ -15,6 +15,7 @@ services:
         networks:
             - front-tier
             - back-tier
+        entrypoint: ./wait-for-it.sh -q db:5432 --
     mysql:
         image: mysql/mysql-server:5.5
         volumes:
