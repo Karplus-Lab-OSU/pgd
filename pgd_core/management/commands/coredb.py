@@ -26,16 +26,6 @@ class Command(BaseCommand):
                     dest='clear',
                     default=False,
                     help='Clear core database'),
-        make_option('--dump',
-                    action='store_true',
-                    dest='dump',
-                    default=False,
-                    help='Dump core database to stdout'),
-        make_option('--import',
-                    action='store_true',
-                    dest='import',
-                    default=False,
-                    help='Import core database from stdin'),
     )
     help = 'Performs basic functions on core database.'
 
@@ -53,16 +43,6 @@ class Command(BaseCommand):
         for p in Protein.objects.all():
             p.delete()
     methods['clear'] = cleardb
-
-    def dumpdb(self):
-        # Dump all proteins to stdout
-        pass
-    methods['dump'] = dumpdb
-
-    def importdb(self):
-        # Import all proteins from stdin
-        pass
-    methods['import'] = importdb
 
     def handle(self, *args, **options):
         # Only one value is allowed in options
