@@ -50,7 +50,8 @@ class Command(BaseCommand):
 
     def cleardb(self):
         # Clear core database of all proteins
-        pass
+        for p in Protein.objects.all():
+            p.delete()
     methods['clear'] = cleardb
 
     def dumpdb(self):

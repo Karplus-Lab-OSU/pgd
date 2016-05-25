@@ -18,7 +18,7 @@ else
 fi
 
 # delete proteins from database
-$DOCKER bash -c 'echo "from pgd_core.models import Protein; Protein.objects.all().delete(); exit()" | python manage.py shell' >/dev/null
+$DOCKER python manage.py coredb --clear
 
 # the database should contain ${EMPTY} proteins
 TESTEMPTY=0
