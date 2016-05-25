@@ -1,36 +1,43 @@
-mysql:
- image: mysql:5.5
- environment:
-   MYSQL_ROOT_PASSWORD: pgd_root_password
-   MYSQL_USER: pgd_user
-   MYSQL_PASSWORD: pgd_user_password
-   MYSQL_DATABASE: pgd_db
-
-pdb:
-  image: centos:7
-  volumes:
-    - /opt/pgd/pdb
-  command: /bin/true
-
-media:
-  image: centos:7
-  volumes:
-    - /opt/pgd/media
-  command: /bin/true
-
-static:
-  image: centos:7
-  volumes:
-    - /opt/pgd/static
-  command: /bin/true
-
-web:
-  build: .
-  volumes_from:
-    - pdb
-    - media
-    - static
-  ports:
-    - "8000:8000"
-  links:
-    - mysql
+version: '2'
+services:
+    web:
+        build: .
+        ports:
+            - "8000:8000"
+        volumes:
+            - pdb:/opt/pgd/pdb
+            - media:/opt/pgd/media
+            - static:/opt/pgd/static
+        links:
+            - mysql
+        environment:
+            DATABASE_URL: mysql://pgd_user:pgd_user_password@mysql:3306/pgd_db
+        networks:
+            - front-tier
+            - back-tier
+        entrypoint: ./wait-for-it.sh -q db:5432 --
+    mysql:
+        image: mysql/mysql-server:5.5
+        volumes:
+            - dbdata:/var/lib/mysql
+        environment:
+            MYSQL_ROOT_PASSWORD: pgd_root_password
+            MYSQL_USER: pgd_user
+            MYSQL_PASSWORD: pgd_user_password
+            MYSQL_DATABASE: pgd_db
+        networks:
+            - back-tier
+volumes:
+    pdb:
+        driver: local
+    media:
+        driver: local
+    static:
+        driver: local
+    dbdata:
+        driver: local
+networks:
+    front-tier:
+        driver: bridge
+    back-tier:
+        driver: bridge

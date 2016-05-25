@@ -15,16 +15,9 @@ MANAGERS = ADMINS
 
 # At this time only MySQL is supported.  When other databases are
 # supported, these settings will be refactored.
-
+import dj_database_url
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',  # 'postgresql_psycopg2'
-        'NAME': config('MYSQL_ENV_MYSQL_DATABASE', default='db'),
-        'USER': config('MYSQL_ENV_MYSQL_USER', default='root'),
-        'PASSWORD': config('MYSQL_ENV_MYSQL_PASSWORD', default='scott'),
-        'HOST': config('MYSQL_PORT_3306_TCP_ADDR', default=''),
-        'PORT': config('MYSQL_PORT_3306_TCP_PORT', default=''),
-    }
+    'default': dj_database_url.config()
 }
 import sys
 if 'test' in sys.argv:
