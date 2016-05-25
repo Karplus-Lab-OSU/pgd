@@ -22,7 +22,7 @@ $DOCKER bash -c 'echo "from pgd_core.models import Protein; Protein.objects.all(
 
 # the database should contain ${EMPTY} proteins
 TESTEMPTY=0
-BEFORE=`$DOCKER bash -c 'echo "from pgd_core.models import Protein; print Protein.objects.count(); exit()" | python manage.py shell' | tail -1 | awk '{ print $2 }' | tr -d '[[:space:]]'`
+BEFORE=`$DOCKER python manage.py coredb --count | grep proteins | awk '{ print $1 }'`
 if [[ $BEFORE -ne $EMPTY ]]; then
     echo "FAIL: $((BEFORE)) proteins found, should be $((EMPTY))"
 else
@@ -53,7 +53,7 @@ $DOCKER python ./pgd_splicer/ProcessPDBTask.py --pipein < ${SHORTFILE}
 
 # the database should contain ${HOWMANY} proteins
 TESTFULL=0
-AFTER=`$DOCKER bash -c 'echo "from pgd_core.models import Protein; print Protein.objects.count(); exit()" | python manage.py shell' | tail -1 | awk '{ print $2 }' | tr -d '[[:space:]]'`
+AFTER=`$DOCKER python manage.py coredb --count | grep proteins | awk '{ print $1 }'`
 if [[ $AFTER -ne $HOWMANY ]]; then
     echo "FAIL: $((AFTER)) proteins found, should be $((HOWMANY))"
 else
