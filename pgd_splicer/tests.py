@@ -430,14 +430,14 @@ class OccTest(TCase):
 
     def test_compare_structure(self):
         structure = PDBParser().get_structure('pdbname',
-                                                      MonkeyPatch.sitefile('not-ordered.pdb')
+                                                      MonkeyPatch.sitefile('not-ordered.pdb'))
         alt_keepAltID = []
         keepAltID = []
         for i in self.yield_altid(structure):
             keepAltID.append(i)
         
         alt_structure = PDBParser().get_structure('pdbname',
-                                                      MonkeyPatch.sitefile('ordered.pdb')
+                                                      MonkeyPatch.sitefile('ordered.pdb'))
         for j in self.yield_altid(alt_structure):
             alt_keepAltID.append(j)
             

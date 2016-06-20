@@ -15,6 +15,7 @@ import pytz
 from django.test import LiveServerTestCase
 import sys
 import requests
+from cStringIO import StringIO
 
 PRO_MIN = -1
 PRO_MAX = 3
@@ -876,14 +877,11 @@ class SaveImageAfterSearch(LiveServerTestCase):
         #Click the button on the second page
         response = self.driver.find_element_by_id("button-save").click()
 
+
 class ViewTest(TestCase):
-
-
-    #Method must start with "test"
-    def test_home_page_noerror(self):
+    def home_page_noerror(self):
         response = self.client.get(reverse('/'))
         self.assertEqual(response.status_code, 200)
-
 
 
 class CheckDumpTest(TestCase) :
@@ -922,4 +920,3 @@ class CheckDumpTest(TestCase) :
         except IndexError:
             pass
         self.assertIn('0.58\t\t0.58', actual.getvalue())
-        
