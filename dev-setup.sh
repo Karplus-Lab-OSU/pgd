@@ -6,6 +6,8 @@ docker-compose rm -v --force
 find . \( -name "*.pyc" -o -name "*.pyo" \) -print0 | xargs -0 rm -rf
 
 # rebuild containers
+docker-compose stop
+docker-compose rm -f -v
 docker-compose build
 
 # start data containers
