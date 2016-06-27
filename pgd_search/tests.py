@@ -19,7 +19,7 @@ from cStringIO import StringIO
 
 PRO_MIN = -1
 PRO_MAX = 3
-FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi1','chi2','chi3','chi4','chi5','bm','bs','bg','h_bond_energy','zeta']
+FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi1','chi2','chi3','chi4','chi5','bm','bs','bg','occm','occscs','h_bond_energy','zeta']
 FIELDS_DICT = {}
 for i in range(1, len(FIELDS)+1):
     #shift values into decimels
