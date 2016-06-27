@@ -223,7 +223,7 @@ class Search(models.Model):
                     'a1',   'a2',   'a3',   'a4',   'a5',   'a6',   'a7',
                     'L1',   'L2',   'L3',   'L4',   'L5',
                     'phi',  'psi',  'ome',  'chi1', 'chi2', 'chi3', 'chi4', 'chi5',
-                    'bm',   'bs',   'bg',
+                    'bm',   'bs',   'bg',   'occm', 'occscs',
                     'h_bond_energy',
                     'zeta',
                 )
@@ -557,4 +557,3 @@ class saveSearchForm(forms.Form):
     description = forms.CharField(label='Description', widget=forms.Textarea)
     isPublic    = forms.BooleanField(label='Publically Viewable',required=False)
     id          = forms.IntegerField(None, widget=forms.HiddenInput, required=False)
-
