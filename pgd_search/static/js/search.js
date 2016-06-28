@@ -724,7 +724,7 @@ $(document).ready(function() {
         .change(function(evt){
                 updateInclusionField(evt.target, true);
             })
-        .not('.lengths_row input, mobility_row input, .sidechain_length_input input')
+        .not('.lengths_row input, .mobility_row input, .occupancy_row input, .sidechain_length_input input')
             .blur(function(evt){
                 angle_qtip_api.hide();
             })
@@ -1056,4 +1056,3 @@ $(document).ready(function() {
 });
 
 // vim: expandtab
-

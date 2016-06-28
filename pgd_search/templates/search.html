@@ -211,7 +211,7 @@
 
             <tr><td colspan="100%" class="sectionheader" id="occupancy_header">Occupancy →</td></tr>
             <tr class="occupancy_row">
-                <td class="label">B<sup>m</sup></td>
+                <td class="label">Occ<sub>m</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.occm}}{{r.occm_i}}
@@ -219,7 +219,7 @@
                 {% endfor %}
             </tr>
             <tr class="occupancy_row">
-                <td class="label">B<sup>&gamma;</sup></td>
+                <td class="label">Occ<sub>scs</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
                         <span class="toggle">&nbsp;</span>{{r.occscs}}{{r.occscs_i}}
