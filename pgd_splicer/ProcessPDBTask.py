@@ -135,10 +135,10 @@ class ProcessPDBTask():
         """
         # process a single protein dict, or a list of proteins
 
-        logging.info('processing {} proteins', len(pdbs))
-
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
+
+        logging.info("processing {} proteins".format(len(pdbs)))
 
         self.total_proteins = len(pdbs)
         skipped = 0
