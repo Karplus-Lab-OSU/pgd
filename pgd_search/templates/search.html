@@ -136,7 +136,7 @@
 
             <tr class="spacer"/>
             <tr><td colspan="100%" class="sectionheader" id="conf_header">Conformation ↓</td></tr>
-            <tr class="conf_row">
+            <tr class="conf_row angle_row">
                 <td class="label"></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -150,7 +150,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="conf_row">
+            <tr class="conf_row angle_row">
                 <td class="label">&Phi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -159,7 +159,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="conf_row">
+            <tr class="conf_row angle_row">
                 <td class="label">&Psi;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -167,7 +167,7 @@
                     </td>
                 {% endfor %}
             </tr>
-            <tr class="conf_row">
+            <tr class="conf_row angle_row">
                 <td class="label">&omega;</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -230,7 +230,7 @@
             <tr class="spacer"/>
 
             <tr><td colspan="100%" class="sectionheader" id="angles_header">Angles →</td></tr>
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">C<sup>-1</sup>NC<sup>&alpha;</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -239,7 +239,7 @@
                     </td>
                     {% endfor %}
                     </tr>
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">NC<sup>&alpha;</sup>C<sup>&beta;</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -248,7 +248,7 @@
 
                     {% endfor %}
                     </tr>
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">NC<sup>&alpha;</sup>C</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -257,7 +257,7 @@
                     {% endfor %}
                     </tr>
 
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">C<sup>&beta;</sup>C<sup>&alpha;</sup>C</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -265,7 +265,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">C<sup>&alpha;</sup>CO</td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -273,7 +273,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">C<sup>&alpha;</sup>CN<sup>+1</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -281,7 +281,7 @@
                     </td>
                     {% endfor %}
                 </tr>
-                <tr class="angles_row">
+                <tr class="angles_row angle_row">
                     <td class="label">OCN<sup>+1</sup></td>
                     {% for r in residueFields %}
                         <td class="field col_{{r.index}}">
@@ -340,7 +340,7 @@
 
             <tr><td colspan="100%" class="sectionheader" id="chi_header">&chi; Angles →</td></tr>
 
-            <tr class="chi_row">
+            <tr class="chi_row angle_row">
                 <td class="label">&chi;<sub>1</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -349,7 +349,7 @@
                 {% endfor %}
             </tr>
 
-            <tr class="chi_row">
+            <tr class="chi_row angle_row">
                 <td class="label">&chi;<sub>2</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -358,7 +358,7 @@
                 {% endfor %}
             </tr>
 
-            <tr class="chi_row">
+            <tr class="chi_row angle_row">
                 <td class="label">&chi;<sub>3</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -367,7 +367,7 @@
                 {% endfor %}
             </tr>
 
-            <tr class="chi_row">
+            <tr class="chi_row angle_row">
                 <td class="label">&chi;<sub>4</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -376,7 +376,7 @@
                 {% endfor %}
             </tr>
 
-            <tr class="chi_row">
+            <tr class="chi_row angle_row">
                 <td class="label">&chi;<sub>5</sub></td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
@@ -388,9 +388,9 @@
             <tr class="spacer"/>
 
             <tr><td colspan="100%" class="sectionheader" id="sidechain_angle_header">Sidechain Angles →</td></tr>
-            <tr class="sidechain_angle_row">
+            <tr class="sidechain_angle_row angle_row">
             {% for angle in sidechain_angle_list %}
-                <tr class="sidechain_angle_row" id="{{angle}}_row">
+                <tr class="sidechain_angle_row angle_row" id="{{angle}}_row">
                 <td class="label">{{angle|sidechain_label}}</td>
                 {% for r in residueFields %}
                     <td class="field col_{{r.index}}">
