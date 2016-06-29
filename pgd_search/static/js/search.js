@@ -981,6 +981,18 @@ $(document).ready(function() {
         }
     });
 
+    $('tr.occupancy_row').hide();
+    $('#occupancy_header').click(function(evt){
+        var header = document.getElementById('occupancy_header');
+        if (header.innerHTML == 'Occupancy →'){
+            header.innerHTML = 'Occupancy ↓';
+            $('tr.occupancy_row').show();
+        } else {
+            header.innerHTML = 'Occupancy →';
+            $('tr.occupancy_row').hide();
+        }
+    });
+
     $('tr.angles_row').hide();
     $('#angles_header').click(function(evt){
         var header = document.getElementById('angles_header');
