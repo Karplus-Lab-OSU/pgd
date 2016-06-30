@@ -22,6 +22,9 @@ Develop branch
 
 - Fixed secondary structure code which broke after updating DSSP binary (#18243)
 
+- Build Occupancy Awareness into the PGD (#17547, #17553, #17565, #17577, #17583)
+
+
 Version 1.0.2: released 2013 Oct 07
 
 - Fixed corrupt selection file generation (#15141)

@@ -15,10 +15,11 @@ import pytz
 from django.test import LiveServerTestCase
 import sys
 import requests
+from cStringIO import StringIO
 
 PRO_MIN = -1
 PRO_MAX = 3
-FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi1','chi2','chi3','chi4','chi5','bm','bs','bg','h_bond_energy','zeta']
+FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi1','chi2','chi3','chi4','chi5','bm','bs','bg','occm','occscs','h_bond_energy','zeta']
 FIELDS_DICT = {}
 for i in range(1, len(FIELDS)+1):
     #shift values into decimels
@@ -876,7 +877,46 @@ class SaveImageAfterSearch(LiveServerTestCase):
         #Click the button on the second page
         response = self.driver.find_element_by_id("button-save").click()
 
+
 class ViewTest(TestCase):
     def home_page_noerror(self):
         response = self.client.get(reverse('/'))
         self.assertEqual(response.status_code, 200)
+
+
+class CheckDumpTest(TestCase) :
+
+
+    fixtures = ['pgd_search.json']
+
+    def test_download_tsv(self):
+
+        search = Search(segmentLength=5)
+
+        # create associated Search_residues
+        data = {}
+        #data['index'] = 5
+        data['residues'] = 5
+        data['occm_-1'] = 0.58
+        data['occm_0'] = 0.58
+        data['occm_1'] = 0.58
+        data['occscs_-1'] = 0.58
+        data['occscs_0'] = 0.58
+        data['occscs_1'] = 0.58
+
+        #Set search data equal to search residue parameters
+        search.data = data
+        search.save()
+
+        from pgd_search.dump.DataDump import Dump
+        dump = Dump(search)
+        actual = StringIO()
+        content_list = []
+
+        try :
+            for i in dump:
+                actual.write(i)
+                #content_list.append(i)
+        except IndexError:
+            pass
+        self.assertIn('0.58\t\t0.58', actual.getvalue())

@@ -717,33 +717,38 @@ $(document).ready(function() {
         .keyup(function(evt){
             updateInclusionField(evt.target, true);
             //update svg
-            val = $(this).val();
-            m = match(val);
-            angles(m);
+            if ($(evt.target).hasClass('angle_row')){
+                val = $(this).val();
+                m = match(val);
+                angles(m);
+            }
             })
         .change(function(evt){
                 updateInclusionField(evt.target, true);
             })
-        .not('.lengths_row input, mobility_row input, .sidechain_length_input input')
             .blur(function(evt){
-                angle_qtip_api.hide();
+                if ($(evt.target).hasClass('angle_row')){
+                    angle_qtip_api.hide();
+                }
             })
             .focus(function(evt){
-                //update svg
-                val = $(this).val();
-                m = match(val);
-                angles(m);
-                if(firstRun == true){//initial run needs to have target set and qtip made
-                    create_angles_helper('Text',$('#'+evt.target.id),'#'+evt.target.id)
-                    angle_qtip_api = $("#"+evt.target.id).qtip('api');
-                    angle_qtip_api.show();
-                    $('#canvas').show();//show it so the qtip can grab it
-                    $('.angle_visualizer').html($('#canvas'));
-                    firstRun = false;
+                if ($(evt.target).hasClass('angle_row')){
+                    //update svg
+                    val = $(this).val();
+                    m = match(val);
+                    angles(m);
+                    if(firstRun == true){//initial run needs to have target set and qtip made
+                        create_angles_helper('Text',$('#'+evt.target.id),'#'+evt.target.id)
+                        angle_qtip_api = $("#"+evt.target.id).qtip('api');
+                        angle_qtip_api.show();
+                        $('#canvas').show();//show it so the qtip can grab it
+                        $('.angle_visualizer').html($('#canvas'));
+                        firstRun = false;
+                    }
+                    angle_qtip_api.options.position.target = $('#'+evt.target.id);
+                    //Set a slight delay to prevent the hide function from stepping on the show function
+                    window.setTimeout(function(){angle_qtip_api.updatePosition($('#'+evt.target.id),false).show();}, 200);
                 }
-                angle_qtip_api.options.position.target = $('#'+evt.target.id);
-                //Set a slight delay to prevent the hide function from stepping on the show function
-                window.setTimeout(function(){angle_qtip_api.updatePosition($('#'+evt.target.id),false).show();}, 200);
             }).updateInclusionField();
 
 
@@ -981,6 +986,18 @@ $(document).ready(function() {
         }
     });
 
+    $('tr.occupancy_row').hide();
+    $('#occupancy_header').click(function(evt){
+        var header = document.getElementById('occupancy_header');
+        if (header.innerHTML == 'Occupancy →'){
+            header.innerHTML = 'Occupancy ↓';
+            $('tr.occupancy_row').show();
+        } else {
+            header.innerHTML = 'Occupancy →';
+            $('tr.occupancy_row').hide();
+        }
+    });
+
     $('tr.angles_row').hide();
     $('#angles_header').click(function(evt){
         var header = document.getElementById('angles_header');
@@ -1056,4 +1073,3 @@ $(document).ready(function() {
 });
 
 // vim: expandtab
-

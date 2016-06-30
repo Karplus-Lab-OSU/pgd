@@ -15,7 +15,8 @@ services:
         networks:
             - front-tier
             - back-tier
-        entrypoint: ./wait-for-it.sh -q db:5432 --
+        entrypoint: ./wait-for-it.sh -q mysql:3306 --
+        command: python manage.py runserver --insecure 0.0.0.0:8000
     mysql:
         image: mysql/mysql-server:5.5
         volumes:

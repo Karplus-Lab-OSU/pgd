@@ -29,7 +29,7 @@ from tempfile import NamedTemporaryFile
 import logging
 
 import Bio.PDB
-from Bio.PDB import calc_angle as pdb_calc_angle
+from Bio.PDB import calc_angle as pdb_calc_angle, PDBIO
 from Bio.PDB import calc_dihedral as pdb_calc_dihedral
 from django.db import transaction
 
@@ -135,10 +135,10 @@ class ProcessPDBTask():
         """
         # process a single protein dict, or a list of proteins
 
-        logging.info('processing {} proteins', len(pdbs))
-
         if not isinstance(pdbs, list):
             pdbs = [pdbs]
+
+        logging.info("processing {} proteins".format(len(pdbs)))
 
         self.total_proteins = len(pdbs)
         skipped = 0
@@ -432,6 +432,35 @@ def parseWithBioPython(code, props, chains_filter=None):
     structure = Bio.PDB.PDBParser().get_structure('pdbname',
                                                   decompressed.name)
 
+    for ichain in structure[0] :
+        for ires in ichain :
+            if ires.is_disordered():
+                res_sum = {}
+                res_sum['occ'], res_sum['count'] = {}, {}
+                for atom in ires :
+                    if atom.is_disordered():
+                        altloc = atom.get_altloc() 
+                        try :
+                            res_sum['occ'][altloc ] = res_sum['occ'][atom.get_altloc() ] + float(atom.get_occupancy())
+                        except KeyError :
+                            res_sum['occ'][altloc ] = float(atom.get_occupancy())
+                        try :
+                            res_sum['count'][altloc ] += 1
+                        except KeyError :
+                            res_sum['count'][altloc] = 1
+
+                avg_dict = {}
+                for k,v in res_sum.iteritems() :
+                    for i,j in v.iteritems():
+                        avg_dict[i] = res_sum['occ'][i]/res_sum['count'][i]
+
+                keepAltID = max(k for k, v in avg_dict.iteritems())
+                for atom in ires :
+                    if ( not atom.is_disordered()) or atom.get_altloc()  ==  keepAltID :
+                        atom.set_altloc(' ') 
+
+
+
     # dssp can't do multiple models. if we ever need to, we'll have to
     # iterate through them
     dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressed.name,
@@ -618,6 +647,28 @@ def parseWithBioPython(code, props, chains_filter=None):
                 if side_chain != []:
                     res_dict['bs'] = sum(side_chain) // len(side_chain)
 
+                #    occscs - Min of side chain
+                #    occm   - Min of main chain
+                #    occ_m  - List containing main chain occupancy values
+                #    occ_scs- List containing side chain occupancy values
+                #    issue link - https://code.osuosl.org/issues/17565
+                occ_m, occ_scs = [], []
+                for name in atoms:
+                    if name in ('N', 'CA', 'C', 'O','OXT', 'CB'):
+                        occ_m.append(atoms[name].get_occupancy())
+                    elif name in ('H'):
+                        continue
+                    else:
+                        occ_scs.append(atoms[name].get_occupancy())
+
+                if occ_m != []:
+                    res_dict['occm'] = min(occ_m)
+
+                if occ_scs != []:
+                    res_dict['occscs'] = min(occ_scs)
+                    
+                if res_dict['aa'] == 'g' or res_dict['aa'] == 'a' :
+                    res_dict['occscs'] = 1.0
 
                 # CHI corrections - Some atoms have symettrical values
                 # in the sidechain that aren't guarunteed to be listed
