@@ -1,7 +1,5 @@
 Develop branch
 
-- Fixed the error saving image in png format 
-
 - Fixed wraparound plots (#3327)
 
 - Updated requirements.txt (#15615)
@@ -26,6 +24,7 @@ Develop branch
 
 - Build Occupancy Awareness into the PGD (#17547, #17553, #17565, #17577, #17583)
 
+- Fixed the error saving image in png format (#18249)
 
 Version 1.0.2: released 2013 Oct 07
 
