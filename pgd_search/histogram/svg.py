@@ -12,6 +12,7 @@ class SVG():
 
     def __init__(self):
         self.operations = []
+        self.font = "DejaVu"
 
     def line(self,x,y,x1,y1,stroke=1,color='black'):
         self.operations.append(Line(x,y,x1,y1,stroke,color))
@@ -19,7 +20,9 @@ class SVG():
     def rect(self, x,y,height,width,stroke=1,color='black',fill=None,data=None):
         self.operations.append(Rect(x,y,height,width,stroke,color, fill, data))
 
-    def text(self, x,y,text, size=16,fontfamily='Verdana', fill='black'):
+    def text(self, x,y,text, size=16,fontfamily=None, fill='black'):
+        if fontfamily==None:
+            fontfamily = self.font
         self.operations.append( Text(x,y,text,size,fontfamily, fill))
 
     def to_dict(self):
@@ -98,7 +101,7 @@ class Rect():
 
 
 class Text():
-    def __init__(self, x,y,text, size,color='#000000', fontfamily='Verdana'):
+    def __init__(self, x,y,text, size,color='#000000', fontfamily=None):
         self.type = 'text'
         self.x = x
         self.y = y
