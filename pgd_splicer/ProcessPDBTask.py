@@ -357,7 +357,7 @@ def pdb_file_is_newer(pdb):
         pdb_date = timezone.make_aware(datetime.fromtimestamp(os.path.getmtime(lfile)), timezone.get_default_timezone())
 
     else:
-        logger.error('File not found: {}'.format(path))
+        logger.error('File not found: {}'.format(lfile))
         return False
     try:
         protein = ProteinModel.objects.get(code=code)

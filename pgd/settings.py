@@ -17,7 +17,7 @@ MANAGERS = ADMINS
 # supported, these settings will be refactored.
 import dj_database_url
 DATABASES = {
-    'default': dj_database_url.config()
+    'default': dj_database_url.config(default=config('DATABASE_URL', ''))
 }
 import sys
 if 'test' in sys.argv:

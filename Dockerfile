@@ -12,11 +12,13 @@ RUN echo "enabled=1" >> /etc/yum.repos.d/osuosl.repo
 RUN echo "gpgcheck=0" >> /etc/yum.repos.d/osuosl.repo
 
 RUN yum -y update && yum -y install \
-    epel-release
+    epel-release \
+    && yum clean all
 
 RUN yum -y update && yum -y install \
   bzip2 \
   cairo-devel \
+  dejavu-sans-fonts \
   gcc \
   gcc-c++ \
   libffi \
@@ -28,7 +30,8 @@ RUN yum -y update && yum -y install \
   osuosl-dssp \
   python-devel \
   python-setuptools \
-  tar
+  tar \
+  && yum clean all
 
 RUN npm -g install phantomjs
 
