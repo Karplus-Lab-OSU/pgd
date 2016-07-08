@@ -106,7 +106,7 @@ class HistogramPlot():
 
         cn = connections['default']
         qn = SQLCompiler(annotated_query.query, cn, 'default').quote_name_unless_alias
-        sortz_sql = sortz.aggregate.as_sql(qn, cn)
+        sortz_sql = sortz.aggregate.as_sql(qn, cn)[0]
 
         annotated_query = annotated_query.extra(select={'z':sortz_sql})
         annotated_query = annotated_query.order_by('z')
