@@ -459,7 +459,10 @@ def parseWithBioPython(code, props, chains_filter=None):
                     if ( not atom.is_disordered()) or atom.get_altloc()  ==  keepAltID :
                         atom.set_altloc(' ') 
 
-
+    # write new PDB based on conformation changes
+    io = PDBIO()
+    io.set_structure(structure)
+    io.save(decompressed.name)
 
     # dssp can't do multiple models. if we ever need to, we'll have to
     # iterate through them
