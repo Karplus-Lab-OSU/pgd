@@ -24,7 +24,7 @@ from Bio.PDB import *
 #       ./pgd_splicer/ProcessPDBTask.py --pipein < \
 #       ./pgd_splicer/testfiles/fixture_selection.txt
 # 3.  Write the fixture from the database.
-#     $ python manage.py dumpdata pgd_splicer --indent 2 --format json > \
+#     $ python manage.py dumpdata pgd_core --indent 2 --format json > \
 #       ./pgd_splicer/fixtures/pgd_splicer.json
 
 
@@ -40,6 +40,7 @@ class MonkeyPatch:
     #  - 3CGM
     #  - 1MWW
     #  - 1H0H
+    #  - 3EOJ
 
     # For comparison, the database fixture contains:
     #  - 1TWF
@@ -48,6 +49,7 @@ class MonkeyPatch:
     #  - 3CGM
     #  - 1MWW
     #  - 1H0H
+    #  - 3EOJ
 
     # Files for all seven proteins are available as well.
 
@@ -186,7 +188,7 @@ class MonkeyPatch:
         settings.PDB_LOCAL_DIR = tempfile.mkdtemp()
 
         # Replace all PDB entries with our test entries.
-        codes = ['1mwq', '1mww', '1twf', '3cgm', '3cgx', '3cgz', '1h0h']
+        codes = ['1mwq', '1mww', '1twf', '3cgm', '3cgx', '3cgz', '1h0h', '3eoj']
         for code in codes:
             lfile = localfile(code)
             rfile = remotefile(code)
@@ -198,7 +200,7 @@ class MonkeyPatch:
 
                 shutil.copy2(rfile, lfile)
             else:
-                print "%s: site file does not exist, oh no!"
+                print "{}: site file does not exist, oh no!".format(rfile)
 
     def __exit__(self, type, value, traceback):
         # Clean up overrides
@@ -344,103 +346,72 @@ class ProcessPDBTask(TestCase):
         import logging
         logging.basicConfig(level=logging.ERROR)
 
-        # Choose the first protein in the selection file.
-        with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
-            line = f.readline()
-        code = line.split(' ')[0]
+        # Install only these codes, and check occupancy values.
+        # For 3EOJ:
+        # - A/30: A/B choice, A should be chosen.
+        #   oldID: 30, occm 0.52
+        # - A/125: A/B/C choice, A should be chosen.
+        #   oldID: 125, occm 0.66
+        # - A/208: A/B/C choice, A should be chosen.
+        #   oldID: 208, occm 0.39
+        occ_check = {'3EOJ': {'A': {30: 0.52, 125: 0.66, 208: 0.39}}}
 
-        # Install that protein into the database with ProcessPDBTask.
-        pdbs = [line]
-        from ProcessPDBTask import ProcessPDBTask
-        task = ProcessPDBTask()
-
-        # The protein file is in the local file directory.
-        with MonkeyPatch():
-            task.work(pdbs)
-
-        # Confirm that that protein was added.
-        from pgd_core.models import Protein
-        try:
-            p = Protein.objects.get(code=code)
-        except Protein.DoesNotExist:
-            self.fail("target protein not in database -- add failed")
-        except:
-            self.fail("Unknown exception")
-
-        # Check that no residues are malformed.
-        from pgd_constants import AA_CHOICES, SS_CHOICES
-        valid_aa = [x[0] for x in AA_CHOICES]
-        valid_ss = [x[0] for x in SS_CHOICES]
-        # '-' is valid and not in SS_CHOICES
-        valid_ss.append('-')
-        for c in p.chains.all():
-            for r in c.residues.all():
-                # Is amino acid valid?
-                if r.aa not in valid_aa:
-                    self.fail("%s %s res %s: aa %s is invalid" % (p.code, c.code, r.chainIndex, r.aa))
-                # Is secondary structure valid?
-                if r.ss not in valid_ss:
-                    self.fail("%s %s res %s: ss %s is invalid" % (p.code, c.code, r.chainIndex, r.ss))
-                # Are phi/psi/ome/omep values within limits?
-                if r.phi is not None and abs(r.phi) >= 180.0:
-                    self.fail("%s %s res %s: phi value invalid: %f" % (p.code, c.code, r.chainIndex, r.phi))
-                if r.psi is not None and abs(r.psi) >= 180.0:
-                    self.fail("%s %s res %s: psi value invalid: %f" % (p.code, c.code, r.chainIndex, r.psi))
-                if r.ome is not None and abs(r.ome) >= 180.0:
-                    self.fail("%s %s res %s: ome value invalid: %f" % (p.code, c.code, r.chainIndex, r.ome))
-                if r.omep is not None and abs(r.omep) >= 180.0:
-                    self.fail("%s %s res %s: omep value invalid: %f" % (p.code, c.code, r.chainIndex, r.omep))
-
-PRO_MIN = -1
-PRO_MAX = 3
-FIELDS = ['a1','a2','a3','a4','a5','a6','a7','L1','L2','L3','L4','L5','phi','psi','ome','chi1','chi2','chi3','chi4','chi5','bm','bs','bg','occm','occscs','h_bond_energy','zeta']
-FIELDS_DICT = {}
-
-for i in range(1, len(FIELDS)+1):
-    #shift values into decimels
-    FIELDS_DICT[FIELDS[i-1]] = i*.01
-
-
-class OccTest(TCase):
-
-    def yield_altid(self, alt_structure) :
-        for ichain in alt_structure[0] :
-            for ires in ichain :
-                if ires.is_disordered():
-                    res_sum = {}
-                    count_sum = {}
-                    for atom in ires :
-                        if atom.is_disordered():
-                            try :
-                                res_sum[ atom.get_altloc() ] = res_sum[atom.get_altloc()] + atom.get_occupancy()
-                            except KeyError :
-                                res_sum[atom.get_altloc()] = atom.get_occupancy()
-                            try :
-                                count_sum[atom.get_altloc()] = count_sum[atom.get_altloc()]+1
-                            except KeyError :
-                                count_sum[atom.get_altloc()] = 1
-
-                    avg_dict = {}
-                    for k,v in res_sum.iteritems() :
-                        avg_dict[k] = res_sum[k]/count_sum[k]
-
-                    keepAltID = max(k for k, v in avg_dict.iteritems())
-                    yield keepAltID
-
-
-    def test_compare_structure(self):
-        structure = PDBParser().get_structure('pdbname',
-                                                      MonkeyPatch.sitefile('not-ordered.pdb'))
-        alt_keepAltID = []
-        keepAltID = []
-        for i in self.yield_altid(structure):
-            keepAltID.append(i)
-        
-        alt_structure = PDBParser().get_structure('pdbname',
-                                                      MonkeyPatch.sitefile('ordered.pdb'))
-        for j in self.yield_altid(alt_structure):
-            alt_keepAltID.append(j)
+        for code in occ_check:
             
-        for i in keepAltID :
-            for j in alt_keepAltID :
-                self.assertNotEqual(i, j)
+            # Use only the required line from the selection file.
+            code_check = ""
+            with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
+                while code_check != code:
+                    line = f.readline()
+                    code_check = line.split(' ')[0]
+
+            # Install that protein into the database with ProcessPDBTask.
+            pdbs = [line]
+            from ProcessPDBTask import ProcessPDBTask
+            task = ProcessPDBTask()
+
+            # The protein file is in the local file directory.
+            with MonkeyPatch():
+                task.work(pdbs)
+
+            # Confirm that that protein was added.
+            from pgd_core.models import Protein
+            try:
+                p = Protein.objects.get(code=code)
+            except Protein.DoesNotExist:
+                self.fail("target protein not in database -- add failed")
+            except:
+                self.fail("Unknown exception")
+
+            # Check that no residues are malformed.
+            from pgd_constants import AA_CHOICES, SS_CHOICES
+            valid_aa = [x[0] for x in AA_CHOICES]
+            valid_ss = [x[0] for x in SS_CHOICES]
+            # '-' is valid and not in SS_CHOICES
+            valid_ss.append('-')
+            for c in p.chains.all():
+                for r in c.residues.all():
+                    # Is amino acid valid?
+                    if r.aa not in valid_aa:
+                        self.fail("%s %s res %s: aa %s is invalid" % (p.code, c.code, r.chainIndex, r.aa))
+                    # Is secondary structure valid?
+                    if r.ss not in valid_ss:
+                        self.fail("%s %s res %s: ss %s is invalid" % (p.code, c.code, r.chainIndex, r.ss))
+                    # Are phi/psi/ome/omep values within limits?
+                    if r.phi is not None and abs(r.phi) >= 180.0:
+                        self.fail("%s %s res %s: phi value invalid: %f" % (p.code, c.code, r.chainIndex, r.phi))
+                    if r.psi is not None and abs(r.psi) >= 180.0:
+                        self.fail("%s %s res %s: psi value invalid: %f" % (p.code, c.code, r.chainIndex, r.psi))
+                    if r.ome is not None and abs(r.ome) >= 180.0:
+                        self.fail("%s %s res %s: ome value invalid: %f" % (p.code, c.code, r.chainIndex, r.ome))
+                    if r.omep is not None and abs(r.omep) >= 180.0:
+                        self.fail("%s %s res %s: omep value invalid: %f" % (p.code, c.code, r.chainIndex, r.omep))
+
+            # Occupancy value check.
+            for chain in occ_check[code]:
+                c = p.chains.get(code=chain)
+                for oldID in occ_check[code][chain]:
+                    r = c.residues.get(oldID=oldID)
+                    expected = occ_check[code][chain][oldID]
+                    if r.occm != expected:
+                        self.fail("%s %s/%d occm: expected %d, got %d", code, chain, oldID, expected, r.occm)
