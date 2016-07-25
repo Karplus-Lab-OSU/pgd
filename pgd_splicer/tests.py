@@ -200,7 +200,7 @@ class MonkeyPatch:
 
                 shutil.copy2(rfile, lfile)
             else:
-                print "{}: site file does not exist, oh no!".format(rfile)
+                print "%s: site file does not exist, oh no!" % rfile
 
     def __exit__(self, type, value, traceback):
         # Clean up overrides
@@ -357,7 +357,7 @@ class ProcessPDBTask(TestCase):
         occ_check = {'3EOJ': {'A': {30: 0.52, 125: 0.66, 208: 0.39}}}
 
         for code in occ_check:
-            
+
             # Use only the required line from the selection file.
             code_check = ""
             with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
@@ -414,4 +414,4 @@ class ProcessPDBTask(TestCase):
                     r = c.residues.get(oldID=oldID)
                     expected = occ_check[code][chain][oldID]
                     if r.occm != expected:
-                        self.fail("%s %s/%d occm: expected %d, got %d", code, chain, oldID, expected, r.occm)
+                        self.fail("%s %s/%d occm: expected %f, got %f", code, chain, oldID, expected, r.occm)
