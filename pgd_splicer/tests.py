@@ -346,6 +346,11 @@ class ProcessPDBTask(TestCase):
         import logging
         logging.basicConfig(level=logging.ERROR)
 
+        codes = {}
+        with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
+            for line in f:
+                codes[line.split(' ')[0]] = line
+
         # Install only these codes, and check occupancy values.
         # For 3EOJ:
         # - A/30: A/B choice, A should be chosen.
@@ -357,13 +362,8 @@ class ProcessPDBTask(TestCase):
         occ_check = {'3EOJ': {'A': {30: 0.52, 125: 0.66, 208: 0.39}}}
 
         for code in occ_check:
-
-            # Use only the required line from the selection file.
-            code_check = ""
-            with open(MonkeyPatch.sitefile('cullpdb_selection.txt'), 'r') as f:
-                while code_check != code:
-                    line = f.readline()
-                    code_check = line.split(' ')[0]
+            if code not in codes:
+                self.fail('code %s not in selection file', code)
 
             # Install that protein into the database with ProcessPDBTask.
             pdbs = [line]
