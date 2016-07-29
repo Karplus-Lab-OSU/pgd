@@ -271,7 +271,6 @@ def process_pdb(pdb):
             #create dictionary of chains for quick access
             chains[chaincode] = chain
 
-
             # 4) iterate through residue data creating residues
             for residue_props in sorted(residues.values(), key=itemgetter("chainIndex")):
 
@@ -482,17 +481,22 @@ def parseWithBioPython(code, props, chains_filter=None):
     # Be kind; rewind.
     decompressed.seek(0)
 
-    structure = Bio.PDB.PDBParser().get_structure('pdbname',
+    # Open structure for pre-cleaned PDB file.
+    pre_structure = Bio.PDB.PDBParser().get_structure('pdbname',
                                                   decompressed.name)
 
     # write new PDB based on conformation changes
     io = PDBIO()
-    io.set_structure(structure)
+    io.set_structure(pre_structure)
     io.save(decompressed.name, select=OccupancySelect())
 
     # write PDB to current directory as well
     # import shutil
     # shutil.copy(decompressed.name, '{}-postocc.ent'.format(code))
+
+    # Reopen structure from cleaned PDB file.
+    structure = Bio.PDB.PDBParser().get_structure('pdbname',
+                                                  decompressed.name)
 
     # dssp can't do multiple models. if we ever need to, we'll have to
     # iterate through them
@@ -547,10 +551,10 @@ def parseWithBioPython(code, props, chains_filter=None):
                 # BioPython should do this automatically, but it does not
                 # always choose the main conformation.  Leading to some
                 # Interesting results
+                # Occupancy selection code renders altloc choice unnecessary.
                 atoms = {}
                 for atom in res.get_unpacked_list():
-                    if atom.get_altloc() in ('A', ' '):
-                        atoms[atom.name] = atom
+                    atoms[atom.name] = atom
 
                 # Exclude water residues
                 # Exclude any Residues that are missing _ANY_ of the
@@ -699,7 +703,7 @@ def parseWithBioPython(code, props, chains_filter=None):
 
                 if occ_scs != []:
                     res_dict['occscs'] = min(occ_scs)
-                    
+
                 if res_dict['aa'] == 'g' or res_dict['aa'] == 'a' :
                     res_dict['occscs'] = 1.0
 
@@ -785,6 +789,9 @@ def parseWithBioPython(code, props, chains_filter=None):
                 prev       = None
                 if res_id in residues:
                     del residues[res_id]
+                if 'old_id' in vars():
+                    if old_id in residues:
+                        del residues[old_id]
 
         logger.debug('processed {} residues'.format(len(residues)))
 

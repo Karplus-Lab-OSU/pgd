@@ -414,4 +414,4 @@ class ProcessPDBTask(TestCase):
                     r = c.residues.get(oldID=oldID)
                     expected = occ_check[code][chain][oldID]
                     if r.occm != expected:
-                        self.fail("%s %s/%d occm: expected %f, got %f", code, chain, oldID, expected, r.occm)
+                        self.fail("%s %s/%d occm: expected %f, got %f" % (code, chain, oldID, expected, r.occm))
