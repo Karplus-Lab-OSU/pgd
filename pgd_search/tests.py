@@ -778,12 +778,12 @@ class SeleniumTests(LiveServerTestCase):
         ss_test_values = {
             "aa_r": {
                 "CB_CG": {
-                    "avg": "1.521",
-                    "stddev": "0.014",
+                    "avg": "1.523",
+                    "stddev": "0.013",
                 },
                 "CA_CB_CG": {
-                    "avg": "112.6",
-                    "stddev": "2.8",
+                    "avg": "112.5",
+                    "stddev": "2.4",
                 },
             },
         }
