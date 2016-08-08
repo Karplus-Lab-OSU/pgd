@@ -437,35 +437,35 @@ class PGDSelect(Select):
 
         # only process selected chains
         # XXX: disabled
-        # if self.chains_filter and not chain in self.chains_filter:
-        #     return False
+        if self.chains_filter and not chain in self.chains_filter:
+            return False
 
         for residue in chain.get_unpacked_list():
 
             # Only process residues in AA3to1.
             # XXX: disabled
-            # resname = residue.resname
-            # if resname not in AA3to1:
-            #     # print "residue {} not in AA3to1".format(residue)
-            #     self.not_in_AA3to1.append(residue)
-            #     continue
+            resname = residue.resname
+            if resname not in AA3to1:
+                # print "residue {} not in AA3to1".format(residue)
+                self.not_in_AA3to1.append(residue)
+                continue
 
             # Only process residues without hetflags.
             # XXX: disabled
             hetflag, resseq, icode = residue.get_id()
-            # if hetflag != ' ':
-            #     # print "residue {} has hetflag".format(residue)
-            #     self.has_hetflag.append(residue)
-            #     continue
+            if hetflag != ' ':
+                # print "residue {} has hetflag".format(residue)
+                self.has_hetflag.append(residue)
+                continue
 
             # Only process residues with all atoms.
             # XXX: disabled
             # JMT: what about after occupancy check?
-            # atoms = {atom.name: atom for atom in residue.get_unpacked_list()}
-            # if not (('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)):
-            #     # print "residue {} missing atom".format(residue)
-            #     self.missing_atom.append(residue)
-            #     continue
+            atoms = {atom.name: atom for atom in residue.get_unpacked_list()}
+            if not (('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)):
+                # print "residue {} missing atom".format(residue)
+                self.missing_atom.append(residue)
+                continue
 
             # Calculate occupancy for disordered residues.
             if residue.is_disordered():
@@ -569,6 +569,8 @@ def parseWithBioPython(code, props, chains_filter=None):
     pre_structure = Bio.PDB.PDBParser().get_structure(code,
                                                       decompressed.name)
 
+    print "pre_structure: {} (len {})".format(pre_structure, len(pre_structure))
+
     # write new PDB based on conformation changes
     io = PDBIO()
     io.set_structure(pre_structure)
@@ -582,6 +584,8 @@ def parseWithBioPython(code, props, chains_filter=None):
     structure = Bio.PDB.PDBParser().get_structure(code,
                                                   decompressed.name)
 
+    print "structure: {} (len {})".format(structure, len(structure))
+
     # dssp can't do multiple models. if we ever need to, we'll have to
     # iterate through them
     dssp = Bio.PDB.DSSP(model=structure[0], pdb_file=decompressed.name,
@@ -594,9 +598,10 @@ def parseWithBioPython(code, props, chains_filter=None):
         chain_id = chain.get_id()
 
         # only process selected chains
-        if chains_filter and not chain_id in chains_filter:
-            logger.debug('skipping chain {}'.format(chain_id))
-            continue
+        # XXX: disable this
+        # if chains_filter and not chain_id in chains_filter:
+        #     logger.debug('skipping chain {}'.format(chain_id))
+        #     continue
 
         # construct structure for saving chain
         if not chain_id in props['chains']:
@@ -621,15 +626,17 @@ def parseWithBioPython(code, props, chains_filter=None):
 
                 # We can't handle any hetflags. This is primarily to filter
                 # out water, but there can be others as well.
-                if hetflag != ' ':
-                    raise InvalidResidueException("HetCode %r" % hetflag)
+                # XXX: disable this
+                # if hetflag != ' ':
+                #     raise InvalidResidueException("HetCode %r" % hetflag)
 
                 resname = res.resname
 
                 # We can't deal with residues that aren't of amino acids.
-                if resname not in AA3to1:
-                    raise InvalidResidueException("Bad amino acid %r" %
-                                                 resname)
+                # XXX: disable this
+                # if resname not in AA3to1:
+                #     raise InvalidResidueException("Bad amino acid %r" %
+                #                                  resname)
 
                 # XXX Get the dictionary of atoms in the Main conformation.
                 # BioPython should do this automatically, but it does not
@@ -643,9 +650,10 @@ def parseWithBioPython(code, props, chains_filter=None):
                 # Exclude water residues
                 # Exclude any Residues that are missing _ANY_ of the
                 #     mainchain atoms.  Any atom could be missing
-                all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
-                if not all_mainchain:
-                    raise InvalidResidueException("Missing atom")
+                # XXX: disable this
+                # all_mainchain = ('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)
+                # if not all_mainchain:
+                #     raise InvalidResidueException("Missing atom")
 
                 # Create dictionary structure and initialize all values.  All
                 # Values are required.  Values that are not filled in will retain
