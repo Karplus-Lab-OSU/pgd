@@ -210,7 +210,7 @@ class MonkeyPatch:
 
                             shutil.copy2(rfile, lfile)
                         else:
-                            print "%s: site file does not exist, oh no!" % rfile
+                            self.fail("{}: site file does not exist".format(rfile))
 
     def __exit__(self, type, value, traceback):
         # Clean up overrides
@@ -377,7 +377,7 @@ class ProcessPDBTask(TestCase):
                 self.fail('code %s not in selection file', code)
 
             # Install that protein into the database with ProcessPDBTask.
-            pdbs = [line]
+            pdbs = [codes[code]]
             from ProcessPDBTask import ProcessPDBTask
             task = ProcessPDBTask()
 
@@ -390,7 +390,7 @@ class ProcessPDBTask(TestCase):
             try:
                 p = Protein.objects.get(code=code)
             except Protein.DoesNotExist:
-                self.fail("target protein not in database -- add failed")
+                self.fail("protein {} not in database -- add failed".format(code))
             except:
                 self.fail("Unknown exception")
 

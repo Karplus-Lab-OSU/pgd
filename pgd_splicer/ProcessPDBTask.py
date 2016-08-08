@@ -403,60 +403,134 @@ def atom_noamino(s):
     return s.startswith("ATOM ") and not amino_present(s)
 
 
-class OccupancySelect(Select):
+class PGDSelect(Select):
     """
-    This class implements the occupancy awareness selection.
+    This class performs three tasks:
+     * it removes residues which do not work with this software, and
+     * it selects the best atoms based on highest average occupancy.
 
-    Each disordered residue contains one or more disordered atom structures.
-    These structures contain one or more atoms, each with its own altloc and
-    occupancy values.  As each atom associated with a particular altloc has
-    its own occupancy value, the altloc with the highest average occupancy
-    value is identified.  Atoms with other altloc values are removed from
-    the structure.
     """
 
-    best_atoms = {}
+    def __init__(self, chains_filter=None):
+        self.best_atoms = {}
+        self.chains_filter = chains_filter
+        self.not_in_AA3to1 = []
+        self.has_hetflag = []
+        self.missing_atom = []
 
-    def accept_residue(self, residue):
+    def accept_chain(self, chain):
         """
-        This method is being overloaded to perform the calculations required
-        to properly accept atoms in the model based on the highest average
-        occupancy value per altloc.
+        Each disordered residue contains one or more disordered atom structures.
+        These structures contain one or more atoms, each with its own altloc and
+        occupancy values.  As each atom associated with a particular altloc has
+        its own occupancy value, the altloc with the highest average occupancy
+        value is identified.  Atoms with other altloc values are removed from
+        the structure.
+
+        Because the occupancy value is calculated across all residues with a
+        given sequence number, the calculation must occur in the chain
+        acceptance method.
         """
 
-        if residue.is_disordered():
-            res_occ = {}
-            for atom in residue:
-                name = atom.name
-                res_occ[name] = {}
-                if atom.is_disordered():
-                    altloc = atom.get_altloc()
-                    occ = atom.get_occupancy()
-                    try:
-                        res_occ[name][altloc].append(occ)
-                    except KeyError:
-                        res_occ[name][altloc] = [occ]
+        best_atoms = {}
+        best_altlocs = {}
 
-            occ_list = {}
-            for occ_vals in [res_occ[k] for k in res_occ if res_occ[k]]:
-                for altloc in occ_vals:
-                    for occ in occ_vals[altloc]:
+        # only process selected chains
+        # XXX: disabled
+        # if self.chains_filter and not chain in self.chains_filter:
+        #     return False
+
+        for residue in chain.get_unpacked_list():
+
+            # Only process residues in AA3to1.
+            # XXX: disabled
+            # resname = residue.resname
+            # if resname not in AA3to1:
+            #     # print "residue {} not in AA3to1".format(residue)
+            #     self.not_in_AA3to1.append(residue)
+            #     continue
+
+            # Only process residues without hetflags.
+            # XXX: disabled
+            hetflag, resseq, icode = residue.get_id()
+            # if hetflag != ' ':
+            #     # print "residue {} has hetflag".format(residue)
+            #     self.has_hetflag.append(residue)
+            #     continue
+
+            # Only process residues with all atoms.
+            # XXX: disabled
+            # JMT: what about after occupancy check?
+            # atoms = {atom.name: atom for atom in residue.get_unpacked_list()}
+            # if not (('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)):
+            #     # print "residue {} missing atom".format(residue)
+            #     self.missing_atom.append(residue)
+            #     continue
+
+            # Calculate occupancy for disordered residues.
+            if residue.is_disordered():
+                res_occ = {}
+                for atom in residue:
+                    name = atom.name
+                    res_occ[name] = {}
+                    if atom.is_disordered():
+                        altloc = atom.get_altloc()
+                        occ = atom.get_occupancy()
                         try:
-                            occ_list[altloc].append(occ)
+                            res_occ[name][altloc].append(occ)
                         except KeyError:
-                            occ_list[altloc] = [occ]
+                            res_occ[name][altloc] = [occ]
 
-            best_altlocs = sorted(occ_list, key=lambda k: sum(occ_list[k])/len(occ_list[k]), reverse=True)
-            self.best_atoms[residue] = {atom: next(altloc for altloc in best_altlocs if altloc in res_occ[atom] or ' ') for atom in res_occ}
+                occ_list = {}
+                for occ_vals in [res_occ[k] for k in res_occ if res_occ[k]]:
+                    for altloc in occ_vals:
+                        for occ in occ_vals[altloc]:
+                            try:
+                                occ_list[altloc].append(occ)
+                            except KeyError:
+                                occ_list[altloc] = [occ]
+
+                # What altloc has the highest average occupancy in this residue?
+                best_altloc = sorted(occ_list, key=lambda k: sum(occ_list[k])/len(occ_list[k]), reverse=True)[0]
+                occ_altloc = sum(occ_list[best_altloc])/len(occ_list[best_altloc])
+                best_atoms[residue] = {atom: best_altloc if best_altloc in res_occ[atom] else ' ' for atom in res_occ}
+
+                # Store the best altloc for all residues sharing this sequence number.
+                try:
+                    best_altlocs[resseq].update({residue: occ_altloc})
+                except KeyError:
+                    best_altlocs[resseq] = {residue: occ_altloc}
+                # print "best_altlocs[{}] = {}".format(resseq, best_altlocs[resseq])
+
+        # The residue with the best altloc has the best atoms.
+        for resseq in best_altlocs:
+            altlocs = best_altlocs[resseq]
+            best_residue = max(altlocs, key=altlocs.get)
+            # print "best residue for {} is {}".format(resseq, best_residue)
+            self.best_atoms[best_residue] = best_atoms[best_residue]
+            # print "best atoms for {} are {}".format(resseq, best_atoms[best_residue])
 
         return True
 
+    def accept_residue(self, residue):
+        """
+        This method uses the information generated by accept_chain and stored
+        in best_atoms to determine which disordered residue is selected to
+        represent that residue in the chain.
+        """
+
+        if residue.is_disordered():
+            return residue in self.best_atoms
+        else:
+            if residue in self.has_hetflag or residue in self.not_in_AA3to1 or residue in self.missing_atom:
+                return False
+            return True
+
     def accept_atom(self, atom):
         """
-        This method uses the information generated by accept_residue and
-        stored in best_altlocs to accept only those atoms which are not
-        disordered or with an altloc that matches the best altloc for that
-        particular set of atoms.
+        This method uses the information generated by accept_chain and stored
+        in best_atoms to determine which disordered atom is selected to
+        represent that atom in the residue.
         """
 
         if atom.is_disordered():
@@ -492,20 +566,20 @@ def parseWithBioPython(code, props, chains_filter=None):
     decompressed.seek(0)
 
     # Open structure for pre-cleaned PDB file.
-    pre_structure = Bio.PDB.PDBParser().get_structure('pdbname',
-                                                  decompressed.name)
+    pre_structure = Bio.PDB.PDBParser().get_structure(code,
+                                                      decompressed.name)
 
     # write new PDB based on conformation changes
     io = PDBIO()
     io.set_structure(pre_structure)
-    io.save(decompressed.name, select=OccupancySelect())
+    io.save(decompressed.name, select=PGDSelect(chains_filter))
 
     # write PDB to current directory as well
     # import shutil
     # shutil.copy(decompressed.name, '{}-postocc.ent'.format(code))
 
     # Reopen structure from cleaned PDB file.
-    structure = Bio.PDB.PDBParser().get_structure('pdbname',
+    structure = Bio.PDB.PDBParser().get_structure(code,
                                                   decompressed.name)
 
     # dssp can't do multiple models. if we ever need to, we'll have to
@@ -555,7 +629,7 @@ def parseWithBioPython(code, props, chains_filter=None):
                 # We can't deal with residues that aren't of amino acids.
                 if resname not in AA3to1:
                     raise InvalidResidueException("Bad amino acid %r" %
-                                                  resname)
+                                                 resname)
 
                 # XXX Get the dictionary of atoms in the Main conformation.
                 # BioPython should do this automatically, but it does not
