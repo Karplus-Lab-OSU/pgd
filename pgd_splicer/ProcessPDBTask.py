@@ -437,7 +437,7 @@ class PGDSelect(Select):
 
         # only process selected chains
         # XXX: disabled
-        if self.chains_filter and not chain in self.chains_filter:
+        if self.chains_filter and not chain.get_id() in self.chains_filter:
             return False
 
         for residue in chain.get_unpacked_list():
@@ -569,7 +569,7 @@ def parseWithBioPython(code, props, chains_filter=None):
     pre_structure = Bio.PDB.PDBParser().get_structure(code,
                                                       decompressed.name)
 
-    print "pre_structure: {} (len {})".format(pre_structure, len(pre_structure))
+    # print "pre_structure: {} (len {})".format(pre_structure, len(pre_structure))
 
     # write new PDB based on conformation changes
     io = PDBIO()
@@ -584,7 +584,10 @@ def parseWithBioPython(code, props, chains_filter=None):
     structure = Bio.PDB.PDBParser().get_structure(code,
                                                   decompressed.name)
 
-    print "structure: {} (len {})".format(structure, len(structure))
+    if len(structure) == 0:
+        raise Exception("No structure was parsed!")
+
+    # print "structure: {} (len {})".format(structure, len(structure))
 
     # dssp can't do multiple models. if we ever need to, we'll have to
     # iterate through them
@@ -1030,6 +1033,11 @@ if __name__ == '__main__':
     """
 
     task = ProcessPDBTask()
+
+    # Ignore the PDBConstructionWarnings.
+    import warnings
+    from Bio.PDB.PDBExceptions import PDBConstructionWarning
+    warnings.simplefilter('ignore', PDBConstructionWarning)
 
     # Configure logging.
     logging.basicConfig(level=logging.DEBUG,
