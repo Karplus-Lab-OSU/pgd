@@ -411,12 +411,30 @@ class PGDSelect(Select):
 
     """
 
-    def __init__(self, chains_filter=None):
-        self.best_atoms = {}
+    def __init__(self, chains_filter=None, debug=False):
         self.chains_filter = chains_filter
+        self.debug = debug
+        self.best_atoms = {}
+        self.ordered_residues = []
+        self.disordered_residues = []
         self.not_in_AA3to1 = []
         self.has_hetflag = []
         self.missing_atom = []
+
+    def __del__(self):
+        if self.debug:
+            print "residues without issue: {}".format(len(self.ordered_residues))
+            print "residues out of order: {}".format(len(self.disordered_residues))
+            print "residues not in AA3to1: {}".format(len(self.not_in_AA3to1))
+            print "residues with hetflags: {}".format(len(self.has_hetflag))
+            print "residues missing atoms: {}".format(len(self.missing_atom))
+
+    def has_mainchain(self, residue):
+        """
+        This method returns True if the residue contains all main chain atoms.
+        """
+        atoms = [atom.name if hasattr(atom, 'name') else atom for atom in residue]
+        return (('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms))
 
     def accept_chain(self, chain):
         """
@@ -436,34 +454,30 @@ class PGDSelect(Select):
         best_altlocs = {}
 
         # only process selected chains
-        # XXX: disabled
         if self.chains_filter and not chain.get_id() in self.chains_filter:
             return False
 
         for residue in chain.get_unpacked_list():
 
             # Only process residues in AA3to1.
-            # XXX: disabled
             resname = residue.resname
             if resname not in AA3to1:
-                # print "residue {} not in AA3to1".format(residue)
+                if self.debug:
+                    print "residue {} not in AA3to1".format(residue)
                 self.not_in_AA3to1.append(residue)
                 continue
 
             # Only process residues without hetflags.
-            # XXX: disabled
             hetflag, resseq, icode = residue.get_id()
             if hetflag != ' ':
-                # print "residue {} has hetflag".format(residue)
+                if self.debug:
+                    print "residue {} has hetflag".format(residue)
                 self.has_hetflag.append(residue)
                 continue
 
-            # Only process residues with all atoms.
-            # XXX: disabled
-            # JMT: what about after occupancy check?
-            atoms = {atom.name: atom for atom in residue.get_unpacked_list()}
-            if not (('N' in atoms) and ('CA' in atoms) and ('C' in atoms) and ('O' in atoms)):
-                # print "residue {} missing atom".format(residue)
+            if not self.has_mainchain(residue):
+                if self.debug:
+                    print "residue {} missing atom (pre-occupancy)".format(residue)
                 self.missing_atom.append(residue)
                 continue
 
@@ -495,20 +509,37 @@ class PGDSelect(Select):
                 occ_altloc = sum(occ_list[best_altloc])/len(occ_list[best_altloc])
                 best_atoms[residue] = {atom: best_altloc if best_altloc in res_occ[atom] else ' ' for atom in res_occ}
 
+                # Only process residues with all main chain atoms.
+                if not self.has_mainchain(best_atoms[residue]):
+                    if self.debug:
+                        print "residue {} missing atom (best_atoms)".format(residue)
+                    self.missing_atom.append(residue)
+                    continue
+
                 # Store the best altloc for all residues sharing this sequence number.
                 try:
                     best_altlocs[resseq].update({residue: occ_altloc})
                 except KeyError:
                     best_altlocs[resseq] = {residue: occ_altloc}
-                # print "best_altlocs[{}] = {}".format(resseq, best_altlocs[resseq])
+                if self.debug:
+                    print "best_altlocs[{}] = {}".format(resseq, best_altlocs[resseq])
+            else:
+                # Only process residues with all main chain atoms.
+                if not self.has_mainchain(residue):
+                    if self.debug:
+                        print "residue {} missing atom (not disordered)".format(residue)
+                    self.missing_atom.append(residue)
+                    continue
 
         # The residue with the best altloc has the best atoms.
         for resseq in best_altlocs:
             altlocs = best_altlocs[resseq]
             best_residue = max(altlocs, key=altlocs.get)
-            # print "best residue for {} is {}".format(resseq, best_residue)
+            if self.debug:
+                print "best residue for {} is {}".format(resseq, best_residue)
             self.best_atoms[best_residue] = best_atoms[best_residue]
-            # print "best atoms for {} are {}".format(resseq, best_atoms[best_residue])
+            if self.debug:
+                print "best atoms for {} are {}".format(resseq, best_atoms[best_residue])
 
         return True
 
@@ -520,10 +551,12 @@ class PGDSelect(Select):
         """
 
         if residue.is_disordered():
+            self.disordered_residues.append(residue)
             return residue in self.best_atoms
         else:
             if residue in self.has_hetflag or residue in self.not_in_AA3to1 or residue in self.missing_atom:
                 return False
+            self.ordered_residues.append(residue)
             return True
 
     def accept_atom(self, atom):
