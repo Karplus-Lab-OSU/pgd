@@ -483,31 +483,37 @@ class PGDSelect(Select):
 
             # Calculate occupancy for disordered residues.
             if residue.is_disordered():
+                # print "residue: {}".format(residue)
                 res_occ = {}
-                for atom in residue:
-                    name = atom.name
-                    res_occ[name] = {}
+                for atom in residue.get_unpacked_list():
                     if atom.is_disordered():
+                        name = atom.name
+                        try:
+                            res_occ[name]
+                        except KeyError:
+                            res_occ[name] = {}
                         altloc = atom.get_altloc()
                         occ = atom.get_occupancy()
-                        try:
-                            res_occ[name][altloc].append(occ)
-                        except KeyError:
-                            res_occ[name][altloc] = [occ]
+                        res_occ[name].update({altloc: occ})
+                # print "atom list: {}".format(res_occ)
 
                 occ_list = {}
                 for occ_vals in [res_occ[k] for k in res_occ if res_occ[k]]:
+                    # print "occ_vals: {}".format(occ_vals)
                     for altloc in occ_vals:
-                        for occ in occ_vals[altloc]:
-                            try:
-                                occ_list[altloc].append(occ)
-                            except KeyError:
-                                occ_list[altloc] = [occ]
+                        try:
+                            occ_list[altloc].append(occ_vals[altloc])
+                        except KeyError:
+                            occ_list[altloc] = [occ_vals[altloc]]
+                # print "altloc list: {}".format(occ_list)
 
                 # What altloc has the highest average occupancy in this residue?
                 best_altloc = sorted(occ_list, key=lambda k: sum(occ_list[k])/len(occ_list[k]), reverse=True)[0]
+                # print "best_altloc: {}".format(best_altloc)
                 occ_altloc = sum(occ_list[best_altloc])/len(occ_list[best_altloc])
+                # print "occ_altloc: {}".format(occ_altloc)
                 best_atoms[residue] = {atom: best_altloc if best_altloc in res_occ[atom] else ' ' for atom in res_occ}
+                # print "best_atoms: {}".format(best_atoms[residue])
 
                 # Only process residues with all main chain atoms.
                 if not self.has_mainchain(best_atoms[residue]):
@@ -610,8 +616,8 @@ def parseWithBioPython(code, props, chains_filter=None):
     io.save(decompressed.name, select=PGDSelect(chains_filter))
 
     # write PDB to current directory as well
-    # import shutil
-    # shutil.copy(decompressed.name, '{}-postocc.ent'.format(code))
+    import shutil
+    shutil.copy(decompressed.name, '{}-postocc.ent'.format(code))
 
     # Reopen structure from cleaned PDB file.
     structure = Bio.PDB.PDBParser().get_structure(code,
